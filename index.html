@@ -6,21 +6,40 @@
     <title>ZyNara AI</title>
     <!-- PWA Manifest -->
     <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiWllOYXJhIEFJIiwic2hvcnRfbmFtZSI6Ilp5TmFyYSIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRjb2xvciI6IiNmZmZmZmYiLCJ0aGVtZV9jb2xvciI6IiMwMDAwMDAiLCJvcmllbnRhdGlvbiI6InBvcnRyYWl0LXByaW1hcnkifQ==">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'></text></svg>">
 
-    <!-- Classic favicon -->
-<link rel="icon" href="favicon.ico" type="image/x-icon" />
+<!-- ================== FAVICONS ================== -->
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+<link rel="icon" type="image/png" sizes="64x64" href="/favicon-64x64.png">
 
-<!-- PNG favicons for higher resolution -->
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+<!-- ================== APPLE ================== -->
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180x180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Zynara">
 
-<!-- Apple Touch Icon (iOS) -->
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<!-- ================== SAFARI PIN ================== -->
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#6ee7b7">
 
-<!-- Optional: Android / PWA icon -->
-<link rel="icon" type="image/png" sizes="192x192" href="favicon-192x192.png">
-    
+<!-- ================== ANDROID / PWA ================== -->
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#0f1724">
+<meta name="background-color" content="#0f1724">
+
+<!-- ================== iOS SPLASH SCREENS ================== -->
+<link rel="apple-touch-startup-image" href="/splash-640x1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)">
+<link rel="apple-touch-startup-image" href="/splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)">
+<link rel="apple-touch-startup-image" href="/splash-828x1792.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)">
+<link rel="apple-touch-startup-image" href="/splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="/splash-1242x2208.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="/splash-1242x2688.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="/splash-1536x2048.png" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2)">
+<link rel="apple-touch-startup-image" href="/splash-1668x2224.png" media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2)">
+<link rel="apple-touch-startup-image" href="/splash-1668x2388.png" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2)">
+<link rel="apple-touch-startup-image" href="/splash-2048x2732.png" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)">
 <!-- Markdown -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
@@ -54,6 +73,7 @@
             <div class="user-info">
                 <div class="user-name" id="user-name">User</div>
                 <div class="user-email" id="user-email">user@example.com</div>
+                <div class="user-plan" id="user-plan">Free Plan</div>
             </div>
             <button id="sign-out-btn" class="sign-out-btn" title="Sign Out">
                 <svg class="svg-icon" viewBox="0 0 24 24"><path d="M16 17v-3H9v-4h7V7l5 5-5 5M14 2a2 2 0 0 1 2 2v10h-2V4H5v16h9v2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9z"/></svg>
@@ -262,10 +282,11 @@
   }
 
   const {
+   FREE_AI_URL, 
+   PREMIUM_AI_URL,
     SUPABASE_URL,
     SUPABASE_ANON_KEY,
-    RECAPTCHA_SITE_KEY,
-    API_URL
+    RECAPTCHA_SITE_KEY
   } = window.__ENV__;
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -329,6 +350,7 @@ if ('serviceWorker' in navigator) {
             const userAvatar = document.getElementById('user-avatar');
             const userName = document.getElementById('user-name');
             const userEmail = document.getElementById('user-email');
+            const userPlan = document.getElementById('user-plan');
             const signOutBtn = document.getElementById('sign-out-btn');
             
             // New Chat Modal Elements
@@ -365,6 +387,11 @@ if ('serviceWorker' in navigator) {
             let voiceBars = [];
          
             let currentUser = null;
+            let userPlanType = 'free'; // Default to free plan
+            
+            // Anonymous user limits
+            const ANON_LIMIT = 5;
+            let anonMessageCount = parseInt(localStorage.getItem('anonMessageCount') || '0');
             
             const themes = [
                 { id: 'light', name: 'Light', preview: '#f0f2f5' },
@@ -380,8 +407,9 @@ if ('serviceWorker' in navigator) {
                 { id: 'indigo', name: 'Indigo', preview: '#e8eaf6' }
             ];
 
-            // Updated API URL to match the provided Python endpoint
-            const API_ENDPOINT = 'https://billy-free-ai-production.up.railway.app/ask/universal'; 
+            // API URLs
+            const FREE_API_ENDPOINT = FREE_AI_URL || 'https://billy-free-ai-production.up.railway.app/ask/universal'; 
+            const PREMIUM_API_ENDPOINT = PREMIUM_AI_URL || 'https://zynara-ai-production.up.railway.app/ask/universal';
             const STT_URL = 'https://zynara-ai-production.up.railway.app/stt';
 
             // --- Authentication Functions ---
@@ -389,10 +417,39 @@ if ('serviceWorker' in navigator) {
                 const { data: { session } } = await supabase.auth.getSession();
                 if (session) {
                     currentUser = session.user;
+                    await getUserPlan();
                     showUserProfile(session.user);
                     loadUserChats();
                 } else {
                     showLoginButton();
+                }
+            };
+
+            const getUserPlan = async () => {
+                if (!currentUser) {
+                    userPlanType = 'free';
+                    return 'free';
+                }
+
+                try {
+                    const { data, error } = await supabase
+                        .from('user_profiles')
+                        .select('plan')
+                        .eq('user_id', currentUser.id)
+                        .single();
+
+                    if (error) {
+                        console.error('Error fetching user plan:', error);
+                        userPlanType = 'free';
+                        return 'free';
+                    }
+
+                    userPlanType = data.plan || 'free';
+                    return userPlanType;
+                } catch (err) {
+                    console.error('Error in getUserPlan:', err);
+                    userPlanType = 'free';
+                    return 'free';
                 }
             };
 
@@ -410,6 +467,17 @@ if ('serviceWorker' in navigator) {
                 userAvatar.textContent = user.email.charAt(0).toUpperCase();
                 userName.textContent = user.user_metadata?.full_name || user.email.split('@')[0];
                 userEmail.textContent = user.email;
+                
+                // Update plan display
+                const planDisplay = userPlanType.charAt(0).toUpperCase() + userPlanType.slice(1);
+                userPlan.textContent = planDisplay + ' Plan';
+                
+                // Add visual indicator for premium plans
+                if (userPlanType === 'premium' || userPlanType === 'lifetime') {
+                    userPlan.classList.add('premium-plan');
+                } else {
+                    userPlan.classList.remove('premium-plan');
+                }
             };
 
             const hideUserProfile = () => {
@@ -427,10 +495,22 @@ if ('serviceWorker' in navigator) {
                     console.error('Error signing out:', error);
                 } else {
                     currentUser = null;
+                    userPlanType = 'free';
                     hideUserProfile();
                     showLoginButton();
                     clearChat();
                 }
+            };
+
+            // --- Anonymous User Functions ---
+            const incrementAnonCount = () => {
+                anonMessageCount++;
+                localStorage.setItem('anonMessageCount', anonMessageCount.toString());
+            };
+
+            const resetAnonCount = () => {
+                anonMessageCount = 0;
+                localStorage.setItem('anonMessageCount', '0');
             };
 
             // --- Supabase Storage Functions ---
@@ -1080,10 +1160,19 @@ if ('serviceWorker' in navigator) {
                 const message = messageText || userInput.value.trim();
                 if (!message) return;
 
+                // Check if user is authenticated
                 const { data: { session } } = await supabase.auth.getSession();
+                
+                // Handle anonymous user limit
                 if (!session) {
-                    showToast("Please login first!");
-                    return;
+                    if (anonMessageCount >= ANON_LIMIT) {
+                        showToast(`You've reached the limit of ${ANON_LIMIT} messages. Sign in to continue chatting.`);
+                        setTimeout(() => {
+                            window.location.href = "login.html";
+                        }, 1500);
+                        return;
+                    }
+                    incrementAnonCount();
                 }
 
                 // Create a new chat if needed
@@ -1147,6 +1236,11 @@ if ('serviceWorker' in navigator) {
                 toggleSendPauseButtons(true);
 
                 try {
+                    // Determine which API endpoint to use based on user plan
+                    const API_ENDPOINT = (userPlanType === 'premium' || userPlanType === 'lifetime') 
+                        ? PREMIUM_API_ENDPOINT 
+                        : FREE_API_ENDPOINT;
+                    
                     // Create an AbortController to allow stopping the request
                     currentResponseController = new AbortController();
                     
@@ -1154,7 +1248,7 @@ if ('serviceWorker' in navigator) {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${session.access_token}`
+                            ...(session ? { Authorization: `Bearer ${session.access_token}` } : {})
                         },
                         body: JSON.stringify({
                             prompt: message,
@@ -1834,14 +1928,17 @@ if ('serviceWorker' in navigator) {
             signOutBtn.addEventListener('click', signOut);
 
             // Listen for auth state changes
-            supabase.auth.onAuthStateChange((event, session) => {
+            supabase.auth.onAuthStateChange(async (event, session) => {
                 if (event === 'SIGNED_IN') {
                     currentUser = session.user;
+                    resetAnonCount(); // Reset anonymous message count when user signs in
+                    await getUserPlan(); // Get user plan
                     hideLoginButton();
                     showUserProfile(session.user);
                     loadUserChats();
                 } else if (event === 'SIGNED_OUT') {
                     currentUser = null;
+                    userPlanType = 'free';
                     hideUserProfile();
                     showLoginButton();
                     clearChat();
