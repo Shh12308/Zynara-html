@@ -15,55 +15,68 @@
   <!-- Load environment variables -->
   <script src="env.js"></script>
 
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    // ---- SAFETY CHECK ----
-    if (!window.__ENV__) {
-      alert("Configuration error. Please refresh.");
-      throw new Error("env.js not loaded");
-    }
+  if (!window.__ENV__) {
+    alert("Configuration error. Please refresh.");
+    throw new Error("env.js not loaded");
+  }
 
-    const {
-      SUPABASE_URL,
-      SUPABASE_ANON_KEY
-    } = window.__ENV__;
+  const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.__ENV__;
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  async function handleAuthCallback() {
+    try {
+      // 🔐 Exchange tokens in URL for a session
+      const { data, error } = await supabase.auth.getSessionFromUrl({
+        storeSession: true
+      });
 
-    async function handleOAuthCallback() {
-      try {
-        const { data, error } = await supabase.auth.getSessionFromUrl({
-          storeSession: true
-        });
-
-        if (error) {
-          console.error("OAuth callback error:", error);
-          alert("Login failed. Please try again.");
-          window.location.replace("login.html");
-          return;
-        }
-
-        if (!data?.session) {
-          throw new Error("No session returned from OAuth");
-        }
-
-        console.log("OAuth login successful:", data.session.user.id);
-
-        // ✅ Clean URL (remove access_token from address bar)
-        window.history.replaceState({}, document.title, "/");
-
-        // ✅ Redirect to app
-        window.location.replace("index.html");
-
-      } catch (err) {
-        console.error("OAuth processing failed:", err);
-        alert("Authentication error. Please log in again.");
+      if (error) {
+        console.error("Auth callback error:", error);
         window.location.replace("login.html");
+        return;
       }
-    }
 
-    handleOAuthCallback();
-  </script>
+      if (!data?.session) {
+        throw new Error("No session returned");
+      }
+
+      // 🔍 Detect flow type
+      const params = new URLSearchParams(window.location.search);
+      const type = params.get("type");
+
+      // 🧹 Clean URL (remove tokens)
+      window.history.replaceState({}, document.title, "/");
+
+      // 🔀 Route based on flow
+      switch (type) {
+        case "recovery":
+          // Password reset
+          window.location.replace("/reset-password.html");
+          break;
+
+        case "signup":
+          // Email confirmation
+          window.location.replace("/email-confirmed.html");
+          break;
+
+        case "magiclink":
+        case "oauth":
+        default:
+          // Normal login
+          window.location.replace("/index.html");
+          break;
+      }
+
+    } catch (err) {
+      console.error("Authentication processing failed:", err);
+      window.location.replace("login.html");
+    }
+  }
+
+  handleAuthCallback();
+</script>
 </body>
 </html>
