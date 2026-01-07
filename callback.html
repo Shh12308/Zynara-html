@@ -4,45 +4,63 @@
   <meta charset="UTF-8" />
   <title>Logging in…</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
 </head>
 <body>
   <div style="text-align:center; margin-top:50px;">
     <h1>Logging you in…</h1>
     <p>Please wait while we complete your login.</p>
   </div>
-<script src="env.js"></script>
 
-<script type="module">
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+  <!-- Load environment variables -->
+  <script src="env.js"></script>
 
-  if (!window.__ENV__) {
-    throw new Error("env.js not loaded");
-  }
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-  const {
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY,
-    RECAPTCHA_SITE_KEY
-  } = window.__ENV__;
+    // ---- SAFETY CHECK ----
+    if (!window.__ENV__) {
+      alert("Configuration error. Please refresh.");
+      throw new Error("env.js not loaded");
+    }
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const {
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    } = window.__ENV__;
 
-    // Complete OAuth sign-in
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
     async function handleOAuthCallback() {
-      const { data, error } = await supabase.auth.getSessionFromUrl({ storeSession: true });
+      try {
+        const { data, error } = await supabase.auth.getSessionFromUrl({
+          storeSession: true
+        });
 
-      if (error) {
-        console.error("OAuth callback error:", error.message);
-        alert("Login failed. Please try again.");
-        window.location.href = "login.html";
-        return;
+        if (error) {
+          console.error("OAuth callback error:", error);
+          alert("Login failed. Please try again.");
+          window.location.replace("login.html");
+          return;
+        }
+
+        if (!data?.session) {
+          throw new Error("No session returned from OAuth");
+        }
+
+        console.log("OAuth login successful:", data.session.user.id);
+
+        // ✅ Clean URL (remove access_token from address bar)
+        window.history.replaceState({}, document.title, "/");
+
+        // ✅ Redirect to app
+        window.location.replace("index.html");
+
+      } catch (err) {
+        console.error("OAuth processing failed:", err);
+        alert("Authentication error. Please log in again.");
+        window.location.replace("login.html");
       }
-
-      // Optionally, you can load user data here
-      console.log("OAuth user session:", data.session);
-      
-      // Redirect to your main page after login
-      window.location.href = "index.html";
     }
 
     handleOAuthCallback();

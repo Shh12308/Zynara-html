@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Zynara Admin Dashboard</title>
+
+<style>
+:root {
+  --bg: #0f1724;
+  --sidebar: #0b1220;
+  --panel: #0f1724;
+  --border: rgba(255,255,255,.06);
+  --text: #e6eef6;
+  --muted: #9aa4b2;
+  --accent: #22c55e;
+  --danger: #ef4444;
+  --radius: 12px;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Sidebar */
+.sidebar {
+  width: 260px;
+  background: var(--sidebar);
+  border-right: 1px solid var(--border);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar h1 {
+  font-size: 20px;
+  margin: 0 0 24px;
+}
+
+.sidebar button {
+  background: none;
+  border: none;
+  color: var(--text);
+  padding: 12px;
+  border-radius: 8px;
+  text-align: left;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.sidebar button:hover {
+  background: rgba(255,255,255,.05);
+}
+
+.sidebar .logout {
+  margin-top: auto;
+  color: var(--danger);
+}
+
+/* Main */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  font-size: 18px;
+}
+
+.content {
+  padding: 24px;
+  overflow-y: auto;
+}
+
+/* Table */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--sidebar);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+th, td {
+  padding: 14px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  font-size: 14px;
+}
+
+th {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.badge.admin { background: #7c3aed; }
+.badge.user { background: #334155; }
+.badge.banned { background: var(--danger); }
+
+.action {
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.ban { background: var(--danger); color: #fff; }
+.unban { background: var(--accent); color: #000; }
+
+/* Sections */
+.section { display: none; }
+.section.active { display: block; }
+</style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <h1>Zynara Admin</h1>
+<button onclick="show('invites')">✉️ Staff Invites</button>
+  <button onclick="show('users')">👤 Users</button>
+  <button onclick="show('logs')">📜 Audit Logs</button>
+  <button class="logout" onclick="logout()">🚪 Logout</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="header" id="title">Users</div>
+  <div class="content">
+
+<!-- STAFF INVITES -->
+<div id="invites" class="section">
+  <h3 style="margin-bottom:16px">Invite Staff</h3>
+
+  <form id="invite-form" style="display:flex; gap:12px; max-width:420px;">
+    <input
+      id="invite-email"
+      type="email"
+      placeholder="staff@zynara.xyz"
+      required
+      style="flex:1; padding:12px; border-radius:8px; border:1px solid var(--border); background:#081424; color:#fff;"
+    />
+    <button
+      type="submit"
+      style="padding:12px 18px; border-radius:8px; border:none; background:var(--accent); color:#000; cursor:pointer;"
+    >
+      Invite
+    </button>
+  </form>
+
+  <table style="margin-top:24px">
+    <thead>
+      <tr>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Status</th>
+        <th>Created</th>
+      </tr>
+    </thead>
+    <tbody id="invites-body"></tbody>
+  </table>
+</div>
+
+    <!-- USERS -->
+    <div id="users" class="section active">
+      <table>
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Username</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="users-body"></tbody>
+      </table>
+    </div>
+
+    <!-- LOGS -->
+    <div id="logs" class="section">
+      <table>
+        <thead>
+          <tr>
+            <th>Admin</th>
+            <th>Action</th>
+            <th>Target</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody id="logs-body"></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<script src="env.js"></script>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+  if (!window.__ENV__) {
+    throw new Error("env.js not loaded");
+  }
+
+  const {
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
+    RECAPTCHA_SITE_KEY
+  } = window.__ENV__;
+
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* 🔐 Admin Gate */
+const { data: { user } } = await supabase.auth.getUser();
+if (!user) location.href = "admin-login.html";
+
+const { data: me } = await supabase
+  .from("users")
+  .select("role")
+  .eq("id", user.id)
+  .single();
+
+if (me?.role !== "admin") {
+  await supabase.auth.signOut();
+  location.href = "admin-login.html";
+}
+
+/* Navigation */
+window.show = (id) => {
+  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  document.getElementById("title").textContent =
+    id === "users" ? "Users" : "Audit Logs";
+};
+
+/* Load Users */
+async function loadUsers() {
+  const { data } = await supabase
+    .from("users")
+    .select("id,email,username,role,is_banned")
+    .order("created_at", { ascending: false });
+
+  const body = document.getElementById("users-body");
+  body.innerHTML = "";
+
+  data.forEach(u => {
+    body.innerHTML += `
+      <tr>
+        <td>${u.email}</td>
+        <td>${u.username || "-"}</td>
+        <td><span class="badge ${u.role}">${u.role}</span></td>
+        <td>${u.is_banned ? '<span class="badge banned">Banned</span>' : 'Active'}</td>
+        <td>
+          <button class="action ${u.is_banned ? 'unban' : 'ban'}"
+            onclick="toggleBan('${u.id}', ${u.is_banned})">
+            ${u.is_banned ? 'Unban' : 'Ban'}
+          </button>
+        </td>
+      </tr>`;
+  });
+}
+
+inviteForm?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const email = inviteEmail.value.trim().toLowerCase();
+  if (!email) return;
+
+  // Create invite
+  const { data, error } = await supabase
+    .from("staff_invites")
+    .insert({ email, role: "staff" })
+    .select()
+    .single();
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  // Send email
+  await fetch(
+    `${SUPABASE_URL}/functions/v1/smart-processor`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`
+      },
+      body: JSON.stringify({
+        email,
+        token: data.token
+      })
+    }
+  );
+
+  inviteEmail.value = "";
+  loadInvites();
+});
+
+/* Ban / Unban */
+window.toggleBan = async (id, banned) => {
+  await supabase.from("users")
+    .update({ is_banned: !banned })
+    .eq("id", id);
+  loadUsers();
+};
+
+/* Load Logs */
+async function loadLogs() {
+  const { data } = await supabase
+    .from("admin_audit_logs")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  const body = document.getElementById("logs-body");
+  body.innerHTML = "";
+
+  data.forEach(l => {
+    body.innerHTML += `
+      <tr>
+        <td>${l.admin_id}</td>
+        <td>${l.action}</td>
+        <td>${l.target_id || "-"}</td>
+        <td>${new Date(l.created_at).toLocaleString()}</td>
+      </tr>`;
+  });
+}
+
+/* Logout */
+window.logout = async () => {
+  await supabase.auth.signOut();
+  location.href = "admin-login.html";
+};
+
+loadUsers();
+loadLogs();
+</script>
+
+</body>
+</html>

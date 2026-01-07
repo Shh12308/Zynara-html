@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Zynara Admin – Email Campaigns</title>
+
+<style>
+:root {
+  --bg:#0f1724;--panel:#0b1220;--border:#1e293b;
+  --text:#e6eef6;--muted:#94a3b8;--accent:#22c55e;--danger:#ef4444;
+}
+*{box-sizing:border-box;font-family:Inter,system-ui}
+body{margin:0;height:100vh;display:flex;background:var(--bg);color:var(--text)}
+.sidebar{width:260px;background:var(--panel);padding:20px;border-right:1px solid var(--border)}
+.sidebar h1{margin:0 0 20px}
+.sidebar button{width:100%;background:none;border:none;color:var(--text);
+padding:12px;border-radius:8px;text-align:left;cursor:pointer}
+.sidebar button:hover{background:#1e293b}
+.main{flex:1;display:flex;flex-direction:column}
+.header{padding:16px 24px;border-bottom:1px solid var(--border);font-size:18px}
+.content{padding:24px;overflow:auto}
+.panel{background:var(--panel);padding:20px;border-radius:12px;border:1px solid var(--border)}
+input,textarea,select{width:100%;padding:10px;background:#020617;
+border:1px solid var(--border);border-radius:8px;color:var(--text)}
+textarea{min-height:120px}
+button.primary{background:var(--accent);border:none;color:#000;padding:12px 18px;
+border-radius:8px;cursor:pointer}
+button.secondary{background:#1e293b;border:none;color:var(--text);
+padding:12px 18px;border-radius:8px;cursor:pointer}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.checkbox{display:flex;align-items:center;gap:6px}
+.user-list{max-height:220px;overflow:auto;border:1px solid var(--border);
+border-radius:8px;padding:10px}
+.user{display:flex;align-items:center;gap:8px;padding:6px}
+.footer-actions{display:flex;gap:12px;margin-top:20px}
+.status{margin-top:12px;color:var(--muted)}
+</style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <h1>Zynara Admin</h1>
+  <button>Email Campaigns</button>
+  <button onclick="logout()" style="color:var(--danger)">Logout</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="header">Email Campaigns</div>
+  <div class="content">
+
+    <div class="panel">
+      <h2>Compose Email</h2>
+
+      <label>Subject</label>
+      <input id="subject" placeholder="Email subject" />
+
+      <label style="margin-top:12px">Message (HTML allowed)</label>
+      <textarea id="body" placeholder="Write your message..."></textarea>
+
+      <div class="row" style="margin-top:12px">
+        <div class="checkbox">
+          <input type="checkbox" id="sendAll" />
+          <label>Send to ALL users</label>
+        </div>
+      </div>
+
+      <div class="user-list" id="users" style="margin-top:12px"></div>
+
+      <label style="margin-top:12px">Attachments</label>
+      <input type="file" id="attachments" multiple />
+
+      <label style="margin-top:12px">Schedule (optional)</label>
+      <input type="datetime-local" id="schedule" />
+
+      <div class="footer-actions">
+        <button class="primary" onclick="sendNow()">Send Now</button>
+        <button class="secondary" onclick="schedule()">Schedule</button>
+      </div>
+
+      <div class="status" id="status"></div>
+    </div>
+
+  </div>
+</div>
+
+<script src="env.js"></script>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+  if (!window.__ENV__) {
+    throw new Error("env.js not loaded");
+  }
+
+  const {
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
+    RECAPTCHA_SITE_KEY
+  } = window.__ENV__;
+
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const status = document.getElementById("status");
+
+/* 🔐 ADMIN AUTH */
+const { data:{ user } } = await supabase.auth.getUser();
+if(!user) location.href="admin-login.html";
+
+const { data:me } = await supabase.from("users").select("role").eq("id",user.id).single();
+if(me?.role!=="admin"){ await supabase.auth.signOut(); location.href="admin-login.html"; }
+
+/* 👥 LOAD USERS */
+const usersBox=document.getElementById("users");
+const { data:users } = await supabase.from("users").select("id,email").order("created_at",{ascending:false});
+users.forEach(u=>{
+  usersBox.innerHTML+=`
+    <div class="user">
+      <input type="checkbox" value="${u.id}">
+      <span>${u.email}</span>
+    </div>`;
+});
+
+/* 📦 ATTACHMENTS */
+async function getAttachments(){
+  const files=document.getElementById("attachments").files;
+  const arr=[];
+  for(const f of files){
+    const b=await f.arrayBuffer();
+    arr.push({
+      filename:f.name,
+      content:btoa(String.fromCharCode(...new Uint8Array(b)))
+    });
+  }
+  return arr;
+}
+
+/* 📤 SEND NOW */
+window.sendNow=async()=>{
+  status.textContent="Sending...";
+  const ids=[...usersBox.querySelectorAll("input:checked")].map(i=>i.value);
+
+  const res=await fetch(`${EMAIL_FN}?action=send`,{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":`Bearer ${(await supabase.auth.getSession()).data.session.access_token}`
+    },
+    body:JSON.stringify({
+      subject:subject.value,
+      body:body.value,
+      send_all:sendAll.checked,
+      user_ids:ids,
+      attachments:await getAttachments()
+    })
+  });
+
+  status.textContent=res.ok?"Emails sent ✔":"Failed ❌";
+};
+
+/* ⏰ SCHEDULE */
+window.schedule=async()=>{
+  status.textContent="Scheduling...";
+  await fetch(`${EMAIL_FN}?action=schedule`,{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":`Bearer ${(await supabase.auth.getSession()).data.session.access_token}`
+    },
+    body:JSON.stringify({
+      subject:subject.value,
+      body:body.value,
+      send_all:sendAll.checked,
+      user_ids:[...usersBox.querySelectorAll("input:checked")].map(i=>i.value),
+      scheduled_at:schedule.value,
+      attachments:await getAttachments()
+    })
+  });
+  status.textContent="Scheduled ✔";
+};
+
+/* 🚪 LOGOUT */
+window.logout=async()=>{
+  await supabase.auth.signOut();
+  location.href="admin-login.html";
+};
+</script>
+
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zynara Premium Pre-Order</title>
+  <meta name="description" content="Pre-order Zynara Premium — the next-generation multimodal AI built with Hugging Face, ElevenLabs, and Sora-level video generation." />
+  <style>
+    body {
+      background: #0f172a;
+      font-family: 'Poppins', sans-serif;
+      color: #f1f5f9;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+    header {
+      padding: 40px 20px 20px;
+      background: linear-gradient(to right, #1e293b, #334155);
+    }
+    header h1 {
+      font-size: 2.8rem;
+      color: #00e0ff;
+    }
+    .preorder-container {
+      margin: 50px auto;
+      max-width: 500px;
+      background: #1e293b;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 25px rgba(0, 224, 255, 0.1);
+    }
+    .preorder-container h2 {
+      color: #38bdf8;
+      margin-bottom: 20px;
+      font-size: 2rem;
+    }
+    .price {
+      font-size: 2.5rem;
+      margin: 20px 0;
+    }
+    .features {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 30px;
+      text-align: left;
+      font-size: 0.95rem;
+      color: #e2e8f0;
+    }
+    .features li {
+      padding: 8px 0;
+      border-bottom: 1px solid #334155;
+    }
+    .preorder-button {
+      background: linear-gradient(to right, #00e0ff, #38bdf8);
+      color: #0f172a;
+      padding: 15px 30px;
+      border: none;
+      font-size: 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.3s;
+    }
+    .preorder-button:hover {
+      opacity: 0.85;
+    }
+    footer {
+      margin-top: 60px;
+      padding: 40px 20px;
+      font-size: 0.9rem;
+      color: #94a3b8;
+      background: #1e293b;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Zynara Premium Pre-Order</h1>
+  </header>
+
+  <main class="preorder-container">
+    <h2>Pre-Order Now</h2>
+    <p class="price">£499 <span>one-time</span></p>
+    <ul class="features">
+      <li>Access to Zynara Super Intelligence+</li>
+      <li>All-in-one multimodal AI: Text, Vision, Audio, Code, 3D</li>
+      <li>Image & Video generation (Sora 2-level realism)</li>
+      <li>ElevenLabs voice synthesis & cloning</li>
+      <li>AI music generation & editing</li>
+      <li>Supabase memory & adaptive learning</li>
+      <li>Offline mode & PWA integration</li>
+      <li>Early access to new model drops</li>
+    </ul>
+    <button class="preorder-button" id="preorderBtn">Pre-Order for £499</button>
+  </main>
+
+  <footer>
+    &copy; 2025 Zynara AI — All rights reserved.
+  </footer>
+
+<script src="env.js"></script>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+  if (!window.__ENV__) {
+    throw new Error("env.js not loaded");
+  }
+
+  const {
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
+    RECAPTCHA_SITE_KEY
+  } = window.__ENV__;
+
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    document.getElementById("preorderBtn").addEventListener("click", async () => {
+      try {
+        // Web payment redirect (e.g., Gumroad one-time checkout)
+        const checkoutUrl = "https://zynara1.gumroad.com/l/epszfs?success=true";
+        window.location.href = checkoutUrl;
+
+        // Optional: Update Supabase plan immediately (can also wait for payment confirmation)
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await fetch(`${supabaseUrl}/functions/v1/update-plan`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId: user.id,
+              email: user.email,
+              plan: "preorder_499",
+              provider: "gumroad"
+            })
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Something went wrong. Please try again.");
+      }
+    });
+
+    // Optional: detect payment success via query param
+    if (window.location.search.includes("success=true")) {
+      alert("✅ Thank you! Your pre-order is confirmed.");
+    }
+  </script>
+</body>
+</html>
