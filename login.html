@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>Login – Zynara</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
 
 <style>
   /* ================== VARIABLES ================== */
@@ -169,6 +170,11 @@
 
     <div class="social-logins" aria-label="Social login options">
       <button id="google-login" type="button"><img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="" class="social-icon" /> Continue with Google</button>
+
+<button id="wallet-login" type="button">
+  <img src="https://www.svgrepo.com/show/331345/metamask.svg" class="social-icon" />
+  Continue with Wallet
+</button>
      
       <button id="github-login" type="button"><img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="" class="social-icon" /> Continue with GitHub</button>
       <button id="discord-login" type="button"><img src="https://www.svgrepo.com/show/353655/discord-icon.svg" alt="" class="social-icon" /> Continue with Discord</button>
@@ -344,6 +350,55 @@
     if (error) errorMsg.textContent = error.message;
     else successMsg.textContent = "Reset email sent!";
   });
+
+const walletBtn = document.getElementById("wallet-login");
+
+walletBtn?.addEventListener("click", async () => {
+  errorMsg.textContent = "";
+  successMsg.textContent = "";
+  setLoading(true);
+
+  try {
+    if (!window.ethereum) {
+      throw new Error("No wallet found. Please install MetaMask.");
+    }
+
+    // 1️⃣ Connect wallet
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const address = await signer.getAddress();
+
+    // 2️⃣ Ask Supabase for SIWE message
+    const { data: siweData, error: siweError } =
+      await supabase.auth.signInWithWeb3({
+        chainId: 1, // mainnet (change if needed)
+        address
+      });
+
+    if (siweError) throw siweError;
+
+    // 3️⃣ Sign the message Supabase gives you
+    const signature = await signer.signMessage(siweData.message);
+
+    // 4️⃣ Verify signature with Supabase
+    const { error: verifyError } =
+      await supabase.auth.verifyWeb3({
+        message: siweData.message,
+        signature
+      });
+
+    if (verifyError) throw verifyError;
+
+    successMsg.textContent = "Wallet login successful!";
+    setTimeout(() => location.href = "index.html", 800);
+
+  } catch (err) {
+    console.error(err);
+    errorMsg.textContent = err.message || "Wallet login failed.";
+  } finally {
+    setLoading(false);
+  }
+});
 
   // OAuth
   [["google", googleBtn], ["github", githubBtn], ["discord", discordBtn]].forEach(

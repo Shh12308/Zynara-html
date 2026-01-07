@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <!-- Google reCAPTCHA v3 -->
 <script src="https://www.google.com/recaptcha/api.js?render=6LckZcIrAAAAABOqm7t5-CTlykQblH_RrgWf19U2"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
   <style>
 :root {
   --bg: #0f1724;
@@ -231,6 +231,11 @@ meter {
         <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="" class="social-icon" />
         Sign up with Google
       </button>
+
+<button id="signup-wallet" type="button" aria-label="Sign up with Wallet">
+  <img src="https://www.svgrepo.com/show/331345/metamask.svg" alt="" class="social-icon" />
+  Sign up with Wallet
+</button>
 
       <button id="signup-github" type="button" aria-label="Sign up with GitHub">
         <img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="" class="social-icon" />
@@ -466,6 +471,57 @@ form.addEventListener("submit", async (e) => {
     errorMsg.textContent = err.message || "Signup failed.";
   } finally {
     submitBtn.disabled = false;
+  }
+});
+
+/* =========================
+   Wallet Signup / Login (SIWE)
+   ========================= */
+const walletSignupBtn = document.getElementById("signup-wallet");
+
+walletSignupBtn?.addEventListener("click", async () => {
+  errorMsg.textContent = "";
+  successMsg.textContent = "";
+
+  try {
+    if (!window.ethereum) {
+      throw new Error("No wallet detected. Please install MetaMask or a Web3 wallet.");
+    }
+
+    // 1️⃣ Connect wallet
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const address = await signer.getAddress();
+
+    // 2️⃣ Request SIWE message from Supabase
+    const { data: siweData, error: siweError } =
+      await supabase.auth.signInWithWeb3({
+        chainId: 1, // Ethereum mainnet (change if needed)
+        address
+      });
+
+    if (siweError) throw siweError;
+
+    // 3️⃣ Sign message
+    const signature = await signer.signMessage(siweData.message);
+
+    // 4️⃣ Verify signature with Supabase
+    const { error: verifyError } =
+      await supabase.auth.verifyWeb3({
+        message: siweData.message,
+        signature
+      });
+
+    if (verifyError) throw verifyError;
+
+    successMsg.textContent = "Wallet connected successfully!";
+    setTimeout(() => {
+      window.location.href = "index.html";
+    }, 800);
+
+  } catch (err) {
+    console.error(err);
+    errorMsg.textContent = err.message || "Wallet signup failed.";
   }
 });
 
