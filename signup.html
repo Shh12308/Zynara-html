@@ -448,13 +448,14 @@ form.addEventListener("submit", async (e) => {
   try {
     await grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: "signup" });
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { full_name: name, username }
-      }
-    });
+const { data, error } = await supabase.auth.signUp({
+  email,
+  password,
+  options: {
+    data: { full_name: name, username },
+    emailRedirectTo: "https://zynara.xyz/confirm.html"
+  }
+});
 
     if (error) throw error;
 
