@@ -1,0 +1,2088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZyNara AI</title>
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiWllOYXJhIEFJIiwic2hvcnRfbmFtZSI6Ilp5TmFyYSIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRjb2xvciI6IiNmZmZmZmYiLCJ0aGVtZV9jb2xvciI6IiMwMDAwMDAiLCJvcmllbnRhdGlvbiI6InBvcnRyYWl0LXByaW1hcnkifQ==">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+
+<!-- Markdown -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<!-- Using only Highlight.js for syntax highlighting (removed Prism.js) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/html.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+
+    <link rel="stylesheet" href="index.css">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+</head>
+<body data-theme="light">
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>
+                <svg class="svg-icon" viewBox="0 0 24 24" style="margin-right: 8px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                ZyNara AI
+            </h2>
+        </div>
+        
+        <!-- User Profile Section -->
+        <div id="user-profile" class="user-profile" style="display: none;">
+            <div class="user-avatar" id="user-avatar">U</div>
+            <div class="user-info">
+                <div class="user-name" id="user-name">User</div>
+                <div class="user-email" id="user-email">user@example.com</div>
+            </div>
+            <button id="sign-out-btn" class="sign-out-btn" title="Sign Out">
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M16 17v-3H9v-4h7V7l5 5-5 5M14 2a2 2 0 0 1 2 2v10h-2V4H5v16h9v2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9z"/></svg>
+            </button>
+        </div>
+        
+        <!-- Login Button -->
+        <button id="login-btn" class="login-btn">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+            Sign In to Save Chats
+        </button>
+        
+        <div class="install-prompt" id="install-prompt">
+            <div class="install-prompt-content">
+                <span>Install ZyNara AI for best experience</span>
+                <button id="install-button">Install</button>
+            </div>
+        </div>
+        
+        <button id="new-chat-btn">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            New Chat
+        </button>
+        <button id="new-folder-btn">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/></svg>
+            New Folder
+        </button>
+        
+        <div class="theme-selector" id="theme-selector">
+            <div class="theme-selector-header">
+                <span>Themes</span>
+                <svg class="svg-icon" style="transform: rotate(-90deg); transition: transform 0.3s;" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+            </div>
+            <div class="theme-options" id="theme-options">
+                <!-- Theme options will be populated by JavaScript -->
+            </div>
+        </div>
+        
+        <div class="sidebar-tabs">
+            <div class="sidebar-tab active" data-tab="chats">Chats</div>
+            <div class="sidebar-tab" data-tab="gallery">Gallery</div>
+        </div>
+
+        <div class="sidebar-content active" id="chats-content">
+            <div id="chat-history"></div>
+        </div>
+
+        <div class="sidebar-content" id="gallery-content">
+            <div id="image-gallery"></div>
+        </div>
+
+        <hr>
+
+        <nav>
+            <a href="settings.html">
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
+                Settings
+            </a>
+            <a href="prem.html">
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0,1.41-.41,1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                Pre-Order
+            </a>
+      <a href="contact.html">
+                
+                Contact
+            </a>
+        </nav>
+    </aside>
+
+    <div class="main-wrapper">
+        <main class="main-content">
+            <header class="main-header">
+                <div class="main-header-left">
+                    <button id="hamburger-menu" title="Toggle Sidebar">
+                        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+                    </button>
+                </div>
+                <div class="main-header-right">
+                    <button id="action-btn" title="Actions">
+                        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                    </button>
+                </div>
+            </header>
+            <div id="chat-messages">
+                <div class="welcome-screen" id="welcome-screen">
+                    <svg class="robot-icon" viewBox="0 0 24 24">
+                        <path d="M12,2A2,2 0 0,1 14,4C14,4.74 13.6,5.39 13,5.73V7H14A7,7 0 0,1 21,14H22A1,1 0 0,1 23,15V18A1,1 0 0,1 22,19H21V20A2,2 0 0,1 19,22H5A2,2 0 0,1 3,20V19H2A1,1 0 0,1 1,18V15A1,1 0 0,1 2,14H3A7,7 0 0,1 10,7H11V5.73C10.4,5.39 10,4.74 10,4A2,2 0 0,1 12,2M7.5,13A2.5,2.5 0 0,0 5,15.5A2.5,2.5 0 0,0 7.5,18A2.5,2.5 0 0,0 10,15.5A2.5,2.5 0 0,0 7.5,13M16.5,13A2.5,2.5 0 0,0 14,15.5A2.5,2.5 0 0,0 16.5,18A2.5,2.5 0 0,0 19,15.5A2.5,2.5 0 0,0 16.5,13Z" />
+                    </svg>
+                    <div class="welcome-text">Hello! How can I help you today?</div>
+                </div>
+            </div>
+            <div class="input-area">
+                <textarea id="user-input" placeholder="Type a message..."></textarea>
+                <div class="file-upload-btn">
+                    <input type="file" id="file-upload-input" class="file-upload-input" multiple accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt">
+                    <button id="file-upload-btn" title="Upload File">
+                        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    </button>
+                </div>
+                <button id="mic-btn" title="Hold to Record">
+                    <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+                </button>
+                <button id="send-btn" title="Send">
+                    <svg class="svg-icon" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                </button>
+                <button id="pause-btn" title="Pause">
+                    <svg class="svg-icon" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                </button>
+            </div>
+            <div id="uploaded-files" class="uploaded-files"></div>
+        </main>
+    </div>
+    
+    <!-- Custom Voice Visualizer -->
+    <div id="voice-visualizer-container" class="voice-visualizer-container">
+        <div class="visualizer-title">Recording...</div>
+        <div class="voice-visualizer" id="voice-visualizer">
+            <!-- Voice bars will be dynamically generated -->
+        </div>
+        <div class="recording-timer" id="recording-timer">00:00</div>
+        <button class="stop-recording-btn" id="stop-recording-btn">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+        </button>
+    </div>
+    
+    <!-- New Chat in Folder Modal -->
+    <div id="new-chat-modal" class="new-chat-modal">
+        <div class="new-chat-dialog">
+            <h3>Start New Chat</h3>
+            <p>Choose a folder for this new chat:</p>
+            <select id="folder-select" class="folder-select">
+                <!-- Folders will be populated by JavaScript -->
+            </select>
+            <div class="new-chat-dialog-buttons">
+                <button id="cancel-new-chat" class="cancel-new-chat">Cancel</button>
+                <button id="confirm-new-chat" class="confirm-new-chat">Start Chat</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="overlay" id="overlay"></div>
+    <div id="action-sheet">
+        <div class="sheet-content">
+            <h3>Actions</h3>
+            <ul>
+                <li data-prompt="Generate me an image of ">
+                    <svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                    Generate Image
+                </li>
+                <li data-prompt="Search web for ">
+                    <svg class="svg-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                    Search Web
+                </li>
+                <li data-prompt="Generate code for ">
+                    <svg class="svg-icon" viewBox="0 0 24 24"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
+                    Generate Code
+                </li>
+                <li id="cancel-action">
+                    <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                    Cancel
+                </li>
+            </ul>
+        </div>
+    </div>
+    
+    <div id="context-menu">
+        <button id="edit-message-btn">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+            Edit
+        </button>
+        <button id="copy-message-btn">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+            Copy
+        </button>
+    </div>
+    
+    <div id="chat-context-menu">
+        <button id="move-chat-btn">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M9 3L5 6.99h3V14h2V6.99h3L9 3zm7 14.01V10h-2v7.01h-3L15 21l4-3.99h-3z"/></svg>
+            Move to Folder
+        </button>
+        <button id="delete-chat-btn-context">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+            Delete
+        </button>
+    </div>
+
+<!-- Zynara Consent Banner -->
+<div id="consent-banner">
+  <p>
+    ⚠️ <strong>Disclaimer:</strong> Zynara is an experimental AI system and may generate inaccurate information.<br>
+    🍪 We use cookies & local storage to improve your experience.<br>
+    By continuing, you agree to our
+    <a href="priv.html" style="color:#38bdf8; text-decoration:underline;">Privacy Policy</a>.
+  </p>
+  <button id="accept-consent">Accept & Continue</button>
+</div>
+
+<script src="env.js"></script>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+  if (!window.__ENV__) {
+    throw new Error("env.js not loaded");
+  }
+
+  const {
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
+    RECAPTCHA_SITE_KEY,
+    API_URL
+  } = window.__ENV__;
+
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('data:text/javascript,' + encodeURIComponent(`
+                    self.addEventListener('install', event => {
+                        self.skipWaiting();
+                    });
+                    
+                    self.addEventListener('activate', event => {
+                        event.waitUntil(
+                            clients.claim()
+                        );
+                    });
+                    
+                    self.addEventListener('fetch', event => {
+                        event.respondWith(
+                            fetch(event.request).catch(() => {
+                                return new Response('Offline');
+                            })
+                        );
+                    });
+                `))
+                .then(registration => {
+                    console.log('ServiceWorker registration successful');
+                })
+                .catch(err => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Elements ---
+            const body = document.body;
+            const chatMessages = document.getElementById('chat-messages');
+            const userInput = document.getElementById('user-input');
+            const sendBtn = document.getElementById('send-btn');
+            const pauseBtn = document.getElementById('pause-btn');
+            const newChatBtn = document.getElementById('new-chat-btn');
+            const newFolderBtn = document.getElementById('new-folder-btn');
+            const actionBtn = document.getElementById('action-btn');
+            const actionSheet = document.getElementById('action-sheet');
+            const overlay = document.getElementById('overlay');
+            const micBtn = document.getElementById('mic-btn');
+            const voiceVisualizerContainer = document.getElementById('voice-visualizer-container');
+            const voiceVisualizer = document.getElementById('voice-visualizer');
+            const recordingTimer = document.getElementById('recording-timer');
+            const stopRecordingBtn = document.getElementById('stop-recording-btn');
+            const fileUploadInput = document.getElementById('file-upload-input');
+            const fileUploadBtn = document.getElementById('file-upload-btn');
+            const uploadedFilesContainer = document.getElementById('uploaded-files');
+            const hamburgerMenu = document.getElementById('hamburger-menu');
+            const sidebar = document.getElementById('sidebar');
+            const chatHistoryContainer = document.getElementById('chat-history');
+            const imageGalleryContainer = document.getElementById('image-gallery');
+            const welcomeScreen = document.getElementById('welcome-screen');
+            const contextMenu = document.getElementById('context-menu');
+            const chatContextMenu = document.getElementById('chat-context-menu');
+            const editMessageBtn = document.getElementById('edit-message-btn');
+            const copyMessageBtn = document.getElementById('copy-message-btn');
+            const moveChatBtn = document.getElementById('move-chat-btn');
+            const deleteChatBtnContext = document.getElementById('delete-chat-btn-context');
+            const sidebarTabs = document.querySelectorAll('.sidebar-tab');
+            const chatsContent = document.getElementById('chats-content');
+            const galleryContent = document.getElementById('gallery-content');
+            const themeSelector = document.getElementById('theme-selector');
+            const themeOptions = document.getElementById('theme-options');
+            const installPrompt = document.getElementById('install-prompt');
+            const installButton = document.getElementById('install-button');
+            
+            // Auth Elements
+            const loginBtn = document.getElementById('login-btn');
+            const userProfile = document.getElementById('user-profile');
+            const userAvatar = document.getElementById('user-avatar');
+            const userName = document.getElementById('user-name');
+            const userEmail = document.getElementById('user-email');
+            const signOutBtn = document.getElementById('sign-out-btn');
+            
+            // New Chat Modal Elements
+            const newChatModal = document.getElementById('new-chat-modal');
+            const folderSelect = document.getElementById('folder-select');
+            const cancelNewChatBtn = document.getElementById('cancel-new-chat');
+            const confirmNewChatBtn = document.getElementById('confirm-new-chat');
+
+            // --- State ---
+            let deferredPrompt;
+            let mediaRecorder;
+            let audioContext;
+            let analyser;
+            let microphone;
+            let currentResponseController = null;
+            let isGeneratingResponse = false;
+            let lastUserPrompt = null;
+            let animationId;
+            let currentChatId = null;
+            let chatToMoveId = null;
+            let folders = {
+                'unfiled': { name: 'Unfiled', chats: {} }
+            };
+            let imageGallery = [];
+            let messageIdCounter = 0;
+            let messagePairToEdit = null;
+            let expandedFolderId = null;
+            let longPressTimer;
+            let isLongPress = false;
+            let longPressTarget = null;
+            let recordingStartTime;
+            let recordingInterval;
+            let uploadedFiles = [];
+            let voiceBars = [];
+         
+            let currentUser = null;
+            
+            const themes = [
+                { id: 'light', name: 'Light', preview: '#f0f2f5' },
+                { id: 'dark', name: 'Dark', preview: '#18191a' },
+                { id: 'system', name: 'System', preview: 'linear-gradient(to right, #f0f2f5 50%, #18191a 50%)' },
+                { id: 'blue', name: 'Blue', preview: '#e6f2ff' },
+                { id: 'purple', name: 'Purple', preview: '#f3e5f5' },
+                { id: 'green', name: 'Green', preview: '#e8f5e9' },
+                { id: 'red', name: 'Red', preview: '#ffebee' },
+                { id: 'teal', name: 'Teal', preview: '#e0f2f1' },
+                { id: 'orange', name: 'Orange', preview: '#fff3e0' },
+                { id: 'pink', name: 'Pink', preview: '#fce4ec' },
+                { id: 'indigo', name: 'Indigo', preview: '#e8eaf6' }
+            ];
+
+            // Updated API URL to match the provided Python endpoint
+            const API_ENDPOINT = 'https://billy-free-ai-production.up.railway.app/ask/universal'; 
+            const STT_URL = 'https://zynara-ai-production.up.railway.app/stt';
+
+            // --- Authentication Functions ---
+            const checkAuthState = async () => {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session) {
+                    currentUser = session.user;
+                    showUserProfile(session.user);
+                    loadUserChats();
+                } else {
+                    showLoginButton();
+                }
+            };
+
+            const showLoginButton = () => {
+                loginBtn.style.display = 'flex';
+                userProfile.style.display = 'none';
+            };
+
+            const hideLoginButton = () => {
+                loginBtn.style.display = 'none';
+            };
+
+            const showUserProfile = (user) => {
+                userProfile.style.display = 'flex';
+                userAvatar.textContent = user.email.charAt(0).toUpperCase();
+                userName.textContent = user.user_metadata?.full_name || user.email.split('@')[0];
+                userEmail.textContent = user.email;
+            };
+
+            const hideUserProfile = () => {
+                userProfile.style.display = 'none';
+            };
+
+            const signIn = () => {
+                // Redirect to login.html for authentication
+                window.location.href = 'login.html';
+            };
+
+            const signOut = async () => {
+                const { error } = await supabase.auth.signOut();
+                if (error) {
+                    console.error('Error signing out:', error);
+                } else {
+                    currentUser = null;
+                    hideUserProfile();
+                    showLoginButton();
+                    clearChat();
+                }
+            };
+
+            // --- Supabase Storage Functions ---
+            const uploadToSupabase = async (file, folder = 'chat-media') => {
+                if (!currentUser) {
+                    showToast('Please sign in to upload files');
+                    return null;
+                }
+
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${currentUser.id}/${Date.now()}.${fileExt}`;
+                
+                const { data, error } = await supabase.storage
+                    .from(folder)
+                    .upload(fileName, file);
+
+                if (error) {
+                    console.error('Error uploading file:', error);
+                    showToast('Failed to upload file');
+                    return null;
+                }
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from(folder)
+                    .getPublicUrl(fileName);
+
+                return publicUrl;
+            };
+
+            const downloadFromSupabase = async (url, filename) => {
+                try {
+                    // Extract file path from URL
+                    const urlObj = new URL(url);
+                    const pathParts = urlObj.pathname.split('/');
+                    const filePath = pathParts.slice(pathParts.indexOf('chat-media') + 1).join('/');
+                    
+                    const { data, error } = await supabase.storage
+                        .from('chat-media')
+                        .download(filePath);
+
+                    if (error) {
+                        console.error('Error downloading file:', error);
+                        throw error;
+                    }
+
+                    // Create blob and download
+                    const blob = new Blob([data]);
+                    const downloadUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = downloadUrl;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(downloadUrl);
+
+                    showToast('File downloaded successfully!');
+                } catch (error) {
+                    console.error('Error downloading file:', error);
+                    showToast('Failed to download file');
+                }
+            };
+
+            // --- User Chat Functions ---
+            const saveUserChats = async () => {
+                if (!currentUser) return;
+
+                const { error } = await supabase
+                    .from('user_chats')
+                    .upsert({
+                        user_id: currentUser.id,
+                        folders: folders,
+                        image_gallery: imageGallery
+                    });
+
+                if (error) {
+                    console.error('Error saving chats:', error);
+                }
+            };
+
+            const loadUserChats = async () => {
+                if (!currentUser) return;
+
+                const { data, error } = await supabase
+                    .from('user_chats')
+                    .select('folders, image_gallery')
+                    .eq('user_id', currentUser.id)
+                    .single();
+
+                if (error && error.code !== 'PGRST116') {
+                    console.error('Error loading chats:', error);
+                    return;
+                }
+
+                if (data) {
+                    folders = data.folders || { 'unfiled': { name: 'Unfiled', chats: {} } };
+                    imageGallery = data.image_gallery || [];
+                }
+
+                displayFoldersAndChats();
+                displayImageGallery();
+            };
+
+            // --- PWA Install Prompt ---
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                installPrompt.classList.add('visible');
+            });
+
+            installButton.addEventListener('click', async () => {
+                if (!deferredPrompt) {
+                    return;
+                }
+                
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                
+                if (outcome === 'accepted') {
+                    console.log('User accepted install prompt');
+                } else {
+                    console.log('User dismissed install prompt');
+                }
+                
+                deferredPrompt = null;
+                installPrompt.classList.remove('visible');
+            });
+
+            // --- Functions ---
+            const renderMessageContent = (content, messageElement) => {
+                 if (typeof content === 'string') {
+                    messageElement.innerHTML = marked.parse(content, {
+                        gfm: true,
+                        breaks: true
+                    });
+                } else if (content.type === 'image') {
+                    const mediaContainer = document.createElement('div');
+                    mediaContainer.className = 'media-container';
+                    
+                    const img = document.createElement('img');
+                    img.src = content.url;
+                    img.alt = "Generated Image";
+                    img.loading = "lazy";
+
+                    // Handle broken images (404s)
+                    img.onerror = () => {
+                        console.warn("Failed to load image, removing from view:", content.url);
+                        mediaContainer.remove();
+                        const index = imageGallery.indexOf(content.url);
+                        if (index > -1) {
+                            imageGallery.splice(index, 1);
+                            saveUserChats();
+                            displayImageGallery();
+                        }
+                    };
+                    
+                    const downloadBtn = document.createElement('button');
+                    downloadBtn.className = 'media-download-btn';
+                    downloadBtn.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>';
+                    downloadBtn.title = 'Download Image';
+                    downloadBtn.addEventListener('click', () => downloadFromSupabase(content.url, 'image.png'));
+                    
+                    mediaContainer.appendChild(img);
+                    mediaContainer.appendChild(downloadBtn);
+                    messageElement.appendChild(mediaContainer);
+                } else if (content.type === 'video') {
+                    const mediaContainer = document.createElement('div');
+                    mediaContainer.className = 'media-container';
+                    
+                    const video = document.createElement('video');
+                    video.controls = true;
+                    const source = document.createElement('source');
+                    source.src = content.url;
+                    source.type = 'video/mp4';
+                    
+                    // Handle broken videos
+                    source.onerror = () => {
+                         mediaContainer.remove();
+                         const index = imageGallery.indexOf(content.url);
+                         if (index > -1) { /* handle removal */ }
+                    };
+                    
+                    video.appendChild(source);
+                    
+                    const downloadBtn = document.createElement('button');
+                    downloadBtn.className = 'media-download-btn';
+                    downloadBtn.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>';
+                    downloadBtn.title = 'Download Video';
+                    downloadBtn.addEventListener('click', () => downloadFromSupabase(content.url, 'video.mp4'));
+                    
+                    mediaContainer.appendChild(video);
+                    mediaContainer.appendChild(downloadBtn);
+                    messageElement.appendChild(mediaContainer);
+                } else if (content.type === 'audio') {
+                    const mediaContainer = document.createElement('div');
+                    mediaContainer.className = 'media-container';
+                    
+                    const audio = document.createElement('audio');
+                    audio.controls = true;
+                    const source = document.createElement('source');
+                    source.src = content.url;
+                    source.type = 'audio/mpeg';
+                    audio.appendChild(source);
+                    
+                    const downloadBtn = document.createElement('button');
+                    downloadBtn.className = 'media-download-btn';
+                    downloadBtn.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>';
+                    downloadBtn.title = 'Download Audio';
+                    downloadBtn.addEventListener('click', () => downloadFromSupabase(content.url, 'audio.mp3'));
+                    
+                    mediaContainer.appendChild(audio);
+                    mediaContainer.appendChild(downloadBtn);
+                    messageElement.appendChild(mediaContainer);
+                } else if (content.type === 'code') {
+                    const lang = content.language || 'plaintext';
+                    
+                    // Create enhanced code block
+                    const codeBlock = document.createElement('div');
+                    codeBlock.className = 'code-block';
+                    
+                    // Create code header with language indicator and actions
+                    const codeHeader = document.createElement('div');
+                    codeHeader.className = 'code-header';
+                    
+                    const languageLabel = document.createElement('div');
+                    languageLabel.className = 'code-language';
+                    
+                    // Add language icon
+                    const languageIcon = document.createElement('div');
+                    languageIcon.className = 'code-language-icon';
+                    
+                    // Set icon color based on language
+                    const languageColors = {
+                        'javascript': '#f7df1e',
+                        'python': '#3776ab',
+                        'html': '#e34c26',
+                        'css': '#1572b6',
+                        'json': '#000000',
+                        'plaintext': '#555555'
+                    };
+                    
+                    languageIcon.style.backgroundColor = languageColors[lang] || languageColors['plaintext'];
+                    
+                    const languageText = document.createElement('span');
+                    languageText.textContent = lang.toUpperCase();
+                    
+                    languageLabel.appendChild(languageIcon);
+                    languageLabel.appendChild(languageText);
+                    
+                    const codeActions = document.createElement('div');
+                    codeActions.className = 'code-actions';
+                    
+                    // Copy button
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = 'code-action-btn';
+                    copyBtn.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>';
+                    copyBtn.title = 'Copy Code';
+                    copyBtn.addEventListener('click', () => {
+                        navigator.clipboard.writeText(content.code).then(() => {
+                            showToast('Code copied to clipboard!');
+                        }).catch(err => {
+                            console.error('Failed to copy code: ', err);
+                        });
+                    });
+                    
+                    codeActions.appendChild(copyBtn);
+                    
+                    // Preview button for supported languages
+                    if (lang === 'html' || lang === 'javascript' || lang === 'css') {
+                        const previewBtn = document.createElement('button');
+                        previewBtn.className = 'code-action-btn';
+                        previewBtn.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>';
+                        previewBtn.title = 'Preview Code';
+                        previewBtn.addEventListener('click', () => {
+                            showCodePreview(content.code, lang);
+                        });
+                        
+                        codeActions.appendChild(previewBtn);
+                    }
+                    
+                    codeHeader.appendChild(languageLabel);
+                    codeHeader.appendChild(codeActions);
+                    
+                    // Create code content area
+                    const codeContent = document.createElement('div');
+                    codeContent.className = 'code-content';
+                    
+                    const preElement = document.createElement('pre');
+                    const codeElement = document.createElement('code');
+                    codeElement.className = `language-${lang}`;
+                    codeElement.textContent = content.code;
+                    
+                    preElement.appendChild(codeElement);
+                    codeContent.appendChild(preElement);
+                    
+                    // Assemble code block
+                    codeBlock.appendChild(codeHeader);
+                    codeBlock.appendChild(codeContent);
+                    
+                    messageElement.appendChild(codeBlock);
+                    
+                    // Highlight code
+                    hljs.highlightElement(codeElement);
+                } else if (content.type === 'search_result') {
+                    const container = document.createElement('div');
+                    container.className = 'search-result-container';
+                    const title = document.createElement('strong');
+                    title.textContent = 'Web Search Results:';
+                    container.appendChild(title);
+
+                    if (Array.isArray(content.data)) {
+                        content.data.forEach(result => {
+                            const item = document.createElement('div');
+                            item.className = 'search-item';
+                            
+                            const link = document.createElement('a');
+                            link.href = result.url || result.link || '#';
+                            link.target = '_blank';
+                            link.className = 'search-title';
+                            link.textContent = result.title || 'Untitled';
+                            
+                            const snippet = document.createElement('span');
+                            snippet.className = 'search-snippet';
+                            snippet.textContent = result.body || result.snippet || 'No description.';
+                            
+                            item.appendChild(link);
+                            item.appendChild(snippet);
+                            container.appendChild(item);
+                        });
+                    } else {
+                        const fallback = document.createElement('div');
+                        fallback.textContent = JSON.stringify(content.data);
+                        container.appendChild(fallback);
+                    }
+                    messageElement.appendChild(container);
+                } else if (content.type === 'code_result') {
+                    const container = document.createElement('div');
+                    container.className = 'code-execution-output';
+                    if (content.data && content.data.stderr) {
+                        container.classList.add('code-execution-error');
+                        container.textContent = content.data.stderr || content.data;
+                    } else {
+                        container.textContent = content.data.stdout || content.data.output || JSON.stringify(content.data);
+                    }
+                    messageElement.appendChild(container);
+                }
+            };
+            
+            // Function to show code preview
+            const showCodePreview = (code, language) => {
+                const previewModal = document.createElement('div');
+                previewModal.className = 'code-preview-modal';
+                
+                const previewHeader = document.createElement('div');
+                previewHeader.className = 'code-preview-header';
+                
+                const previewTitle = document.createElement('div');
+                previewTitle.className = 'code-preview-title';
+                previewTitle.textContent = `${language.toUpperCase()} Preview`;
+                
+                const closeBtn = document.createElement('button');
+                closeBtn.className = 'close-preview-btn';
+                closeBtn.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
+                closeBtn.addEventListener('click', () => {
+                    document.body.removeChild(previewModal);
+                });
+                
+                previewHeader.appendChild(previewTitle);
+                previewHeader.appendChild(closeBtn);
+                
+                const previewContent = document.createElement('div');
+                previewContent.className = 'code-preview-content';
+                
+                if (language === 'html') {
+                    const iframe = document.createElement('iframe');
+                    iframe.className = 'code-preview-iframe';
+                    iframe.srcdoc = code;
+                    previewContent.appendChild(iframe);
+                } else {
+                    // For non-HTML code, just show it in a formatted block
+                    const preElement = document.createElement('pre');
+                    preElement.className = 'code-preview-code';
+                    
+                    const codeElement = document.createElement('code');
+                    codeElement.className = `language-${language}`;
+                    codeElement.textContent = code;
+                    
+                    preElement.appendChild(codeElement);
+                    previewContent.appendChild(preElement);
+                    
+                    // Highlight code
+                    hljs.highlightElement(codeElement);
+                }
+                
+                previewModal.appendChild(previewHeader);
+                previewModal.appendChild(previewContent);
+                
+                // Add event listener to close when clicking outside
+                previewModal.addEventListener('click', (e) => {
+                    if (e.target === previewModal) {
+                        document.body.removeChild(previewModal);
+                    }
+                });
+                
+                document.body.appendChild(previewModal);
+            };
+            
+            // Function to show toast notifications
+            const showToast = (message) => {
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.textContent = message;
+                
+                document.body.appendChild(toast);
+                
+                // Trigger animation
+                setTimeout(() => {
+                    toast.classList.add('visible');
+                }, 10);
+                
+                // Remove after 3 seconds
+                setTimeout(() => {
+                    toast.classList.remove('visible');
+                    setTimeout(() => {
+                        document.body.removeChild(toast);
+                    }, 300);
+                }, 3000);
+            };
+
+            // --- File Upload Functions ---
+            const handleFileUpload = async (files) => {
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    uploadedFiles.push(file);
+                    displayUploadedFile(file);
+                }
+            };
+
+            const displayUploadedFile = (file) => {
+                const fileElement = document.createElement('div');
+                fileElement.className = 'uploaded-file';
+                
+                const fileName = document.createElement('span');
+                fileName.className = 'uploaded-file-name';
+                fileName.textContent = file.name;
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-file-btn';
+                removeBtn.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
+                removeBtn.addEventListener('click', () => {
+                    removeUploadedFile(file, fileElement);
+                });
+                
+                fileElement.appendChild(fileName);
+                fileElement.appendChild(removeBtn);
+                uploadedFilesContainer.appendChild(fileElement);
+            };
+
+            const removeUploadedFile = (file, fileElement) => {
+                const index = uploadedFiles.indexOf(file);
+                if (index > -1) {
+                    uploadedFiles.splice(index, 1);
+                }
+                uploadedFilesContainer.removeChild(fileElement);
+            };
+
+            const clearUploadedFiles = () => {
+                uploadedFiles = [];
+                uploadedFilesContainer.innerHTML = '';
+            };
+
+            // --- Voice Recording Functions ---
+            const startRecording = async () => {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    const audioChunks = [];
+
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    analyser = audioContext.createAnalyser();
+                    microphone = audioContext.createMediaStreamSource(stream);
+                    microphone.connect(analyser);
+                    analyser.fftSize = 256;
+                    
+                    const bufferLength = analyser.frequencyBinCount;
+                    const dataArray = new Uint8Array(bufferLength);
+
+                    // Show visualizer
+                    voiceVisualizerContainer.classList.add('active');
+                    recordingStartTime = Date.now();
+                    
+                    // Update timer
+                    recordingInterval = setInterval(updateRecordingTimer, 1000);
+                    
+                    // Animate voice bars
+                    const animateBars = () => {
+                        animationId = requestAnimationFrame(animateBars);
+                        analyser.getByteFrequencyData(dataArray);
+                        
+                        // Update bars based on frequency data
+                        for (let i = 0; i < voiceBars.length; i++) {
+                            const dataIndex = Math.floor(i * bufferLength / voiceBars.length);
+                            const value = dataArray[dataIndex];
+                            const height = Math.max(4, (value / 255) * 60);
+                            voiceBars[i].style.height = `${height}px`;
+                        }
+                    };
+                    animateBars();
+
+                    mediaRecorder.ondataavailable = event => {
+                        audioChunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        
+                        try {
+                            const formData = new FormData();
+                            formData.append('file', audioBlob, 'recording.webm');
+
+                            const response = await fetch(STT_URL, { method: 'POST', body: formData });
+                            if (!response.ok) throw new Error(`STT Error: ${response.statusText}`);
+                            const data = await response.json();
+                            const transcription = data.transcription;
+                            
+                            if (transcription) {
+                                handleSendMessage(transcription);
+                            } else {
+                                addMessageToChat('bot', 'Sorry, I could not understand the audio.');
+                            }
+                        } catch (error) {
+                            console.error('STT Error:', error);
+                            addMessageToChat('bot', `An error occurred during transcription: ${error.message}`);
+                        }
+                    };
+
+                    mediaRecorder.start();
+                } catch (err) {
+                    console.error("Error accessing microphone:", err);
+                    showToast("Could not access microphone. Please check permissions.");
+                }
+            };
+
+            const stopRecording = () => {
+                if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                    mediaRecorder.stop();
+                    mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                    
+                    // Hide visualizer
+                    voiceVisualizerContainer.classList.remove('active');
+                    
+                    // Clear timer
+                    clearInterval(recordingInterval);
+                    recordingTimer.textContent = '00:00';
+                    
+                    // Stop animation
+                    cancelAnimationFrame(animationId);
+                    
+                    // Reset bars
+                    voiceBars.forEach(bar => {
+                        bar.style.height = '4px';
+                    });
+                    
+                    // Clean up audio context
+                    if (microphone) microphone.disconnect();
+                    if (audioContext) audioContext.close();
+                }
+            };
+
+            const updateRecordingTimer = () => {
+                const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                recordingTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            };
+
+            const addMessageToChat = (sender, content, messageId = null) => {
+                const messagePair = document.createElement('div');
+                messagePair.className = 'message-pair';
+                messagePair.dataset.messageId = messageId || `msg-${messageIdCounter++}`;
+
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message', `${sender}-message`);
+                const messageContent = document.createElement('div');
+                messageContent.className = 'message-content';
+                
+                renderMessageContent(content, messageContent);
+                messageElement.appendChild(messageContent);
+                messagePair.appendChild(messageElement);
+                
+                chatMessages.appendChild(messagePair);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                return messagePair;
+            };
+            
+            // Function to create thinking dots animation
+            const createThinkingDots = () => {
+                const dotsContainer = document.createElement('div');
+                dotsContainer.className = 'thinking-dots';
+                
+                for (let i = 0; i < 3; i++) {
+                    const dot = document.createElement('span');
+                    dotsContainer.appendChild(dot);
+                }
+                
+                return dotsContainer;
+            };
+            
+            // Function to toggle send/pause buttons
+            const toggleSendPauseButtons = (showPause) => {
+                if (showPause) {
+                    sendBtn.classList.add('hidden');
+                    pauseBtn.classList.add('visible');
+                } else {
+                    sendBtn.classList.remove('hidden');
+                    pauseBtn.classList.remove('visible');
+                }
+            };
+            
+            const stopResponseGeneration = async () => {
+                if (currentResponseController) {
+                    currentResponseController.abort();
+                    currentResponseController = null;
+                }
+
+                try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (session) {
+                        await fetch("https://billy-free-ai-production.up.railway.app/stop", {
+                            method: "POST",
+                            headers: {
+                                "Authorization": `Bearer ${session.access_token}`,
+                                "Content-Type": "application/json"
+                            }
+                        });
+                    }
+                } catch (e) {
+                    console.warn("Backend stop failed:", e);
+                }
+
+                isGeneratingResponse = false;
+                toggleSendPauseButtons(false);
+            };
+            
+            const handleSendMessage = async (messageText = null) => {
+                const message = messageText || userInput.value.trim();
+                if (!message) return;
+
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) {
+                    showToast("Please login first!");
+                    return;
+                }
+
+                // Create a new chat if needed
+                if (!currentChatId) {
+                    currentChatId = Date.now().toString();
+                    folders['unfiled'].chats[currentChatId] = {
+                        title: message.substring(0, 30) + '...',
+                        messages: []
+                    };
+                }
+
+                // Handle file uploads to Supabase
+                if (uploadedFiles.length > 0) {
+                    const uploadedUrls = [];
+                    for (const file of uploadedFiles) {
+                        const url = await uploadToSupabase(file);
+                        if (url) {
+                            uploadedUrls.push({
+                                name: file.name,
+                                size: file.size,
+                                type: file.type,
+                                url: url
+                            });
+                        }
+                    }
+                    
+                    if (uploadedUrls.length > 0) {
+                        const fileContent = {
+                            type: 'files',
+                            files: uploadedUrls
+                        };
+                        addMessageToChat('user', fileContent);
+                        folders['unfiled'].chats[currentChatId].messages.push({ 
+                            id: `msg-${messageIdCounter++}`, 
+                            sender: 'user', 
+                            text: `Uploaded ${uploadedUrls.length} file(s)` 
+                        });
+                    }
+                    clearUploadedFiles();
+                }
+
+                // Add text message to UI
+                const userMessagePair = addMessageToChat('user', message);
+                folders['unfiled'].chats[currentChatId].messages.push({ id: userMessagePair.dataset.messageId, sender: 'user', text: message });
+                
+                saveUserChats();
+
+                userInput.value = '';
+                userInput.style.height = '22px';
+
+                // Create bot message placeholder with thinking dots
+                const botMessagePair = addMessageToChat('bot', '');
+                const botMessageContent = botMessagePair.querySelector('.message-content');
+                botMessageContent.appendChild(createThinkingDots());
+                
+                folders['unfiled'].chats[currentChatId].messages.push({ id: botMessagePair.dataset.messageId, sender: 'bot', text: 'Thinking...' });
+                saveUserChats();
+
+                // Show pause button and hide send button
+                isGeneratingResponse = true;
+                toggleSendPauseButtons(true);
+
+                try {
+                    // Create an AbortController to allow stopping the request
+                    currentResponseController = new AbortController();
+                    
+                    const response = await fetch(API_ENDPOINT, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${session.access_token}`
+                        },
+                        body: JSON.stringify({
+                            prompt: message,
+                            stream: true
+                        }),
+                        signal: currentResponseController.signal
+                    });
+
+                    if (!response.ok) {
+                        // Provide specific error feedback
+                        if (response.status === 400) {
+                            throw new Error("Bad Request: The server requires a text prompt and could not process request.");
+                        }
+                        throw new Error(`API Error: ${response.status}`);
+                    }
+                    
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder("utf-8");
+
+                    botMessageContent.innerHTML = '';
+
+                    let buffer = '';
+                    let fullText = '';
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+
+                        buffer += decoder.decode(value, { stream: true });
+
+                        // SSE frames are separated by DOUBLE newlines
+                        const events = buffer.split("\n\n");
+                        buffer = events.pop(); // keep unfinished frame
+
+                        for (const evt of events) {
+                            if (!evt.startsWith("data:")) continue;
+
+                            const payload = evt.replace("data:", "").trim();
+                            if (!payload || payload === "[DONE]") continue;
+
+                            let data;
+                            try {
+                                data = JSON.parse(payload);
+                            } catch {
+                                continue; // ignore partial JSON safely
+                            }
+
+                            // START EVENT
+                            if (data.type === "starting") {
+                                continue;
+                            }
+
+                            // TOKEN STREAM (SLOWED)
+                            if (data.type === "token" && data.text) {
+                                for (const char of data.text) {
+                                    fullText += char;
+                                    botMessageContent.textContent = fullText;
+
+                                    // save live text
+                                    const msgObj = folders['unfiled']
+                                        .chats[currentChatId]
+                                        .messages.find(m => m.id === botMessagePair.dataset.messageId);
+
+                                    if (msgObj) msgObj.text = fullText;
+
+                                    await new Promise(r => setTimeout(r, 15)); // typing speed
+                                }
+                            }
+
+                            // IMAGE
+                            if (data.type === "image" && data.url) {
+                                renderMessageContent({ type: 'image', url: data.url }, botMessageContent);
+                            }
+
+                            // DONE
+                            if (data.type === "done") {
+                                saveUserChats();
+                                return;
+                            }
+                        }
+                    }
+                } catch (error) {
+                    // If the request was aborted, don't show an error message
+                    if (error.name === 'AbortError') {
+                        console.log('Request was aborted');
+                        return;
+                    }
+                    
+                    console.error('Error:', error);
+                    const botMessageContent = botMessagePair.querySelector('.message-content');
+                    renderMessageContent(`An error occurred: ${error.message}. Please try again.`, botMessageContent);
+                    folders['unfiled'].chats[currentChatId].messages.find(m => m.id === botMessagePair.dataset.messageId).text = `Error: ${error.message}`;
+                    saveUserChats();
+                } finally {
+                    // Reset state when response is complete or aborted
+                    isGeneratingResponse = false;
+                    currentResponseController = null;
+                    toggleSendPauseButtons(false);
+                }
+            };
+
+            const clearChat = () => {
+                chatMessages.innerHTML = '';
+                currentChatId = null;
+                messageIdCounter = 0;
+                if (welcomeScreen) {
+                    welcomeScreen.classList.remove('hidden');
+                }
+            };
+
+            const setTheme = (themeId) => {
+                if (themeId === 'system') {
+                    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    body.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+                } else {
+                    body.setAttribute('data-theme', themeId);
+                }
+                localStorage.setItem('theme', themeId);
+                
+                // Update active theme in UI
+                document.querySelectorAll('.theme-option').forEach(option => {
+                    option.classList.remove('active');
+                    if (option.dataset.theme === themeId) {
+                        option.classList.add('active');
+                    }
+                });
+            };
+
+            const loadTheme = () => {
+                const savedTheme = localStorage.getItem('theme') || 'light';
+                setTheme(savedTheme);
+            };
+            
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                if (localStorage.getItem('theme') === 'system') {
+                    setTheme('system');
+                }
+            });
+
+            const initializeThemeSelector = () => {
+                themeOptions.innerHTML = '';
+                
+                themes.forEach(theme => {
+                    const themeOption = document.createElement('div');
+                    themeOption.className = 'theme-option';
+                    themeOption.dataset.theme = theme.id;
+                    
+                    const themePreview = document.createElement('div');
+                    themePreview.className = 'theme-preview';
+                    themePreview.style.background = theme.preview;
+                    
+                    const themeName = document.createElement('span');
+                    themeName.textContent = theme.name;
+                    
+                    themeOption.appendChild(themePreview);
+                    themeOption.appendChild(themeName);
+                    
+                    themeOption.addEventListener('click', () => {
+                        setTheme(theme.id);
+                    });
+                    
+                    themeOptions.appendChild(themeOption);
+                });
+                
+                // Set initial active theme
+                const savedTheme = localStorage.getItem('theme') || 'light';
+                document.querySelector(`.theme-option[data-theme="${savedTheme}"]`)?.classList.add('active');
+            };
+
+            const showActionSheet = () => {
+                actionSheet.classList.add('visible');
+                overlay.classList.add('visible');
+            };
+
+            const hideActionSheet = () => {
+                actionSheet.classList.remove('visible');
+                overlay.classList.remove('visible');
+            };
+            
+            // --- Folder & Chat Management ---
+            const displayFoldersAndChats = () => {
+                chatHistoryContainer.innerHTML = '';
+                for (const folderId in folders) {
+                    const folder = folders[folderId];
+                    const folderEl = document.createElement('div');
+                    folderEl.className = 'folder';
+                    folderEl.dataset.folderId = folderId;
+                    
+                    if (folderId === expandedFolderId) {
+                        folderEl.classList.add('expanded');
+                    }
+
+                    const folderHeader = document.createElement('div');
+                    folderHeader.className = 'folder-header';
+                    folderHeader.innerHTML = `
+                        <span class="folder-name">${folder.name}</span>
+                        <svg class="svg-icon" style="transform: rotate(-90deg); transition: transform 0.3s;" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                    `;
+                    folderEl.appendChild(folderHeader);
+
+                    // Add long press handler for folder
+                    folderHeader.addEventListener('mousedown', (e) => {
+                        if (e.button === 0) { // Left click only
+                            longPressTarget = { type: 'folder', id: folderId, name: folder.name };
+                            longPressTimer = setTimeout(() => {
+                                isLongPress = true;
+                                folderHeader.classList.add('long-press');
+                                showDeleteDialog('folder', folderId, folder.name);
+                            }, 500);
+                        }
+                    });
+
+                    folderHeader.addEventListener('mouseup', () => {
+                        clearTimeout(longPressTimer);
+                        setTimeout(() => {
+                            folderHeader.classList.remove('long-press');
+                        }, 100);
+                    });
+
+                    folderHeader.addEventListener('mouseleave', () => {
+                        clearTimeout(longPressTimer);
+                        folderHeader.classList.remove('long-press');
+                    });
+
+                    folderHeader.addEventListener('click', (e) => {
+                        if (!isLongPress) {
+                            folderEl.classList.toggle('expanded');
+                            const arrow = folderHeader.querySelector('.svg-icon');
+                            arrow.style.transform = folderEl.classList.contains('expanded') ? 'rotate(0deg)' : 'rotate(-90deg)';
+                            
+                            if (folderEl.classList.contains('expanded')) {
+                                expandedFolderId = folderId;
+                            } else {
+                                expandedFolderId = null;
+                            }
+                        }
+                        isLongPress = false;
+                    });
+
+                    // Touch events for mobile
+                    folderHeader.addEventListener('touchstart', (e) => {
+                        longPressTarget = { type: 'folder', id: folderId, name: folder.name };
+                        longPressTimer = setTimeout(() => {
+                            isLongPress = true;
+                            folderHeader.classList.add('long-press');
+                            showDeleteDialog('folder', folderId, folder.name);
+                        }, 500);
+                    });
+
+                    folderHeader.addEventListener('touchend', () => {
+                        clearTimeout(longPressTimer);
+                        setTimeout(() => {
+                            folderHeader.classList.remove('long-press');
+                        }, 100);
+                    });
+
+                    folderHeader.addEventListener('touchmove', () => {
+                        clearTimeout(longPressTimer);
+                        folderHeader.classList.remove('long-press');
+                    });
+
+                    const chatsContainer = document.createElement('div');
+                    chatsContainer.className = 'folder-chats';
+
+                    for (const chatId in folder.chats) {
+                        const chat = folder.chats[chatId];
+                        const chatItem = document.createElement('div');
+                        chatItem.className = 'chat-history-item';
+                        chatItem.dataset.chatId = chatId;
+                        chatItem.textContent = chat.title;
+                        if (chatId === currentChatId) {
+                            chatItem.classList.add('active');
+                        }
+                        
+                        // Add long press handler for chat
+                        chatItem.addEventListener('mousedown', (e) => {
+                            if (e.button === 0) { // Left click only
+                                longPressTarget = { type: 'chat', id: chatId, name: chat.title };
+                                longPressTimer = setTimeout(() => {
+                                    isLongPress = true;
+                                    chatItem.classList.add('long-press');
+                                    showDeleteDialog('chat', chatId, chat.title);
+                                }, 500);
+                            }
+                        });
+
+                        chatItem.addEventListener('mouseup', () => {
+                            clearTimeout(longPressTimer);
+                            setTimeout(() => {
+                                chatItem.classList.remove('long-press');
+                            }, 100);
+                        });
+
+                        chatItem.addEventListener('mouseleave', () => {
+                            clearTimeout(longPressTimer);
+                            chatItem.classList.remove('long-press');
+                        });
+
+                        chatItem.addEventListener('click', (e) => {
+                            if (!isLongPress) {
+                                loadChat(chatId);
+                            }
+                            isLongPress = false;
+                        });
+
+                        // Touch events for mobile
+                        chatItem.addEventListener('touchstart', (e) => {
+                            longPressTarget = { type: 'chat', id: chatId, name: chat.title };
+                            longPressTimer = setTimeout(() => {
+                                isLongPress = true;
+                                chatItem.classList.add('long-press');
+                                showDeleteDialog('chat', chatId, chat.title);
+                            }, 500);
+                        });
+
+                        chatItem.addEventListener('touchend', () => {
+                            clearTimeout(longPressTimer);
+                            setTimeout(() => {
+                                chatItem.classList.remove('long-press');
+                            }, 100);
+                        });
+
+                        chatItem.addEventListener('touchmove', () => {
+                            clearTimeout(longPressTimer);
+                            chatItem.classList.remove('long-press');
+                        });
+
+                        chatItem.addEventListener('contextmenu', (e) => showChatContextMenu(e, chatId));
+                        chatsContainer.appendChild(chatItem);
+                    }
+                    folderEl.appendChild(chatsContainer);
+                    chatHistoryContainer.appendChild(folderEl);
+                }
+            };
+            
+            const showDeleteDialog = (type, id, name) => {
+                const overlay = document.createElement('div');
+                overlay.className = 'delete-overlay';
+                
+                const dialog = document.createElement('div');
+                dialog.className = 'delete-dialog';
+                
+                const isFolder = type === 'folder';
+                const message = isFolder 
+                    ? `Are you sure you want to delete folder "${name}" and all its chats? This action cannot be undone.`
+                    : `Are you sure you want to delete this chat? This action cannot be undone.`;
+                
+                dialog.innerHTML = `
+                    <h3>Delete ${isFolder ? 'Folder' : 'Chat'}</h3>
+                    <p>${message}</p>
+                    <div class="delete-dialog-buttons">
+                        <button class="cancel-delete">Cancel</button>
+                        <button class="confirm-delete">Delete</button>
+                    </div>
+                `;
+                
+                overlay.appendChild(dialog);
+                document.body.appendChild(overlay);
+                
+                const cancelBtn = dialog.querySelector('.cancel-delete');
+                const confirmBtn = dialog.querySelector('.confirm-delete');
+                
+                const closeDialog = () => {
+                    document.body.removeChild(overlay);
+                };
+                
+                cancelBtn.addEventListener('click', closeDialog);
+                
+                confirmBtn.addEventListener('click', () => {
+                    if (isFolder) {
+                        deleteFolder(id);
+                    } else {
+                        deleteChat(id);
+                    }
+                    closeDialog();
+                });
+                
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) {
+                        closeDialog();
+                    }
+                });
+            };
+
+            const deleteFolder = (folderId) => {
+                if (folderId === 'unfiled') {
+                    alert('Cannot delete Unfiled folder.');
+                    return;
+                }
+                
+                // Move all chats from this folder to unfiled
+                const folderToDelete = folders[folderId];
+                if (folderToDelete && folderToDelete.chats) {
+                    for (const chatId in folderToDelete.chats) {
+                        folders['unfiled'].chats[chatId] = folderToDelete.chats[chatId];
+                    }
+                }
+                
+                delete folders[folderId];
+                saveUserChats();
+                displayFoldersAndChats();
+                
+                // Clear current chat if it was in deleted folder
+                if (currentChatId && folders['unfiled'].chats[currentChatId]) {
+                    // Chat moved to unfiled, no need to clear
+                } else if (currentChatId) {
+                    clearChat();
+                }
+            };
+            
+            const createFolder = () => {
+                const folderName = prompt("Enter folder name:");
+                if (folderName) {
+                    const folderId = 'folder_' + Date.now();
+                    folders[folderId] = { name: folderName, chats: {} };
+                    saveUserChats();
+                    displayFoldersAndChats();
+                }
+            };
+
+            const loadChat = (chatId) => {
+                clearChat();
+                currentChatId = chatId;
+                let chat = null;
+                for (const folderId in folders) {
+                    if (folders[folderId].chats[chatId]) {
+                        chat = folders[folderId].chats[chatId];
+                        break;
+                    }
+                }
+                if (chat) {
+                    chat.messages.forEach(msg => {
+                        addMessageToChat(msg.sender, msg.text, msg.id);
+                    });
+                    displayFoldersAndChats();
+                }
+            };
+            
+            const deleteChat = (chatId) => {
+                for (const folderId in folders) {
+                    if (folders[folderId].chats[chatId]) {
+                        delete folders[folderId].chats[chatId];
+                        saveUserChats();
+                        if (currentChatId === chatId) {
+                            clearChat();
+                        }
+                        displayFoldersAndChats();
+                        break;
+                    }
+                }
+            };
+
+            const moveChatToFolder = (chatId, targetFolderId) => {
+                let chatToMove = null;
+                let sourceFolderId = null;
+
+                for (const folderId in folders) {
+                    if (folders[folderId].chats[chatId]) {
+                        chatToMove = folders[folderId].chats[chatId];
+                        sourceFolderId = folderId;
+                        delete folders[folderId].chats[chatId];
+                        break;
+                    }
+                }
+                
+                if (chatToMove && targetFolderId) {
+                    folders[targetFolderId].chats[chatId] = chatToMove;
+                    saveUserChats();
+                    displayFoldersAndChats();
+                }
+            };
+
+            const showChatContextMenu = (e, chatId) => {
+                e.preventDefault();
+                chatToMoveId = chatId;
+                const rect = e.target.getBoundingClientRect();
+                chatContextMenu.style.top = `${rect.bottom + window.scrollY}px`;
+                chatContextMenu.style.left = `${rect.left + window.scrollX}px`;
+                chatContextMenu.classList.add('visible');
+            };
+
+            const hideChatContextMenu = () => {
+                chatContextMenu.classList.remove('visible');
+            };
+            
+            // --- New Chat in Folder Functions ---
+            const showNewChatModal = () => {
+                // Populate folder select with current folders
+                folderSelect.innerHTML = '';
+                for (const folderId in folders) {
+                    const folder = folders[folderId];
+                    const option = document.createElement('option');
+                    option.value = folderId;
+                    option.textContent = folder.name;
+                    folderSelect.appendChild(option);
+                }
+                
+                // Show modal
+                newChatModal.style.display = 'flex';
+                overlay.classList.add('visible');
+            };
+            
+            const hideNewChatModal = () => {
+                newChatModal.style.display = 'none';
+                overlay.classList.remove('visible');
+            };
+            
+            const startNewChatInFolder = (folderId) => {
+                // Create new chat in the specified folder
+                const message = userInput.value.trim() || 'New chat';
+                const chatId = Date.now().toString();
+                
+                // Add chat to the specified folder
+                if (!folders[folderId]) {
+                    folders[folderId] = { name: `Folder ${folderId}`, chats: {} };
+                }
+                
+                folders[folderId].chats[chatId] = {
+                    title: message.substring(0, 30) + '...',
+                    messages: []
+                };
+                
+                // Set as current chat and clear display
+                currentChatId = chatId;
+                clearChat();
+                
+                // Save and update display
+                saveUserChats();
+                displayFoldersAndChats();
+                
+                // If there's a message, send it
+                if (message && message !== 'New chat') {
+                    handleSendMessage(message);
+                }
+                
+                // Clear input
+                userInput.value = '';
+            };
+            
+            // --- Image Gallery Management ---
+            const displayImageGallery = () => {
+                imageGalleryContainer.innerHTML = '';
+                imageGallery.forEach(url => {
+                    const imgContainer = document.createElement('div');
+                    imgContainer.className = 'media-container';
+                    imgContainer.style.position = 'relative';
+                    
+                    const img = document.createElement('img');
+                    img.src = url;
+                    img.alt = 'Generated Image';
+                    img.loading = "lazy";
+                    img.onclick = () => window.open(url, '_blank');
+
+                    // Add error handling for gallery items
+                    img.onerror = () => {
+                        console.warn("Gallery image failed to load, removing:", url);
+                        imgContainer.remove();
+                        // Remove from array permanently to stop loop
+                        const index = imageGallery.indexOf(url);
+                        if (index > -1) {
+                            imageGallery.splice(index, 1);
+                            saveUserChats();
+                        }
+                    };
+
+                    const downloadBtn = document.createElement('button');
+                    downloadBtn.className = 'media-download-btn';
+                    downloadBtn.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>';
+                    downloadBtn.title = 'Download Image';
+                    downloadBtn.addEventListener('click', () => downloadFromSupabase(url, 'image.png'));
+                    
+                    imgContainer.appendChild(img);
+                    imgContainer.appendChild(downloadBtn);
+                    imageGalleryContainer.appendChild(imgContainer);
+                });
+            };
+
+            // --- Message Interaction (Edit/Copy) ---
+            const showContextMenu = (e, messagePair) => {
+                e.preventDefault();
+                e.stopPropagation();
+                messagePairToEdit = messagePair;
+                const rect = e.target.getBoundingClientRect();
+                contextMenu.style.top = `${rect.bottom + window.scrollY}px`;
+                contextMenu.style.left = `${rect.left + window.scrollX}px`;
+                contextMenu.classList.add('visible');
+            };
+
+            const hideContextMenu = () => {
+                contextMenu.classList.remove('visible');
+            };
+            
+            const copyMessage = () => {
+                const messageText = messagePairToEdit.querySelector('.user-message .message-content').textContent;
+                navigator.clipboard.writeText(messageText).then(() => {
+                    console.log('Message copied to clipboard!');
+                }).catch(err => {
+                    console.error('Failed to copy message: ', err);
+                });
+                hideContextMenu();
+            };
+            
+            const editMessage = () => {
+                const messageElement = messagePairToEdit.querySelector('.user-message');
+                const messageContent = messagePairToEdit.querySelector('.message-content');
+                const originalText = messageContent.textContent;
+                
+                const textarea = document.createElement('textarea');
+                textarea.className = 'edit-textarea';
+                textarea.value = originalText;
+                
+                const saveBtn = document.createElement('button');
+                saveBtn.textContent = 'Save';
+                saveBtn.className = 'preview-btn';
+                
+                const cancelBtn = document.createElement('button');
+                cancelBtn.textContent = 'Cancel';
+                cancelBtn.className = 'preview-btn';
+                cancelBtn.style.background = 'var(--sidebar-hover-bg)';
+                
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'edit-actions';
+                actionsDiv.appendChild(cancelBtn);
+                actionsDiv.appendChild(saveBtn);
+                
+                messageContent.replaceWith(textarea);
+                messageElement.appendChild(actionsDiv);
+                hideContextMenu();
+                
+                textarea.focus();
+                textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+
+                const saveEdit = () => {
+                    const newText = textarea.value.trim();
+                    if (newText && newText !== originalText) {
+                        let nextElement = messagePairToEdit.nextElementSibling;
+                        while(nextElement) {
+                            const nextPair = nextElement;
+                            nextElement = nextPair.nextElementSibling;
+                            nextPair.remove();
+                        }
+                        
+                        const userMsgHistory = folders['unfiled'].chats[currentChatId].messages.find(m => m.id === messagePairToEdit.dataset.messageId);
+                        userMsgHistory.text = newText;
+                        folders['unfiled'].chats[currentChatId].messages = folders['unfiled'].chats[currentChatId].messages.filter(m => m.id !== messagePairToEdit.dataset.messageId);
+                        saveUserChats();
+                        
+                        const newContent = document.createElement('div');
+                        newContent.className = 'message-content';
+                        newContent.textContent = newText;
+                        textarea.replaceWith(newContent);
+                        actionsDiv.remove();
+                        
+                        handleSendMessage(newText);
+                    } else {
+                        const revertContent = document.createElement('div');
+                        revertContent.className = 'message-content';
+                        revertContent.textContent = originalText;
+                        textarea.replaceWith(revertContent);
+                        actionsDiv.remove();
+                    }
+                };
+                
+                saveBtn.addEventListener('click', saveEdit);
+                cancelBtn.addEventListener('click', () => {
+                    const revertContent = document.createElement('div');
+                    revertContent.className = 'message-content';
+                    revertContent.textContent = originalText;
+                    textarea.replaceWith(revertContent);
+                    actionsDiv.remove();
+                });
+            };
+
+            // --- Event Listeners ---
+            // Auth event listeners
+            loginBtn.addEventListener('click', signIn);
+            signOutBtn.addEventListener('click', signOut);
+
+            // Listen for auth state changes
+            supabase.auth.onAuthStateChange((event, session) => {
+                if (event === 'SIGNED_IN') {
+                    currentUser = session.user;
+                    hideLoginButton();
+                    showUserProfile(session.user);
+                    loadUserChats();
+                } else if (event === 'SIGNED_OUT') {
+                    currentUser = null;
+                    hideUserProfile();
+                    showLoginButton();
+                    clearChat();
+                }
+            });
+
+            sendBtn.addEventListener('click', () => handleSendMessage());
+            pauseBtn.addEventListener('click', () => stopResponseGeneration());
+            userInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                }
+            });
+
+            userInput.addEventListener('input', () => {
+                userInput.style.height = 'auto';
+                userInput.style.height = userInput.scrollHeight + 'px';
+            });
+
+            // File upload event listeners
+            fileUploadBtn.addEventListener('click', () => {
+                fileUploadInput.click();
+            });
+
+            fileUploadInput.addEventListener('change', (e) => {
+                handleFileUpload(e.target.files);
+            });
+
+            // Drag and drop file upload
+            document.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            document.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    handleFileUpload(e.dataTransfer.files);
+                }
+            });
+
+            // Voice recording event listeners
+            micBtn.addEventListener('mousedown', startRecording);
+            stopRecordingBtn.addEventListener('click', stopRecording);
+
+            micBtn.addEventListener('touchstart', (e) => { 
+                e.preventDefault(); 
+                startRecording(); 
+            });
+
+            micBtn.addEventListener('touchend', (e) => { 
+                e.preventDefault(); 
+                stopRecording(); 
+            });
+
+            micBtn.addEventListener('mouseleave', stopRecording);
+
+            // New Chat Button - Show folder selection modal
+            newChatBtn.addEventListener('click', showNewChatModal);
+
+            // New Chat Modal Event Listeners
+            cancelNewChatBtn.addEventListener('click', hideNewChatModal);
+            
+            confirmNewChatBtn.addEventListener('click', () => {
+                const selectedFolderId = folderSelect.value;
+                startNewChatInFolder(selectedFolderId);
+                hideNewChatModal();
+            });
+
+            // Close modal when clicking outside
+            newChatModal.addEventListener('click', (e) => {
+                if (e.target === newChatModal) {
+                    hideNewChatModal();
+                }
+            });
+
+            newFolderBtn.addEventListener('click', createFolder);
+
+            actionBtn.addEventListener('click', showActionSheet);
+            overlay.addEventListener('click', () => {
+                hideActionSheet();
+                hideContextMenu();
+                hideChatContextMenu();
+                hideNewChatModal();
+                sidebar.classList.remove('visible');
+            });
+            
+            const actionSheetItems = document.querySelectorAll('#action-sheet li[data-prompt]');
+            actionSheetItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const prompt = item.getAttribute('data-prompt');
+                    userInput.value = prompt;
+                    userInput.focus();
+                    hideActionSheet();
+                });
+            });
+            document.getElementById('cancel-action').addEventListener('click', hideActionSheet);
+            
+            hamburgerMenu.addEventListener('click', () => {
+                sidebar.classList.toggle('visible');
+            });
+            
+            // Theme selector toggle
+            const themeSelectorHeader = document.querySelector('.theme-selector-header');
+            themeSelectorHeader.addEventListener('click', () => {
+                themeSelector.classList.toggle('expanded');
+                const arrow = themeSelectorHeader.querySelector('.svg-icon');
+                arrow.style.transform = themeSelector.classList.contains('expanded') ? 'rotate(0deg)' : 'rotate(-90deg)';
+            });
+            
+            // Context menu listeners
+            chatMessages.addEventListener('contextmenu', (e) => {
+                const userMessage = e.target.closest('.user-message');
+                if (userMessage) {
+                    const messagePair = userMessage.closest('.message-pair');
+                    showContextMenu(e, messagePair);
+                }
+            });
+            document.addEventListener('click', (e) => {
+                if (!contextMenu.contains(e.target) && !newChatModal.contains(e.target)) {
+                    hideContextMenu();
+                }
+            });
+            editMessageBtn.addEventListener('click', editMessage);
+            copyMessageBtn.addEventListener('click', copyMessage);
+            
+            // Chat context menu listeners
+            moveChatBtn.addEventListener('click', () => {
+                // Only show folders that are currently expanded
+                const folderOptions = Object.keys(folders)
+                    .filter(id => id === expandedFolderId || id === 'unfiled')
+                    .map(id => `<option value="${id}">${folders[id].name}</option>`)
+                    .join('');
+                
+                if (folderOptions === '') {
+                    alert('Please open a folder first before moving a chat.');
+                    hideChatContextMenu();
+                    return;
+                }
+                
+                const popup = document.createElement('div');
+                popup.style.position = 'fixed';
+                popup.style.top = '50%';
+                popup.style.left = '50%';
+                popup.style.transform = 'translate(-50%, -50%)';
+                popup.style.background = 'var(--sidebar-bg)';
+                popup.style.padding = '20px';
+                popup.style.borderRadius = '8px';
+                popup.style.boxShadow = 'var(--shadow-color)';
+                popup.style.zIndex = '1001';
+                popup.innerHTML = `
+                    <p>Move chat to:</p>
+                    <select id="folder-select">${folderOptions}</select>
+                    <button id="confirm-move">Move</button>
+                `;
+                document.body.appendChild(popup);
+                
+                document.getElementById('confirm-move').addEventListener('click', () => {
+                    const targetFolderId = document.getElementById('folder-select').value;
+                    moveChatToFolder(chatToMoveId, targetFolderId);
+                    document.body.removeChild(popup);
+                });
+                hideChatContextMenu();
+            });
+
+            deleteChatBtnContext.addEventListener('click', () => {
+                if (confirm('Are you sure you want to delete this chat?')) {
+                    deleteChat(chatToMoveId);
+                }
+                hideChatContextMenu();
+            });
+
+            // Sidebar tab listeners
+            sidebarTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabName = tab.dataset.tab;
+                    sidebarTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    if (tabName === 'chats') {
+                        chatsContent.classList.add('active');
+                        galleryContent.classList.remove('active');
+                    } else {
+                        chatsContent.classList.remove('active');
+                        galleryContent.classList.add('active');
+                    }
+                });
+            });
+
+            // --- Initial Load ---
+            loadTheme();
+            initializeThemeSelector();
+            
+            // Check authentication state
+            checkAuthState();
+            
+            // Initialize voice bars
+            const initializeVoiceBars = () => {
+                voiceVisualizer.innerHTML = '';
+                for (let i = 0; i < 20; i++) {
+                    const bar = document.createElement('div');
+                    bar.className = 'voice-bar';
+                    bar.style.height = '4px';
+                    voiceVisualizer.appendChild(bar);
+                    voiceBars.push(bar);
+                }
+            };
+            
+            initializeVoiceBars();
+        });
+
+        (function () {
+            const CONSENT_KEY = "zynara_consent_v1";
+
+            // Show banner if not accepted
+            if (!localStorage.getItem(CONSENT_KEY)) {
+                document.getElementById("consent-banner").style.display = "block";
+            }
+
+            // Accept all consents
+            document.getElementById("accept-consent").addEventListener("click", () => {
+                localStorage.setItem(
+                    CONSENT_KEY,
+                    JSON.stringify({
+                        disclaimer: true,
+                        cookies: true,
+                        privacy: true,
+                        accepted_at: new Date().toISOString()
+                    })
+                );
+
+                document.getElementById("consent-banner").remove();
+            });
+        })();
+    </script>
+</body>
+</html>

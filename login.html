@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login – Zynara</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<style>
+  /* ================== VARIABLES ================== */
+  :root {
+    --bg: #0f1724;
+    --card: #0b1220;
+    --accent: #6ee7b7;
+    --muted: #9aa4b2;
+    --danger: #ff6b6b;
+    --maxw: 420px;
+    --radius: 12px;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+
+  /* ================== GLOBAL STYLES ================== */
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: clamp(12px, 5vw, 24px);
+    height: 100%;
+    background: linear-gradient(180deg, #071028 0%, #0f1724 100%);
+    color: #e6eef6;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* mobile-first: align top */
+    font-size: 16px;
+    overflow-y: auto;
+  }
+
+  /* ================== CARD / CONTAINER ================== */
+  .signup-container {
+    width: 100%;
+    max-width: min(var(--maxw), 95vw);
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius: var(--radius);
+    padding: clamp(20px, 5vw, 32px);
+    box-shadow: 0 8px 40px rgba(2,6,23,0.75);
+    border: 1px solid rgba(255,255,255,0.03);
+    display: flex;
+    flex-direction: column;
+    margin: 20px 0;
+  }
+
+  h1 {
+    margin: 0 0 18px 0;
+    font-size: clamp(20px, 5vw, 26px);
+    text-align: center;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  input[type="email"],
+  input[type="password"],
+  input[type="text"] {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: #071126;
+    color: #e6eef6;
+    border: 1px solid rgba(255,255,255,0.05);
+    font-size: clamp(15px, 2vw, 16px);
+  }
+
+  /* ================== PASSWORD TOGGLE ================== */
+  .password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .password-wrapper input { padding-right: 50px; flex-grow: 1; }
+
+  #toggle-password {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 18px;
+    padding: 6px;
+  }
+
+  /* ================== BUTTONS ================== */
+  button[type="submit"],
+  .social-logins button,
+  #admin-login-btn {
+    width: 100%;
+    padding: 14px 0;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.15s ease;
+    min-height: 48px; /* touch target */
+  }
+
+  button[type="submit"] { background: linear-gradient(90deg, #0ea5a5, #4ade80); color: #062022; }
+  button[type="submit"]:hover, .social-logins button:hover, #admin-login-btn:hover { transform: scale(1.03); }
+
+  #admin-login-btn { background: linear-gradient(90deg, #ff3b3b, #ff6b6b); color: #fff; margin-top: 10px; }
+
+  /* ================== SOCIAL LOGINS ================== */
+  .social-logins {
+    display: grid;
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .social-logins button {
+    background: #081424;
+    color: #e6eef6;
+    border: 1px solid rgba(255,255,255,0.04);
+    justify-content: flex-start;
+    padding-left: 12px;
+    font-size: 15px;
+  }
+
+  .social-icon { width: 20px; height: 20px; max-width: 20px; max-height: 20px; }
+
+  /* ================== MESSAGES ================== */
+  .legal, .note { color: var(--muted); font-size: clamp(13px, 2vw, 14px); text-align: center; margin-top: 14px; }
+  .legal a, .note a { color: var(--accent); text-decoration: none; }
+  #error-message { color: var(--danger); min-height: 1.4em; text-align: center; font-size: 14px; margin-top: 14px; }
+  #success-message { color: #7ee787; min-height: 1.4em; text-align: center; font-size: 14px; margin-top: 8px; }
+
+  /* ================== AVATAR / MFA ================== */
+  #avatar-preview { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+  #avatar-preview img { width: 40px; height: 40px; border-radius: 50%; }
+
+  /* ================== RESPONSIVE ================== */
+  @media (max-width: 500px) {
+    .signup-container { max-width: 100%; border-radius: 0; padding: 20px; }
+    input, button { font-size: 16px; padding: 16px; }
+    .social-logins { display: flex; flex-direction: column; gap: 12px; }
+    .social-logins button { justify-content: center; }
+  }
+
+  @media (max-width: 350px) {
+    .password-wrapper input { padding-right: 40px; }
+    #toggle-password { font-size: 16px; }
+  }
+
+  @media (min-height: 700px) { body { align-items: center; } }
+  @media (max-height: 699px) { body { align-items: flex-start; } }
+</style>
+  <script src="https://www.google.com/recaptcha/api.js?render=6LcjZcIrAAAAAJLvrkikTdvpmy_ny-o5p19NvbPZ" async defer></script>
+</head>
+<body>
+  <div class="signup-container" role="main" aria-labelledby="page-title">
+    <h1 id="page-title">Welcome Back to Zynara</h1>
+
+    <div class="social-logins" aria-label="Social login options">
+      <button id="google-login" type="button"><img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="" class="social-icon" /> Continue with Google</button>
+     
+      <button id="github-login" type="button"><img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="" class="social-icon" /> Continue with GitHub</button>
+      <button id="discord-login" type="button"><img src="https://www.svgrepo.com/show/353655/discord-icon.svg" alt="" class="social-icon" /> Continue with Discord</button>
+      <button id="admin-login-btn" type="button">Admin Login</button>
+    </div>
+
+    <form id="login-form" aria-label="Login form" autocomplete="on">
+      <input type="email" name="email" id="email" placeholder="Email" aria-label="Email" required autocomplete="email" />
+      <div class="password-wrapper">
+        <input type="password" name="password" id="password" placeholder="Password" aria-label="Password" required autocomplete="current-password" />
+        <button type="button" id="toggle-password" aria-pressed="false" aria-label="Show password">👁️</button>
+      </div>
+
+      <label class="remember">
+        <input type="checkbox" id="remember-me" aria-label="Remember me" /> Remember me
+      </label>
+
+      <button type="submit" id="login-btn" aria-busy="false" aria-live="polite">
+        Log In <span id="login-spinner" hidden class="spinner" aria-hidden="true"></span>
+      </button>
+    </form>
+
+    <p class="note">
+      Don't have an account? <a href="signup.html">Create one</a><br />
+      Forgot your password? <a id="reset-link" href="reset.html">Reset it</a>
+    </p>
+
+    <p class="legal">
+      By logging in, you agree to our
+      <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and
+      <a href="priv.html" target="_blank" rel="noopener">Privacy Policy</a>.
+    </p>
+
+    <div id="error-message" role="alert" aria-live="assertive"></div>
+    <div id="success-message" role="status" aria-live="polite"></div>
+
+    <div id="mfa-section" hidden class="small" aria-hidden="true">
+      Two-factor authentication is supported. Enable it in <a href="account.html">Account Settings</a>.
+    </div>
+  </div>
+
+<script src="env.js"></script>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+  if (!window.__ENV__) {
+    throw new Error("env.js not loaded");
+  }
+
+  const {
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
+    RECAPTCHA_SITE_KEY
+  } = window.__ENV__;
+
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const form = document.getElementById("login-form");
+  const emailField = document.getElementById("email");
+  const passwordField = document.getElementById("password");
+  const togglePassword = document.getElementById("toggle-password");
+  const rememberMe = document.getElementById("remember-me");
+  const loginBtn = document.getElementById("login-btn");
+  const loginSpinner = document.getElementById("login-spinner");
+  const errorMsg = document.getElementById("error-message");
+  const successMsg = document.getElementById("success-message");
+  const resetLink = document.getElementById("reset-link");
+  const googleBtn = document.getElementById("google-login");
+  const githubBtn = document.getElementById("github-login");
+  const discordBtn = document.getElementById("discord-login");
+  const adminLoginBtn = document.getElementById("admin-login-btn");
+
+  // Prefill email
+  const savedEmail = localStorage.getItem("lastEmail");
+  if (savedEmail) {
+    emailField.value = savedEmail;
+    rememberMe.checked = true;
+  }
+
+  togglePassword.addEventListener("click", () => {
+    const hidden = passwordField.type === "password";
+    passwordField.type = hidden ? "text" : "password";
+    togglePassword.textContent = hidden ? "🙈" : "👁️";
+  });
+
+  function setLoading(isLoading) {
+    loginBtn.disabled = isLoading;
+    loginSpinner.hidden = !isLoading;
+  }
+
+  function validateEmail(email) {
+    return /\S+@\S+\.\S+/.test(email);
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    errorMsg.textContent = "";
+    successMsg.textContent = "";
+    setLoading(true);
+
+    const email = emailField.value.trim();
+    const password = passwordField.value;
+
+    if (!validateEmail(email)) {
+      errorMsg.textContent = "Invalid email address.";
+      setLoading(false);
+      return;
+    }
+
+    if (!password || password.length < 6) {
+      errorMsg.textContent = "Password must be at least 6 characters.";
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Optional reCAPTCHA
+      if (window.grecaptcha && RECAPTCHA_SITE_KEY) {
+        await grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: "login" });
+      }
+
+      if (rememberMe.checked) {
+        localStorage.setItem("lastEmail", email);
+      } else {
+        localStorage.removeItem("lastEmail");
+      }
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      setLoading(false);
+
+      if (error) {
+        errorMsg.textContent = error.message;
+        return;
+      }
+
+      successMsg.textContent = "Login successful!";
+      setTimeout(() => {
+        window.location.href = "index.html";
+      }, 800);
+
+    } catch (err) {
+      console.error(err);
+      setLoading(false);
+      errorMsg.textContent = "Unexpected error occurred.";
+    }
+  });
+
+  // Admin login
+  adminLoginBtn?.addEventListener("click", () => {
+    window.location.href = "admin-login.html";
+  });
+
+  // Password reset
+  resetLink?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    const email = prompt("Enter your email:");
+    if (!validateEmail(email)) {
+      errorMsg.textContent = "Invalid email.";
+      return;
+    }
+
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${location.origin}/reset-complete.html`
+    });
+    setLoading(false);
+
+    if (error) errorMsg.textContent = error.message;
+    else successMsg.textContent = "Reset email sent!";
+  });
+
+  // OAuth
+  [["google", googleBtn], ["github", githubBtn], ["discord", discordBtn]].forEach(
+    ([provider, btn]) => {
+      btn?.addEventListener("click", async () => {
+        setLoading(true);
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider,
+          options: { redirectTo: `${location.origin}/oauth-callback.html` }
+        });
+        setLoading(false);
+        if (error) errorMsg.textContent = error.message;
+      });
+    }
+  );
+</script>
+</body>
+</html>
