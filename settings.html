@@ -5,27 +5,52 @@
 <title>Zynara Settings</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 :root {
-  --bg: #0f1724; --card: #0b1220; --accent: #6ee7b7; --text: #e6eef6; --danger: #ff6b6b; --radius: 12px; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  --bg: #0f1724;
+  --card: #0b1220;
+  --accent: #6ee7b7;
+  --text: #e6eef6;
+  --danger: #ff6b6b;
+  --radius: 12px;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
 }
-body { margin:0; background: var(--bg); color: var(--text); font-family: inherit; padding:20px; }
+body { margin:0; background: var(--bg); color: var(--text); padding:20px; }
 header { display:flex; justify-content: space-between; align-items:center; margin-bottom:20px; }
 header h1 { margin:0; font-size:1.4rem; }
 button { cursor:pointer; border:none; border-radius:var(--radius); padding:10px 15px; font-weight:600; }
 .primary { background: linear-gradient(90deg, #0ea5a5, #4ade80); color:#062022; }
 .card { background: var(--card); padding:20px; border-radius:var(--radius); margin-bottom:20px; }
-input { width:100%; padding:10px; margin:5px 0 10px 0; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:#071126; color: var(--text); }
-#email-feedback, #password-feedback { font-size:0.9em; margin-bottom:5px; }
+input, select { width:100%; padding:10px; margin:5px 0 10px 0; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:#071126; color: var(--text); }
+
+.badge {
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  background:rgba(255,255,255,0.08);
+  padding:8px 12px;
+  border-radius:999px;
+  font-size:0.9em;
+  margin-top:10px;
+}
+
+.badge img {
+  width:18px;
+  height:18px;
+}
+
+#email-feedback, #password-feedback, #avatar-feedback { font-size:0.9em; margin-bottom:5px; }
+img#avatar-preview { width:80px; height:80px; border-radius:50%; margin-bottom:10px; }
 </style>
 </head>
 <body>
+
 <header>
   <h1>Zynara Settings</h1>
   <div>
     <button class="primary" onclick="window.location.href='index.html'">Home</button>
     <button class="primary" onclick="window.location.href='prem.html'">Premium</button>
-    <button id="dark-toggle" class="primary">🌙</button>
     <button id="logout-btn" class="primary">Logout</button>
   </div>
 </header>
@@ -33,25 +58,33 @@ input { width:100%; padding:10px; margin:5px 0 10px 0; border-radius:8px; border
 <div class="card">
   <h2>Account Info</h2>
   <p><strong>Email:</strong> <span id="user-email">Loading...</span></p>
-  <label for="nickname">Nickname:</label>
-  <input type="text" id="nickname" placeholder="Your nickname">
-  <label for="personality">Personality:</label>
+  <div id="provider-badge"></div>
+
+  <img id="avatar-preview" src="" alt="Avatar">
+  <input type="file" id="avatar" accept="image/*">
+  <div id="avatar-feedback" style="color:red;"></div>
+
+  <label>Nickname:</label>
+  <input type="text" id="nickname">
+
+  <label>Personality:</label>
   <select id="personality">
     <option value="friendly">Friendly</option>
     <option value="professional">Professional</option>
     <option value="playful">Playful</option>
   </select>
-  <button id="update-profile" class="primary">Update Profile</button>
+
+  <button id="update-profile" class="primary">Save Settings</button>
 </div>
 
-<div class="card">
+<div class="card" id="email-card">
   <h2>Update Email</h2>
   <input type="email" id="new-email" placeholder="new@email.com">
   <div id="email-feedback" style="color:red;"></div>
   <button id="update-email" class="primary">Update Email</button>
 </div>
 
-<div class="card">
+<div class="card" id="password-card">
   <h2>Change Password</h2>
   <input type="password" id="current-password" placeholder="Current password">
   <input type="password" id="new-password" placeholder="New password">
@@ -59,121 +92,75 @@ input { width:100%; padding:10px; margin:5px 0 10px 0; border-radius:8px; border
   <button id="update-password" class="primary">Update Password</button>
 </div>
 
+<div class="card">
+  <h2>Danger Zone</h2>
+  <button id="delete-account" class="primary" style="background-color: var(--danger); color:#fff;">Delete Account</button>
+</div>
+
 <script src="env.js"></script>
-
 <script type="module">
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-  if (!window.__ENV__) {
-    throw new Error("env.js not loaded");
-  }
-
-  const {
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY,
-    RECAPTCHA_SITE_KEY
-  } = window.__ENV__;
-
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.__ENV__;
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const userEmailSpan = document.getElementById("user-email");
 const nicknameInput = document.getElementById("nickname");
 const personalitySelect = document.getElementById("personality");
-const newEmailInput = document.getElementById("new-email");
-const emailFeedback = document.getElementById("email-feedback");
-const currentPasswordInput = document.getElementById("current-password");
-const newPasswordInput = document.getElementById("new-password");
-const passwordFeedback = document.getElementById("password-feedback");
+const avatarInput = document.getElementById("avatar");
+const avatarPreview = document.getElementById("avatar-preview");
+const avatarFeedback = document.getElementById("avatar-feedback");
+const providerBadge = document.getElementById("provider-badge");
 
-// --------------------
-// Load user info
-// --------------------
 async function loadUser() {
-  const { data: { user }, error } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) { window.location.href="login.html"; return; }
+
   userEmailSpan.textContent = user.email;
-  nicknameInput.value = localStorage.getItem("nickname") || "";
-  personalitySelect.value = localStorage.getItem("personality") || "friendly";
+
+  const provider = user.app_metadata?.provider || "email";
+
+  // Provider icons
+  const icons = {
+    google: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg",
+    github: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg",
+    discord: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/discordjs/discordjs-original.svg",
+    email: "https://cdn-icons-png.flaticon.com/512/561/561127.png"
+  };
+
+  providerBadge.innerHTML = `
+    <div class="badge">
+      <img src="${icons[provider] || icons.email}">
+      Connected Account: ${provider.charAt(0).toUpperCase() + provider.slice(1)}
+    </div>
+  `;
+
+  if (provider !== "email") {
+    document.getElementById("email-card").style.display = "none";
+    document.getElementById("password-card").style.display = "none";
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+
+  if (profile) {
+    nicknameInput.value = profile.nickname || '';
+    personalitySelect.value = profile.personality || 'friendly';
+    if (profile.avatar_url) {
+      avatarPreview.src =
+        supabase.storage.from('avatars')
+        .getPublicUrl(profile.avatar_url).publicUrl;
+    }
+  }
 }
 loadUser();
 
-// --------------------
-// Dark mode toggle
-// --------------------
-const darkToggle = document.getElementById("dark-toggle");
-darkToggle.addEventListener("click", () => {
-  document.body.classList.toggle("dark");
-});
-
-// --------------------
-// Logout
-// --------------------
 document.getElementById("logout-btn").addEventListener("click", async () => {
   await supabase.auth.signOut();
   window.location.href="login.html";
-});
-
-// --------------------
-// Update Profile (nickname/personality)
-// --------------------
-document.getElementById("update-profile").addEventListener("click", () => {
-  localStorage.setItem("nickname", nicknameInput.value.trim());
-  localStorage.setItem("personality", personalitySelect.value);
-  alert("Profile updated!");
-});
-
-// --------------------
-// Update Email
-// --------------------
-function validateEmail(email) {
-  if (!email) return "Email cannot be empty";
-  const pattern = /\S+@\S+\.\S+/;
-  if (!pattern.test(email)) return "Invalid email format";
-  if (email.endsWith("@zynara.xyz")) return "Cannot use @zynara.xyz domain";
-  return null;
-}
-
-document.getElementById("update-email").addEventListener("click", async () => {
-  const email = newEmailInput.value.trim();
-  const validation = validateEmail(email);
-  if (validation) { emailFeedback.textContent = validation; return; }
-  emailFeedback.textContent = "";
-  
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
-  const { error } = await supabase.auth.updateUser({ email });
-  if (error) emailFeedback.textContent = error.message;
-  else { alert("Email updated! Please log in again."); await supabase.auth.signOut(); window.location.href="login.html"; }
-});
-
-// --------------------
-// Update Password
-// --------------------
-function validatePassword(pw) {
-  if (!pw) return "Password cannot be empty";
-  if (pw.length < 6) return "Password must be at least 6 characters";
-  return null;
-}
-
-document.getElementById("update-password").addEventListener("click", async () => {
-  const current = currentPasswordInput.value.trim();
-  const newPw = newPasswordInput.value.trim();
-  const validation = validatePassword(newPw);
-  if (validation) { passwordFeedback.textContent = validation; return; }
-  passwordFeedback.textContent = "";
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
-
-  try {
-    // Reauthenticate with current password
-    const { error: loginError } = await supabase.auth.signInWithPassword({ email: user.email, password: current });
-    if (loginError) { passwordFeedback.textContent = "Current password is incorrect"; return; }
-    
-    const { error } = await supabase.auth.updateUser({ password: newPw });
-    if (error) passwordFeedback.textContent = error.message;
-    else { alert("Password updated! Please log in again."); await supabase.auth.signOut(); window.location.href="login.html"; }
-  } catch(e) { passwordFeedback.textContent = e.message; }
 });
 </script>
 </body>

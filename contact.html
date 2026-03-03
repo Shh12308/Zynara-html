@@ -173,12 +173,19 @@ button:disabled {
     <div id="msg" aria-live="polite"></div>
   </form>
 </div>
-
+ <script src="env.js"></script>
 <script>
+const SUPABASE_ANON_KEY = window.ENV?.SUPABASE_ANON_KEY;
+
+if (!SUPABASE_ANON_KEY) {
+  console.error("Missing SUPABASE_ANON_KEY");
+}
+
 const form = document.getElementById("supportForm");
 const msg = document.getElementById("msg");
 const btn = document.getElementById("submitBtn");
 const darkToggle = document.getElementById("darkToggle");
+const messageField = form.querySelector('textarea[name="message"]');
 
 /* Theme toggle */
 darkToggle.addEventListener("click", () => {
@@ -188,7 +195,7 @@ darkToggle.addEventListener("click", () => {
 });
 
 /* Auto-resize textarea */
-form.message.addEventListener("input", e => {
+messageField.addEventListener("input", e => {
   e.target.style.height = "auto";
   e.target.style.height = e.target.scrollHeight + "px";
 });
@@ -202,14 +209,23 @@ form.addEventListener("submit", async e => {
 
   const data = new FormData(form);
 
-  // Honeypot check
-  if (data.get("company")) return;
+  // Honeypot
+  if (data.get("company")) {
+    btn.disabled = false;
+    return;
+  }
 
   try {
-    const res = await fetch(
-      "https://xmmqhahsfhlmplbuchat.supabase.co/functions/v1/quick-responder",
-      { method: "POST", body: data }
-    );
+  const res = await fetch(
+  "https://xmmqhahsfhlmplbuchat.supabase.co/functions/v1/quick-responder",
+  {
+    method: "POST",
+    body: data,
+    headers: {
+      "Accept": "application/json"
+    }
+  }
+);
 
     const json = await res.json();
     if (!res.ok) throw new Error(json?.error || "Failed");
@@ -218,7 +234,8 @@ form.addEventListener("submit", async e => {
     msg.className = "success";
     form.reset();
 
-  } catch {
+  } catch (err) {
+    console.error(err);
     msg.textContent = "❌ Unable to send message. Please try again later.";
     msg.className = "error";
   } finally {

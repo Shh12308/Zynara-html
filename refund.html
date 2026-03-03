@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Refund Policy</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+  margin: 0;
+  padding: 40px 20px;
+  color: #333;
+}
+
+.container {
+  max-width: 800px;
+  margin: auto;
+  background: #ffffff;
+  padding: 40px;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+h1 {
+  margin-top: 0;
+}
+
+h2 {
+  margin-top: 40px;
+}
+
+ul {
+  padding-left: 20px;
+}
+
+form {
+  margin-top: 30px;
+}
+
+label {
+  display: block;
+  margin-top: 15px;
+  font-weight: bold;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 12px;
+  margin-top: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+textarea {
+  resize: vertical;
+}
+
+button {
+  margin-top: 25px;
+  padding: 14px;
+  width: 100%;
+  background: #0070f3;
+  border: none;
+  color: white;
+  font-size: 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+button:hover {
+  background: #0059c9;
+}
+
+.success-message {
+  display: none;
+  margin-top: 20px;
+  padding: 15px;
+  background: #e6f9ed;
+  color: #137333;
+  border-radius: 6px;
+}
+
+.error-message {
+  display: none;
+  margin-top: 20px;
+  padding: 15px;
+  background: #fdecea;
+  color: #b3261e;
+  border-radius: 6px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Refund Policy</h1>
+
+<p>We want you to be satisfied with your purchase. If you are not happy, you may request a refund under the conditions below.</p>
+
+<h2>Eligibility</h2>
+<ul>
+  <li>Refund requests must be submitted within <strong>7 days</strong> of purchase.</li>
+  <li>You must provide the <strong>email used at checkout</strong>.</li>
+  <li>You must include your <strong>Order ID</strong>.</li>
+  <li>Refunds are only issued for purchases made through Gumroad.</li>
+</ul>
+
+<h2>Processing Time</h2>
+<p>Approved refunds are processed within 3–5 business days. Funds may take 5–10 business days to appear in your account.</p>
+
+<h2>Request a Refund</h2>
+
+<form id="refundForm">
+
+<label>Full Name</label>
+<input type="text" name="full_name" required>
+
+<label>Email Used at Purchase</label>
+<input type="email" name="email" required>
+
+<label>Order ID</label>
+<input type="text" name="order_id" required>
+
+<label>Product Name</label>
+<input type="text" name="product_name" required>
+
+<label>Reason for Refund</label>
+<select name="reason" required>
+  <option value="">Select a reason</option>
+  <option>Accidental purchase</option>
+  <option>Technical issue</option>
+  <option>Duplicate order</option>
+  <option>Not what I expected</option>
+  <option>Other</option>
+</select>
+
+<label>Additional Details</label>
+<textarea name="details" rows="4" placeholder="Optional"></textarea>
+
+<button type="submit">Submit Refund Request</button>
+
+<div class="success-message" id="successMessage">
+  Refund request submitted successfully. We will respond within 48 hours.
+</div>
+
+<div class="error-message" id="errorMessage">
+  Something went wrong. Please try again later.
+</div>
+
+</form>
+
+</div>
+
+<script>
+document.getElementById("refundForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
+
+  const form = e.target;
+
+  const formData = {
+    full_name: form.full_name.value.trim(),
+    email: form.email.value.trim(),
+    order_id: form.order_id.value.trim(),
+    product_name: form.product_name.value.trim(),
+    reason: form.reason.value,
+    details: form.details.value.trim()
+  };
+
+  try {
+    const response = await fetch("https://ysteep-leaf-1ae2.sorryforanyproblems.workers.dev", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(formData)
+    });
+
+    if (response.ok) {
+      document.getElementById("successMessage").style.display = "block";
+      document.getElementById("errorMessage").style.display = "none";
+      form.reset();
+    } else {
+      throw new Error("Request failed");
+    }
+
+  } catch (error) {
+    document.getElementById("errorMessage").style.display = "block";
+    document.getElementById("successMessage").style.display = "none";
+  }
+});
+</script>
+
+</body>
+</html>
