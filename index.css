@@ -20,6 +20,43 @@
             --code-space-border: #444;
         }
 
+:root {
+    --accent-color-hover: #0056b3; /* fallback for hover */
+}
+
+[data-theme="dark"] {
+    --accent-color-hover: #3399ff;
+}
+
+[data-theme="blue"] {
+    --accent-color-hover: #003d99;
+}
+
+.login-btn:hover {
+    background-color: var(--accent-color-hover);
+}
+
+[data-theme="pink"] {
+    --sidebar-text-color: #880e4f; /* same as before */
+    --text-color: #560027; /* darker for better contrast */
+}
+
+:root {
+    --transition-speed: 0.3s;
+}
+
+body, .sidebar, .main-content, .message, .input-area button {
+    transition: background-color var(--transition-speed), color var(--transition-speed);
+}
+
+:root {
+    --hover-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.login-btn:hover, .sidebar button:hover, .input-area button:hover {
+    box-shadow: var(--hover-shadow);
+}
+
         [data-theme="dark"] {
             --bg-color: #18191a;
             --sidebar-bg: #242526;
