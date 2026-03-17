@@ -1096,250 +1096,169 @@ if ('serviceWorker' in navigator) {
             };
             
             const handleSendMessage = async (messageText = null) => {
-                const message = messageText || userInput.value.trim();
-                if (!message) return;
+    const message = messageText || userInput.value.trim();
+    if (!message) return;
 
-                // Check if user is authenticated
-                const { data: { session } } = await supabase.auth.getSession();
-                
-                // Handle anonymous user limit
-                if (!session) {
-                    if (anonMessageCount >= ANON_LIMIT) {
-                        showToast(`You've reached the limit of ${ANON_LIMIT} messages. Sign in to continue chatting.`);
-                        setTimeout(() => {
-                            window.location.href = "login.html";
-                        }, 1500);
-                        return;
+    // Check user session
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session && anonMessageCount >= ANON_LIMIT) {
+        showToast(`You've reached the limit of ${ANON_LIMIT} messages. Sign in to continue chatting.`);
+        setTimeout(() => window.location.href = "login.html", 1500);
+        return;
+    }
+    if (!session) incrementAnonCount();
+
+    // Create new chat if needed
+    if (!currentChatId) {
+        currentChatId = Date.now().toString();
+        folders['unfiled'].chats[currentChatId] = {
+            title: message.substring(0, 30) + '...',
+            messages: []
+        };
+    }
+
+    // Add user's message to UI
+    const userMessagePair = addMessageToChat('user', message);
+    folders['unfiled'].chats[currentChatId].messages.push({ 
+        id: userMessagePair.dataset.messageId, 
+        sender: 'user', 
+        text: message 
+    });
+    saveUserChats();
+
+    userInput.value = '';
+    userInput.style.height = '22px';
+
+    // Bot placeholder
+    const botMessagePair = addMessageToChat('bot', '');
+    const botMessageContent = botMessagePair.querySelector('.message-content');
+    botMessageContent.appendChild(createThinkingDots());
+
+    folders['unfiled'].chats[currentChatId].messages.push({ 
+        id: botMessagePair.dataset.messageId, 
+        sender: 'bot', 
+        text: 'Thinking...' 
+    });
+    saveUserChats();
+
+    isGeneratingResponse = true;
+    toggleSendPauseButtons(true);
+
+    try {
+        const AI_URL = (userPlanType === 'premium' || userPlanType === 'lifetime') 
+            ? PREMIUM_AI_URL 
+            : FREE_AI_URL;
+
+        currentResponseController = new AbortController();
+        const endpoint = new URL('/ask/universal', AI_URL).toString();
+
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            credentials: "include",
+            headers: {
+                'Content-Type': 'application/json',
+                ...(session ? { Authorization: `Bearer ${session.access_token}` } : {})
+            },
+            body: JSON.stringify({
+                prompt: message,
+                stream: true   // <-- important for SSE
+            }),
+            signal: currentResponseController.signal
+        });
+
+        if (!response.ok) throw new Error(`API Error: ${response.status}`);
+
+        // Check if the response is streaming
+        const contentType = response.headers.get("content-type") || "";
+        if (contentType.includes("text/event-stream")) {
+            // --- STREAMING SSE ---
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+            botMessageContent.innerHTML = '';
+
+            let buffer = '';
+            let fullText = '';
+            let statusElement = null;
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+
+                const events = buffer.split("\n\n");
+                buffer = events.pop(); // keep unfinished frame
+
+                for (const evt of events) {
+                    if (!evt.startsWith("data:")) continue;
+
+                    const payload = evt.replace("data:", "").trim();
+                    if (!payload || payload === "[DONE]") continue;
+
+                    let data;
+                    try { data = JSON.parse(payload); } catch { continue; }
+
+                    // STATUS
+                    if (data.type === "status") {
+                        if (statusElement) statusElement.remove();
+                        statusElement = createStatusIndicator(data.status);
+                        botMessageContent.appendChild(statusElement);
+                        continue;
                     }
-                    incrementAnonCount();
-                }
 
-                // Create a new chat if needed
-                if (!currentChatId) {
-                    currentChatId = Date.now().toString();
-                    folders['unfiled'].chats[currentChatId] = {
-                        title: message.substring(0, 30) + '...',
-                        messages: []
-                    };
-                }
+                    // TOKEN
+                    if (data.type === "token" && data.text) {
+                        if (statusElement) { statusElement.remove(); statusElement = null; }
+                        for (const char of data.text) {
+                            fullText += char;
+                            botMessageContent.textContent = fullText;
 
-                // Handle file uploads to Supabase
-                if (uploadedFiles.length > 0) {
-                    const uploadedUrls = [];
-                    for (const file of uploadedFiles) {
-                        const url = await uploadToSupabase(file);
-                        if (url) {
-                            uploadedUrls.push({
-                                name: file.name,
-                                size: file.size,
-                                type: file.type,
-                                url: url
-                            });
+                            const msgObj = folders['unfiled'].chats[currentChatId].messages
+                                .find(m => m.id === botMessagePair.dataset.messageId);
+                            if (msgObj) msgObj.text = fullText;
                         }
                     }
-                    
-                    if (uploadedUrls.length > 0) {
-                        const fileContent = {
-                            type: 'files',
-                            files: uploadedUrls
-                        };
-                        addMessageToChat('user', fileContent);
-                        folders['unfiled'].chats[currentChatId].messages.push({ 
-                            id: `msg-${messageIdCounter++}`, 
-                            sender: 'user', 
-                            text: `Uploaded ${uploadedUrls.length} file(s)` 
-                        });
-                    }
-                    clearUploadedFiles();
-                }
 
-                // Add text message to UI
-                const userMessagePair = addMessageToChat('user', message);
-                folders['unfiled'].chats[currentChatId].messages.push({ id: userMessagePair.dataset.messageId, sender: 'user', text: message });
-                
-                saveUserChats();
-
-                userInput.value = '';
-                userInput.style.height = '22px';
-
-                // Create bot message placeholder with thinking dots
-                const botMessagePair = addMessageToChat('bot', '');
-                const botMessageContent = botMessagePair.querySelector('.message-content');
-                botMessageContent.appendChild(createThinkingDots());
-                
-                folders['unfiled'].chats[currentChatId].messages.push({ id: botMessagePair.dataset.messageId, sender: 'bot', text: 'Thinking...' });
-                saveUserChats();
-
-                // Show pause button and hide send button
-                isGeneratingResponse = true;
-                toggleSendPauseButtons(true);
-
-                try {
-                    // Determine which API endpoint to use based on user plan
-                    const AI_URL = (userPlanType === 'premium' || userPlanType === 'lifetime') 
-                        ? PREMIUM_AI_URL 
-                        : FREE_AI_URL;
-                    
-                    // Create an AbortController to allow stopping the request
-                    currentResponseController = new AbortController();
-                    
-                    const endpoint = new URL('/ask/universal', AI_URL).toString();
-
-const response = await fetch(endpoint, {
-    method: 'POST',
-    credentials: "include",
-    headers: {
-        'Content-Type': 'application/json',
-        ...(session ? { Authorization: `Bearer ${session.access_token}` } : {})
-    },
-    body: JSON.stringify({
-        prompt: message,
-        stream: true
-    }),
-    signal: currentResponseController.signal
-});
-
-                    if (!response.ok) {
-                        // Provide specific error feedback
-                        if (response.status === 400) {
-                            throw new Error("Bad Request: The server requires a text prompt and could not process request.");
-                        }
-                        throw new Error(`API Error: ${response.status}`);
-                    }
-                    
-                    const reader = response.body.getReader();
-                    const decoder = new TextDecoder("utf-8");
-
-                    botMessageContent.innerHTML = '';
-
-                    let buffer = '';
-                    let fullText = '';
-                    let currentStatus = null;
-                    let statusElement = null;
-
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
-
-                        buffer += decoder.decode(value, { stream: true });
-
-                        // SSE frames are separated by DOUBLE newlines
-                        const events = buffer.split("\n\n");
-                        buffer = events.pop(); // keep unfinished frame
-
-                        for (const evt of events) {
-                            if (!evt.startsWith("data:")) continue;
-
-                            const payload = evt.replace("data:", "").trim();
-                            if (!payload || payload === "[DONE]") continue;
-
-                            let data;
-                            try {
-                                data = JSON.parse(payload);
-                            } catch {
-                                continue; // ignore partial JSON safely
-                            }
-
-                            // START EVENT
-                            if (data.type === "starting") {
-                                continue;
-                            }
-
-                            // STATUS EVENTS - Show status like "Generating image", "Searching online"
-                            if (data.type === "status") {
-                                // Remove previous status if exists
-                                if (statusElement) {
-                                    statusElement.remove();
-                                }
-                                
-                                // Create new status indicator
-                                statusElement = createStatusIndicator(data.status);
-                                botMessageContent.appendChild(statusElement);
-                                currentStatus = data.status;
-                                continue;
-                            }
-
-                            // TOKEN STREAM (SLOWED)
-                            if (data.type === "token" && data.text) {
-                                // Remove status indicator if we're now getting actual content
-                                if (statusElement) {
-                                    statusElement.remove();
-                                    statusElement = null;
-                                }
-                                
-                                for (const char of data.text) {
-                                    fullText += char;
-                                    botMessageContent.textContent = fullText;
-
-                                    // save live text
-                                    const msgObj = folders['unfiled']
-                                        .chats[currentChatId]
-                                        .messages.find(m => m.id === botMessagePair.dataset.messageId);
-
-                                    if (msgObj) msgObj.text = fullText;
-
-                                    await new Promise(r => setTimeout(r, 15)); // typing speed
-                                }
-                            }
-
-                            // IMAGE
-                            if (data.type === "image" && data.url) {
-                                // Remove status indicator if we're now getting actual content
-                                if (statusElement) {
-                                    statusElement.remove();
-                                    statusElement = null;
-                                }
-                                
-                                renderMessageContent({ type: 'image', url: data.url }, botMessageContent);
-                                
-                                // Add to image gallery
-                                if (!imageGallery.includes(data.url)) {
-                                    imageGallery.push(data.url);
-                                    saveUserChats();
-                                    displayImageGallery();
-                                }
-                            }
-
-                            // VIDEO
-                            if (data.type === "video" && data.url) {
-                                // Remove status indicator if we're now getting actual content
-                                if (statusElement) {
-                                    statusElement.remove();
-                                    statusElement = null;
-                                }
-                                
-                                renderMessageContent({ type: 'video', url: data.url }, botMessageContent);
-                            }
-
-                            // DONE
-                            if (data.type === "done") {
-                                saveUserChats();
-                                return;
-                            }
+                    // IMAGE / VIDEO / AUDIO
+                    if (data.type === "image" || data.type === "video" || data.type === "audio") {
+                        if (statusElement) { statusElement.remove(); statusElement = null; }
+                        renderMessageContent(data, botMessageContent);
+                        if (data.url && !imageGallery.includes(data.url)) {
+                            imageGallery.push(data.url);
+                            saveUserChats();
+                            displayImageGallery();
                         }
                     }
-                } catch (error) {
-                    // If the request was aborted, don't show an error message
-                    if (error.name === 'AbortError') {
-                        console.log('Request was aborted');
-                        return;
-                    }
-                    
-                    console.error('Error:', error);
-                    const botMessageContent = botMessagePair.querySelector('.message-content');
-                    renderMessageContent(`An error occurred: ${error.message}. Please try again.`, botMessageContent);
-                    folders['unfiled'].chats[currentChatId].messages.find(m => m.id === botMessagePair.dataset.messageId).text = `Error: ${error.message}`;
-                    saveUserChats();
-                } finally {
-                    // Reset state when response is complete or aborted
-                    isGeneratingResponse = false;
-                    currentResponseController = null;
-                    toggleSendPauseButtons(false);
-                    
-                    // Remove any status indicators
-                    document.querySelectorAll('.status-indicator').forEach(el => el.remove());
+
+                    // DONE
+                    if (data.type === "done") saveUserChats();
                 }
-            };
+            }
+
+        } else {
+            // --- NON-STREAMING JSON ---
+            const jsonData = await response.json();
+            let text = jsonData.response || "No response";
+            botMessageContent.textContent = text;
+
+            const msgObj = folders['unfiled'].chats[currentChatId].messages
+                .find(m => m.id === botMessagePair.dataset.messageId);
+            if (msgObj) msgObj.text = text;
+            saveUserChats();
+        }
+
+    } catch (error) {
+        if (error.name !== 'AbortError') {
+            console.error('Error:', error);
+            renderMessageContent(`Error: ${error.message}`, botMessageContent);
+        }
+    } finally {
+        isGeneratingResponse = false;
+        currentResponseController = null;
+        toggleSendPauseButtons(false);
+        document.querySelectorAll('.status-indicator').forEach(el => el.remove());
+    }
+};
 
             const clearChat = () => {
                 chatMessages.innerHTML = '';
