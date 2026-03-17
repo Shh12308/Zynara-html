@@ -1335,6 +1335,7 @@ if ('serviceWorker' in navigator) {
 
 const response = await fetch(endpoint, {
     method: 'POST',
+    credentials: "include",
     headers: {
         'Content-Type': 'application/json',
         ...(session ? { Authorization: `Bearer ${session.access_token}` } : {})
