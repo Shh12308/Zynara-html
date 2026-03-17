@@ -643,279 +643,131 @@ if ('serviceWorker' in navigator) {
 
             // --- Functions ---
             const renderMessageContent = (content, messageElement) => {
-                 if (typeof content === 'string') {
-                    // Process code blocks with triple backticks
-                    const processedContent = content.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-                        return `<div class="code-block" data-lang="${lang || 'plaintext'}">
-                            <div class="code-header">
-                                <div class="code-language">
-                                    <div class="code-language-icon"></div>
-                                    <span>${(lang || 'plaintext').toUpperCase()}</span>
-                                </div>
-                                <div class="code-actions">
-                                    <button class="code-action-btn copy-code-btn">
-                                        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
-                                    </button>
-                                    ${lang === 'html' || lang === 'javascript' || lang === 'css' ? `
-                                    <button class="code-action-btn preview-code-btn">
-                                        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
-                                    </button>` : ''}
-                                </div>
-                            </div>
-                            <div class="code-content">
-                                <pre><code class="language-${lang || 'plaintext'}">${code}</code></pre>
-                            </div>
-                        </div>`;
-                    });
-                    
-                    messageElement.innerHTML = marked.parse(processedContent, {
-                        gfm: true,
-                        breaks: true
-                    });
-                    
-                    // Highlight code blocks
-                    messageElement.querySelectorAll('.code-block').forEach(block => {
-                        const codeElement = block.querySelector('code');
-                        if (codeElement) {
-                            hljs.highlightElement(codeElement);
-                        }
-                        
-                        // Add copy functionality
-                        const copyBtn = block.querySelector('.copy-code-btn');
-                        if (copyBtn) {
-                            copyBtn.addEventListener('click', () => {
-                                const code = block.querySelector('code').textContent;
-                                navigator.clipboard.writeText(code).then(() => {
-                                    showToast('Code copied to clipboard!');
-                                }).catch(err => {
-                                    console.error('Failed to copy code: ', err);
-                                });
-                            });
-                        }
-                        
-                        // Add preview functionality for HTML/JS/CSS
-                        const previewBtn = block.querySelector('.preview-code-btn');
-                        if (previewBtn) {
-                            previewBtn.addEventListener('click', () => {
-                                const code = block.querySelector('code').textContent;
-                                const lang = block.dataset.lang;
-                                showCodePreview(code, lang);
-                            });
-                        }
-                    });
-                } else if (content.type === 'image') {
-                    const mediaContainer = document.createElement('div');
-                    mediaContainer.className = 'media-container';
-                    
-                    const img = document.createElement('img');
-                    img.src = content.url;
-                    img.alt = "Generated Image";
-                    img.loading = "lazy";
+    if (typeof content === 'string') {
+        // Parse markdown with code blocks
+        const processedContent = content.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+            return `<div class="code-block" data-lang="${lang || 'plaintext'}">
+                <div class="code-header">
+                    <div class="code-language">
+                        <div class="code-language-icon" style="background-color:${
+                            {
+                                'javascript': '#f7df1e',
+                                'python': '#3776ab',
+                                'html': '#e34c26',
+                                'css': '#1572b6',
+                                'json': '#000000',
+                                'plaintext': '#555555'
+                            }[lang] || '#555555'
+                        }"></div>
+                        <span>${(lang || 'plaintext').toUpperCase()}</span>
+                    </div>
+                    <div class="code-actions">
+                        <button class="code-action-btn copy-code-btn" title="Copy Code">
+                            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                        </button>
+                        ${['html','javascript','css'].includes(lang) ? `
+                        <button class="code-action-btn preview-code-btn" title="Preview Code">
+                            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                        </button>` : ''}
+                    </div>
+                </div>
+                <div class="code-content">
+                    <pre><code class="language-${lang || 'plaintext'}">${code}</code></pre>
+                </div>
+            </div>`;
+        });
 
-                    // Handle broken images (404s)
-                    img.onerror = () => {
-                        console.warn("Failed to load image, removing from view:", content.url);
-                        mediaContainer.remove();
-                        const index = imageGallery.indexOf(content.url);
-                        if (index > -1) {
-                            imageGallery.splice(index, 1);
-                            saveUserChats();
-                            displayImageGallery();
-                        }
-                    };
-                    
-                    const downloadBtn = document.createElement('button');
-                    downloadBtn.className = 'media-download-btn';
-                    downloadBtn.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>';
-                    downloadBtn.title = 'Download Image';
-                    downloadBtn.addEventListener('click', () => downloadFromSupabase(content.url, 'image.png'));
-                    
-                    mediaContainer.appendChild(img);
-                    mediaContainer.appendChild(downloadBtn);
-                    messageElement.appendChild(mediaContainer);
-                } else if (content.type === 'video') {
-                    const mediaContainer = document.createElement('div');
-                    mediaContainer.className = 'media-container';
-                    
-                    const video = document.createElement('video');
-                    video.controls = true;
-                    video.autoplay = false;
-                    const source = document.createElement('source');
-                    source.src = content.url;
-                    source.type = 'video/mp4';
-                    
-                    // Handle broken videos
-                    source.onerror = () => {
-                         mediaContainer.remove();
-                         const index = imageGallery.indexOf(content.url);
-                         if (index > -1) { /* handle removal */ }
-                    };
-                    
-                    video.appendChild(source);
-                    
-                    const downloadBtn = document.createElement('button');
-                    downloadBtn.className = 'media-download-btn';
-                    downloadBtn.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>';
-                    downloadBtn.title = 'Download Video';
-                    downloadBtn.addEventListener('click', () => downloadFromSupabase(content.url, 'video.mp4'));
-                    
-                    mediaContainer.appendChild(video);
-                    mediaContainer.appendChild(downloadBtn);
-                    messageElement.appendChild(mediaContainer);
-                } else if (content.type === 'audio') {
-                    const mediaContainer = document.createElement('div');
-                    mediaContainer.className = 'media-container';
-                    
-                    const audio = document.createElement('audio');
-                    audio.controls = true;
-                    const source = document.createElement('source');
-                    source.src = content.url;
-                    source.type = 'audio/mpeg';
-                    audio.appendChild(source);
-                    
-                    const downloadBtn = document.createElement('button');
-                    downloadBtn.className = 'media-download-btn';
-                    downloadBtn.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>';
-                    downloadBtn.title = 'Download Audio';
-                    downloadBtn.addEventListener('click', () => downloadFromSupabase(content.url, 'audio.mp3'));
-                    
-                    mediaContainer.appendChild(audio);
-                    mediaContainer.appendChild(downloadBtn);
-                    messageElement.appendChild(mediaContainer);
-                } else if (content.type === 'code') {
-                    const lang = content.language || 'plaintext';
-                    
-                    // Create enhanced code block
-                    const codeBlock = document.createElement('div');
-                    codeBlock.className = 'code-block';
-                    
-                    // Create code header with language indicator and actions
-                    const codeHeader = document.createElement('div');
-                    codeHeader.className = 'code-header';
-                    
-                    const languageLabel = document.createElement('div');
-                    languageLabel.className = 'code-language';
-                    
-                    // Add language icon
-                    const languageIcon = document.createElement('div');
-                    languageIcon.className = 'code-language-icon';
-                    
-                    // Set icon color based on language
-                    const languageColors = {
-                        'javascript': '#f7df1e',
-                        'python': '#3776ab',
-                        'html': '#e34c26',
-                        'css': '#1572b6',
-                        'json': '#000000',
-                        'plaintext': '#555555'
-                    };
-                    
-                    languageIcon.style.backgroundColor = languageColors[lang] || languageColors['plaintext'];
-                    
-                    const languageText = document.createElement('span');
-                    languageText.textContent = lang.toUpperCase();
-                    
-                    languageLabel.appendChild(languageIcon);
-                    languageLabel.appendChild(languageText);
-                    
-                    const codeActions = document.createElement('div');
-                    codeActions.className = 'code-actions';
-                    
-                    // Copy button
-                    const copyBtn = document.createElement('button');
-                    copyBtn.className = 'code-action-btn';
-                    copyBtn.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>';
-                    copyBtn.title = 'Copy Code';
-                    copyBtn.addEventListener('click', () => {
-                        navigator.clipboard.writeText(content.code).then(() => {
-                            showToast('Code copied to clipboard!');
-                        }).catch(err => {
-                            console.error('Failed to copy code: ', err);
-                        });
-                    });
-                    
-                    codeActions.appendChild(copyBtn);
-                    
-                    // Preview button for supported languages
-                    if (lang === 'html' || lang === 'javascript' || lang === 'css') {
-                        const previewBtn = document.createElement('button');
-                        previewBtn.className = 'code-action-btn';
-                        previewBtn.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>';
-                        previewBtn.title = 'Preview Code';
-                        previewBtn.addEventListener('click', () => {
-                            showCodePreview(content.code, lang);
-                        });
-                        
-                        codeActions.appendChild(previewBtn);
-                    }
-                    
-                    codeHeader.appendChild(languageLabel);
-                    codeHeader.appendChild(codeActions);
-                    
-                    // Create code content area
-                    const codeContent = document.createElement('div');
-                    codeContent.className = 'code-content';
-                    
-                    const preElement = document.createElement('pre');
-                    const codeElement = document.createElement('code');
-                    codeElement.className = `language-${lang}`;
-                    codeElement.textContent = content.code;
-                    
-                    preElement.appendChild(codeElement);
-                    codeContent.appendChild(preElement);
-                    
-                    // Assemble code block
-                    codeBlock.appendChild(codeHeader);
-                    codeBlock.appendChild(codeContent);
-                    
-                    messageElement.appendChild(codeBlock);
-                    
-                    // Highlight code
-                    hljs.highlightElement(codeElement);
-                } else if (content.type === 'search_result') {
-                    const container = document.createElement('div');
-                    container.className = 'search-result-container';
-                    const title = document.createElement('strong');
-                    title.textContent = 'Web Search Results:';
-                    container.appendChild(title);
+        messageElement.innerHTML = marked.parse(processedContent, {
+            gfm: true,
+            breaks: true
+        });
 
-                    if (Array.isArray(content.data)) {
-                        content.data.forEach(result => {
-                            const item = document.createElement('div');
-                            item.className = 'search-item';
-                            
-                            const link = document.createElement('a');
-                            link.href = result.url || result.link || '#';
-                            link.target = '_blank';
-                            link.className = 'search-title';
-                            link.textContent = result.title || 'Untitled';
-                            
-                            const snippet = document.createElement('span');
-                            snippet.className = 'search-snippet';
-                            snippet.textContent = result.body || result.snippet || 'No description.';
-                            
-                            item.appendChild(link);
-                            item.appendChild(snippet);
-                            container.appendChild(item);
-                        });
-                    } else {
-                        const fallback = document.createElement('div');
-                        fallback.textContent = JSON.stringify(content.data);
-                        container.appendChild(fallback);
-                    }
-                    messageElement.appendChild(container);
-                } else if (content.type === 'code_result') {
-                    const container = document.createElement('div');
-                    container.className = 'code-execution-output';
-                    if (content.data && content.data.stderr) {
-                        container.classList.add('code-execution-error');
-                        container.textContent = content.data.stderr || content.data;
-                    } else {
-                        container.textContent = content.data.stdout || content.data.output || JSON.stringify(content.data);
-                    }
-                    messageElement.appendChild(container);
-                }
-            };
+        // Highlight and add actions for code blocks
+        messageElement.querySelectorAll('.code-block').forEach(block => {
+            const codeEl = block.querySelector('code');
+            if (codeEl) hljs.highlightElement(codeEl);
+
+            const copyBtn = block.querySelector('.copy-code-btn');
+            if (copyBtn) copyBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(codeEl.textContent)
+                    .then(() => showToast('Code copied!'))
+                    .catch(err => console.error(err));
+            });
+
+            const previewBtn = block.querySelector('.preview-code-btn');
+            if (previewBtn) previewBtn.addEventListener('click', () => {
+                showCodePreview(codeEl.textContent, block.dataset.lang);
+            });
+        });
+
+    } else if (content.type === 'image' || content.type === 'video' || content.type === 'audio') {
+        const mediaContainer = document.createElement('div');
+        mediaContainer.className = 'media-container';
+        let mediaEl;
+
+        if (content.type === 'image') {
+            mediaEl = document.createElement('img');
+            mediaEl.src = content.url;
+            mediaEl.alt = 'Generated Image';
+            mediaEl.loading = 'lazy';
+            mediaEl.onerror = () => mediaContainer.remove();
+        } else if (content.type === 'video') {
+            mediaEl = document.createElement('video');
+            mediaEl.controls = true;
+            const source = document.createElement('source');
+            source.src = content.url;
+            source.type = 'video/mp4';
+            mediaEl.appendChild(source);
+        } else if (content.type === 'audio') {
+            mediaEl = document.createElement('audio');
+            mediaEl.controls = true;
+            const source = document.createElement('source');
+            source.src = content.url;
+            source.type = 'audio/mpeg';
+            mediaEl.appendChild(source);
+        }
+
+        const downloadBtn = document.createElement('button');
+        downloadBtn.className = 'media-download-btn';
+        downloadBtn.title = `Download ${content.type}`;
+        downloadBtn.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>';
+        downloadBtn.addEventListener('click', () => downloadFromSupabase(content.url, `${content.type}.mp4`));
+
+        mediaContainer.appendChild(mediaEl);
+        mediaContainer.appendChild(downloadBtn);
+        messageElement.appendChild(mediaContainer);
+
+    } else if (content.type === 'code') {
+        // Use the same logic as markdown code blocks if content.type === 'code'
+        renderMessageContent(`\`\`\`${content.language || 'plaintext'}\n${content.code}\`\`\``, messageElement);
+
+    } else if (content.type === 'search_result') {
+        const container = document.createElement('div');
+        container.className = 'search-result-container';
+        const title = document.createElement('strong');
+        title.textContent = 'Web Search Results:';
+        container.appendChild(title);
+
+        if (Array.isArray(content.data)) {
+            content.data.forEach(result => {
+                const item = document.createElement('div');
+                item.className = 'search-item';
+                const link = document.createElement('a');
+                link.href = result.url || result.link || '#';
+                link.target = '_blank';
+                link.className = 'search-title';
+                link.textContent = result.title || 'Untitled';
+                const snippet = document.createElement('span');
+                snippet.className = 'search-snippet';
+                snippet.textContent = result.body || result.snippet || '';
+                item.appendChild(link);
+                item.appendChild(snippet);
+                container.appendChild(item);
+            });
+        }
+        messageElement.appendChild(container);
+    }
+};
             
             // Function to show code preview
             const showCodePreview = (code, language) => {
