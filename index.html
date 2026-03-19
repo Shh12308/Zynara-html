@@ -259,7 +259,6 @@
         </button>
     </div>
 
-<!-- Zynara Consent Banner -->
 <div id="consent-banner">
   <p>
     ⚠️ <strong>Disclaimer:</strong> HeloxAi is an experimental AI system and may generate inaccurate information.<br>
@@ -287,6 +286,8 @@
 </script>
 
 <script type="module">
+import { marked } from 'https://cdn.jsdelivr.net/npm/marked/lib/marked.esm.js';
+import hljs from 'https://cdn.jsdelivr.net/npm/highlight.js/+esm';
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
   if (!window.__ENV__) {
@@ -866,9 +867,6 @@ const showCodePreview = (code, language) => {
     previewModal.appendChild(previewContent);
     document.body.appendChild(previewModal);
 };
-                
-                document.body.appendChild(previewModal);
-            };
             
             // Function to show toast notifications
             const showToast = (message) => {
@@ -1102,40 +1100,34 @@ const showCodePreview = (code, language) => {
             };
             
             const stopResponseGeneration = async () => {
-                if (currentResponseController) {
-                    currentResponseController.abort();
-                    currentResponseController = null;
-                }
+    if (currentResponseController) {
+        currentResponseController.abort();
+        currentResponseController = null;
+    }
 
-                               try {
-                    // Determine which API endpoint to use based on user plan
-                    const AI_URL = (userPlanType === 'premium' || userPlanType === 'lifetime') 
-                        ? PREMIUM_AI_URL 
-                        : FREE_AI_URL;
-                    
-                    
-                    // Call the stop endpoint
-                    const stopResponse = await fetch(STOP_URL, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            ...(session ? { Authorization: `Bearer ${session.access_token}` } : {})
-                        }
-                    });
-                    
-                    if (!stopResponse.ok) {
-                        console.warn("Failed to stop generation on backend:", stopResponse.statusText);
-                    }
-                } catch (e) {
-                    console.warn("Backend stop failed:", e);
-                }
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
 
-                isGeneratingResponse = false;
-                toggleSendPauseButtons(false);
-                
-                // Remove any status indicators
-                document.querySelectorAll('.status-indicator').forEach(el => el.remove());
-            };
+        const stopResponse = await fetch(STOP_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                ...(session ? { Authorization: `Bearer ${session.access_token}` } : {})
+            }
+        });
+
+        if (!stopResponse.ok) {
+            console.warn("Failed to stop generation on backend:", stopResponse.statusText);
+        }
+    } catch (e) {
+        console.warn("Backend stop failed:", e);
+    }
+
+    isGeneratingResponse = false;
+    toggleSendPauseButtons(false);
+
+    document.querySelectorAll('.status-indicator').forEach(el => el.remove());
+};
             
             const handleSendMessage = async (messageText = null) => {
     const message = messageText || userInput.value.trim();
@@ -2106,7 +2098,7 @@ const showCodePreview = (code, language) => {
         });
 
         (function () {
-            const CONSENT_KEY = "zynara_consent_v1";
+            const CONSENT_KEY = "HeloxAi_consent_v1";
 
             // Show banner if not accepted
             if (!localStorage.getItem(CONSENT_KEY)) {
