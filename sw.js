@@ -1,9 +1,4 @@
-// ================================
-// 🧠 AI Chat PWA Service Worker
-// Full Offline Support + Push + Background Sync
-// ================================
-
-const CACHE_NAME = 'chat-app-cache-v2';
+const CACHE_NAME = 'HeloxAi-v2';
 const OFFLINE_URL = '/offline.html';
 const MESSAGE_DB = 'chat-db';
 const MESSAGE_STORE = 'outbox';
