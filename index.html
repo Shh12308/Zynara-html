@@ -272,8 +272,19 @@
 
 <!-- Hidden file input for action sheet -->
 <input type="file" id="file-upload-input" class="file-upload-input" multiple accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt" style="display: none;">
-
+    
 <script src="env.js"></script>
+
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: window.ENV.ONESIGNAL_APP_ID,
+    });
+  });
+</script>
 
 <script type="module">
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
