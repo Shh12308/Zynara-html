@@ -425,6 +425,9 @@ if ('serviceWorker' in navigator) {
             const folderSelect = document.getElementById('folder-select');
             const cancelNewChatBtn = document.getElementById('cancel-new-chat');
             const confirmNewChatBtn = document.getElementById('confirm-new-chat');
+            const contextMenu = document.getElementById("context-menu");
+const aiMenu = document.getElementById("ai-message-menu");
+
 
             // --- State ---
             let deferredPrompt;
@@ -452,7 +455,8 @@ if ('serviceWorker' in navigator) {
             let recordingInterval;
             let uploadedFiles = [];
             let voiceBars = [];
-         
+            let currentMessage = null;
+            
             let currentUser = null;
             let userPlanType = 'free'; // Default to free plan
             
@@ -1057,6 +1061,7 @@ const showCodePreview = (code, language) => {
                     showToast("Could not access microphone. Please check permissions.");
                 }
             };
+            
 
             const stopRecording = () => {
                 if (mediaRecorder && mediaRecorder.state !== 'inactive') {
@@ -1425,6 +1430,179 @@ const showCodePreview = (code, language) => {
                 actionSheet.classList.remove('visible');
                 overlay.classList.remove('visible');
             };
+
+    document.addEventListener("contextmenu", (e) => {
+    const userMsg = e.target.closest(".user-message");
+    const aiMsg = e.target.closest(".ai-message");
+
+    if (userMsg) {
+        e.preventDefault();
+        currentMessage = userMsg;
+
+        aiMenu.style.display = "none";
+        contextMenu.style.display = "flex";
+
+        positionMenu(contextMenu, e.pageX, e.pageY);
+    }
+
+    if (aiMsg) {
+        e.preventDefault();
+        currentMessage = aiMsg;
+
+        contextMenu.style.display = "none";
+        aiMenu.style.display = "flex";
+
+        positionMenu(aiMenu, e.pageX, e.pageY);
+    }
+});
+
+// Hide menus on click
+document.addEventListener("click", () => {
+    contextMenu.style.display = "none";
+    aiMenu.style.display = "none";
+});
+
+function positionMenu(menu, x, y) {
+    menu.style.left = x + "px";
+    menu.style.top = y + "px";
+}
+
+            // EDIT
+document.getElementById("edit-message-btn").onclick = () => {
+    if (!currentMessage) return;
+
+    const textEl = currentMessage.querySelector(".message-text");
+    const newText = prompt("Edit message:", textEl.innerText);
+
+    if (newText !== null) {
+        textEl.innerText = newText;
+    }
+
+    contextMenu.style.display = "none";
+};
+
+// COPY
+document.getElementById("copy-message-btn").onclick = () => {
+    if (!currentMessage) return;
+
+    const text = currentMessage.innerText;
+    navigator.clipboard.writeText(text);
+
+    contextMenu.style.display = "none";
+};
+
+    document.getElementById("ai-copy-btn").onclick = () => {
+    if (!currentMessage) return;
+
+    navigator.clipboard.writeText(currentMessage.innerText);
+    aiMenu.style.display = "none";
+};
+
+            document.getElementById("ai-like-btn").onclick = () => {
+    if (!currentMessage) return;
+
+    currentMessage.dataset.feedback = "like";
+    currentMessage.classList.add("liked");
+
+    aiMenu.style.display = "none";
+};
+
+document.getElementById("ai-dislike-btn").onclick = () => {
+    if (!currentMessage) return;
+
+    currentMessage.dataset.feedback = "dislike";
+    currentMessage.classList.add("disliked");
+
+    aiMenu.style.display = "none";
+};
+
+            async function regenerateMessage(messageId, promptText) {
+    const userPlan = window.currentUser?.plan || "free";
+
+    try {
+        const res = await fetch("/regenrate", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                messageId,
+                prompt: promptText,
+                plan: userPlan
+            })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.error || "Regeneration failed");
+        }
+
+        return data.response;
+
+    } catch (err) {
+        console.error(err);
+        alert(err.message);
+        return null;
+    }
+}
+
+    document.getElementById("ai-regenerate-btn").onclick = async () => {
+    if (!currentMessage) return;
+
+    const messageId = currentMessage.dataset.id;
+    const promptText = currentMessage.dataset.prompt || "";
+
+    const newResponse = await regenerateMessage(messageId, promptText);
+
+    if (newResponse) {
+        currentMessage.querySelector(".message-text").innerText = newResponse;
+    }
+
+    aiMenu.style.display = "none";
+};
+
+    async function speakText(text) {
+    const userPlan = window.currentUser?.plan || "free";
+
+    try {
+        const res = await fetch("/tts", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                text,
+                plan: userPlan
+            })
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || "TTS failed");
+        }
+
+        // Assuming backend returns audio file (blob)
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+
+        const audio = new Audio(url);
+        audio.play();
+
+    } catch (err) {
+        console.error(err);
+        alert(err.message);
+    }
+}
+
+    document.getElementById("ai-voice-reply-btn").onclick = () => {
+    if (!currentMessage) return;
+
+    const text = currentMessage.innerText;
+    speakText(text);
+
+    aiMenu.style.display = "none";
+};
             
             // --- Folder & Chat Management ---
             const displayFoldersAndChats = () => {
