@@ -1953,294 +1953,236 @@ const showCodePreview = (code, language) => {
 
             // --- Event Listeners ---
             // Auth event listeners
-            loginBtn.addEventListener('click', signIn);
-            signOutBtn.addEventListener('click', signOut);
+            const loginBtn = document.getElementById("login-btn");
+    const signOutBtn = document.getElementById("signout-btn");
 
-            // Listen for auth state changes
-            supabase.auth.onAuthStateChange(async (event, session) => {
-                if (event === 'SIGNED_IN') {
-                    currentUser = session.user;
-                    resetAnonCount(); // Reset anonymous message count when user signs in
-                    await getUserPlan(); // Get user plan
-                    hideLoginButton();
-                    showUserProfile(session.user);
-                    loadUserChats();
-                } else if (event === 'SIGNED_OUT') {
-                    currentUser = null;
-                    userPlanType = 'free';
-                    hideUserProfile();
-                    showLoginButton();
-                    clearChat();
-                }
-            });
+    const aiMenu = document.getElementById("ai-message-menu");
+    const userMenu = document.getElementById("context-menu");
 
-            sendBtn.addEventListener('click', () => handleSendMessage());
-            pauseBtn.addEventListener('click', () => stopResponseGeneration());
-            userInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
-                }
-            });
-
-            userInput.addEventListener('input', () => {
-                userInput.style.height = 'auto';
-                userInput.style.height = userInput.scrollHeight + 'px';
-            });
-
-            // File upload event listeners
-            fileUploadBtn.addEventListener('click', () => {
-                fileUploadInput.click();
-            });
-
-            fileUploadInput.addEventListener('change', (e) => {
-                handleFileUpload(e.target.files);
-            });
-
-
-
-// =========================
-// UTIL: SHOW / HIDE MENUS
-// =========================
-function showMenu(menu, x, y) {
-    menu.style.display = "flex";
-    menu.style.top = y + "px";
-    menu.style.left = x + "px";
-}
-
-function hideMenus() {
-    document.querySelectorAll(".context-menu").forEach(menu => {
-        menu.style.display = "none";
-    });
-}
-
-// Close menus on click
-document.addEventListener("click", hideMenus);
-
-// =========================
-// CONTEXT MENU HANDLING
-// =========================
-
-// AI message right click
-document.addEventListener("contextmenu", (e) => {
-    const aiMsg = e.target.closest(".ai-message");
-    const userMsg = e.target.closest(".user-message");
-
-    // AI MESSAGE MENU
-    if (aiMsg) {
-        e.preventDefault();
-        currentAIMessage = aiMsg;
-
-        const menu = document.getElementById("ai-message-menu");
-        showMenu(menu, e.pageX, e.pageY);
+    // =========================
+    // UTIL: MENUS
+    // =========================
+    function showMenu(menu, x, y) {
+        if (!menu) return;
+        menu.style.display = "flex";
+        menu.style.top = y + "px";
+        menu.style.left = x + "px";
     }
 
-    // USER MESSAGE MENU
-    if (userMsg) {
-        e.preventDefault();
-        currentUserMessage = userMsg;
-
-        const menu = document.getElementById("context-menu");
-        showMenu(menu, e.pageX, e.pageY);
-    }
-});
-
-// =========================
-// COPY MESSAGE
-// =========================
-document.getElementById("copy-message-btn")?.addEventListener("click", () => {
-    if (!currentUserMessage) return;
-
-    navigator.clipboard.writeText(currentUserMessage.innerText);
-});
-
-// =========================
-// EDIT MESSAGE (simple inline edit)
-// =========================
-document.getElementById("edit-message-btn")?.addEventListener("click", () => {
-    if (!currentUserMessage) return;
-
-    const textEl = currentUserMessage.querySelector(".message-text");
-    const newText = prompt("Edit message:", textEl.innerText);
-
-    if (newText !== null) {
-        textEl.innerText = newText;
-    }
-});
-
-// =========================
-// AI: COPY
-// =========================
-document.getElementById("ai-copy-btn")?.addEventListener("click", () => {
-    if (!currentAIMessage) return;
-
-    navigator.clipboard.writeText(currentAIMessage.innerText);
-});
-
-// =========================
-// AI: LIKE / DISLIKE
-// =========================
-document.getElementById("ai-like-btn")?.addEventListener("click", () => {
-    if (!currentAIMessage) return;
-
-    currentAIMessage.classList.add("liked");
-    currentAIMessage.classList.remove("disliked");
-});
-
-document.getElementById("ai-dislike-btn")?.addEventListener("click", () => {
-    if (!currentAIMessage) return;
-
-    currentAIMessage.classList.add("disliked");
-    currentAIMessage.classList.remove("liked");
-});
-
-// =========================
-// AI: REGENERATE (/regenrate)
-// =========================
-document.getElementById("ai-regenerate-btn")?.addEventListener("click", async () => {
-    if (!currentAIMessage) return;
-
-    const prompt = currentAIMessage.innerText;
-
-    try {
-        const res = await fetch("/regenrate", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                prompt,
-                plan: currentUser.plan || "free"
-            })
+    function hideMenus() {
+        document.querySelectorAll(".context-menu").forEach(menu => {
+            menu.style.display = "none";
         });
-
-        const data = await res.json();
-
-        if (!res.ok) throw new Error(data.error || "Regenerate failed");
-
-        const textEl = currentAIMessage.querySelector(".message-text") || currentAIMessage;
-        textEl.innerText = data.response;
-
-    } catch (err) {
-        alert(err.message);
     }
-});
 
-// =========================
-// AI: TTS (/tts)
-// =========================
-document.getElementById("ai-voice-btn")?.addEventListener("click", async () => {
-    if (!currentAIMessage) return;
+    document.addEventListener("click", hideMenus);
 
-    const text = currentAIMessage.innerText;
+    // =========================
+    // AUTH
+    // =========================
+    loginBtn?.addEventListener("click", signIn);
+    signOutBtn?.addEventListener("click", signOut);
 
-    try {
-        const res = await fetch("/tts", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                text,
-                plan: currentUser.plan || "free"
-            })
-        });
+    supabase.auth.onAuthStateChange(async (event, session) => {
+        if (event === "SIGNED_IN") {
+            currentUser = session?.user || null;
 
-        if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err.error || "TTS failed");
+            resetAnonCount?.();
+            await getUserPlan?.();
+
+            hideLoginButton?.();
+            showUserProfile?.(session.user);
+            loadUserChats?.();
         }
 
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
+        if (event === "SIGNED_OUT") {
+            currentUser = null;
+            userPlanType = "free";
 
-        const audio = new Audio(url);
-        audio.play();
+            hideUserProfile?.();
+            showLoginButton?.();
+            clearChat?.();
+        }
+    });
 
-    } catch (err) {
-        alert(err.message);
+    // =========================
+    // SEND MESSAGE
+    // =========================
+    async function sendMessage(text) {
+        if (!text.trim()) return;
+
+        const chatContainer = document.getElementById("chat-messages");
+
+        const userMsg = document.createElement("div");
+        userMsg.className = "user-message";
+        userMsg.innerHTML = `<div class="message-text">${text}</div>`;
+        chatContainer.appendChild(userMsg);
+
+        userInput.value = "";
+
+        try {
+            const endpoint =
+                currentUser?.plan === "premium" || currentUser?.plan === "lifetime"
+                    ? "/premium-ai"
+                    : "/free-ai";
+
+            const res = await fetch(endpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prompt: text })
+            });
+
+            const data = await res.json();
+
+            const aiMsg = document.createElement("div");
+            aiMsg.className = "ai-message";
+            aiMsg.innerHTML = `<div class="message-text">${data.response}</div>`;
+
+            chatContainer.appendChild(aiMsg);
+
+        } catch (err) {
+            console.error(err);
+        }
     }
+
+    sendBtn?.addEventListener("click", () => sendMessage(userInput.value));
+
+    userInput?.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage(userInput.value);
+        }
+    });
+
+    // =========================
+    // UNIFIED CONTEXT MENU
+    // =========================
+    document.addEventListener("contextmenu", (e) => {
+        const aiMsg = e.target.closest(".ai-message");
+        const userMsg = e.target.closest(".user-message");
+
+        if (aiMsg) {
+            e.preventDefault();
+            currentAIMessage = aiMsg;
+            showMenu(aiMenu, e.pageX, e.pageY);
+            return;
+        }
+
+        if (userMsg) {
+            e.preventDefault();
+            currentUserMessage = userMsg;
+            showMenu(userMenu, e.pageX, e.pageY);
+        }
+    });
+
+    // =========================
+    // USER MENU ACTIONS
+    // =========================
+    document.getElementById("copy-message-btn")?.addEventListener("click", () => {
+        if (!currentUserMessage) return;
+        navigator.clipboard.writeText(currentUserMessage.innerText);
+    });
+
+    document.getElementById("edit-message-btn")?.addEventListener("click", () => {
+        if (!currentUserMessage) return;
+
+        const textEl = currentUserMessage.querySelector(".message-text");
+        const newText = prompt("Edit message:", textEl.innerText);
+
+        if (newText !== null) {
+            textEl.innerText = newText;
+        }
+    });
+
+    // =========================
+    // AI MENU ACTIONS
+    // =========================
+
+    document.getElementById("ai-copy-btn")?.addEventListener("click", () => {
+        if (!currentAIMessage) return;
+        navigator.clipboard.writeText(currentAIMessage.innerText);
+    });
+
+    document.getElementById("ai-like-btn")?.addEventListener("click", () => {
+        if (!currentAIMessage) return;
+        currentAIMessage.classList.add("liked");
+        currentAIMessage.classList.remove("disliked");
+    });
+
+    document.getElementById("ai-dislike-btn")?.addEventListener("click", () => {
+        if (!currentAIMessage) return;
+        currentAIMessage.classList.add("disliked");
+        currentAIMessage.classList.remove("liked");
+    });
+
+    // =========================
+    // REGENERATE
+    // =========================
+    document.getElementById("ai-regenerate-btn")?.addEventListener("click", async () => {
+        if (!currentAIMessage) return;
+
+        const prompt = currentAIMessage.innerText;
+        const plan = currentUser?.plan || "free";
+
+        try {
+            const res = await fetch("/regenrate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prompt, plan })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) throw new Error(data.error || "Regenerate failed");
+
+            const textEl = currentAIMessage.querySelector(".message-text") || currentAIMessage;
+            textEl.innerText = data.response;
+
+        } catch (err) {
+            alert(err.message);
+        }
+    });
+
+    // =========================
+    // TTS
+    // =========================
+    document.getElementById("ai-voice-btn")?.addEventListener("click", async () => {
+        if (!currentAIMessage) return;
+
+        const text = currentAIMessage.innerText;
+        const plan = currentUser?.plan || "free";
+
+        try {
+            const res = await fetch("/tts", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text, plan })
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.error || "TTS failed");
+            }
+
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+
+            new Audio(url).play();
+
+        } catch (err) {
+            alert(err.message);
+        }
+    });
+
+    // =========================
+    // INPUT AUTO RESIZE
+    // =========================
+    userInput?.addEventListener("input", () => {
+        userInput.style.height = "auto";
+        userInput.style.height = userInput.scrollHeight + "px";
+    });
+
 });
-
-// =========================
-// CHAT SENDING
-// =========================
-async function sendMessage(text) {
-    if (!text.trim()) return;
-
-    const chatContainer = document.getElementById("chat-messages");
-
-    // User message
-    const userMsg = document.createElement("div");
-    userMsg.className = "user-message";
-    userMsg.innerHTML = `<div class="message-text">${text}</div>`;
-    chatContainer.appendChild(userMsg);
-
-    document.getElementById("user-input").value = "";
-
-    try {
-        const endpoint =
-            currentUser.plan === "premium" || currentUser.plan === "lifetime"
-                ? "/premium-ai"
-                : "/free-ai";
-
-        const res = await fetch(endpoint, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ prompt: text })
-        });
-
-        const data = await res.json();
-
-        const aiMsg = document.createElement("div");
-        aiMsg.className = "ai-message";
-
-        aiMsg.innerHTML = `<div class="message-text">${data.response}</div>`;
-
-        chatContainer.appendChild(aiMsg);
-
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-// =========================
-// SEND BUTTON
-// =========================
-document.getElementById("send-btn")?.addEventListener("click", () => {
-    const input = document.getElementById("user-input");
-    sendMessage(input.value);
-});
-
-// Enter key support
-document.getElementById("user-input")?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage(e.target.value);
-    }
-});
-
-// =========================
-// AUTH UI TOGGLE
-// =========================
-function updateAuthUI(user) {
-    const profile = document.getElementById("user-profile");
-    const loginBtn = document.getElementById("login-btn");
-
-    if (user) {
-        profile.style.display = "flex";
-        loginBtn.style.display = "none";
-    } else {
-        profile.style.display = "none";
-        loginBtn.style.display = "block";
-    }
-}
-
-// Example init
-updateAuthUI(currentUser);
-
             // Drag and drop file upload
             document.addEventListener('dragover', (e) => {
                 e.preventDefault();
