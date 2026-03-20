@@ -1431,93 +1431,116 @@ const showCodePreview = (code, language) => {
                 overlay.classList.remove('visible');
             };
 
-    document.addEventListener("contextmenu", (e) => {
-    const userMsg = e.target.closest(".user-message");
-    const aiMsg = e.target.closest(".ai-message");
+// =========================
+// GLOBAL STATE
+// =========================
+let currentUser = window.currentUser || { plan: "free" };
 
-    if (userMsg) {
-        e.preventDefault();
-        currentMessage = userMsg;
+let currentAIMessage = null;
+let currentUserMessage = null;
 
-        aiMenu.style.display = "none";
-        contextMenu.style.display = "flex";
-
-        positionMenu(contextMenu, e.pageX, e.pageY);
-    }
-
-    if (aiMsg) {
-        e.preventDefault();
-        currentMessage = aiMsg;
-
-        contextMenu.style.display = "none";
-        aiMenu.style.display = "flex";
-
-        positionMenu(aiMenu, e.pageX, e.pageY);
-    }
-});
-
-// Hide menus on click
-document.addEventListener("click", () => {
-    contextMenu.style.display = "none";
-    aiMenu.style.display = "none";
-});
-
-function positionMenu(menu, x, y) {
-    menu.style.left = x + "px";
+// =========================
+// UTIL: SHOW / HIDE MENUS
+// =========================
+function showMenu(menu, x, y) {
+    menu.style.display = "flex";
     menu.style.top = y + "px";
+    menu.style.left = x + "px";
 }
 
-            // EDIT
-document.getElementById("edit-message-btn").onclick = () => {
-    if (!currentMessage) return;
+function hideMenus() {
+    document.querySelectorAll(".context-menu").forEach(menu => {
+        menu.style.display = "none";
+    });
+}
 
-    const textEl = currentMessage.querySelector(".message-text");
+// Close menus on click
+document.addEventListener("click", hideMenus);
+
+// =========================
+// CONTEXT MENU HANDLING
+// =========================
+
+// AI message right click
+document.addEventListener("contextmenu", (e) => {
+    const aiMsg = e.target.closest(".ai-message");
+    const userMsg = e.target.closest(".user-message");
+
+    // AI MESSAGE MENU
+    if (aiMsg) {
+        e.preventDefault();
+        currentAIMessage = aiMsg;
+
+        const menu = document.getElementById("ai-message-menu");
+        showMenu(menu, e.pageX, e.pageY);
+    }
+
+    // USER MESSAGE MENU
+    if (userMsg) {
+        e.preventDefault();
+        currentUserMessage = userMsg;
+
+        const menu = document.getElementById("context-menu");
+        showMenu(menu, e.pageX, e.pageY);
+    }
+});
+
+// =========================
+// COPY MESSAGE
+// =========================
+document.getElementById("copy-message-btn")?.addEventListener("click", () => {
+    if (!currentUserMessage) return;
+
+    navigator.clipboard.writeText(currentUserMessage.innerText);
+});
+
+// =========================
+// EDIT MESSAGE (simple inline edit)
+// =========================
+document.getElementById("edit-message-btn")?.addEventListener("click", () => {
+    if (!currentUserMessage) return;
+
+    const textEl = currentUserMessage.querySelector(".message-text");
     const newText = prompt("Edit message:", textEl.innerText);
 
     if (newText !== null) {
         textEl.innerText = newText;
     }
+});
 
-    contextMenu.style.display = "none";
-};
+// =========================
+// AI: COPY
+// =========================
+document.getElementById("ai-copy-btn")?.addEventListener("click", () => {
+    if (!currentAIMessage) return;
 
-// COPY
-document.getElementById("copy-message-btn").onclick = () => {
-    if (!currentMessage) return;
+    navigator.clipboard.writeText(currentAIMessage.innerText);
+});
 
-    const text = currentMessage.innerText;
-    navigator.clipboard.writeText(text);
+// =========================
+// AI: LIKE / DISLIKE
+// =========================
+document.getElementById("ai-like-btn")?.addEventListener("click", () => {
+    if (!currentAIMessage) return;
 
-    contextMenu.style.display = "none";
-};
+    currentAIMessage.classList.add("liked");
+    currentAIMessage.classList.remove("disliked");
+});
 
-    document.getElementById("ai-copy-btn").onclick = () => {
-    if (!currentMessage) return;
+document.getElementById("ai-dislike-btn")?.addEventListener("click", () => {
+    if (!currentAIMessage) return;
 
-    navigator.clipboard.writeText(currentMessage.innerText);
-    aiMenu.style.display = "none";
-};
+    currentAIMessage.classList.add("disliked");
+    currentAIMessage.classList.remove("liked");
+});
 
-            document.getElementById("ai-like-btn").onclick = () => {
-    if (!currentMessage) return;
+// =========================
+// AI: REGENERATE (/regenrate)
+// =========================
+document.getElementById("ai-regenerate-btn")?.addEventListener("click", async () => {
+    if (!currentAIMessage) return;
 
-    currentMessage.dataset.feedback = "like";
-    currentMessage.classList.add("liked");
-
-    aiMenu.style.display = "none";
-};
-
-document.getElementById("ai-dislike-btn").onclick = () => {
-    if (!currentMessage) return;
-
-    currentMessage.dataset.feedback = "dislike";
-    currentMessage.classList.add("disliked");
-
-    aiMenu.style.display = "none";
-};
-
-            async function regenerateMessage(messageId, promptText) {
-    const userPlan = window.currentUser?.plan || "free";
+    const prompt = currentAIMessage.innerText;
 
     try {
         const res = await fetch("/regenrate", {
@@ -1526,44 +1549,30 @@ document.getElementById("ai-dislike-btn").onclick = () => {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                messageId,
-                prompt: promptText,
-                plan: userPlan
+                prompt,
+                plan: currentUser.plan || "free"
             })
         });
 
         const data = await res.json();
 
-        if (!res.ok) {
-            throw new Error(data.error || "Regeneration failed");
-        }
+        if (!res.ok) throw new Error(data.error || "Regenerate failed");
 
-        return data.response;
+        const textEl = currentAIMessage.querySelector(".message-text") || currentAIMessage;
+        textEl.innerText = data.response;
 
     } catch (err) {
-        console.error(err);
         alert(err.message);
-        return null;
     }
-}
+});
 
-    document.getElementById("ai-regenerate-btn").onclick = async () => {
-    if (!currentMessage) return;
+// =========================
+// AI: TTS (/tts)
+// =========================
+document.getElementById("ai-voice-btn")?.addEventListener("click", async () => {
+    if (!currentAIMessage) return;
 
-    const messageId = currentMessage.dataset.id;
-    const promptText = currentMessage.dataset.prompt || "";
-
-    const newResponse = await regenerateMessage(messageId, promptText);
-
-    if (newResponse) {
-        currentMessage.querySelector(".message-text").innerText = newResponse;
-    }
-
-    aiMenu.style.display = "none";
-};
-
-    async function speakText(text) {
-    const userPlan = window.currentUser?.plan || "free";
+    const text = currentAIMessage.innerText;
 
     try {
         const res = await fetch("/tts", {
@@ -1573,7 +1582,7 @@ document.getElementById("ai-dislike-btn").onclick = () => {
             },
             body: JSON.stringify({
                 text,
-                plan: userPlan
+                plan: currentUser.plan || "free"
             })
         });
 
@@ -1581,6 +1590,96 @@ document.getElementById("ai-dislike-btn").onclick = () => {
             const err = await res.json();
             throw new Error(err.error || "TTS failed");
         }
+
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+
+        const audio = new Audio(url);
+        audio.play();
+
+    } catch (err) {
+        alert(err.message);
+    }
+});
+
+// =========================
+// CHAT SENDING
+// =========================
+async function sendMessage(text) {
+    if (!text.trim()) return;
+
+    const chatContainer = document.getElementById("chat-messages");
+
+    // User message
+    const userMsg = document.createElement("div");
+    userMsg.className = "user-message";
+    userMsg.innerHTML = `<div class="message-text">${text}</div>`;
+    chatContainer.appendChild(userMsg);
+
+    document.getElementById("user-input").value = "";
+
+    try {
+        const endpoint =
+            currentUser.plan === "premium" || currentUser.plan === "lifetime"
+                ? "/premium-ai"
+                : "/free-ai";
+
+        const res = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ prompt: text })
+        });
+
+        const data = await res.json();
+
+        const aiMsg = document.createElement("div");
+        aiMsg.className = "ai-message";
+
+        aiMsg.innerHTML = `<div class="message-text">${data.response}</div>`;
+
+        chatContainer.appendChild(aiMsg);
+
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+// =========================
+// SEND BUTTON
+// =========================
+document.getElementById("send-btn")?.addEventListener("click", () => {
+    const input = document.getElementById("user-input");
+    sendMessage(input.value);
+});
+
+// Enter key support
+document.getElementById("user-input")?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage(e.target.value);
+    }
+});
+
+// =========================
+// AUTH UI TOGGLE
+// =========================
+function updateAuthUI(user) {
+    const profile = document.getElementById("user-profile");
+    const loginBtn = document.getElementById("login-btn");
+
+    if (user) {
+        profile.style.display = "flex";
+        loginBtn.style.display = "none";
+    } else {
+        profile.style.display = "none";
+        loginBtn.style.display = "block";
+    }
+}
+
+// Example init
+updateAuthUI(currentUser);
 
         // Assuming backend returns audio file (blob)
         const blob = await res.blob();
