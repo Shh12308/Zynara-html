@@ -269,6 +269,10 @@
   <button id="accept-consent">Accept & Continue</button>
 </div>
 
+    <button id="enable-notifications-btn">
+  🔔 Enable Notifications
+</button>
+
 <!-- Hidden file input for action sheet -->
 <input type="file" id="file-upload-input" class="file-upload-input" multiple accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt" style="display: none;">
     
@@ -278,10 +282,38 @@
 
 <script>
   window.OneSignalDeferred = window.OneSignalDeferred || [];
+
   OneSignalDeferred.push(async function(OneSignal) {
     await OneSignal.init({
       appId: window.ENV.ONESIGNAL_APP_ID,
+
+      // Optional but recommended
+      notifyButton: {
+        enable: true
+      }
     });
+
+    // Attach button handler AFTER init
+    const btn = document.getElementById("enable-notifications-btn");
+
+    if (btn) {
+      btn.addEventListener("click", async () => {
+        const permission = await Notification.requestPermission();
+
+        if (permission === "granted") {
+          // Show OneSignal native prompt
+          OneSignal.showNativePrompt();
+        } else {
+          alert("Please allow notifications to continue.");
+        }
+      });
+    }
+
+    // Hide button if already subscribed
+    const isEnabled = await OneSignal.isPushNotificationsEnabled();
+    if (isEnabled && btn) {
+      btn.style.display = "none";
+    }
   });
 </script>
 
