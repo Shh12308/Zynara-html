@@ -434,6 +434,10 @@ const aiMenu = document.getElementById("ai-message-menu");
             let mediaRecorder;
             let audioContext;
             let analyser;
+let currentUser = window.currentUser || { plan: "free" };
+
+let currentAIMessage = null;
+let currentUserMessage = null;
             let microphone;
             let currentResponseController = null;
             let isGeneratingResponse = false;
@@ -1993,13 +1997,7 @@ const showCodePreview = (code, language) => {
                 handleFileUpload(e.target.files);
             });
 
-    // =========================
-// GLOBAL STATE
-// =========================
-let currentUser = window.currentUser || { plan: "free" };
 
-let currentAIMessage = null;
-let currentUserMessage = null;
 
 // =========================
 // UTIL: SHOW / HIDE MENUS
