@@ -1169,8 +1169,10 @@ const showCodePreview = (code, language) => {
     const botMessageContent = botMessagePair.querySelector('.message-content');
     botMessageContent.appendChild(createThinkingDots());
 
+    const botMsgId = botMessagePair.dataset.messageId;
+
     folders['unfiled'].chats[currentChatId].messages.push({ 
-        id: botMessagePair.dataset.messageId, 
+        id: botMsgId, 
         sender: 'bot', 
         text: 'Thinking...' 
     });
@@ -1178,6 +1180,9 @@ const showCodePreview = (code, language) => {
 
     isGeneratingResponse = true;
     toggleSendPauseButtons(true);
+
+    let fullText = '';
+    let statusElement = null;
 
     try {
         const AI_URL = (userPlanType === 'premium' || userPlanType === 'lifetime') 
@@ -1196,32 +1201,36 @@ const showCodePreview = (code, language) => {
             },
             body: JSON.stringify({
                 prompt: message,
-                stream: true   // <-- important for SSE
+                stream: true
             }),
             signal: currentResponseController.signal
         });
 
         if (!response.ok) throw new Error(`API Error: ${response.status}`);
 
-        // Check if the response is streaming
+        if (!response.body) {
+            throw new Error("No response body (streaming not supported)");
+        }
+
         const contentType = response.headers.get("content-type") || "";
+
         if (contentType.includes("text/event-stream")) {
             // --- STREAMING SSE ---
             const reader = response.body.getReader();
             const decoder = new TextDecoder("utf-8");
+
             botMessageContent.innerHTML = '';
 
             let buffer = '';
-            let fullText = '';
-            let statusElement = null;
 
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
+
                 buffer += decoder.decode(value, { stream: true });
 
                 const events = buffer.split("\n\n");
-                buffer = events.pop(); // keep unfinished frame
+                buffer = events.pop();
 
                 for (const evt of events) {
                     if (!evt.startsWith("data:")) continue;
@@ -1230,7 +1239,11 @@ const showCodePreview = (code, language) => {
                     if (!payload || payload === "[DONE]") continue;
 
                     let data;
-                    try { data = JSON.parse(payload); } catch { continue; }
+                    try {
+                        data = JSON.parse(payload);
+                    } catch {
+                        continue;
+                    }
 
                     // STATUS
                     if (data.type === "status") {
@@ -1242,21 +1255,29 @@ const showCodePreview = (code, language) => {
 
                     // TOKEN
                     if (data.type === "token" && data.text) {
-                        if (statusElement) { statusElement.remove(); statusElement = null; }
-                        for (const char of data.text) {
-                            fullText += char;
-                            botMessageContent.textContent = fullText;
-
-                            const msgObj = folders['unfiled'].chats[currentChatId].messages
-                                .find(m => m.id === botMessagePair.dataset.messageId);
-                            if (msgObj) msgObj.text = fullText;
+                        if (statusElement) {
+                            statusElement.remove();
+                            statusElement = null;
                         }
+
+                        fullText += data.text;
+                        botMessageContent.textContent = fullText;
+
+                        const msgObj = folders['unfiled'].chats[currentChatId].messages
+                            .find(m => m.id === botMsgId);
+
+                        if (msgObj) msgObj.text = fullText;
                     }
 
                     // IMAGE / VIDEO / AUDIO
                     if (data.type === "image" || data.type === "video" || data.type === "audio") {
-                        if (statusElement) { statusElement.remove(); statusElement = null; }
+                        if (statusElement) {
+                            statusElement.remove();
+                            statusElement = null;
+                        }
+
                         renderMessageContent(data, botMessageContent);
+
                         if (data.url && !imageGallery.includes(data.url)) {
                             imageGallery.push(data.url);
                             saveUserChats();
@@ -1265,31 +1286,40 @@ const showCodePreview = (code, language) => {
                     }
 
                     // DONE
-                    if (data.type === "done") saveUserChats();
+                    if (data.type === "done") {
+                        saveUserChats();
+                    }
                 }
             }
 
         } else {
             // --- NON-STREAMING JSON ---
             const jsonData = await response.json();
-            let text = jsonData.response || "No response";
+            const text = jsonData.response || "No response";
+
             botMessageContent.textContent = text;
 
             const msgObj = folders['unfiled'].chats[currentChatId].messages
-                .find(m => m.id === botMessagePair.dataset.messageId);
+                .find(m => m.id === botMsgId);
+
             if (msgObj) msgObj.text = text;
+
             saveUserChats();
         }
 
     } catch (error) {
         if (error.name !== 'AbortError') {
             console.error('Error:', error);
-            renderMessageContent(`Error: ${error.message}`, botMessageContent);
+
+            if (botMessageContent) {
+                renderMessageContent(`Error: ${error.message}`, botMessageContent);
+            }
         }
     } finally {
         isGeneratingResponse = false;
         currentResponseController = null;
         toggleSendPauseButtons(false);
+
         document.querySelectorAll('.status-indicator').forEach(el => el.remove());
     }
 };
