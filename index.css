@@ -359,17 +359,17 @@ body, .sidebar, .main-content, .message, .input-area button {
             overflow-y: auto;
         }
 
-.message {
-    max-width: min(80%, 700px); /* prevents overly wide bubbles */
-    width: fit-content;
-    padding: 12px 16px;
-    border-radius: 16px;
-    line-height: 1.5;
-    display: flex;
-    flex-direction: column;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    white-space: pre-wrap;
+.user-message {
+    align-self: flex-end;
+}
+
+.bot-message {
+    align-self: flex-start;
+}
+
+.main-content, #chat-messages {
+    box-sizing: border-box;
+    width: 100%;
 }
 
 .message-pair {
@@ -402,8 +402,17 @@ body, .sidebar, .main-content, .message, .input-area button {
     color: var(--text-color);
 }
 
-.message * {
-    max-width: 100%;
+.message {
+    max-width: min(80%, 700px);
+    width: fit-content;
+    padding: 15px 20px;
+    border-radius: 20px;
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
 }
 
 .message pre,
@@ -432,11 +441,12 @@ body, .sidebar, .main-content, .message, .input-area button {
 }
 
 #chat-messages {
-    align-items: center;
+    align-items: stretch;
 }
 
 .message {
-    width: 100%;
+    max-width: 100%;
+    width: auto;
 }
 
         .sidebar.visible {
