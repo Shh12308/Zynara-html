@@ -193,7 +193,7 @@ darkToggle.addEventListener("click", () => {
     document.body.classList.contains("dark") ? "☀️" : "🌙";
 });
 
-/* Auto-resize textarea */
+/* Auto resize */
 messageField.addEventListener("input", e => {
   e.target.style.height = "auto";
   e.target.style.height = e.target.scrollHeight + "px";
@@ -202,31 +202,37 @@ messageField.addEventListener("input", e => {
 /* Submit */
 form.addEventListener("submit", async e => {
   e.preventDefault();
+
   msg.textContent = "";
   msg.className = "";
   btn.disabled = true;
 
-  const data = new FormData(form);
+  const formData = new FormData(form);
 
-  // Honeypot
-  if (data.get("company")) {
+  // Honeypot spam check
+  if (formData.get("company")) {
     btn.disabled = false;
     return;
   }
 
+  const data = Object.fromEntries(formData);
+
   try {
-  const res = await fetch(
-  "https://acbnqeeukfxewiqswgbw.supabase.co/functions/v1/dynamic-api",
-  {
-    method: "POST",
-    body: data,
-    headers: {
-      "Accept": "application/json"
-    }
-  }
-);
+    const res = await fetch(
+      "https://acbnqeeukfxewiqswgbw.supabase.co/functions/v1/dynamic-api",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify(data)
+      }
+    );
 
     const json = await res.json();
+    console.log("Response:", json);
+
     if (!res.ok) throw new Error(json?.error || "Failed");
 
     msg.textContent = "✅ Message sent successfully";
@@ -234,7 +240,7 @@ form.addEventListener("submit", async e => {
     form.reset();
 
   } catch (err) {
-    console.error(err);
+    console.error("Error:", err);
     msg.textContent = "❌ Unable to send message. Please try again later.";
     msg.className = "error";
   } finally {
