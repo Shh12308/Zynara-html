@@ -1295,7 +1295,7 @@ const showCodePreview = (code, language) => {
         } else {
             // --- NON-STREAMING JSON ---
             const jsonData = await response.json();
-            const text = jsonData.response || "No response";
+            const text = jsonData.reply || jsonData.response || "No response";
 
             botMessageContent.textContent = text;
 
