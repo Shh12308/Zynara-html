@@ -550,11 +550,44 @@ const preorderBtn = document.getElementById("preorderBtn");
 const spinner = document.getElementById("loadingSpinner");
 
 // ----------------------------
-// Countdown Timer
+// AUTH HELPERS
 // ----------------------------
-// Set a realistic deadline, e.g., 30 days from now
+
+async function getCurrentUser() {
+  const { data } = await supabase.auth.getUser();
+  return data.user;
+}
+
+// ----------------------------
+// AUTH UI STATE
+// ----------------------------
+
+async function updateAuthUI() {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    preorderBtn.disabled = true;
+    preorderBtn.textContent = "Login to Preorder";
+  } else {
+    preorderBtn.disabled = false;
+    preorderBtn.textContent = "Pre-Order for £499";
+  }
+}
+
+updateAuthUI();
+
+// Listen for auth changes
+supabase.auth.onAuthStateChange(() => {
+  updateAuthUI();
+});
+
+// ----------------------------
+// COUNTDOWN TIMER
+// ----------------------------
+
 const deadline = new Date();
 deadline.setDate(deadline.getDate() + 30);
+
 const countdownElement = document.getElementById("countdown");
 
 function updateCountdown() {
@@ -565,7 +598,6 @@ function updateCountdown() {
     countdownElement.innerHTML = "Preorder closed";
     preorderBtn.disabled = true;
     preorderBtn.textContent = "Preorder Closed";
-    preorderBtn.style.opacity = "0.5";
     return;
   }
 
@@ -574,34 +606,49 @@ function updateCountdown() {
   const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
   const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-  countdownElement.innerHTML = `${days}d ${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
+  countdownElement.innerHTML = `${days}d ${hours.toString().padStart(2,'0')}h ${minutes.toString().padStart(2,'0')}m ${seconds.toString().padStart(2,'0')}s`;
 }
+
 setInterval(updateCountdown, 1000);
 updateCountdown();
 
 // ----------------------------
-// FAQ Accordion
+// FAQ ACCORDION
 // ----------------------------
+
 document.querySelectorAll('.faq-question').forEach(button => {
-    button.addEventListener('click', () => {
-        const answer = button.nextElementSibling;
-        button.classList.toggle('active');
-        answer.classList.toggle('show');
-    });
+  button.addEventListener('click', () => {
+    const answer = button.nextElementSibling;
+    button.classList.toggle('active');
+    answer.classList.toggle('show');
+  });
 });
 
+// ----------------------------
+// PREORDER CLICK (AUTH CHECK)
+// ----------------------------
 
-// ----------------------------
-// Preorder Click
-// ----------------------------
 preorderBtn.addEventListener("click", async () => {
   spinner.style.display = "flex";
 
-  try {
-    // In a real app, you might log the intent to Supabase here before redirecting
-    // const { data, error } = await supabase.from('preorders').insert({ email: 'user@example.com', status: 'initiated' });
+  const user = await getCurrentUser();
 
-    // Redirect to Gumroad checkout
+  if (!user) {
+    spinner.style.display = "none";
+    alert("Please log in to continue.");
+    return;
+  }
+
+  try {
+    // Save preorder intent
+    const { error } = await supabase.from("preorders").insert({
+      email: user.email,
+      status: "pending"
+    });
+
+    if (error) throw error;
+
+    // Redirect to Gumroad
     const checkoutUrl = "https://heloxai.gumroad.com/l/epszfs?success=true";
     window.location.href = checkoutUrl;
 
@@ -611,7 +658,6 @@ preorderBtn.addEventListener("click", async () => {
     alert("Something went wrong. Please try again.");
   }
 });
-
 </script>
 
 </body>
