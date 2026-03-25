@@ -136,6 +136,11 @@
 
   .social-icon { width: 20px; height: 20px; max-width: 20px; max-height: 20px; }
 
+  .social-logins button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
   /* ================== MESSAGES ================== */
   .legal, .note { color: var(--muted); font-size: clamp(13px, 2vw, 14px); text-align: center; margin-top: 14px; }
   .legal a, .note a { color: var(--accent); text-decoration: none; }
@@ -169,7 +174,10 @@
     <h1 id="page-title">Welcome Back to HeloxAi</h1>
 
     <div class="social-logins" aria-label="Social login options">
-      <button id="google-login" type="button"><img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="" class="social-icon" /> Continue with Google</button>
+      <button id="google-login" type="button" disabled title="Google login temporarily disabled">
+  <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="" class="social-icon" />
+  Continue with Google
+</button>
 
 <button id="wallet-login" type="button">
   <img src="https://www.svgrepo.com/show/331345/metamask.svg" class="social-icon" />
