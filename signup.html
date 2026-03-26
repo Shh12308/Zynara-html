@@ -311,17 +311,17 @@ meter {
     const declineBtn = document.getElementById("decline-cookies");
 
     // Check if consent already given
-    if (!localStorage.getItem("zynara_cookie_consent")) {
+    if (!localStorage.getItem("heloxai_cookie_consent")) {
       banner.style.display = "block";
     }
 
     acceptBtn.addEventListener("click", () => {
-      localStorage.setItem("zynara_cookie_consent", "accepted");
+      localStorage.setItem("heloxai_cookie_consent", "accepted");
       banner.style.display = "none";
     });
 
     declineBtn.addEventListener("click", () => {
-      localStorage.setItem("zynara_cookie_consent", "declined");
+      localStorage.setItem("heloxai_cookie_consent", "declined");
       banner.style.display = "none";
     });
   });
@@ -350,7 +350,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 /* =========================
    Constants
    ========================= */
-const ADMIN_DOMAIN = "@zynara.xyz";
+const ADMIN_DOMAIN = "@heloxai.xyz";
 
 /* =========================
    DOM Elements
@@ -452,16 +452,44 @@ form.addEventListener("submit", async (e) => {
   }
 
   try {
-    await grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: "signup" });
+    /* =========================
+       ✅ FIXED reCAPTCHA
+       ========================= */
+    await new Promise(resolve => grecaptcha.ready(resolve));
 
-const { data, error } = await supabase.auth.signUp({
-  email,
-  password,
-  options: {
-    data: { full_name: name, username },
-    emailRedirectTo: "https://zynara.xyz/confirm.html"
-  }
-});
+    const token = await grecaptcha.execute(RECAPTCHA_SITE_KEY, {
+      action: "signup"
+    });
+
+    if (!token) {
+      throw new Error("reCAPTCHA failed. Please refresh.");
+    }
+
+    const verify = await fetch("/verify-recaptcha", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ token })
+    });
+
+    const verifyResult = await verify.json();
+
+    if (!verifyResult.success) {
+      throw new Error("reCAPTCHA verification failed.");
+    }
+
+    /* =========================
+       Supabase Signup
+       ========================= */
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: name, username },
+        emailRedirectTo: "https://heloxai.xyz/confirm.html"
+      }
+    });
 
     if (error) throw error;
 
@@ -482,7 +510,7 @@ const { data, error } = await supabase.auth.signUp({
 });
 
 /* =========================
-   Wallet Signup / Login (SIWE)
+   Wallet Signup
    ========================= */
 const walletSignupBtn = document.getElementById("signup-wallet");
 
@@ -492,27 +520,23 @@ walletSignupBtn?.addEventListener("click", async () => {
 
   try {
     if (!window.ethereum) {
-      throw new Error("No wallet detected. Please install MetaMask or a Web3 wallet.");
+      throw new Error("No wallet detected.");
     }
 
-    // 1️⃣ Connect wallet
     const provider = new ethers.BrowserProvider(window.ethereum);
     const signer = await provider.getSigner();
     const address = await signer.getAddress();
 
-    // 2️⃣ Request SIWE message from Supabase
     const { data: siweData, error: siweError } =
       await supabase.auth.signInWithWeb3({
-        chainId: 1, // Ethereum mainnet (change if needed)
+        chainId: 1,
         address
       });
 
     if (siweError) throw siweError;
 
-    // 3️⃣ Sign message
     const signature = await signer.signMessage(siweData.message);
 
-    // 4️⃣ Verify signature with Supabase
     const { error: verifyError } =
       await supabase.auth.verifyWeb3({
         message: siweData.message,
@@ -521,7 +545,7 @@ walletSignupBtn?.addEventListener("click", async () => {
 
     if (verifyError) throw verifyError;
 
-    successMsg.textContent = "Wallet connected successfully!";
+    successMsg.textContent = "Wallet connected!";
     setTimeout(() => {
       window.location.href = "index.html";
     }, 800);
@@ -533,14 +557,14 @@ walletSignupBtn?.addEventListener("click", async () => {
 });
 
 /* =========================
-   OAuth (Users Only)
+   OAuth
    ========================= */
 ["google", "github", "discord"].forEach((provider) => {
   const btn = document.getElementById(`signup-${provider}`);
   btn?.addEventListener("click", async () => {
     await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: "https://zynara.xyz/callback" }
+      options: { redirectTo: "https://heloxai.xyz/callback" }
     });
   });
 });
