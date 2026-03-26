@@ -5,9 +5,11 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>Sign Up – HeloxAi</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<!-- Google reCAPTCHA v3 -->
-<script src="https://www.google.com/recaptcha/api.js?render=6Le6lZksAAAAAJrbiMWvHD4zUC3lHiNFCTLeAJgC"></script>
-<script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
+  
+  <!-- Cloudflare Turnstile -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
+  
   <style>
 :root {
   --bg: #0f1724;
@@ -191,6 +193,13 @@ meter {
   accent-color: #4ade80;
 }
 
+/* Turnstile Widget Container */
+#turnstile-widget {
+  display: flex;
+  justify-content: center;
+  margin-top: 5px;
+}
+
 /* Responsive tweaks */
 @media (max-width: 500px) {
   .signup-container {
@@ -272,6 +281,9 @@ meter {
   Password must be at least 8 characters and include uppercase, lowercase, numbers, and special characters.
 </small>
 
+      <!-- Cloudflare Turnstile Widget -->
+      <div id="turnstile-widget"></div>
+
       <button type="submit" id="signup-btn" aria-busy="false" aria-live="polite">Sign Up</button>
 
       <div id="error-message" role="alert" aria-live="assertive"></div>
@@ -342,7 +354,8 @@ if (!window.__ENV__) {
 const {
   SUPABASE_URL,
   SUPABASE_ANON_KEY,
-  RECAPTCHA_SITE_KEY
+  // Ensure you have added TURNSTILE_SITE_KEY to your env.js
+  TURNSTILE_SITE_KEY 
 } = window.__ENV__;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -361,6 +374,39 @@ const successMsg = document.getElementById("success-message");
 const togglePasswordBtn = document.getElementById("toggle-password");
 const passwordInput = document.getElementById("password");
 const passwordMeter = document.getElementById("password-strength");
+const turnstileContainer = document.getElementById("turnstile-widget");
+
+/* =========================
+   Turnstile Initialization
+   ========================= */
+let turnstileWidgetId = null;
+
+function initTurnstile() {
+  if (!window.turnstile || !TURNSTILE_SITE_KEY) {
+    console.warn("Turnstile not ready or Site Key missing.");
+    return;
+  }
+  
+  // Only render if not already rendered
+  if (turnstileWidgetId === null) {
+    turnstileWidgetId = turnstile.render('#turnstile-widget', {
+      sitekey: TURNSTILE_SITE_KEY,
+      theme: 'dark',
+      callback: function(token) {
+        // Optional: Logic when challenge is solved (e.g., enable button)
+        console.log("Turnstile challenge passed");
+      }
+    });
+  }
+}
+
+// Wait for Turnstile script to load
+const checkTurnstile = setInterval(() => {
+  if (window.turnstile) {
+    clearInterval(checkTurnstile);
+    initTurnstile();
+  }
+}, 100);
 
 /* =========================
    Helpers
@@ -453,30 +499,39 @@ form.addEventListener("submit", async (e) => {
 
   try {
     /* =========================
-       ✅ FIXED reCAPTCHA
+       ✅ Turnstile Verification
        ========================= */
-    await new Promise(resolve => grecaptcha.ready(resolve));
-
-    const token = await grecaptcha.execute(RECAPTCHA_SITE_KEY, {
-      action: "signup"
-    });
-
-    if (!token) {
-      throw new Error("reCAPTCHA failed. Please refresh.");
+    
+    // Ensure Turnstile is loaded and widget exists
+    if (!window.turnstile || turnstileWidgetId === null) {
+       throw new Error("Security check is loading. Please wait and try again.");
     }
 
-    const verify = await fetch("/verify-recaptcha", {
+    // Get the token from the widget
+    const token = turnstile.getToken(turnstileWidgetId);
+
+    if (!token) {
+      // If no token, reset the widget to give user another chance
+      turnstile.reset(turnstileWidgetId);
+      throw new Error("Please complete the security check.");
+    }
+
+    // Send token to backend for verification
+    // Note: You must update your backend to verify Turnstile tokens
+    const verify = await fetch("/verify-recaptcha", { 
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ token })
+      body: JSON.stringify({ token }) 
     });
 
     const verifyResult = await verify.json();
 
     if (!verifyResult.success) {
-      throw new Error("reCAPTCHA verification failed.");
+      // Reset widget on failure
+      turnstile.reset(turnstileWidgetId);
+      throw new Error("Security verification failed.");
     }
 
     /* =========================
@@ -500,6 +555,9 @@ form.addEventListener("submit", async (e) => {
     successMsg.textContent =
       "Success! Please check your email to confirm your account.";
     form.reset();
+    
+    // Reset turnstile after successful submission
+    turnstile.reset(turnstileWidgetId);
 
   } catch (err) {
     console.error(err);
