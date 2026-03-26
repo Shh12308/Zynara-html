@@ -96,10 +96,6 @@
             <svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
             New Chat
         </button>
-        <button id="new-folder-btn">
-            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/></svg>
-            New Folder
-        </button>
         
         <div class="theme-selector" id="theme-selector">
             <div class="theme-selector-header">
@@ -189,21 +185,6 @@
         </button>
     </div>
     
-    <!-- New Chat in Folder Modal -->
-    <div id="new-chat-modal" class="new-chat-modal">
-        <div class="new-chat-dialog">
-            <h3>Start New Chat</h3>
-            <p>Choose a folder for this new chat:</p>
-            <select id="folder-select" class="folder-select">
-                <!-- Folders will be populated by JavaScript -->
-            </select>
-            <div class="new-chat-dialog-buttons">
-                <button id="cancel-new-chat" class="cancel-new-chat">Cancel</button>
-                <button id="confirm-new-chat" class="confirm-new-chat">Start Chat</button>
-            </div>
-        </div>
-    </div>
-    
     <div class="overlay" id="overlay"></div>
     <div id="action-sheet">
         <div class="sheet-content">
@@ -249,10 +230,6 @@
     </div>
     
     <div id="chat-context-menu">
-        <button id="move-chat-btn">
-            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M9 3L5 6.99h3V14h2V6.99h3L9 3zm7 14.01V10h-2v7.01h-3L15 21l4-3.99h-3z"/></svg>
-            Move to Folder
-        </button>
         <button id="delete-chat-btn-context">
             <svg class="svg-icon" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
             Delete
@@ -326,7 +303,6 @@ if ('serviceWorker' in navigator) {
             const sendBtn = document.getElementById('send-btn');
             const pauseBtn = document.getElementById('pause-btn');
             const newChatBtn = document.getElementById('new-chat-btn');
-            const newFolderBtn = document.getElementById('new-folder-btn');
             const actionBtn = document.getElementById('action-btn');
             const actionSheet = document.getElementById('action-sheet');
             const overlay = document.getElementById('overlay');
@@ -347,7 +323,6 @@ if ('serviceWorker' in navigator) {
             const chatContextMenu = document.getElementById('chat-context-menu');
             const editMessageBtn = document.getElementById('edit-message-btn');
             const copyMessageBtn = document.getElementById('copy-message-btn');
-            const moveChatBtn = document.getElementById('move-chat-btn');
             const deleteChatBtnContext = document.getElementById('delete-chat-btn-context');
             const sidebarTabs = document.querySelectorAll('.sidebar-tab');
             const chatsContent = document.getElementById('chats-content');
@@ -366,12 +341,6 @@ if ('serviceWorker' in navigator) {
             const userPlan = document.getElementById('user-plan');
             const signOutBtn = document.getElementById('sign-out-btn');
             
-            // New Chat Modal Elements
-            const newChatModal = document.getElementById('new-chat-modal');
-            const folderSelect = document.getElementById('folder-select');
-            const cancelNewChatBtn = document.getElementById('cancel-new-chat');
-            const confirmNewChatBtn = document.getElementById('confirm-new-chat');
-
             // --- State ---
             let deferredPrompt;
             let mediaRecorder;
@@ -383,14 +352,11 @@ if ('serviceWorker' in navigator) {
             let lastUserPrompt = null;
             let animationId;
             let currentChatId = null;
-            let chatToMoveId = null;
-            let folders = {
-                'unfiled': { name: 'Unfiled', chats: {} }
-            };
+            // Replaced folders object with a flat chats object
+            let chats = {};
             let imageGallery = [];
             let messageIdCounter = 0;
             let messagePairToEdit = null;
-            let expandedFolderId = null;
             let longPressTimer;
             let isLongPress = false;
             let longPressTarget = null;
@@ -595,7 +561,7 @@ if ('serviceWorker' in navigator) {
                     .from('user_chats')
                     .upsert({
                         user_id: currentUser.id,
-                        folders: folders,
+                        chats: chats, // Saving flat chats object
                         image_gallery: imageGallery
                     });
 
@@ -609,7 +575,7 @@ if ('serviceWorker' in navigator) {
 
                 const { data, error } = await supabase
                     .from('user_chats')
-                    .select('folders, image_gallery')
+                    .select('chats, image_gallery')
                     .eq('user_id', currentUser.id)
                     .single();
 
@@ -619,11 +585,11 @@ if ('serviceWorker' in navigator) {
                 }
 
                 if (data) {
-                    folders = data.folders || { 'unfiled': { name: 'Unfiled', chats: {} } };
+                    chats = data.chats || {};
                     imageGallery = data.image_gallery || [];
                 }
 
-                displayFoldersAndChats();
+                displayChatHistory();
                 displayImageGallery();
             };
 
@@ -1146,7 +1112,7 @@ const showCodePreview = (code, language) => {
     // Create new chat if needed
     if (!currentChatId) {
         currentChatId = Date.now().toString();
-        folders['unfiled'].chats[currentChatId] = {
+        chats[currentChatId] = {
             title: message.substring(0, 30) + '...',
             messages: []
         };
@@ -1154,7 +1120,7 @@ const showCodePreview = (code, language) => {
 
     // Add user's message to UI
     const userMessagePair = addMessageToChat('user', message);
-    folders['unfiled'].chats[currentChatId].messages.push({ 
+    chats[currentChatId].messages.push({ 
         id: userMessagePair.dataset.messageId, 
         sender: 'user', 
         text: message 
@@ -1171,7 +1137,7 @@ const showCodePreview = (code, language) => {
 
     const botMsgId = botMessagePair.dataset.messageId;
 
-    folders['unfiled'].chats[currentChatId].messages.push({ 
+    chats[currentChatId].messages.push({ 
         id: botMsgId, 
         sender: 'bot', 
         text: 'Thinking...' 
@@ -1263,7 +1229,7 @@ const showCodePreview = (code, language) => {
                         fullText += data.text;
                         botMessageContent.textContent = fullText;
 
-                        const msgObj = folders['unfiled'].chats[currentChatId].messages
+                        const msgObj = chats[currentChatId].messages
                             .find(m => m.id === botMsgId);
 
                         if (msgObj) msgObj.text = fullText;
@@ -1299,7 +1265,7 @@ const showCodePreview = (code, language) => {
 
             botMessageContent.textContent = text;
 
-            const msgObj = folders['unfiled'].chats[currentChatId].messages
+            const msgObj = chats[currentChatId].messages
                 .find(m => m.id === botMsgId);
 
             if (msgObj) msgObj.text = text;
@@ -1402,159 +1368,83 @@ const showCodePreview = (code, language) => {
                 overlay.classList.remove('visible');
             };
             
-            // --- Folder & Chat Management ---
-            const displayFoldersAndChats = () => {
+            // --- Chat Management (Flat List) ---
+            const displayChatHistory = () => {
                 chatHistoryContainer.innerHTML = '';
-                for (const folderId in folders) {
-                    const folder = folders[folderId];
-                    const folderEl = document.createElement('div');
-                    folderEl.className = 'folder';
-                    folderEl.dataset.folderId = folderId;
+                
+                // Sort chats by timestamp (newest first) if available, or just iterate
+                // We rely on object insertion order or simple iteration here.
+                // For a better experience, we might sort by an updated_at timestamp if we had one.
+                // Let's assume the ID is timestamp-based for now.
+                
+                const sortedChatIds = Object.keys(chats).sort((a, b) => parseInt(b) - parseInt(a));
+
+                for (const chatId of sortedChatIds) {
+                    const chat = chats[chatId];
+                    const chatItem = document.createElement('div');
+                    chatItem.className = 'chat-history-item';
+                    chatItem.dataset.chatId = chatId;
+                    chatItem.textContent = chat.title;
                     
-                    if (folderId === expandedFolderId) {
-                        folderEl.classList.add('expanded');
+                    if (chatId === currentChatId) {
+                        chatItem.classList.add('active');
                     }
-
-                    const folderHeader = document.createElement('div');
-                    folderHeader.className = 'folder-header';
-                    folderHeader.innerHTML = `
-                        <span class="folder-name">${folder.name}</span>
-                        <svg class="svg-icon" style="transform: rotate(-90deg); transition: transform 0.3s;" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
-                    `;
-                    folderEl.appendChild(folderHeader);
-
-                    // Add long press handler for folder
-                    folderHeader.addEventListener('mousedown', (e) => {
+                    
+                    // Add long press handler for chat
+                    chatItem.addEventListener('mousedown', (e) => {
                         if (e.button === 0) { // Left click only
-                            longPressTarget = { type: 'folder', id: folderId, name: folder.name };
-                            longPressTimer = setTimeout(() => {
-                                isLongPress = true;
-                                folderHeader.classList.add('long-press');
-                                showDeleteDialog('folder', folderId, folder.name);
-                            }, 500);
-                        }
-                    });
-
-                    folderHeader.addEventListener('mouseup', () => {
-                        clearTimeout(longPressTimer);
-                        setTimeout(() => {
-                            folderHeader.classList.remove('long-press');
-                        }, 100);
-                    });
-
-                    folderHeader.addEventListener('mouseleave', () => {
-                        clearTimeout(longPressTimer);
-                        folderHeader.classList.remove('long-press');
-                    });
-
-                    folderHeader.addEventListener('click', (e) => {
-                        if (!isLongPress) {
-                            folderEl.classList.toggle('expanded');
-                            const arrow = folderHeader.querySelector('.svg-icon');
-                            arrow.style.transform = folderEl.classList.contains('expanded') ? 'rotate(0deg)' : 'rotate(-90deg)';
-                            
-                            if (folderEl.classList.contains('expanded')) {
-                                expandedFolderId = folderId;
-                            } else {
-                                expandedFolderId = null;
-                            }
-                        }
-                        isLongPress = false;
-                    });
-
-                    // Touch events for mobile
-                    folderHeader.addEventListener('touchstart', (e) => {
-                        longPressTarget = { type: 'folder', id: folderId, name: folder.name };
-                        longPressTimer = setTimeout(() => {
-                            isLongPress = true;
-                            folderHeader.classList.add('long-press');
-                            showDeleteDialog('folder', folderId, folder.name);
-                        }, 500);
-                    });
-
-                    folderHeader.addEventListener('touchend', () => {
-                        clearTimeout(longPressTimer);
-                        setTimeout(() => {
-                            folderHeader.classList.remove('long-press');
-                        }, 100);
-                    });
-
-                    folderHeader.addEventListener('touchmove', () => {
-                        clearTimeout(longPressTimer);
-                        folderHeader.classList.remove('long-press');
-                    });
-
-                    const chatsContainer = document.createElement('div');
-                    chatsContainer.className = 'folder-chats';
-
-                    for (const chatId in folder.chats) {
-                        const chat = folder.chats[chatId];
-                        const chatItem = document.createElement('div');
-                        chatItem.className = 'chat-history-item';
-                        chatItem.dataset.chatId = chatId;
-                        chatItem.textContent = chat.title;
-                        if (chatId === currentChatId) {
-                            chatItem.classList.add('active');
-                        }
-                        
-                        // Add long press handler for chat
-                        chatItem.addEventListener('mousedown', (e) => {
-                            if (e.button === 0) { // Left click only
-                                longPressTarget = { type: 'chat', id: chatId, name: chat.title };
-                                longPressTimer = setTimeout(() => {
-                                    isLongPress = true;
-                                    chatItem.classList.add('long-press');
-                                    showDeleteDialog('chat', chatId, chat.title);
-                                }, 500);
-                            }
-                        });
-
-                        chatItem.addEventListener('mouseup', () => {
-                            clearTimeout(longPressTimer);
-                            setTimeout(() => {
-                                chatItem.classList.remove('long-press');
-                            }, 100);
-                        });
-
-                        chatItem.addEventListener('mouseleave', () => {
-                            clearTimeout(longPressTimer);
-                            chatItem.classList.remove('long-press');
-                        });
-
-                        chatItem.addEventListener('click', (e) => {
-                            if (!isLongPress) {
-                                loadChat(chatId);
-                            }
-                            isLongPress = false;
-                        });
-
-                        // Touch events for mobile
-                        chatItem.addEventListener('touchstart', (e) => {
                             longPressTarget = { type: 'chat', id: chatId, name: chat.title };
                             longPressTimer = setTimeout(() => {
                                 isLongPress = true;
                                 chatItem.classList.add('long-press');
                                 showDeleteDialog('chat', chatId, chat.title);
                             }, 500);
-                        });
+                        }
+                    });
 
-                        chatItem.addEventListener('touchend', () => {
-                            clearTimeout(longPressTimer);
-                            setTimeout(() => {
-                                chatItem.classList.remove('long-press');
-                            }, 100);
-                        });
-
-                        chatItem.addEventListener('touchmove', () => {
-                            clearTimeout(longPressTimer);
+                    chatItem.addEventListener('mouseup', () => {
+                        clearTimeout(longPressTimer);
+                        setTimeout(() => {
                             chatItem.classList.remove('long-press');
-                        });
+                        }, 100);
+                    });
 
-                        chatItem.addEventListener('contextmenu', (e) => showChatContextMenu(e, chatId));
-                        chatsContainer.appendChild(chatItem);
-                    }
-                    folderEl.appendChild(chatsContainer);
-                    chatHistoryContainer.appendChild(folderEl);
+                    chatItem.addEventListener('mouseleave', () => {
+                        clearTimeout(longPressTimer);
+                        chatItem.classList.remove('long-press');
+                    });
+
+                    chatItem.addEventListener('click', (e) => {
+                        if (!isLongPress) {
+                            loadChat(chatId);
+                        }
+                        isLongPress = false;
+                    });
+
+                    // Touch events for mobile
+                    chatItem.addEventListener('touchstart', (e) => {
+                        longPressTarget = { type: 'chat', id: chatId, name: chat.title };
+                        longPressTimer = setTimeout(() => {
+                            isLongPress = true;
+                            chatItem.classList.add('long-press');
+                            showDeleteDialog('chat', chatId, chat.title);
+                        }, 500);
+                    });
+
+                    chatItem.addEventListener('touchend', () => {
+                        clearTimeout(longPressTimer);
+                        setTimeout(() => {
+                            chatItem.classList.remove('long-press');
+                        }, 100);
+                    });
+
+                    chatItem.addEventListener('touchmove', () => {
+                        clearTimeout(longPressTimer);
+                        chatItem.classList.remove('long-press');
+                    });
+
+                    chatItem.addEventListener('contextmenu', (e) => showChatContextMenu(e, chatId));
+                    chatHistoryContainer.appendChild(chatItem);
                 }
             };
             
@@ -1565,13 +1455,10 @@ const showCodePreview = (code, language) => {
                 const dialog = document.createElement('div');
                 dialog.className = 'delete-dialog';
                 
-                const isFolder = type === 'folder';
-                const message = isFolder 
-                    ? `Are you sure you want to delete folder "${name}" and all its chats? This action cannot be undone.`
-                    : `Are you sure you want to delete this chat? This action cannot be undone.`;
+                const message = `Are you sure you want to delete this chat? This action cannot be undone.`;
                 
                 dialog.innerHTML = `
-                    <h3>Delete ${isFolder ? 'Folder' : 'Chat'}</h3>
+                    <h3>Delete Chat</h3>
                     <p>${message}</p>
                     <div class="delete-dialog-buttons">
                         <button class="cancel-delete">Cancel</button>
@@ -1592,11 +1479,7 @@ const showCodePreview = (code, language) => {
                 cancelBtn.addEventListener('click', closeDialog);
                 
                 confirmBtn.addEventListener('click', () => {
-                    if (isFolder) {
-                        deleteFolder(id);
-                    } else {
-                        deleteChat(id);
-                    }
+                    deleteChat(id);
                     closeDialog();
                 });
                 
@@ -1607,92 +1490,26 @@ const showCodePreview = (code, language) => {
                 });
             };
 
-            const deleteFolder = (folderId) => {
-                if (folderId === 'unfiled') {
-                    alert('Cannot delete Unfiled folder.');
-                    return;
-                }
-                
-                // Move all chats from this folder to unfiled
-                const folderToDelete = folders[folderId];
-                if (folderToDelete && folderToDelete.chats) {
-                    for (const chatId in folderToDelete.chats) {
-                        folders['unfiled'].chats[chatId] = folderToDelete.chats[chatId];
-                    }
-                }
-                
-                delete folders[folderId];
-                saveUserChats();
-                displayFoldersAndChats();
-                
-                // Clear current chat if it was in deleted folder
-                if (currentChatId && folders['unfiled'].chats[currentChatId]) {
-                    // Chat moved to unfiled, no need to clear
-                } else if (currentChatId) {
-                    clearChat();
-                }
-            };
-            
-            const createFolder = () => {
-                const folderName = prompt("Enter folder name:");
-                if (folderName) {
-                    const folderId = 'folder_' + Date.now();
-                    folders[folderId] = { name: folderName, chats: {} };
-                    saveUserChats();
-                    displayFoldersAndChats();
-                }
-            };
-
             const loadChat = (chatId) => {
                 clearChat();
                 currentChatId = chatId;
-                let chat = null;
-                for (const folderId in folders) {
-                    if (folders[folderId].chats[chatId]) {
-                        chat = folders[folderId].chats[chatId];
-                        break;
-                    }
-                }
+                const chat = chats[chatId];
+                
                 if (chat) {
                     chat.messages.forEach(msg => {
                         addMessageToChat(msg.sender, msg.text, msg.id);
                     });
-                    displayFoldersAndChats();
+                    displayChatHistory();
                 }
             };
             
             const deleteChat = (chatId) => {
-                for (const folderId in folders) {
-                    if (folders[folderId].chats[chatId]) {
-                        delete folders[folderId].chats[chatId];
-                        saveUserChats();
-                        if (currentChatId === chatId) {
-                            clearChat();
-                        }
-                        displayFoldersAndChats();
-                        break;
-                    }
+                delete chats[chatId];
+                saveUserChats();
+                if (currentChatId === chatId) {
+                    clearChat();
                 }
-            };
-
-            const moveChatToFolder = (chatId, targetFolderId) => {
-                let chatToMove = null;
-                let sourceFolderId = null;
-
-                for (const folderId in folders) {
-                    if (folders[folderId].chats[chatId]) {
-                        chatToMove = folders[folderId].chats[chatId];
-                        sourceFolderId = folderId;
-                        delete folders[folderId].chats[chatId];
-                        break;
-                    }
-                }
-                
-                if (chatToMove && targetFolderId) {
-                    folders[targetFolderId].chats[chatId] = chatToMove;
-                    saveUserChats();
-                    displayFoldersAndChats();
-                }
+                displayChatHistory();
             };
 
             const showChatContextMenu = (e, chatId) => {
@@ -1706,60 +1523,6 @@ const showCodePreview = (code, language) => {
 
             const hideChatContextMenu = () => {
                 chatContextMenu.classList.remove('visible');
-            };
-            
-            // --- New Chat in Folder Functions ---
-            const showNewChatModal = () => {
-                // Populate folder select with current folders
-                folderSelect.innerHTML = '';
-                for (const folderId in folders) {
-                    const folder = folders[folderId];
-                    const option = document.createElement('option');
-                    option.value = folderId;
-                    option.textContent = folder.name;
-                    folderSelect.appendChild(option);
-                }
-                
-                // Show modal
-                newChatModal.style.display = 'flex';
-                overlay.classList.add('visible');
-            };
-            
-            const hideNewChatModal = () => {
-                newChatModal.style.display = 'none';
-                overlay.classList.remove('visible');
-            };
-            
-            const startNewChatInFolder = (folderId) => {
-                // Create new chat in the specified folder
-                const message = userInput.value.trim() || 'New chat';
-                const chatId = Date.now().toString();
-                
-                // Add chat to the specified folder
-                if (!folders[folderId]) {
-                    folders[folderId] = { name: `Folder ${folderId}`, chats: {} };
-                }
-                
-                folders[folderId].chats[chatId] = {
-                    title: message.substring(0, 30) + '...',
-                    messages: []
-                };
-                
-                // Set as current chat and clear display
-                currentChatId = chatId;
-                clearChat();
-                
-                // Save and update display
-                saveUserChats();
-                displayFoldersAndChats();
-                
-                // If there's a message, send it
-                if (message && message !== 'New chat') {
-                    handleSendMessage(message);
-                }
-                
-                // Clear input
-                userInput.value = '';
             };
             
             // --- Image Gallery Management ---
@@ -1865,9 +1628,9 @@ const showCodePreview = (code, language) => {
                             nextPair.remove();
                         }
                         
-                        const userMsgHistory = folders['unfiled'].chats[currentChatId].messages.find(m => m.id === messagePairToEdit.dataset.messageId);
+                        const userMsgHistory = chats[currentChatId].messages.find(m => m.id === messagePairToEdit.dataset.messageId);
                         userMsgHistory.text = newText;
-                        folders['unfiled'].chats[currentChatId].messages = folders['unfiled'].chats[currentChatId].messages.filter(m => m.id !== messagePairToEdit.dataset.messageId);
+                        chats[currentChatId].messages = chats[currentChatId].messages.filter(m => m.id !== messagePairToEdit.dataset.messageId);
                         saveUserChats();
                         
                         const newContent = document.createElement('div');
@@ -1973,33 +1736,16 @@ const showCodePreview = (code, language) => {
 
             micBtn.addEventListener('mouseleave', stopRecording);
 
-            // New Chat Button - Show folder selection modal
-            newChatBtn.addEventListener('click', showNewChatModal);
-
-            // New Chat Modal Event Listeners
-            cancelNewChatBtn.addEventListener('click', hideNewChatModal);
-            
-            confirmNewChatBtn.addEventListener('click', () => {
-                const selectedFolderId = folderSelect.value;
-                startNewChatInFolder(selectedFolderId);
-                hideNewChatModal();
+            // New Chat Button - Simply clears the current chat context
+            newChatBtn.addEventListener('click', () => {
+                clearChat();
             });
-
-            // Close modal when clicking outside
-            newChatModal.addEventListener('click', (e) => {
-                if (e.target === newChatModal) {
-                    hideNewChatModal();
-                }
-            });
-
-            newFolderBtn.addEventListener('click', createFolder);
 
             actionBtn.addEventListener('click', showActionSheet);
             overlay.addEventListener('click', () => {
                 hideActionSheet();
                 hideContextMenu();
                 hideChatContextMenu();
-                hideNewChatModal();
                 sidebar.classList.remove('visible');
             });
             
@@ -2035,7 +1781,7 @@ const showCodePreview = (code, language) => {
                 }
             });
             document.addEventListener('click', (e) => {
-                if (!contextMenu.contains(e.target) && !newChatModal.contains(e.target)) {
+                if (!contextMenu.contains(e.target)) {
                     hideContextMenu();
                 }
             });
@@ -2043,44 +1789,6 @@ const showCodePreview = (code, language) => {
             copyMessageBtn.addEventListener('click', copyMessage);
             
             // Chat context menu listeners
-            moveChatBtn.addEventListener('click', () => {
-                // Only show folders that are currently expanded
-                const folderOptions = Object.keys(folders)
-                    .filter(id => id === expandedFolderId || id === 'unfiled')
-                    .map(id => `<option value="${id}">${folders[id].name}</option>`)
-                    .join('');
-                
-                if (folderOptions === '') {
-                    alert('Please open a folder first before moving a chat.');
-                    hideChatContextMenu();
-                    return;
-                }
-                
-                const popup = document.createElement('div');
-                popup.style.position = 'fixed';
-                popup.style.top = '50%';
-                popup.style.left = '50%';
-                popup.style.transform = 'translate(-50%, -50%)';
-                popup.style.background = 'var(--sidebar-bg)';
-                popup.style.padding = '20px';
-                popup.style.borderRadius = '8px';
-                popup.style.boxShadow = 'var(--shadow-color)';
-                popup.style.zIndex = '1001';
-                popup.innerHTML = `
-                    <p>Move chat to:</p>
-                    <select id="folder-select">${folderOptions}</select>
-                    <button id="confirm-move">Move</button>
-                `;
-                document.body.appendChild(popup);
-                
-                document.getElementById('confirm-move').addEventListener('click', () => {
-                    const targetFolderId = document.getElementById('folder-select').value;
-                    moveChatToFolder(chatToMoveId, targetFolderId);
-                    document.body.removeChild(popup);
-                });
-                hideChatContextMenu();
-            });
-
             deleteChatBtnContext.addEventListener('click', () => {
                 if (confirm('Are you sure you want to delete this chat?')) {
                     deleteChat(chatToMoveId);
