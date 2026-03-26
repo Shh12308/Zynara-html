@@ -52,9 +52,58 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
 
     <link rel="stylesheet" href="index.css">
+    
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <style>
+        /* Context Menu Styles - Added to ensure visibility */
+        .context-menu {
+            position: absolute;
+            background: var(--sidebar-bg, #ffffff); 
+            border: 1px solid var(--border-color, #e5e7eb);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            padding: 5px 0;
+            min-width: 150px;
+        }
+
+        .context-menu.visible {
+            display: flex;
+        }
+
+        .context-menu button {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 8px 15px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            text-align: left;
+            font-size: 14px;
+            color: var(--text-color, #111827);
+            transition: background 0.2s;
+        }
+
+        .context-menu button:hover {
+            background: var(--sidebar-hover-bg, #f3f4f6);
+        }
+
+        .context-menu button.active {
+            color: white; /* For like/dislike active state */
+        }
+        
+        .context-menu .svg-icon {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+    </style>
 </head>
 <body data-theme="light">
 
@@ -254,7 +303,7 @@
         </button>
     </div>
     
-    <div id="chat-context-menu">
+    <div id="chat-context-menu" class="context-menu">
         <button id="delete-chat-btn-context">
             <svg class="svg-icon" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
             Delete
@@ -1373,10 +1422,6 @@ const showCodePreview = (code, language) => {
                 chatMessages.innerHTML = '';
                 currentChatId = null;
                 messageIdCounter = 0;
-                // Restore welcome screen if needed or keep removed
-                // For "New Chat", usually we want a fresh state
-                // We won't explicitly add back welcome screen here to keep it clean, 
-                // but typically in a full app, we might unhide a template.
             };
 
             const setTheme = (themeId) => {
