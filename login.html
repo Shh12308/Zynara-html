@@ -4,7 +4,10 @@
   <meta charset="UTF-8" />
   <title>Login – HeloxAi</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
+  
+  <!-- Cloudflare Turnstile -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
 <style>
   /* ================== VARIABLES ================== */
@@ -166,8 +169,14 @@
 
   @media (min-height: 700px) { body { align-items: center; } }
   @media (max-height: 699px) { body { align-items: flex-start; } }
+
+  /* Turnstile Widget Container */
+  #turnstile-widget {
+    display: flex;
+    justify-content: center;
+    margin-top: 5px;
+  }
 </style>
-  <script src="https://www.google.com/recaptcha/api.js?render=6LcjZcIrAAAAAJLvrkikTdvpmy_ny-o5p19NvbPZ" async defer></script>
 </head>
 <body>
   <div class="signup-container" role="main" aria-labelledby="page-title">
@@ -199,6 +208,9 @@
       <label class="remember">
         <input type="checkbox" id="remember-me" aria-label="Remember me" /> Remember me
       </label>
+
+      <!-- Cloudflare Turnstile Widget -->
+      <div id="turnstile-widget"></div>
 
       <button type="submit" id="login-btn" aria-busy="false" aria-live="polite">
         Log In <span id="login-spinner" hidden class="spinner" aria-hidden="true"></span>
@@ -236,7 +248,7 @@
   const {
     SUPABASE_URL,
     SUPABASE_ANON_KEY,
-    RECAPTCHA_SITE_KEY
+    TURNSTILE_SITE_KEY
   } = window.__ENV__;
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -255,6 +267,36 @@
   const githubBtn = document.getElementById("github-login");
   const discordBtn = document.getElementById("discord-login");
   const adminLoginBtn = document.getElementById("admin-login-btn");
+  const turnstileContainer = document.getElementById("turnstile-widget");
+
+  /* =========================
+     Turnstile Initialization
+     ========================= */
+  let turnstileWidgetId = null;
+
+  function initTurnstile() {
+    if (!window.turnstile || !TURNSTILE_SITE_KEY) {
+      console.warn("Turnstile not ready or Site Key missing.");
+      return;
+    }
+    
+    if (turnstileWidgetId === null) {
+      turnstileWidgetId = turnstile.render('#turnstile-widget', {
+        sitekey: TURNSTILE_SITE_KEY,
+        theme: 'dark',
+        callback: function(token) {
+          console.log("Turnstile challenge passed");
+        }
+      });
+    }
+  }
+
+  const checkTurnstile = setInterval(() => {
+    if (window.turnstile) {
+      clearInterval(checkTurnstile);
+      initTurnstile();
+    }
+  }, 100);
 
   // Prefill email
   const savedEmail = localStorage.getItem("lastEmail");
@@ -300,47 +342,72 @@
     }
 
     try {
-      // Optional reCAPTCHA
-      if (window.grecaptcha && RECAPTCHA_SITE_KEY) {
-        await grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: "login" });
+      /* =========================
+         ✅ Turnstile Verification
+         ========================= */
+      if (!window.turnstile || turnstileWidgetId === null) {
+         throw new Error("Security check is loading. Please wait and try again.");
       }
 
+      const token = turnstile.getToken(turnstileWidgetId);
+
+      if (!token) {
+        turnstile.reset(turnstileWidgetId);
+        throw new Error("Please complete the security check.");
+      }
+
+      // Optional: Verify token with backend
+      // Even if not strictly enforced on backend yet, it's good practice to send it
+      const verify = await fetch("/verify-recaptcha", { 
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token })
+      });
+      
+      // Note: You might choose to ignore the result for login if not enforced server-side
+      // const verifyResult = await verify.json(); 
+
+      /* =========================
+         Supabase Login
+         ========================= */
       if (rememberMe.checked) {
         localStorage.setItem("lastEmail", email);
       } else {
         localStorage.removeItem("lastEmail");
       }
 
-      const { data: userData, error: userError } = await supabase
-  .from("users")
-  .select("is_banned, plan, role")
-  .eq("id", (await supabase.auth.getUser()).data.user.id)
-  .single();
-
-if (userError) {
-  errorMsg.textContent = "Failed to verify account.";
-  return;
-}
-
-if (userData.is_banned) {
-  await supabase.auth.signOut();
-  errorMsg.textContent = "Your account has been banned.";
-  return;
-}
-
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
-      setLoading(false);
+      if (error) throw error;
+      
+      // Check ban status after successful login
+      if (data?.user) {
+        const { data: userData, error: userError } = await supabase
+          .from("users")
+          .select("is_banned")
+          .eq("id", data.user.id)
+          .single();
 
-      if (error) {
-        errorMsg.textContent = error.message;
-        return;
+        if (userError) {
+          // If we can't verify status, proceed with caution or throw error
+          console.warn("Could not verify ban status:", userError.message);
+        }
+
+        if (userData?.is_banned) {
+          await supabase.auth.signOut();
+          throw new Error("Your account has been banned.");
+        }
       }
 
+      setLoading(false);
       successMsg.textContent = "Login successful!";
+      
+      // Reset turnstile on success
+      if(window.turnstile && turnstileWidgetId) turnstile.reset(turnstileWidgetId);
+
       setTimeout(() => {
         window.location.href = "index.html";
       }, 800);
@@ -348,7 +415,10 @@ if (userData.is_banned) {
     } catch (err) {
       console.error(err);
       setLoading(false);
-      errorMsg.textContent = "Unexpected error occurred.";
+      errorMsg.textContent = err.message || "Unexpected error occurred.";
+      
+      // Reset turnstile on failure
+      if(window.turnstile && turnstileWidgetId) turnstile.reset(turnstileWidgetId);
     }
   });
 
@@ -361,6 +431,8 @@ if (userData.is_banned) {
   resetLink?.addEventListener("click", async (e) => {
     e.preventDefault();
     const email = prompt("Enter your email:");
+    if (!email) return; // User cancelled
+    
     if (!validateEmail(email)) {
       errorMsg.textContent = "Invalid email.";
       return;
