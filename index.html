@@ -50,7 +50,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/css.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/html.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
-
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex/dist/contrib/auto-render.min.js"></script>
+    
     <link rel="stylesheet" href="index.css">
     
     <!-- Supabase JS -->
@@ -74,6 +77,38 @@
         .context-menu.visible {
             display: flex;
         }
+
+        .message {
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+        .sources-container {
+  margin-top: 10px;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.source-item {
+  margin-top: 4px;
+}
+
+        .message-actions {
+  margin-top: 6px;
+  display: flex;
+  gap: 8px;
+}
+
+.message-actions button {
+  background: none;
+  border: 1px solid var(--border-color);
+  padding: 4px 8px;
+  cursor: pointer;
+}
 
         .context-menu button {
             display: flex;
@@ -455,6 +490,23 @@ if ('serviceWorker' in navigator) {
          
             let currentUser = null;
             let userPlanType = 'free'; // Default to free plan
+
+            let lastRender = 0;
+
+if (Date.now() - lastRender > 50) {
+    renderMessageContent(fullText, botMessageContent);
+    lastRender = Date.now();
+}
+            
+            let typingTimeout;
+
+const typeText = (el, text) => {
+    clearTimeout(typingTimeout);
+
+    typingTimeout = setTimeout(() => {
+        renderMessageContent(text, el);
+    }, 20); // smooth typing
+};
             
             // Anonymous user limits
             const ANON_LIMIT = 9999915;
@@ -702,7 +754,6 @@ if ('serviceWorker' in navigator) {
             });
 
 // --- Markdown Configuration ---
-// --- Markdown Configuration ---
 marked.setOptions({
     gfm: true,
     breaks: true, // Better chat-style formatting
@@ -738,7 +789,16 @@ const renderMessageContent = (content, messageElement) => {
         });
 
         // ✅ Render Markdown
-        messageElement.innerHTML = marked.parse(processedContent);
+        // After marked.parse(...)
+messageElement.innerHTML = marked.parse(processedContent);
+
+// ✅ Render LaTeX
+renderMathInElement(messageElement, {
+    delimiters: [
+        { left: "$$", right: "$$", display: true },
+        { left: "$", right: "$", display: false }
+    ]
+});
 
         // ✅ Highlight + Enhance Code Blocks
         messageElement.querySelectorAll('pre code').forEach((codeEl) => {
@@ -755,27 +815,79 @@ const renderMessageContent = (content, messageElement) => {
 
                 const lang = codeEl.className.replace('language-', '') || 'plaintext';
 
-                header.innerHTML = `
-                    <div class="code-language">
-                        <div class="code-language-icon" style="background-color:${
-                            {
-                                javascript: '#f7df1e',
-                                python: '#3776ab',
-                                html: '#e34c26',
-                                css: '#1572b6',
-                                json: '#000',
-                                plaintext: '#555'
-                            }[lang] || '#555'
-                        }"></div>
-                        <span>${lang.toUpperCase()}</span>
-                    </div>
-                    <div class="code-actions">
-                        <button class="code-action-btn copy-code-btn">📋</button>
-                        ${['html','javascript','css'].includes(lang) ? `
-                        <button class="code-action-btn preview-code-btn">👁️</button>
-                        ` : ''}
-                    </div>
-                `;
+                // --- Normalize language ---
+let rawLang = (codeEl.className.replace('language-', '') || '').toLowerCase();
+
+// Auto-detect if missing
+if (!rawLang || rawLang === 'plaintext') {
+    const detected = hljs.highlightAuto(codeEl.textContent);
+    if (detected.language) rawLang = detected.language;
+}
+
+// Apply alias
+const lang = LANGUAGE_ALIASES[rawLang] || rawLang || 'plaintext';
+
+// Get color
+const langColor = LANGUAGE_COLORS[lang] || '#555';
+
+// --- Category Detection ---
+const getCategory = (lang) => {
+    if (['react','vue','angular','html','css','javascript','typescript'].includes(lang)) return 'frontend';
+    if (['node','express','python','django','flask','java','spring','php','laravel','ruby','rails','go','rust'].includes(lang)) return 'backend';
+    if (['sql','mysql','postgres','mongodb','redis'].includes(lang)) return 'database';
+    if (['dockerfile','kubernetes','nginx','apache','yaml','toml'].includes(lang)) return 'devops';
+    if (['bash','zsh','powershell','shell'].includes(lang)) return 'shell';
+    return 'other';
+};
+
+const category = getCategory(lang);
+
+// --- Category Labels ---
+const CATEGORY_LABELS = {
+    frontend: '🌐 Frontend',
+    backend: '⚙️ Backend',
+    database: '🗄️ Database',
+    devops: '☁️ DevOps',
+    shell: '💻 Shell',
+    other: '📄 Code'
+};
+
+// --- Optional Icons ---
+const LANGUAGE_ICONS = {
+    javascript: '🟨',
+    python: '🐍',
+    html: '🌐',
+    css: '🎨',
+    react: '⚛️',
+    bash: '💻',
+    dockerfile: '🐳',
+    sql: '🗄️'
+};
+
+const icon = LANGUAGE_ICONS[lang] || '📄';
+
+// --- Build UI ---
+header.innerHTML = `
+    <div class="code-language">
+        <div class="code-language-icon" style="background-color:${langColor}"></div>
+        
+        <span class="code-lang-name">
+            ${icon} ${lang.toUpperCase()}
+        </span>
+        
+        <span class="code-category-badge ${category}">
+            ${CATEGORY_LABELS[category]}
+        </span>
+    </div>
+
+    <div class="code-actions">
+        <button class="code-action-btn copy-code-btn" title="Copy Code">📋</button>
+
+        ${['html','javascript','css','react'].includes(lang) ? `
+        <button class="code-action-btn preview-code-btn" title="Preview Code">👁️</button>
+        ` : ''}
+    </div>
+`;
 
                 wrapper.appendChild(header);
                 wrapper.appendChild(pre);
@@ -1231,16 +1343,26 @@ const showCodePreview = (code, language) => {
     userInput.value = '';
     userInput.style.height = '22px';
 
-    // 3. Prepare Bot Message
-    // If we edited, we need to regenerate the response. 
-    // We will assume we always generate a new response for the flow.
-    
     const botMessagePair = addMessageToChat('bot', '');
     const botMessageContent = botMessagePair.querySelector('.message-content');
     botMessageContent.appendChild(createThinkingDots());
 
     const botMsgId = botMessagePair.dataset.messageId;
 
+               const actions = document.createElement('div');
+actions.className = 'message-actions';
+
+const copyBtn = document.createElement('button');
+copyBtn.textContent = '📋 Copy';
+
+copyBtn.onclick = () => {
+    navigator.clipboard.writeText(fullText);
+    showToast('Copied!');
+};
+
+actions.appendChild(copyBtn);
+botMessagePair.appendChild(actions);
+    
     chats[currentChatId].messages.push({ 
         id: botMsgId, 
         sender: 'bot', 
@@ -1325,10 +1447,10 @@ const showCodePreview = (code, language) => {
 
                     // TOKEN
                     if (data.type === "token" && data.text) {
-                        if (statusElement) {
-                            statusElement.remove();
-                            statusElement = null;
-                        }
+    fullText += data.text;
+
+    typeText(botMessageContent, fullText);
+}
 
                         fullText += data.text;
                         botMessageContent.textContent = fullText;
@@ -1472,11 +1594,6 @@ const showCodePreview = (code, language) => {
             // --- Chat Management (Flat List) ---
             const displayChatHistory = () => {
                 chatHistoryContainer.innerHTML = '';
-                
-                // Sort chats by timestamp (newest first) if available, or just iterate
-                // We rely on object insertion order or simple iteration here.
-                // For a better experience, we might sort by an updated_at timestamp if we had one.
-                // Let's assume the ID is timestamp-based for now.
                 
                 const sortedChatIds = Object.keys(chats).sort((a, b) => parseInt(b) - parseInt(a));
 
