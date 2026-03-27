@@ -1250,7 +1250,11 @@ const showCodePreview = (code, language) => {
                 try {
                     const { data: { session } } = await supabase.auth.getSession();
 
-                    const stopResponse = await fetch(STOP_URL, {
+                    const AI_URL = (userPlanType === 'premium' || userPlanType === 'lifetime') 
+    ? PREMIUM_AI_URL 
+    : FREE_AI_URL;
+
+const stopResponse = await fetch(`${AI_URL}/stop`, {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
