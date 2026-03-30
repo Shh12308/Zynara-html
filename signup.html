@@ -512,34 +512,29 @@ form.addEventListener("submit", async (e) => {
        throw new Error("Security check is loading. Please wait and try again.");
     }
 
+
+// ✅ Check token
 if (!turnstileToken) {
   turnstile.reset(turnstileWidgetId);
   throw new Error("Please complete the security check.");
 }
 
-    if (!token) {
-      // If no token, reset the widget to give user another chance
-      turnstile.reset(turnstileWidgetId);
-      throw new Error("Please complete the security check.");
-    }
+// ✅ Send token to backend
+const verify = await fetch("/verify-turnstile", { 
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({ token: turnstileToken })
+});
 
-    // Send token to backend for verification
-    // Note: You must update your backend to verify Turnstile tokens
-    const verify = await fetch("/verify-recaptcha", { 
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ token: turnstileToken })
-    });
+const verifyResult = await verify.json();
 
-    const verifyResult = await verify.json();
-
-    if (!verifyResult.success) {
-      // Reset widget on failure
-      turnstile.reset(turnstileWidgetId);
-      throw new Error("Security verification failed.");
-    }
+if (!verifyResult.success) {
+  turnstile.reset(turnstileWidgetId);
+  turnstileToken = null;
+  throw new Error("Security verification failed.");
+}
 
     /* =========================
        Supabase Signup
