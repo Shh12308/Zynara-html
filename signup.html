@@ -394,27 +394,21 @@ function checkPasswordStrength(password) {
 }
 
 function initTurnstile() {
-  if (!window.turnstile || !TURNSTILE_SITE_KEY) {
-    console.warn("Turnstile not ready or Site Key missing.");
-    return;
-  }
+  if (!window.turnstile || !TURNSTILE_SITE_KEY) return;
 
-  if (turnstileWidgetId === null) {
-    turnstileWidgetId = turnstile.render('#turnstile-widget', {
-      sitekey: TURNSTILE_SITE_KEY,
-      theme: 'dark',
-      callback: function(token) {
-        // defer token assignment to next tick to avoid DOMException
-        setTimeout(() => {
-          turnstileToken = token;
-          console.log("Turnstile challenge passed, token stored");
-        }, 0);
-      },
-      'expired-callback': function() {
-        setTimeout(() => { turnstileToken = null; }, 0);
-      }
-    });
-  }
+  if (turnstileWidgetId !== null) return; // ✅ prevent double render
+
+  turnstileWidgetId = turnstile.render('#turnstile-widget', {
+    sitekey: TURNSTILE_SITE_KEY,
+    theme: 'dark',
+    callback: function(token) {
+      console.log("Turnstile passed");
+      turnstileToken = token;
+    },
+    'expired-callback': function() {
+      turnstileToken = null;
+    }
+  });
 }
 
 // Wait for Turnstile to load
@@ -474,9 +468,8 @@ form.addEventListener("submit", async (e) => {
     }
 
     if (!turnstileToken) {
-      turnstile.reset(turnstileWidgetId);
-      throw new Error("Please complete the security check.");
-    }
+  throw new Error("Please complete the security check.");
+}
 
     // Optional: Verify token on backend
     await fetch("/verify-recaptcha", {
