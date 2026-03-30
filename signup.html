@@ -487,6 +487,80 @@ form.addEventListener("submit", async (e) => {
     }
 
     /* =========================
+   SOCIAL LOGINS
+========================= */
+document.getElementById("signup-google").addEventListener("click", async () => {
+  try {
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: "https://heloxai.xyz/confirm.html" },
+    });
+  } catch (err) {
+    console.error(err);
+    errorMsg.textContent = "Google login failed.";
+  }
+});
+
+document.getElementById("signup-github").addEventListener("click", async () => {
+  try {
+    await supabase.auth.signInWithOAuth({
+      provider: "github",
+      options: { redirectTo: "https://heloxai.xyz/confirm.html" },
+    });
+  } catch (err) {
+    console.error(err);
+    errorMsg.textContent = "GitHub login failed.";
+  }
+});
+
+document.getElementById("signup-discord").addEventListener("click", async () => {
+  try {
+    await supabase.auth.signInWithOAuth({
+      provider: "discord",
+      options: { redirectTo: "https://heloxai.xyz/confirm.html" },
+    });
+  } catch (err) {
+    console.error(err);
+    errorMsg.textContent = "Discord login failed.";
+  }
+});
+
+/* =========================
+   WALLET SIGNUP
+========================= */
+document.getElementById("signup-wallet").addEventListener("click", async () => {
+  try {
+    if (!window.ethereum) throw new Error("No crypto wallet found.");
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const address = await signer.getAddress();
+
+    // Here you could create a message nonce and sign it for authentication
+    const message = `Sign this message to verify your wallet: ${Date.now()}`;
+    const signature = await signer.signMessage(message);
+
+    // Send wallet + signature to your server or Supabase Function for verification
+    const res = await fetch(
+      "https://acbnqeeukfxewiqswgbw.supabase.co/functions/v1/wallet-signup",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address, signature }),
+      }
+    );
+
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || "Wallet signup failed.");
+
+    successMsg.textContent = "✅ Wallet verified successfully!";
+
+  } catch (err) {
+    console.error(err);
+    errorMsg.textContent = err.message;
+  }
+});
+
+    /* =========================
        SUPABASE SIGNUP
     ========================= */
     const { data, error } = await supabase.auth.signUp({
