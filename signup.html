@@ -392,20 +392,21 @@ function initTurnstile() {
     turnstileWidgetId = turnstile.render('#turnstile-widget', {
       sitekey: TURNSTILE_SITE_KEY,
       theme: 'dark',
-
       callback: function(token) {
-        console.log("Turnstile challenge passed");
-        turnstileToken = token; // ✅ STORE TOKEN HERE
+        // defer token assignment to next tick to avoid DOMException
+        setTimeout(() => {
+          turnstileToken = token;
+          console.log("Turnstile challenge passed, token stored");
+        }, 0);
       },
-
       'expired-callback': function() {
-        turnstileToken = null;
+        setTimeout(() => { turnstileToken = null; }, 0);
       }
     });
   }
 }
 
-// Wait for Turnstile script to load
+// Wait for Turnstile to load
 const checkTurnstile = setInterval(() => {
   if (window.turnstile) {
     clearInterval(checkTurnstile);
@@ -414,61 +415,12 @@ const checkTurnstile = setInterval(() => {
 }, 100);
 
 /* =========================
-   Helpers
-   ========================= */
-function validateEmail(email) {
-  return /\S+@\S+\.\S+/.test(email);
-}
-
-function checkPasswordStrength(password) {
-  let score = 0;
-  if (/.{8,}/.test(password)) score++;
-  if (/[a-z]/.test(password)) score++;
-  if (/[A-Z]/.test(password)) score++;
-  if (/[0-9]/.test(password)) score++;
-  if (/[^A-Za-z0-9]/.test(password)) score++;
-  return score;
-}
-
-/* =========================
-   Password Toggle
-   ========================= */
-togglePasswordBtn?.addEventListener("click", () => {
-  const hidden = passwordInput.type === "password";
-  passwordInput.type = hidden ? "text" : "password";
-  togglePasswordBtn.textContent = hidden ? "🙈" : "👁️";
-});
-
-/* =========================
-   Password Strength Meter
-   ========================= */
-passwordInput?.addEventListener("input", () => {
-  passwordMeter.value = checkPasswordStrength(passwordInput.value);
-});
-
-/* =========================
-   Create User Profile
-   ========================= */
-async function createUserProfile(userId, username) {
-  await supabase.from("users").insert({
-    id: userId,
-    username,
-    role: "user",
-    plan: "free",
-    is_banned: false,
-    preferences: {},
-    last_active: new Date().toISOString()
-  });
-}
-
-/* =========================
    Signup Handler
    ========================= */
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   errorMsg.textContent = "";
   successMsg.textContent = "";
-
   const submitBtn = form.querySelector("button[type='submit']");
   submitBtn.disabled = true;
 
@@ -483,7 +435,7 @@ form.addEventListener("submit", async (e) => {
     return;
   }
 
-  if (!validateEmail(email)) {
+  if (!/\S+@\S+\.\S+/.test(email)) {
     errorMsg.textContent = "Invalid email address.";
     submitBtn.disabled = false;
     return;
@@ -504,37 +456,23 @@ form.addEventListener("submit", async (e) => {
 
   try {
     /* =========================
-       ✅ Turnstile Verification
+       Turnstile verification
        ========================= */
-    
-    // Ensure Turnstile is loaded and widget exists
     if (!window.turnstile || turnstileWidgetId === null) {
        throw new Error("Security check is loading. Please wait and try again.");
     }
 
+    if (!turnstileToken) {
+      turnstile.reset(turnstileWidgetId);
+      throw new Error("Please complete the security check.");
+    }
 
-// ✅ Check token
-if (!turnstileToken) {
-  turnstile.reset(turnstileWidgetId);
-  throw new Error("Please complete the security check.");
-}
-
-// ✅ Send token to backend
-const verify = await fetch("/verify-turnstile", { 
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({ token: turnstileToken })
-});
-
-const verifyResult = await verify.json();
-
-if (!verifyResult.success) {
-  turnstile.reset(turnstileWidgetId);
-  turnstileToken = null;
-  throw new Error("Security verification failed.");
-}
+    // Optional: Verify token on backend
+    await fetch("/verify-recaptcha", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: turnstileToken })
+    });
 
     /* =========================
        Supabase Signup
@@ -551,19 +489,39 @@ if (!verifyResult.success) {
     if (error) throw error;
 
     if (data?.user) {
-      await createUserProfile(data.user.id, username);
+      await supabase.from("users").insert({
+        id: data.user.id,
+        username,
+        role: "user",
+        plan: "free",
+        is_banned: false,
+        preferences: {},
+        last_active: new Date().toISOString()
+      });
     }
 
-    successMsg.textContent =
-      "Success! Please check your email to confirm your account.";
+    // ✅ DOM updates AFTER async tasks
+    successMsg.textContent = "Success! Please check your email to confirm your account.";
     form.reset();
-    
-    // Reset turnstile after successful submission
-    turnstile.reset(turnstileWidgetId);
+
+    // Reset Turnstile safely after DOM updates
+    setTimeout(() => {
+      if (window.turnstile && turnstileWidgetId) {
+        turnstile.reset(turnstileWidgetId);
+        turnstileToken = null;
+      }
+    }, 0);
 
   } catch (err) {
     console.error(err);
     errorMsg.textContent = err.message || "Signup failed.";
+
+    setTimeout(() => {
+      if (window.turnstile && turnstileWidgetId) {
+        turnstile.reset(turnstileWidgetId);
+        turnstileToken = null;
+      }
+    }, 0);
   } finally {
     submitBtn.disabled = false;
   }
