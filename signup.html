@@ -5,9 +5,6 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>Sign Up – HeloxAi</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- Cloudflare Turnstile -->
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <!-- Ethers for wallet signup -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
 
@@ -34,166 +31,6 @@
       justify-content: center;
       padding: clamp(12px, 5vw, 24px);
       overflow-y: auto;
-    }
-
-    /* ============================================
-       TURNSTILE OVERLAY
-    ============================================ */
-    #turnstile-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      background: linear-gradient(180deg, #071028 0%, #0f1724 100%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 28px;
-      transition: opacity 0.5s ease, visibility 0.5s ease;
-    }
-
-    #turnstile-overlay.dismissed {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-    }
-
-    .overlay-brand {
-      text-align: center;
-    }
-
-    .overlay-brand .logo-mark {
-      width: 56px;
-      height: 56px;
-      margin: 0 auto 14px;
-      border-radius: 16px;
-      background: linear-gradient(135deg, #0ea5a5, #4ade80);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 26px;
-      font-weight: 800;
-      color: #062022;
-      box-shadow: 0 4px 24px rgba(78, 222, 128, 0.25);
-    }
-
-    .overlay-brand h2 {
-      margin: 0;
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: -0.3px;
-    }
-
-    .overlay-brand p {
-      margin: 6px 0 0;
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    /* Loading ring */
-    .overlay-loader {
-      width: 44px;
-      height: 44px;
-      border: 3px solid rgba(255,255,255,0.06);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: overlay-spin 0.8s linear infinite;
-    }
-
-    @keyframes overlay-spin {
-      to { transform: rotate(360deg); }
-    }
-
-    /* Turnstile container inside overlay */
-    #overlay-turnstile {
-      min-height: 66px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-
-    #overlay-turnstile.visible {
-      opacity: 1;
-    }
-
-    /* Success checkmark */
-    .overlay-success {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      animation: overlay-pop 0.35s ease;
-    }
-
-    .overlay-success.show {
-      display: flex;
-    }
-
-    .overlay-check {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #0ea5a5, #4ade80);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .overlay-check svg {
-      width: 24px;
-      height: 24px;
-      stroke: #062022;
-      stroke-width: 3;
-      fill: none;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    .overlay-success span {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--accent);
-    }
-
-    @keyframes overlay-pop {
-      0% { transform: scale(0.7); opacity: 0; }
-      60% { transform: scale(1.05); }
-      100% { transform: scale(1); opacity: 1; }
-    }
-
-    /* Retry button (shown on error) */
-    .overlay-retry {
-      display: none;
-      padding: 10px 28px;
-      border-radius: 8px;
-      background: rgba(255,255,255,0.06);
-      color: #e6eef6;
-      border: 1px solid rgba(255,255,255,0.08);
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 500;
-      transition: background 0.15s;
-    }
-
-    .overlay-retry.show {
-      display: inline-block;
-    }
-
-    .overlay-retry:hover {
-      background: rgba(255,255,255,0.1);
-    }
-
-    .overlay-error-text {
-      display: none;
-      color: var(--danger);
-      font-size: 13px;
-      text-align: center;
-    }
-
-    .overlay-error-text.show {
-      display: block;
     }
 
     /* ============================================
@@ -422,6 +259,14 @@
       to { transform: rotate(360deg); }
     }
 
+    /* Inline Turnstile widget */
+    #turnstile-widget {
+      display: flex;
+      justify-content: center;
+      margin-top: 5px;
+      min-height: 0;
+    }
+
     /* ============================================
        COOKIE BANNER
     ============================================ */
@@ -489,31 +334,6 @@
 <body>
 
   <!-- ============================================
-       TURNSTILE GATE OVERLAY
-  ============================================ -->
-  <div id="turnstile-overlay" role="dialog" aria-modal="true" aria-label="Security verification">
-    <div class="overlay-brand">
-      <div class="logo-mark">H</div>
-      <h2>HeloxAi</h2>
-      <p>Verifying you're human</p>
-    </div>
-
-    <div class="overlay-loader" id="overlay-loader"></div>
-
-    <div id="overlay-turnstile"></div>
-
-    <div class="overlay-success" id="overlay-success">
-      <div class="overlay-check">
-        <svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg>
-      </div>
-      <span>Verified</span>
-    </div>
-
-    <p class="overlay-error-text" id="overlay-error-text">Verification failed. Please try again.</p>
-    <button class="overlay-retry" id="overlay-retry" type="button">Try Again</button>
-  </div>
-
-  <!-- ============================================
        MAIN SIGNUP CARD
   ============================================ -->
   <div class="signup-container" role="main" aria-labelledby="page-title">
@@ -555,6 +375,8 @@
       <small id="password-hint">
         Password must be at least 8 characters and include uppercase, lowercase, numbers, and special characters.
       </small>
+
+      <div id="turnstile-widget"></div>
 
       <button type="submit" id="signup-btn" aria-busy="false">Sign Up</button>
 
@@ -629,6 +451,9 @@
        DOM REFS
     =========================== */
     const form            = document.getElementById("signup-form");
+    const nameField       = document.getElementById("name");
+    const usernameField   = document.getElementById("username");
+    const emailField      = document.getElementById("email");
     const errorMsg        = document.getElementById("error-message");
     const successMsg      = document.getElementById("success-message");
     const passwordInput   = document.getElementById("password");
@@ -636,149 +461,71 @@
     const togglePwBtn     = document.getElementById("toggle-password");
     const submitBtn       = document.getElementById("signup-btn");
 
-    // Overlay elements
-    const overlay         = document.getElementById("turnstile-overlay");
-    const overlayLoader   = document.getElementById("overlay-loader");
-    const overlayCf       = document.getElementById("overlay-turnstile");
-    const overlaySuccess  = document.getElementById("overlay-success");
-    const overlayError    = document.getElementById("overlay-error-text");
-    const overlayRetry    = document.getElementById("overlay-retry");
-
     /* ===========================
-       STATE
+       TURNSTILE — LAZY LOADED
+       Script injected only when
+       user first focuses a form
+       input. Zero weight on load.
     =========================== */
-    let turnstileToken = null;
-    let turnstileVerified = false;
     let turnstileWidgetId = null;
+    let turnstileToken = null;
+    let turnstileLoaded = false;
+    let turnstileLoading = false;
 
-    /* ===========================
-       TURNSTILE OVERLAY LOGIC
-    =========================== */
-    function showOverlayError(msg) {
-      overlayLoader.style.display = "none";
-      overlayCf.classList.remove("visible");
-      overlayError.textContent = msg || "Verification failed. Please try again.";
-      overlayError.classList.add("show");
-      overlayRetry.classList.add("show");
+    function loadTurnstileScript() {
+      return new Promise((resolve, reject) => {
+        if (window.turnstile) { resolve(); return; }
+        if (turnstileLoading) {
+          const wait = setInterval(() => {
+            if (window.turnstile) { clearInterval(wait); resolve(); }
+          }, 80);
+          return;
+        }
+        turnstileLoading = true;
+        const s = document.createElement("script");
+        s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+        s.async = true;
+        s.onload = () => { turnstileLoading = false; resolve(); };
+        s.onerror = () => { turnstileLoading = false; reject(new Error("Failed to load security check")); };
+        document.head.appendChild(s);
+      });
     }
 
-    function renderTurnstileInOverlay() {
-      // Hide spinner, show Turnstile container
-      overlayLoader.style.display = "none";
-      overlayCf.classList.add("visible");
+    function renderTurnstile() {
+      if (turnstileWidgetId !== null) return;
+      if (!window.turnstile || !TURNSTILE_SITE_KEY) return;
 
-      // Destroy previous widget if exists
-      if (turnstileWidgetId !== null && window.turnstile) {
-        try { window.turnstile.remove(turnstileWidgetId); } catch (_) {}
-      }
-
-      turnstileWidgetId = window.turnstile.render("#overlay-turnstile", {
+      turnstileWidgetId = window.turnstile.render("#turnstile-widget", {
         sitekey: TURNSTILE_SITE_KEY,
         theme: "dark",
-        appearance: "interaction-only",
-        callback: (token) => {
-          turnstileToken = token;
-        },
-        "expired-callback": () => {
-          turnstileToken = null;
-        },
-        "error-callback": () => {
-          turnstileToken = null;
-          showOverlayError("Could not load verification. Check your network and try again.");
-        }
+        callback: (token) => { turnstileToken = token; },
+        "expired-callback": () => { turnstileToken = null; }
       });
     }
 
-    function dismissOverlay() {
-      turnstileVerified = true;
-      // Show success checkmark
-      overlayCf.classList.remove("visible");
-      overlayLoader.style.display = "none";
-      overlayError.classList.remove("show");
-      overlayRetry.classList.remove("show");
-      overlaySuccess.classList.add("show");
-
-      // Fade out entire overlay after a brief pause
-      setTimeout(() => {
-        overlay.classList.add("dismissed");
-        // Clean up widget DOM after transition
-        setTimeout(() => {
-          if (turnstileWidgetId !== null && window.turnstile) {
-            try { window.turnstile.remove(turnstileWidgetId); } catch (_) {}
-            turnstileWidgetId = null;
-          }
-        }, 600);
-      }, 700);
-    }
-
-    async function verifyTokenWithServer(token) {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/dynamic-api`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "turnstile", token })
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Server verification failed.");
+    async function ensureTurnstile() {
+      if (turnstileLoaded) return;
+      try {
+        await loadTurnstileScript();
+        renderTurnstile();
+        turnstileLoaded = true;
+      } catch (e) {
+        console.warn("Turnstile unavailable:", e);
       }
-      const data = await res.json();
-      if (!data.success) throw new Error("Verification rejected.");
-      return true;
     }
 
-    // Watch for token and auto-verify + dismiss
-    let tokenWatchInterval = null;
-
-    function startTokenWatch() {
-      tokenWatchInterval = setInterval(async () => {
-        if (turnstileToken && !turnstileVerified) {
-          clearInterval(tokenWatchInterval);
-          try {
-            await verifyTokenWithServer(turnstileToken);
-            dismissOverlay();
-          } catch (err) {
-            console.error("Turnstile server verify failed:", err);
-            // Reset widget so user can retry
-            turnstileToken = null;
-            if (window.turnstile && turnstileWidgetId !== null) {
-              try { window.turnstile.reset(turnstileWidgetId); } catch (_) {}
-            }
-            showOverlayError(err.message || "Verification failed. Please try again.");
-          }
-        }
-      }, 250);
+    // Trigger on first form input focus
+    let turnstileTriggered = false;
+    function triggerTurnstileLoad() {
+      if (turnstileTriggered) return;
+      turnstileTriggered = true;
+      ensureTurnstile();
     }
 
-    // Initialize: wait for Turnstile script, then render
-    function initOverlayTurnstile() {
-      if (!window.turnstile) return;
-
-      // Clear the loader polling
-      clearInterval(turnstilePoll);
-
-      // Small delay so the user sees the spinner first (feels intentional)
-      setTimeout(() => {
-        renderTurnstileInOverlay();
-        startTokenWatch();
-      }, 800);
-    }
-
-    const turnstilePoll = setInterval(() => {
-      if (window.turnstile) initOverlayTurnstile();
-    }, 150);
-
-    // Retry button
-    overlayRetry.addEventListener("click", () => {
-      overlayError.classList.remove("show");
-      overlayRetry.classList.remove("show");
-      overlayLoader.style.display = "block";
-      turnstileToken = null;
-
-      setTimeout(() => {
-        renderTurnstileInOverlay();
-        startTokenWatch();
-      }, 400);
-    });
+    nameField.addEventListener("focus", triggerTurnstileLoad, { once: true });
+    usernameField.addEventListener("focus", triggerTurnstileLoad, { once: true });
+    emailField.addEventListener("focus", triggerTurnstileLoad, { once: true });
+    passwordInput.addEventListener("focus", triggerTurnstileLoad, { once: true });
 
     /* ===========================
        PASSWORD TOGGLE
@@ -884,8 +631,10 @@
       e.preventDefault();
       clearMessages();
 
-      // Block if overlay hasn't been passed
-      if (!turnstileVerified) {
+      // Ensure Turnstile is loaded before checking token
+      if (!turnstileLoaded) await ensureTurnstile();
+
+      if (!turnstileToken) {
         setError("Please complete the security check first.");
         return;
       }
@@ -904,6 +653,13 @@
         if (username.length < 3) throw new Error("Username must be at least 3 characters.");
         if (!/^[a-zA-Z0-9_]+$/.test(username)) throw new Error("Username can only contain letters, numbers, and underscores.");
         if (checkPasswordStrength(password) < 5) throw new Error("Password must be at least 8 characters with uppercase, lowercase, numbers, and special characters.");
+
+        // Optional: server-side token verification
+        await fetch(`${SUPABASE_URL}/functions/v1/dynamic-api`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "turnstile", token: turnstileToken })
+        });
 
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -930,6 +686,11 @@
         setError(err.message || "Signup failed. Please try again.");
       } finally {
         setLoading(submitBtn, false);
+        // Reset Turnstile for next attempt
+        if (window.turnstile && turnstileWidgetId !== null) {
+          window.turnstile.reset(turnstileWidgetId);
+          turnstileToken = null;
+        }
       }
     });
   </script>
