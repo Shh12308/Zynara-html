@@ -347,16 +347,9 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 /* =========================
    ENV + CLIENT
 ========================= */
-if (!window.__ENV__) {
-  throw new Error("env.js not loaded");
-}
+if (!window.__ENV__) throw new Error("env.js not loaded");
 
-const {
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY,
-  TURNSTILE_SITE_KEY
-} = window.__ENV__;
-
+const { SUPABASE_URL, SUPABASE_ANON_KEY, TURNSTILE_SITE_KEY } = window.__ENV__;
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /* =========================
@@ -365,13 +358,18 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const ADMIN_DOMAIN = "@heloxai.xyz";
 
 /* =========================
-   DOM
+   DOM ELEMENTS
 ========================= */
 const form = document.getElementById("signup-form");
 const errorMsg = document.getElementById("error-message");
 const successMsg = document.getElementById("success-message");
 const passwordInput = document.getElementById("password");
 const passwordMeter = document.getElementById("password-strength");
+
+const googleBtn = document.getElementById("signup-google");
+const githubBtn = document.getElementById("signup-github");
+const discordBtn = document.getElementById("signup-discord");
+const walletBtn = document.getElementById("signup-wallet");
 
 /* =========================
    PASSWORD STRENGTH
@@ -387,7 +385,7 @@ function checkPasswordStrength(password) {
 }
 
 passwordInput?.addEventListener("input", () => {
-  passwordMeter.value = checkPasswordStrength(passwordInput.value);
+  if (passwordMeter) passwordMeter.value = checkPasswordStrength(passwordInput.value);
 });
 
 /* =========================
@@ -397,33 +395,75 @@ let turnstileWidgetId = null;
 let turnstileToken = null;
 
 function initTurnstile() {
-  if (!window.turnstile || !TURNSTILE_SITE_KEY) return;
-  if (turnstileWidgetId !== null) return;
-
+  if (!window.turnstile || !TURNSTILE_SITE_KEY || turnstileWidgetId !== null) return;
   turnstileWidgetId = turnstile.render("#turnstile-widget", {
     sitekey: TURNSTILE_SITE_KEY,
     theme: "dark",
-
-    callback: (token) => {
-      console.log("✅ Turnstile passed");
-      turnstileToken = token;
-    },
-
-    "expired-callback": () => {
-      turnstileToken = null;
-    }
+    callback: (token) => { turnstileToken = token; },
+    "expired-callback": () => { turnstileToken = null; },
   });
 }
 
 const waitTurnstile = setInterval(() => {
-  if (window.turnstile) {
-    clearInterval(waitTurnstile);
-    initTurnstile();
-  }
+  if (window.turnstile) { clearInterval(waitTurnstile); initTurnstile(); }
 }, 100);
 
 /* =========================
-   SIGNUP
+   SOCIAL LOGIN HELPERS
+========================= */
+function attachSocialLogin(btn, provider) {
+  btn?.addEventListener("click", async () => {
+    errorMsg.textContent = "";
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: "https://heloxai.xyz/confirm.html" },
+      });
+      if (error) throw error;
+    } catch (err) {
+      console.error(err);
+      errorMsg.textContent = `${provider.charAt(0).toUpperCase() + provider.slice(1)} login failed.`;
+    }
+  });
+}
+
+attachSocialLogin(googleBtn, "google");
+attachSocialLogin(githubBtn, "github");
+attachSocialLogin(discordBtn, "discord");
+
+/* =========================
+   WALLET SIGNUP
+========================= */
+walletBtn?.addEventListener("click", async () => {
+  errorMsg.textContent = "";
+  successMsg.textContent = "";
+  try {
+    if (!window.ethereum) throw new Error("No crypto wallet found.");
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const address = await signer.getAddress();
+    const message = `Sign this message to verify your wallet: ${Date.now()}`;
+    const signature = await signer.signMessage(message);
+
+    const res = await fetch(
+      "https://acbnqeeukfxewiqswgbw.supabase.co/functions/v1/wallet-signup",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address, signature }),
+      }
+    );
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || "Wallet signup failed.");
+    successMsg.textContent = "✅ Wallet verified successfully!";
+  } catch (err) {
+    console.error(err);
+    errorMsg.textContent = err.message;
+  }
+});
+
+/* =========================
+   SIGNUP FORM SUBMIT
 ========================= */
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -439,158 +479,42 @@ form.addEventListener("submit", async (e) => {
   const password = form.password.value;
 
   try {
-    /* =========================
-       VALIDATION
-    ========================= */
-    if (!name || !username || !email || !password) {
-      throw new Error("Please fill out all fields.");
-    }
+    // Validation
+    if (!name || !username || !email || !password) throw new Error("Please fill out all fields.");
+    if (!/\S+@\S+\.\S+/.test(email)) throw new Error("Invalid email address.");
+    if (email.endsWith(ADMIN_DOMAIN)) throw new Error("Reserved domain.");
+    if (checkPasswordStrength(password) < 5) throw new Error("Weak password.");
 
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      throw new Error("Invalid email address.");
-    }
+    if (!turnstileToken) throw new Error("Please complete the security check.");
 
-    if (email.endsWith(ADMIN_DOMAIN)) {
-      throw new Error("Reserved domain.");
-    }
-
-    if (checkPasswordStrength(password) < 5) {
-      throw new Error("Weak password.");
-    }
-
-    /* =========================
-       TURNSTILE CHECK
-    ========================= */
-    if (!turnstileToken) {
-      throw new Error("Please complete the security check.");
-    }
-
-    // ✅ Verify with YOUR Supabase function
+    // Optional: verify Turnstile with backend
     const verify = await fetch(
       "https://acbnqeeukfxewiqswgbw.supabase.co/functions/v1/dynamic-api",
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          type: "turnstile",
-          token: turnstileToken
-        })
-      }
-    );
-
-    const verifyResult = await verify.json();
-
-    if (!verifyResult.success) {
-      throw new Error("Security verification failed.");
-    }
-
-    /* =========================
-   SOCIAL LOGINS
-========================= */
-document.getElementById("signup-google").addEventListener("click", async () => {
-  try {
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: "https://heloxai.xyz/confirm.html" },
-    });
-  } catch (err) {
-    console.error(err);
-    errorMsg.textContent = "Google login failed.";
-  }
-});
-
-document.getElementById("signup-github").addEventListener("click", async () => {
-  try {
-    await supabase.auth.signInWithOAuth({
-      provider: "github",
-      options: { redirectTo: "https://heloxai.xyz/confirm.html" },
-    });
-  } catch (err) {
-    console.error(err);
-    errorMsg.textContent = "GitHub login failed.";
-  }
-});
-
-document.getElementById("signup-discord").addEventListener("click", async () => {
-  try {
-    await supabase.auth.signInWithOAuth({
-      provider: "discord",
-      options: { redirectTo: "https://heloxai.xyz/confirm.html" },
-    });
-  } catch (err) {
-    console.error(err);
-    errorMsg.textContent = "Discord login failed.";
-  }
-});
-
-/* =========================
-   WALLET SIGNUP
-========================= */
-document.getElementById("signup-wallet").addEventListener("click", async () => {
-  try {
-    if (!window.ethereum) throw new Error("No crypto wallet found.");
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const signer = await provider.getSigner();
-    const address = await signer.getAddress();
-
-    // Here you could create a message nonce and sign it for authentication
-    const message = `Sign this message to verify your wallet: ${Date.now()}`;
-    const signature = await signer.signMessage(message);
-
-    // Send wallet + signature to your server or Supabase Function for verification
-    const res = await fetch(
-      "https://acbnqeeukfxewiqswgbw.supabase.co/functions/v1/wallet-signup",
-      {
-        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address, signature }),
+        body: JSON.stringify({ type: "turnstile", token: turnstileToken }),
       }
     );
+    const verifyResult = await verify.json();
+    if (!verifyResult.success) throw new Error("Security verification failed.");
 
-    const json = await res.json();
-    if (!json.success) throw new Error(json.error || "Wallet signup failed.");
-
-    successMsg.textContent = "✅ Wallet verified successfully!";
-
-  } catch (err) {
-    console.error(err);
-    errorMsg.textContent = err.message;
-  }
-});
-
-    /* =========================
-       SUPABASE SIGNUP
-    ========================= */
+    // Supabase signup
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: {
-          full_name: name,
-          username: username
-        },
-        emailRedirectTo: "https://heloxai.xyz/confirm.html"
-      }
+      options: { data: { full_name: name, username }, emailRedirectTo: "https://heloxai.xyz/confirm.html" },
     });
-
     if (error) throw error;
 
-    /* =========================
-       SUCCESS
-    ========================= */
-    successMsg.textContent =
-      "✅ Check your email to confirm your account.";
+    successMsg.textContent = "✅ Check your email to confirm your account.";
     form.reset();
-
   } catch (err) {
     console.error(err);
     errorMsg.textContent = err.message || "Signup failed.";
   } finally {
     btn.disabled = false;
-
-    // ✅ Safe Turnstile reset (prevents DOMException)
+    // Safe Turnstile reset
     setTimeout(() => {
       if (window.turnstile && turnstileWidgetId) {
         turnstile.reset(turnstileWidgetId);
