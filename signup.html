@@ -5,265 +5,322 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>Sign Up – HeloxAi</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
+
   <!-- Cloudflare Turnstile -->
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <!-- Ethers for wallet signup -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
-  
+
   <style>
-:root {
-  --bg: #0f1724;
-  --card: #0b1220;
-  --accent: #6ee7b7;
-  --muted: #9aa4b2;
-  --danger: #ff6b6b;
-  --maxw: 420px;
-  --radius: 12px;
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-}
+    :root {
+      --bg: #0f1724;
+      --card: #0b1220;
+      --accent: #6ee7b7;
+      --muted: #9aa4b2;
+      --danger: #ff6b6b;
+      --maxw: 420px;
+      --radius: 12px;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
 
-html, body {
-  height: 100%;
-  margin: 0;
-  background: linear-gradient(180deg, #071028 0%, #0f1724 100%);
-  color: #e6eef6;
-  display: flex;
-  justify-content: center;
-  padding: clamp(12px, 5vw, 24px);
-  box-sizing: border-box;
-  overflow-y: auto; /* allows scrolling if viewport is too small */
-}
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: linear-gradient(180deg, #071028 0%, #0f1724 100%);
+      color: #e6eef6;
+      display: flex;
+      justify-content: center;
+      padding: clamp(12px, 5vw, 24px);
+      box-sizing: border-box;
+      overflow-y: auto;
+    }
 
-/* Signup card */
-.signup-container {
-  width: 100%;
-  max-width: min(var(--maxw), 95vw);
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  border-radius: var(--radius);
-  padding: clamp(20px, 5vw, 32px);
-  box-shadow: 0 8px 40px rgba(2,6,23,0.75);
-  border: 1px solid rgba(255,255,255,0.03);
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  margin: 20px 0; /* top & bottom spacing */
-}
+    .signup-container {
+      width: 100%;
+      max-width: min(var(--maxw), 95vw);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius: var(--radius);
+      padding: clamp(20px, 5vw, 32px);
+      box-shadow: 0 8px 40px rgba(2,6,23,0.75);
+      border: 1px solid rgba(255,255,255,0.03);
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      margin: 20px 0;
+    }
 
-/* Headings */
-h1 {
-  margin: 0 0 18px 0;
-  font-size: clamp(20px, 5vw, 26px);
-  text-align: center;
-}
+    h1 {
+      margin: 0 0 6px 0;
+      font-size: clamp(20px, 5vw, 26px);
+      text-align: center;
+      letter-spacing: -0.3px;
+    }
 
-/* Form fields */
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
+    .subtitle {
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      margin: 0 0 20px 0;
+    }
 
-input[type="email"],
-input[type="password"],
-input[type="text"] {
-  width: 100%;
-  padding: 14px 16px;
-  border-radius: 10px;
-  background: #071126;
-  color: #e6eef6;
-  border: 1px solid rgba(255,255,255,0.05);
-  font-size: clamp(15px, 2vw, 16px);
-  box-sizing: border-box;
-}
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
 
-/* Password wrapper */
-.password-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
+    input[type="email"],
+    input[type="password"],
+    input[type="text"] {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 10px;
+      background: #071126;
+      color: #e6eef6;
+      border: 1px solid rgba(255,255,255,0.05);
+      font-size: clamp(15px, 2vw, 16px);
+      box-sizing: border-box;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
 
-.password-wrapper input {
-  padding-right: 50px;
-  flex-grow: 1;
-}
+    input[type="email"]:focus,
+    input[type="password"]:focus,
+    input[type="text"]:focus {
+      border-color: rgba(110, 231, 183, 0.35);
+    }
+
+    .password-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .password-wrapper input {
+      padding-right: 50px;
+      flex-grow: 1;
+    }
+
+    #toggle-password {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 18px;
+      padding: 6px;
+      line-height: 1;
+    }
+
+    #toggle-password:hover {
+      color: #e6eef6;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 18px 0 4px 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.06);
+    }
+
+    button[type="submit"],
+    .social-logins button {
+      width: 100%;
+      padding: 14px 0;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.15s ease;
+    }
+
+    button[type="submit"] {
+      background: linear-gradient(90deg, #0ea5a5, #4ade80);
+      color: #062022;
+    }
+
+    button[type="submit"]:hover:not(:disabled) {
+      transform: scale(1.03);
+      box-shadow: 0 4px 20px rgba(78, 222, 128, 0.2);
+    }
+
+    button[type="submit"]:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .social-logins {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .social-logins button {
+      background: #081424;
+      color: #e6eef6;
+      border: 1px solid rgba(255,255,255,0.04);
+      font-size: 14px;
+    }
+
+    .social-logins button:hover:not(:disabled) {
+      background: #0d1e34;
+      border-color: rgba(255,255,255,0.08);
+      transform: scale(1.02);
+    }
 
     .social-logins button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
 
-#toggle-password {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: var(--muted);
-  cursor: pointer;
-  font-size: 18px;
-  padding: 6px;
-}
+    .social-icon {
+      width: 20px;
+      height: 20px;
+      display: inline-block;
+      flex-shrink: 0;
+    }
 
-/* Buttons */
-button[type="submit"],
-.social-logins button {
-  width: 100%;
-  padding: 14px 0;
-  border-radius: 10px;
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-  background: linear-gradient(90deg, #0ea5a5, #4ade80);
-  color: #062022;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  transition: all 0.15s ease;
-}
+    .legal, .note {
+      color: var(--muted);
+      font-size: clamp(13px, 2vw, 14px);
+      margin-top: 14px;
+      text-align: center;
+    }
 
-button[type="submit"]:hover,
-.social-logins button:hover {
-  transform: scale(1.03);
-}
+    .legal a, .note a {
+      color: var(--accent);
+      text-decoration: none;
+    }
 
-/* Social logins */
-.social-logins {
-  display: grid;
-  gap: 10px;
-  margin-top: 16px;
-}
+    .legal a:hover, .note a:hover {
+      text-decoration: underline;
+    }
 
-.social-logins button {
-  background: #081424;
-  color: #e6eef6;
-  border: 1px solid rgba(255,255,255,0.04);
-  justify-content: flex-start;
-  padding-left: 12px;
-  font-size: 15px;
-}
+    #error-message {
+      color: var(--danger);
+      margin-top: 4px;
+      min-height: 1.4em;
+      text-align: center;
+      font-size: 14px;
+    }
 
-.social-icon {
-  width: 20px;
-  height: 20px;
-  display: inline-block;
-}
+    #success-message {
+      color: #7ee787;
+      margin-top: 4px;
+      min-height: 1.4em;
+      text-align: center;
+      font-size: 14px;
+    }
 
-/* Footer text */
-.legal, .note {
-  color: var(--muted);
-  font-size: clamp(13px, 2vw, 14px);
-  margin-top: 14px;
-  text-align: center;
-}
+    meter {
+      width: 100%;
+      height: 6px;
+      border-radius: 4px;
+      margin-top: -4px;
+      margin-bottom: 4px;
+      background: #071126;
+      accent-color: #4ade80;
+    }
 
-.legal a, .note a {
-  color: var(--accent);
-  text-decoration: none;
-}
+    #password-hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+      margin-top: -6px;
+    }
 
-/* Messages */
-#error-message {
-  color: var(--danger);
-  margin-top: 14px;
-  min-height: 1.4em;
-  text-align: center;
-  font-size: 14px;
-}
+    #turnstile-widget {
+      display: flex;
+      justify-content: center;
+      margin-top: 5px;
+    }
 
-#success-message {
-  color: #7ee787;
-  margin-top: 8px;
-  min-height: 1.4em;
-  text-align: center;
-  font-size: 14px;
-}
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid transparent;
+      border-top-color: currentColor;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 6px;
+    }
 
-/* Password strength meter */
-meter {
-  width: 100%;
-  height: 6px;
-  border-radius: 4px;
-  margin-top: -4px;
-  margin-bottom: 4px;
-  background: #071126;
-  accent-color: #4ade80;
-}
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
 
-/* Turnstile Widget Container */
-#turnstile-widget {
-  display: flex;
-  justify-content: center;
-  margin-top: 5px;
-}
+    @media (max-width: 500px) {
+      .signup-container {
+        max-width: 100%;
+        border-radius: 0;
+        padding: 20px;
+      }
 
-/* Responsive tweaks */
-@media (max-width: 500px) {
-  .signup-container {
-    max-width: 100%;
-    border-radius: 0;
-    padding: 20px;
-  }
+      input, button {
+        padding: 16px;
+        font-size: 16px;
+      }
+    }
 
-  input, button {
-    padding: 16px;
-    font-size: 16px;
-  }
+    @media (min-height: 700px) {
+      body { align-items: center; }
+    }
 
-  .social-logins {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .social-logins button {
-    justify-content: center;
-  }
-}
-
-/* Vertical alignment based on viewport height */
-@media (min-height: 700px) {
-  body {
-    align-items: center; /* center vertically on tall screens */
-  }
-}
-@media (max-height: 699px) {
-  body {
-    align-items: flex-start; /* top-aligned + scrollable on short screens */
-  }
-}
-</style>
+    @media (max-height: 699px) {
+      body { align-items: flex-start; }
+    }
+  </style>
 </head>
 <body>
   <div class="signup-container" role="main" aria-labelledby="page-title">
     <h1 id="page-title">Create Your HeloxAi Account</h1>
+    <p class="subtitle">Get started in seconds</p>
 
-   <div class="social-logins" aria-label="Social signup options">
-      <button id="google-login" type="button" disabled title="Google login temporarily disabled">
-  <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="" class="social-icon" />
-  Continue with Google
-</button>
-
-<button id="signup-wallet" type="button" aria-label="Sign up with Wallet">
-  <img src="https://www.svgrepo.com/show/331345/metamask.svg" alt="" class="social-icon" />
-  Sign up with Wallet
-</button>
+    <!-- Social logins — buttons at the TOP level, IDs match JS selectors -->
+    <div class="social-logins" aria-label="Social signup options">
+      <button id="signup-google" type="button" aria-label="Sign up with Google">
+        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="" class="social-icon" />
+        Continue with Google
+      </button>
 
       <button id="signup-github" type="button" aria-label="Sign up with GitHub">
         <img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="" class="social-icon" />
-        Sign up with GitHub
+        Continue with GitHub
       </button>
 
       <button id="signup-discord" type="button" aria-label="Sign up with Discord">
         <img src="https://www.svgrepo.com/show/353655/discord-icon.svg" alt="" class="social-icon" />
-        Sign up with Discord
+        Continue with Discord
       </button>
 
+      <button id="signup-wallet" type="button" aria-label="Sign up with Wallet">
+        <img src="https://www.svgrepo.com/show/331345/metamask.svg" alt="" class="social-icon" />
+        Sign up with Wallet
+      </button>
     </div>
 
+    <div class="divider">or sign up with email</div>
 
     <form id="signup-form" aria-label="Sign up form" autocomplete="on" novalidate>
       <input type="text" id="name" name="name" placeholder="Full Name" aria-label="Full Name" required autocomplete="name" />
@@ -272,28 +329,26 @@ meter {
 
       <div class="password-wrapper">
         <input type="password" id="password" name="password" placeholder="Password" aria-label="Password" required autocomplete="new-password" />
-        <button type="button" id="toggle-password" aria-pressed="false" aria-label="Show password" title="Show password">👁️</button>
+        <button type="button" id="toggle-password" aria-pressed="false" aria-label="Show password" title="Show password">&#128065;</button>
       </div>
 
-      <!-- Password strength meter -->
       <meter id="password-strength" min="0" max="5" value="0" aria-hidden="true"></meter>
       <small id="password-hint">
-  Password must be at least 8 characters and include uppercase, lowercase, numbers, and special characters.
-</small>
+        Password must be at least 8 characters and include uppercase, lowercase, numbers, and special characters.
+      </small>
 
       <!-- Cloudflare Turnstile Widget -->
       <div id="turnstile-widget"></div>
 
-      <button type="submit" id="signup-btn" aria-busy="false" aria-live="polite">Sign Up</button>
+      <button type="submit" id="signup-btn" aria-busy="false">Sign Up</button>
 
       <div id="error-message" role="alert" aria-live="assertive"></div>
       <div id="success-message" role="status" aria-live="polite"></div>
     </form>
 
- 
     <div class="legal" aria-label="Legal and contact links">
-      <a href="term.html" target="_blank" rel="noopener noreferrer">Terms</a> •
-      <a href="priv.html" target="_blank" rel="noopener noreferrer">Privacy</a> •
+      <a href="term.html" target="_blank" rel="noopener noreferrer">Terms</a> &bull;
+      <a href="priv.html" target="_blank" rel="noopener noreferrer">Privacy</a> &bull;
       <a href="contact.html" target="_blank" rel="noopener noreferrer">Contact</a>
     </div>
 
@@ -302,227 +357,342 @@ meter {
     </p>
   </div>
 
-<!-- Cookie Consent Banner -->
-<div id="cookie-banner" style="position:fixed;bottom:20px;left:20px;right:20px;background:#1e293b;color:#f1f5f9;padding:15px;border:1px solid #00e0ff;border-radius:10px;display:none;z-index:1000;font-family:'Poppins',sans-serif;">
-  <p style="margin:0 0 10px 0;font-size:0.95rem;">
-    🍪 We use cookies and local storage to improve your experience on HeloxAi. By continuing, you agree to our 
-    <a href="priv.html" style="color:#00e0ff;text-decoration:underline;">Privacy Policy</a>.
-  </p>
-  <button id="accept-cookies" style="background:#00e0ff;color:#0f172a;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:bold;">
-    Accept
-  </button>
-  <button id="decline-cookies" style="background:transparent;color:#00e0ff;border:1px solid #00e0ff;padding:8px 14px;border-radius:6px;cursor:pointer;margin-left:10px;">
-    Decline
-  </button>
-</div>
+  <!-- Cookie Consent Banner -->
+  <div id="cookie-banner" style="position:fixed;bottom:20px;left:20px;right:20px;background:#1e293b;color:#f1f5f9;padding:15px;border:1px solid #00e0ff;border-radius:10px;display:none;z-index:1000;font-family:'Poppins',sans-serif;">
+    <p style="margin:0 0 10px 0;font-size:0.95rem;">
+      &#127850; We use cookies and local storage to improve your experience on HeloxAi. By continuing, you agree to our
+      <a href="priv.html" style="color:#00e0ff;text-decoration:underline;">Privacy Policy</a>.
+    </p>
+    <button id="accept-cookies" style="background:#00e0ff;color:#0f172a;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:bold;">
+      Accept
+    </button>
+    <button id="decline-cookies" style="background:transparent;color:#00e0ff;border:1px solid #00e0ff;padding:8px 14px;border-radius:6px;cursor:pointer;margin-left:10px;">
+      Decline
+    </button>
+  </div>
 
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const banner = document.getElementById("cookie-banner");
-    const acceptBtn = document.getElementById("accept-cookies");
-    const declineBtn = document.getElementById("decline-cookies");
+  <!-- Cookie consent logic (non-module, runs immediately) -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const banner = document.getElementById("cookie-banner");
+      const acceptBtn = document.getElementById("accept-cookies");
+      const declineBtn = document.getElementById("decline-cookies");
 
-    // Check if consent already given
-    if (!localStorage.getItem("heloxai_cookie_consent")) {
-      banner.style.display = "block";
-    }
+      if (!localStorage.getItem("heloxai_cookie_consent")) {
+        banner.style.display = "block";
+      }
 
-    acceptBtn.addEventListener("click", () => {
-      localStorage.setItem("heloxai_cookie_consent", "accepted");
-      banner.style.display = "none";
-    });
-
-    declineBtn.addEventListener("click", () => {
-      localStorage.setItem("heloxai_cookie_consent", "declined");
-      banner.style.display = "none";
-    });
-  });
-</script>
-
-<script src="env.js"></script>
-
-<script type="module">
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-
-/* =========================
-   ENV + CLIENT
-========================= */
-if (!window.__ENV__) throw new Error("env.js not loaded");
-
-const { SUPABASE_URL, SUPABASE_ANON_KEY, TURNSTILE_SITE_KEY } = window.__ENV__;
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-/* =========================
-   CONSTANTS
-========================= */
-const ADMIN_DOMAIN = "@heloxai.xyz";
-
-/* =========================
-   DOM ELEMENTS
-========================= */
-const form = document.getElementById("signup-form");
-const errorMsg = document.getElementById("error-message");
-const successMsg = document.getElementById("success-message");
-const passwordInput = document.getElementById("password");
-const passwordMeter = document.getElementById("password-strength");
-
-const googleBtn = document.getElementById("signup-google");
-const githubBtn = document.getElementById("signup-github");
-const discordBtn = document.getElementById("signup-discord");
-const walletBtn = document.getElementById("signup-wallet");
-
-/* =========================
-   PASSWORD STRENGTH
-========================= */
-function checkPasswordStrength(password) {
-  let score = 0;
-  if (/.{8,}/.test(password)) score++;
-  if (/[a-z]/.test(password)) score++;
-  if (/[A-Z]/.test(password)) score++;
-  if (/[0-9]/.test(password)) score++;
-  if (/[^A-Za-z0-9]/.test(password)) score++;
-  return score;
-}
-
-passwordInput?.addEventListener("input", () => {
-  if (passwordMeter) passwordMeter.value = checkPasswordStrength(passwordInput.value);
-});
-
-/* =========================
-   TURNSTILE
-========================= */
-let turnstileWidgetId = null;
-let turnstileToken = null;
-
-function initTurnstile() {
-  if (!window.turnstile || !TURNSTILE_SITE_KEY || turnstileWidgetId !== null) return;
-  turnstileWidgetId = turnstile.render("#turnstile-widget", {
-    sitekey: TURNSTILE_SITE_KEY,
-    theme: "dark",
-    callback: (token) => { turnstileToken = token; },
-    "expired-callback": () => { turnstileToken = null; },
-  });
-}
-
-const waitTurnstile = setInterval(() => {
-  if (window.turnstile) { clearInterval(waitTurnstile); initTurnstile(); }
-}, 100);
-
-/* =========================
-   SOCIAL LOGIN HELPERS
-========================= */
-function attachSocialLogin(btn, provider) {
-  btn?.addEventListener("click", async () => {
-    errorMsg.textContent = "";
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: { redirectTo: "https://heloxai.xyz/confirm.html" },
+      acceptBtn.addEventListener("click", () => {
+        localStorage.setItem("heloxai_cookie_consent", "accepted");
+        banner.style.display = "none";
       });
-      if (error) throw error;
-    } catch (err) {
-      console.error(err);
-      errorMsg.textContent = `${provider.charAt(0).toUpperCase() + provider.slice(1)} login failed.`;
-    }
-  });
-}
 
-attachSocialLogin(googleBtn, "google");
-attachSocialLogin(githubBtn, "github");
-attachSocialLogin(discordBtn, "discord");
-
-/* =========================
-   WALLET SIGNUP
-========================= */
-walletBtn?.addEventListener("click", async () => {
-  errorMsg.textContent = "";
-  successMsg.textContent = "";
-  try {
-    if (!window.ethereum) throw new Error("No crypto wallet found.");
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const signer = await provider.getSigner();
-    const address = await signer.getAddress();
-    const message = `Sign this message to verify your wallet: ${Date.now()}`;
-    const signature = await signer.signMessage(message);
-
-    const res = await fetch(
-      "https://acbnqeeukfxewiqswgbw.supabase.co/functions/v1/wallet-signup",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address, signature }),
-      }
-    );
-    const json = await res.json();
-    if (!json.success) throw new Error(json.error || "Wallet signup failed.");
-    successMsg.textContent = "✅ Wallet verified successfully!";
-  } catch (err) {
-    console.error(err);
-    errorMsg.textContent = err.message;
-  }
-});
-
-/* =========================
-   SIGNUP FORM SUBMIT
-========================= */
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  errorMsg.textContent = "";
-  successMsg.textContent = "";
-
-  const btn = form.querySelector("button[type='submit']");
-  btn.disabled = true;
-
-  const name = form.name.value.trim();
-  const username = form.username.value.trim();
-  const email = form.email.value.trim().toLowerCase();
-  const password = form.password.value;
-
-  try {
-    // Validation
-    if (!name || !username || !email || !password) throw new Error("Please fill out all fields.");
-    if (!/\S+@\S+\.\S+/.test(email)) throw new Error("Invalid email address.");
-    if (email.endsWith(ADMIN_DOMAIN)) throw new Error("Reserved domain.");
-    if (checkPasswordStrength(password) < 5) throw new Error("Weak password.");
-
-    if (!turnstileToken) throw new Error("Please complete the security check.");
-
-    // Optional: verify Turnstile with backend
-    const verify = await fetch(
-      "https://acbnqeeukfxewiqswgbw.supabase.co/functions/v1/dynamic-api",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "turnstile", token: turnstileToken }),
-      }
-    );
-    const verifyResult = await verify.json();
-    if (!verifyResult.success) throw new Error("Security verification failed.");
-
-    // Supabase signup
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: name, username }, emailRedirectTo: "https://heloxai.xyz/confirm.html" },
+      declineBtn.addEventListener("click", () => {
+        localStorage.setItem("heloxai_cookie_consent", "declined");
+        banner.style.display = "none";
+      });
     });
-    if (error) throw error;
+  </script>
 
-    successMsg.textContent = "✅ Check your email to confirm your account.";
-    form.reset();
-  } catch (err) {
-    console.error(err);
-    errorMsg.textContent = err.message || "Signup failed.";
-  } finally {
-    btn.disabled = false;
-    // Safe Turnstile reset
-    setTimeout(() => {
-      if (window.turnstile && turnstileWidgetId) {
-        turnstile.reset(turnstileWidgetId);
-        turnstileToken = null;
+  <!-- Load env vars before the module script -->
+  <script src="env.js"></script>
+
+  <!-- Main application logic (ES module for Supabase import) -->
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    /* ===========================
+       ENV + SUPABASE CLIENT
+    =========================== */
+    if (!window.__ENV__) {
+      throw new Error("env.js not loaded — make sure it defines window.__ENV__ with SUPABASE_URL, SUPABASE_ANON_KEY, TURNSTILE_SITE_KEY");
+    }
+
+    const {
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY,
+      TURNSTILE_SITE_KEY
+    } = window.__ENV__;
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const REDIRECT_URL = `${window.location.origin}/confirm.html`;
+
+    /* ===========================
+       DOM REFS
+    =========================== */
+    const form            = document.getElementById("signup-form");
+    const errorMsg        = document.getElementById("error-message");
+    const successMsg      = document.getElementById("success-message");
+    const passwordInput   = document.getElementById("password");
+    const passwordMeter   = document.getElementById("password-strength");
+    const togglePwBtn     = document.getElementById("toggle-password");
+    const submitBtn       = document.getElementById("signup-btn");
+
+    const ADMIN_DOMAIN = "@heloxai.xyz";
+
+    /* ===========================
+       PASSWORD TOGGLE
+    =========================== */
+    togglePwBtn.addEventListener("click", () => {
+      const isPassword = passwordInput.type === "password";
+      passwordInput.type = isPassword ? "text" : "password";
+      togglePwBtn.setAttribute("aria-pressed", String(isPassword));
+      togglePwBtn.setAttribute("aria-label", isPassword ? "Hide password" : "Show password");
+      togglePwBtn.textContent = isPassword ? "\u{1F441}\u{FE0F}\u{200D}\u{1F5E8}" : "\u{1F441}";
+    });
+
+    /* ===========================
+       PASSWORD STRENGTH METER
+    =========================== */
+    function checkPasswordStrength(password) {
+      let score = 0;
+      if (/.{8,}/.test(password))                score++;
+      if (/[a-z]/.test(password))                score++;
+      if (/[A-Z]/.test(password))                score++;
+      if (/[0-9]/.test(password))                score++;
+      if (/[^A-Za-z0-9]/.test(password))         score++;
+      return score;
+    }
+
+    passwordInput.addEventListener("input", () => {
+      passwordMeter.value = checkPasswordStrength(passwordInput.value);
+    });
+
+    /* ===========================
+       HELPERS
+    =========================== */
+    function setError(msg) {
+      errorMsg.textContent = msg;
+      successMsg.textContent = "";
+    }
+
+    function setSuccess(msg) {
+      successMsg.textContent = msg;
+      errorMsg.textContent = "";
+    }
+
+    function clearMessages() {
+      errorMsg.textContent = "";
+      successMsg.textContent = "";
+    }
+
+    function setLoading(btn, isLoading) {
+      btn.disabled = isLoading;
+      btn.setAttribute("aria-busy", String(isLoading));
+      if (isLoading) {
+        btn._prevText = btn.textContent;
+        btn.innerHTML = '<span class="spinner"></span>Please wait\u2026';
+      } else {
+        btn.textContent = btn._prevText || "Sign Up";
       }
-    }, 100);
-  }
-});
-</script>
+    }
+
+    /* ===========================
+       TURNSTILE
+    =========================== */
+    let turnstileWidgetId = null;
+    let turnstileToken = null;
+
+    function initTurnstile() {
+      if (!window.turnstile || !TURNSTILE_SITE_KEY) return;
+      if (turnstileWidgetId !== null) return;
+
+      turnstileWidgetId = window.turnstile.render("#turnstile-widget", {
+        sitekey: TURNSTILE_SITE_KEY,
+        theme: "dark",
+        callback: (token) => {
+          turnstileToken = token;
+        },
+        "expired-callback": () => {
+          turnstileToken = null;
+        },
+        "error-callback": () => {
+          turnstileToken = null;
+        }
+      });
+    }
+
+    // Poll for Turnstile script to finish loading
+    const turnstilePoll = setInterval(() => {
+      if (window.turnstile) {
+        clearInterval(turnstilePoll);
+        initTurnstile();
+      }
+    }, 150);
+
+    function resetTurnstile() {
+      setTimeout(() => {
+        if (window.turnstile && turnstileWidgetId !== null) {
+          turnstileToken = null;
+          turnstile.reset(turnstileWidgetId);
+        }
+      }, 150);
+    }
+
+    /* ===========================
+       SOCIAL LOGINS — top-level,
+       NOT inside the form handler
+    =========================== */
+    async function socialLogin(provider, label) {
+      clearMessages();
+      try {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider,
+          options: { redirectTo: REDIRECT_URL }
+        });
+        if (error) throw error;
+      } catch (err) {
+        console.error(`${label} login failed:`, err);
+        setError(`${label} login failed. Please try again.`);
+      }
+    }
+
+    document.getElementById("signup-google").addEventListener("click", () => socialLogin("google", "Google"));
+    document.getElementById("signup-github").addEventListener("click", () => socialLogin("github", "GitHub"));
+    document.getElementById("signup-discord").addEventListener("click", () => socialLogin("discord", "Discord"));
+
+    /* ===========================
+       WALLET SIGNUP
+    =========================== */
+    document.getElementById("signup-wallet").addEventListener("click", async () => {
+      clearMessages();
+      const walletBtn = document.getElementById("signup-wallet");
+      walletBtn.disabled = true;
+
+      try {
+        if (!window.ethereum) {
+          throw new Error("No crypto wallet detected. Install MetaMask first.");
+        }
+
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        const address = await signer.getAddress();
+
+        const message = `Sign this message to verify wallet ownership for HeloxAi: ${Date.now()}`;
+        const signature = await signer.signMessage(message);
+
+        const res = await fetch(
+          `${SUPABASE_URL}/functions/v1/wallet-signup`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${SUPABASE_ANON_KEY}`
+            },
+            body: JSON.stringify({ address, signature, message })
+          }
+        );
+
+        const json = await res.json();
+
+        if (!res.ok) {
+          throw new Error(json.error || "Wallet signup failed.");
+        }
+
+        setSuccess("Wallet verified! Check your email if confirmation is required.");
+
+      } catch (err) {
+        console.error("Wallet signup error:", err);
+        setError(err.message || "Wallet signup failed.");
+      } finally {
+        walletBtn.disabled = false;
+      }
+    });
+
+    /* ===========================
+       EMAIL SIGNUP (form submit)
+    =========================== */
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearMessages();
+      setLoading(submitBtn, true);
+
+      const name     = form.name.value.trim();
+      const username = form.username.value.trim();
+      const email    = form.email.value.trim().toLowerCase();
+      const password = form.password.value;
+
+      try {
+        /* --- Validation --- */
+        if (!name || !username || !email || !password) {
+          throw new Error("Please fill out all fields.");
+        }
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          throw new Error("Please enter a valid email address.");
+        }
+
+        if (email.endsWith(ADMIN_DOMAIN)) {
+          throw new Error("This email domain is reserved.");
+        }
+
+        if (username.length < 3) {
+          throw new Error("Username must be at least 3 characters.");
+        }
+
+        if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+          throw new Error("Username can only contain letters, numbers, and underscores.");
+        }
+
+        if (checkPasswordStrength(password) < 5) {
+          throw new Error("Password must be at least 8 characters with uppercase, lowercase, numbers, and special characters.");
+        }
+
+        /* --- Turnstile check --- */
+        if (!turnstileToken) {
+          throw new Error("Please complete the security check above.");
+        }
+
+        const verifyRes = await fetch(
+          `${SUPABASE_URL}/functions/v1/dynamic-api`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ type: "turnstile", token: turnstileToken })
+          }
+        );
+
+        const verifyData = await verifyRes.json();
+
+        if (!verifyRes.ok || !verifyData.success) {
+          throw new Error(verifyData.error || "Security verification failed. Please try again.");
+        }
+
+        /* --- Supabase signup --- */
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: name,
+              username: username
+            },
+            emailRedirectTo: REDIRECT_URL
+          }
+        });
+
+        if (error) throw error;
+
+        /* --- Success --- */
+        if (data.session) {
+          // User was auto-confirmed (e.g. email not required)
+          setSuccess("Account created successfully! Redirecting\u2026");
+          setTimeout(() => { window.location.href = REDIRECT_URL; }, 1500);
+        } else {
+          setSuccess("Account created! Check your email to confirm.");
+          form.reset();
+          passwordMeter.value = 0;
+        }
+
+      } catch (err) {
+        console.error("Signup error:", err);
+        setError(err.message || "Signup failed. Please try again.");
+      } finally {
+        setLoading(submitBtn, false);
+        resetTurnstile();
+      }
+    });
+  </script>
 </body>
 </html>
