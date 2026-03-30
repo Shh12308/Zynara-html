@@ -2,24 +2,171 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Logging in…</title>
+  <title>Logging in… – HeloxAi</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex" />
+
+  <style>
+    :root {
+      --bg: #0f1724;
+      --accent: #6ee7b7;
+      --muted: #9aa4b2;
+      --danger: #ff6b6b;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: linear-gradient(180deg, #071028 0%, #0f1724 100%);
+      color: #e6eef6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .callback-card {
+      text-align: center;
+      max-width: 380px;
+      width: 100%;
+      padding: 48px 32px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius: 12px;
+      box-shadow: 0 8px 40px rgba(2,6,23,0.75);
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+
+    .callback-card h1 {
+      margin: 0 0 8px 0;
+      font-size: 22px;
+      letter-spacing: -0.3px;
+    }
+
+    .callback-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* Spinner ring */
+    .spinner-ring {
+      width: 44px;
+      height: 44px;
+      margin: 0 auto 24px auto;
+      border: 3px solid rgba(110, 231, 183, 0.12);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Error state */
+    .callback-card.error .spinner-ring {
+      display: none;
+    }
+
+    .error-icon {
+      display: none;
+      width: 44px;
+      height: 44px;
+      margin: 0 auto 24px auto;
+      border-radius: 50%;
+      background: rgba(255, 107, 107, 0.1);
+      color: var(--danger);
+      font-size: 22px;
+      line-height: 44px;
+    }
+
+    .callback-card.error .error-icon {
+      display: block;
+    }
+
+    .callback-card.error h1 {
+      color: var(--danger);
+    }
+
+    .retry-btn {
+      display: none;
+      margin-top: 20px;
+      padding: 12px 28px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #0ea5a5, #4ade80);
+      color: #062022;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .callback-card.error .retry-btn {
+      display: inline-block;
+    }
+
+    .retry-btn:hover {
+      transform: scale(1.03);
+      box-shadow: 0 4px 20px rgba(78, 222, 128, 0.2);
+    }
+
+    .error-detail {
+      display: none;
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: rgba(255, 107, 107, 0.06);
+      border: 1px solid rgba(255, 107, 107, 0.1);
+      color: var(--muted);
+      font-size: 12px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      word-break: break-word;
+      text-align: left;
+    }
+
+    .callback-card.error .error-detail {
+      display: block;
+    }
+  </style>
 </head>
 <body>
-  <div style="text-align:center; margin-top:50px;">
-    <h1>Logging you in…</h1>
-    <p>Please wait while we complete your login.</p>
+
+  <div class="callback-card" id="callback-card">
+    <div class="spinner-ring" aria-hidden="true"></div>
+    <div class="error-icon" aria-hidden="true">&#10007;</div>
+    <h1 id="status-title">Logging you in&hellip;</h1>
+    <p id="status-text">Please wait while we complete your authentication.</p>
+    <div class="error-detail" id="error-detail"></div>
+    <button class="retry-btn" id="retry-btn">Back to Login</button>
   </div>
 
-  <!-- Load environment variables -->
   <script src="env.js"></script>
 
   <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
+    const card       = document.getElementById("callback-card");
+    const title      = document.getElementById("status-title");
+    const text       = document.getElementById("status-text");
+    const detail     = document.getElementById("error-detail");
+    const retryBtn   = document.getElementById("retry-btn");
+
+    function showError(message, raw) {
+      card.classList.add("error");
+      title.textContent = "Login failed";
+      text.textContent  = message;
+      detail.textContent = raw || "";
+    }
+
+    /* Guard: env.js must be loaded */
     if (!window.__ENV__) {
-      alert("Configuration error. Please refresh.");
+      showError("Configuration error. Please refresh the page.", "env.js not loaded — window.__ENV__ is undefined");
+      retryBtn.addEventListener("click", () => { window.location.replace("login.html"); });
       throw new Error("env.js not loaded");
     }
 
@@ -28,35 +175,52 @@
 
     async function handleAuthCallback() {
       try {
-        // ✅ REQUIRED for Supabase v2 OAuth (Discord especially)
+        /*
+          Supabase v2 OAuth flow:
+          After the provider redirects back here with ?code=...&state=...,
+          we must exchange that code for a session. This is required for
+          all OAuth providers, especially Discord.
+        */
         const { error } = await supabase.auth.exchangeCodeForSession(
           window.location.href
         );
 
         if (error) {
           console.error("OAuth exchange failed:", error);
-          window.location.replace("login.html");
+          showError(
+            "Authentication could not be completed. You may need to try logging in again.",
+            error.message
+          );
+          retryBtn.addEventListener("click", () => { window.location.replace("login.html"); });
           return;
         }
 
-        // Optional: verify session exists
+        /* Verify the session actually landed */
         const { data: { session } } = await supabase.auth.getSession();
 
         if (!session) {
-          console.error("No session after exchange.");
-          window.location.replace("login.html");
+          console.error("No session found after successful exchange.");
+          showError(
+            "Something went wrong — no session was created. Please try again.",
+            "getSession() returned null after exchangeCodeForSession"
+          );
+          retryBtn.addEventListener("click", () => { window.location.replace("login.html"); });
           return;
         }
 
-        // Clean URL
-        window.history.replaceState({}, document.title, "/oauth-callback.html");
+        /* Clean the URL — remove query params so it doesn't linger */
+        window.history.replaceState({}, document.title, "/callback.html");
 
-        // Redirect to homepage
+        /* Success — send user to the app */
         window.location.replace("/index.html");
 
       } catch (err) {
         console.error("Authentication processing failed:", err);
-        window.location.replace("login.html");
+        showError(
+          "An unexpected error occurred during login. Please try again.",
+          err.message || String(err)
+        );
+        retryBtn.addEventListener("click", () => { window.location.replace("login.html"); });
       }
     }
 
