@@ -5,7 +5,6 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>Sign Up – HeloxAi</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- Ethers for wallet signup -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
 
   <style>
@@ -33,9 +32,6 @@
       overflow-y: auto;
     }
 
-    /* ============================================
-       SIGNUP CARD
-    ============================================ */
     .signup-container {
       width: 100%;
       max-width: min(var(--maxw), 95vw);
@@ -259,7 +255,6 @@
       to { transform: rotate(360deg); }
     }
 
-    /* Inline Turnstile widget */
     #turnstile-widget {
       display: flex;
       justify-content: center;
@@ -267,9 +262,6 @@
       min-height: 0;
     }
 
-    /* ============================================
-       COOKIE BANNER
-    ============================================ */
     #cookie-banner {
       position: fixed;
       bottom: 20px;
@@ -315,9 +307,6 @@
       margin-left: 10px;
     }
 
-    /* ============================================
-       RESPONSIVE
-    ============================================ */
     @media (max-width: 500px) {
       .signup-container {
         max-width: 100%;
@@ -333,9 +322,6 @@
 </head>
 <body>
 
-  <!-- ============================================
-       MAIN SIGNUP CARD
-  ============================================ -->
   <div class="signup-container" role="main" aria-labelledby="page-title">
     <h1 id="page-title">Create Your HeloxAi Account</h1>
     <p class="subtitle">Get started in seconds</p>
@@ -395,7 +381,6 @@
     </p>
   </div>
 
-  <!-- Cookie Consent Banner -->
   <div id="cookie-banner">
     <p>
       &#127850; We use cookies and local storage to improve your experience on HeloxAi. By continuing, you agree to our
@@ -405,7 +390,6 @@
     <button class="cookie-decline" id="decline-cookies">Decline</button>
   </div>
 
-  <!-- Cookie consent logic -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const banner = document.getElementById("cookie-banner");
@@ -423,16 +407,14 @@
     });
   </script>
 
-  <!-- Load env vars -->
   <script src="env.js"></script>
 
-  <!-- Main application logic -->
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-    /* ===========================
+    /* ===========================================
        ENV + SUPABASE CLIENT
-    =========================== */
+    =========================================== */
     if (!window.__ENV__) {
       throw new Error("env.js not loaded — define window.__ENV__ with SUPABASE_URL, SUPABASE_ANON_KEY, TURNSTILE_SITE_KEY");
     }
@@ -444,12 +426,17 @@
     } = window.__ENV__;
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const REDIRECT_URL = `${window.location.origin}/confirm.html`;
+
+    /* Email signup: confirmation link in the email points here */
+    const EMAIL_CONFIRM_URL = `${window.location.origin}/confirm.html`;
+    /* Social OAuth: browser redirects here after provider authorizes */
+    const SOCIAL_CALLBACK_URL = `${window.location.origin}/callback.html`;
+
     const ADMIN_DOMAIN = "@heloxai.xyz";
 
-    /* ===========================
+    /* ===========================================
        DOM REFS
-    =========================== */
+    =========================================== */
     const form            = document.getElementById("signup-form");
     const nameField       = document.getElementById("name");
     const usernameField   = document.getElementById("username");
@@ -461,12 +448,9 @@
     const togglePwBtn     = document.getElementById("toggle-password");
     const submitBtn       = document.getElementById("signup-btn");
 
-    /* ===========================
+    /* ===========================================
        TURNSTILE — LAZY LOADED
-       Script injected only when
-       user first focuses a form
-       input. Zero weight on load.
-    =========================== */
+    =========================================== */
     let turnstileWidgetId = null;
     let turnstileToken = null;
     let turnstileLoaded = false;
@@ -514,7 +498,6 @@
       }
     }
 
-    // Trigger on first form input focus
     let turnstileTriggered = false;
     function triggerTurnstileLoad() {
       if (turnstileTriggered) return;
@@ -527,9 +510,9 @@
     emailField.addEventListener("focus", triggerTurnstileLoad, { once: true });
     passwordInput.addEventListener("focus", triggerTurnstileLoad, { once: true });
 
-    /* ===========================
+    /* ===========================================
        PASSWORD TOGGLE
-    =========================== */
+    =========================================== */
     togglePwBtn.addEventListener("click", () => {
       const show = passwordInput.type === "password";
       passwordInput.type = show ? "text" : "password";
@@ -537,9 +520,9 @@
       togglePwBtn.setAttribute("aria-label", show ? "Hide password" : "Show password");
     });
 
-    /* ===========================
+    /* ===========================================
        PASSWORD STRENGTH
-    =========================== */
+    =========================================== */
     function checkPasswordStrength(pw) {
       let s = 0;
       if (/.{8,}/.test(pw))          s++;
@@ -554,9 +537,9 @@
       passwordMeter.value = checkPasswordStrength(passwordInput.value);
     });
 
-    /* ===========================
+    /* ===========================================
        HELPERS
-    =========================== */
+    =========================================== */
     function setError(msg)   { errorMsg.textContent = msg; successMsg.textContent = ""; }
     function setSuccess(msg) { successMsg.textContent = msg; errorMsg.textContent = ""; }
     function clearMessages() { errorMsg.textContent = ""; successMsg.textContent = ""; }
@@ -572,20 +555,28 @@
       }
     }
 
-    /* ===========================
-       SOCIAL LOGINS
-    =========================== */
+    /* ===========================================
+       SOCIAL LOGINS — redirect to callback.html
+    =========================================== */
     async function socialLogin(provider, label) {
       clearMessages();
+      const btn = document.getElementById(`signup-${provider}`);
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Connecting\u2026';
       try {
         const { error } = await supabase.auth.signInWithOAuth({
           provider,
-          options: { redirectTo: REDIRECT_URL }
+          options: {
+            redirectTo: SOCIAL_CALLBACK_URL
+          }
         });
         if (error) throw error;
+        /* Browser will now redirect to the OAuth provider, then to callback.html */
       } catch (err) {
         console.error(`${label} login failed:`, err);
         setError(`${label} login failed. Please try again.`);
+        btn.disabled = false;
+        btn.textContent = `Continue with ${label}`;
       }
     }
 
@@ -593,13 +584,14 @@
     document.getElementById("signup-github").addEventListener("click",  () => socialLogin("github",  "GitHub"));
     document.getElementById("signup-discord").addEventListener("click", () => socialLogin("discord", "Discord"));
 
-    /* ===========================
+    /* ===========================================
        WALLET SIGNUP
-    =========================== */
+    =========================================== */
     document.getElementById("signup-wallet").addEventListener("click", async () => {
       clearMessages();
       const btn = document.getElementById("signup-wallet");
       btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Connecting wallet\u2026';
       try {
         if (!window.ethereum) throw new Error("No crypto wallet detected. Install MetaMask first.");
         const provider = new ethers.BrowserProvider(window.ethereum);
@@ -610,7 +602,10 @@
 
         const res  = await fetch(`${SUPABASE_URL}/functions/v1/wallet-signup`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SUPABASE_ANON_KEY}` },
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`
+          },
           body: JSON.stringify({ address, signature: sig, message })
         });
         const json = await res.json();
@@ -621,17 +616,18 @@
         setError(err.message || "Wallet signup failed.");
       } finally {
         btn.disabled = false;
+        btn.innerHTML = '<img src="https://www.svgrepo.com/show/331345/metamask.svg" alt="" class="social-icon" /> Sign up with Wallet';
       }
     });
 
-    /* ===========================
-       EMAIL SIGNUP
-    =========================== */
+    /* ===========================================
+       EMAIL SIGNUP — Supabase sends confirmation
+       email with link pointing to confirm.html
+    =========================================== */
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       clearMessages();
 
-      // Ensure Turnstile is loaded before checking token
       if (!turnstileLoaded) await ensureTurnstile();
 
       if (!turnstileToken) {
@@ -647,36 +643,57 @@
       const password = form.password.value;
 
       try {
-        if (!name || !username || !email || !password) throw new Error("Please fill out all fields.");
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Please enter a valid email address.");
-        if (email.endsWith(ADMIN_DOMAIN)) throw new Error("This email domain is reserved.");
-        if (username.length < 3) throw new Error("Username must be at least 3 characters.");
-        if (!/^[a-zA-Z0-9_]+$/.test(username)) throw new Error("Username can only contain letters, numbers, and underscores.");
-        if (checkPasswordStrength(password) < 5) throw new Error("Password must be at least 8 characters with uppercase, lowercase, numbers, and special characters.");
+        /* ---- Client-side validation ---- */
+        if (!name || !username || !email || !password) {
+          throw new Error("Please fill out all fields.");
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          throw new Error("Please enter a valid email address.");
+        }
+        if (email.endsWith(ADMIN_DOMAIN)) {
+          throw new Error("This email domain is reserved.");
+        }
+        if (username.length < 3) {
+          throw new Error("Username must be at least 3 characters.");
+        }
+        if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+          throw new Error("Username can only contain letters, numbers, and underscores.");
+        }
+        if (checkPasswordStrength(password) < 5) {
+          throw new Error("Password must be at least 8 characters with uppercase, lowercase, numbers, and special characters.");
+        }
 
-        // Optional: server-side token verification
-        await fetch(`${SUPABASE_URL}/functions/v1/dynamic-api`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ type: "turnstile", token: turnstileToken })
-        });
-
+        /* ---- Supabase signUp ----
+           Supabase automatically sends a confirmation email
+           because "Confirm email" is enabled in the Auth settings.
+           The link inside that email will redirect to EMAIL_CONFIRM_URL.
+        */
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            data: { full_name: name, username },
-            emailRedirectTo: REDIRECT_URL
+            data: {
+              full_name: name,
+              username: username
+            },
+            emailRedirectTo: EMAIL_CONFIRM_URL
           }
         });
 
         if (error) throw error;
 
+        /*
+          data.user exists but data.session is null when
+          email confirmation is required — which is the
+          default Supabase behaviour.
+        */
         if (data.session) {
+          /* Rare case: confirmation not required or auto-confirmed */
           setSuccess("Account created successfully! Redirecting\u2026");
-          setTimeout(() => { window.location.href = REDIRECT_URL; }, 1500);
+          setTimeout(() => { window.location.href = EMAIL_CONFIRM_URL; }, 1500);
         } else {
-          setSuccess("Account created! Check your email to confirm.");
+          /* Normal flow: user must click the link in their inbox */
+          setSuccess("Account created! Check your email to confirm your address.");
           form.reset();
           passwordMeter.value = 0;
         }
@@ -686,7 +703,7 @@
         setError(err.message || "Signup failed. Please try again.");
       } finally {
         setLoading(submitBtn, false);
-        // Reset Turnstile for next attempt
+        /* Reset Turnstile for next attempt */
         if (window.turnstile && turnstileWidgetId !== null) {
           window.turnstile.reset(turnstileWidgetId);
           turnstileToken = null;
