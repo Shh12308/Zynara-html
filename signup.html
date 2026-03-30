@@ -380,21 +380,26 @@ const turnstileContainer = document.getElementById("turnstile-widget");
    Turnstile Initialization
    ========================= */
 let turnstileWidgetId = null;
+let turnstileToken = null;
 
 function initTurnstile() {
   if (!window.turnstile || !TURNSTILE_SITE_KEY) {
     console.warn("Turnstile not ready or Site Key missing.");
     return;
   }
-  
-  // Only render if not already rendered
+
   if (turnstileWidgetId === null) {
     turnstileWidgetId = turnstile.render('#turnstile-widget', {
       sitekey: TURNSTILE_SITE_KEY,
       theme: 'dark',
+
       callback: function(token) {
-        // Optional: Logic when challenge is solved (e.g., enable button)
         console.log("Turnstile challenge passed");
+        turnstileToken = token; // ✅ STORE TOKEN HERE
+      },
+
+      'expired-callback': function() {
+        turnstileToken = null;
       }
     });
   }
@@ -507,8 +512,10 @@ form.addEventListener("submit", async (e) => {
        throw new Error("Security check is loading. Please wait and try again.");
     }
 
-    // Get the token from the widget
-    const token = turnstile.getToken(turnstileWidgetId);
+if (!turnstileToken) {
+  turnstile.reset(turnstileWidgetId);
+  throw new Error("Please complete the security check.");
+}
 
     if (!token) {
       // If no token, reset the widget to give user another chance
@@ -523,7 +530,7 @@ form.addEventListener("submit", async (e) => {
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ token }) 
+      body: JSON.stringify({ token: turnstileToken })
     });
 
     const verifyResult = await verify.json();
