@@ -382,6 +382,17 @@ const turnstileContainer = document.getElementById("turnstile-widget");
 let turnstileWidgetId = null;
 let turnstileToken = null;
 
+  // Helper function: Password strength
+function checkPasswordStrength(password) {
+  let score = 0;
+  if (/.{8,}/.test(password)) score++;          // Minimum 8 chars
+  if (/[a-z]/.test(password)) score++;         // Lowercase
+  if (/[A-Z]/.test(password)) score++;         // Uppercase
+  if (/[0-9]/.test(password)) score++;         // Number
+  if (/[^A-Za-z0-9]/.test(password)) score++; // Special char
+  return score;
+}
+
 function initTurnstile() {
   if (!window.turnstile || !TURNSTILE_SITE_KEY) {
     console.warn("Turnstile not ready or Site Key missing.");
