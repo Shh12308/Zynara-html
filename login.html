@@ -5,442 +5,161 @@
   <title>Login – HeloxAi</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
-  <style>
-    :root {
-      --bg: #0f1724;
-      --card: #0b1220;
-      --accent: #6ee7b7;
-      --muted: #9aa4b2;
-      --danger: #ff6b6b;
-      --maxw: 420px;
-      --radius: 12px;
-      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    }
+<style>
+  :root {
+    --bg: #0f1724;
+    --card: #0b1220;
+    --accent: #6ee7b7;
+    --muted: #9aa4b2;
+    --danger: #ff6b6b;
+    --maxw: 420px;
+    --radius: 12px;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
 
-    *, *::before, *::after { box-sizing: border-box; }
+  *, *::before, *::after { box-sizing: border-box; }
 
-    html, body {
-      margin: 0;
-      padding: clamp(12px, 5vw, 24px);
-      height: 100%;
-      background: linear-gradient(180deg, #071028 0%, #0f1724 100%);
-      color: #e6eef6;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      font-size: 16px;
-      overflow-y: auto;
-    }
+  html, body {
+    margin: 0;
+    padding: clamp(12px, 5vw, 24px);
+    height: 100%;
+    background: linear-gradient(180deg, #071028 0%, #0f1724 100%);
+    color: #e6eef6;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    font-size: 16px;
+    overflow-y: auto;
+  }
 
-    /* ===========================
-       TURNSTILE OVERLAY
-    =========================== */
-    #turnstile-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      background: linear-gradient(180deg, #071028 0%, #0f1724 100%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 28px;
-      transition: opacity 0.5s ease, visibility 0.5s ease;
-    }
+  .signup-container {
+    width: 100%;
+    max-width: min(var(--maxw), 95vw);
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius: var(--radius);
+    padding: clamp(20px, 5vw, 32px);
+    box-shadow: 0 8px 40px rgba(2,6,23,0.75);
+    border: 1px solid rgba(255,255,255,0.03);
+    display: flex;
+    flex-direction: column;
+    margin: 20px 0;
+  }
 
-    #turnstile-overlay.dismissed {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-    }
+  h1 {
+    margin: 0 0 18px 0;
+    font-size: clamp(20px, 5vw, 26px);
+    text-align: center;
+  }
 
-    .overlay-brand { text-align: center; }
+  form { display: flex; flex-direction: column; gap: 14px; }
 
-    .overlay-brand .logo-mark {
-      width: 56px;
-      height: 56px;
-      margin: 0 auto 14px;
-      border-radius: 16px;
-      background: linear-gradient(135deg, #0ea5a5, #4ade80);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 26px;
-      font-weight: 800;
-      color: #062022;
-      box-shadow: 0 4px 24px rgba(78, 222, 128, 0.25);
-    }
+  input[type="email"],
+  input[type="password"],
+  input[type="text"] {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: #071126;
+    color: #e6eef6;
+    border: 1px solid rgba(255,255,255,0.05);
+    font-size: clamp(15px, 2vw, 16px);
+  }
 
-    .overlay-brand h2 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
-    .overlay-brand p { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+  .password-wrapper { position: relative; display: flex; align-items: center; }
+  .password-wrapper input { padding-right: 50px; flex-grow: 1; }
 
-    .overlay-loader {
-      width: 44px;
-      height: 44px;
-      border: 3px solid rgba(255,255,255,0.06);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: overlay-spin 0.8s linear infinite;
-    }
+  #toggle-password {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; color: var(--muted); cursor: pointer;
+    font-size: 18px; padding: 6px;
+  }
 
-    @keyframes overlay-spin { to { transform: rotate(360deg); } }
+  button[type="submit"],
+  .social-logins button,
+  #admin-login-btn {
+    width: 100%; padding: 14px 0; border-radius: 10px; border: none;
+    cursor: pointer; font-weight: 600; display: flex; align-items: center;
+    justify-content: center; gap: 10px; transition: all 0.15s ease;
+    min-height: 48px;
+  }
 
-    #overlay-turnstile {
-      min-height: 66px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
+  button[type="submit"] { background: linear-gradient(90deg, #0ea5a5, #4ade80); color: #062022; }
+  button[type="submit"]:hover, .social-logins button:hover, #admin-login-btn:hover { transform: scale(1.03); }
+  #admin-login-btn { background: linear-gradient(90deg, #ff3b3b, #ff6b6b); color: #fff; margin-top: 10px; }
 
-    #overlay-turnstile.visible { opacity: 1; }
+  .social-logins { display: grid; gap: 10px; margin-top: 16px; }
+  .social-logins button {
+    background: #081424; color: #e6eef6;
+    border: 1px solid rgba(255,255,255,0.04);
+    justify-content: flex-start; padding-left: 12px; font-size: 15px;
+  }
+  .social-icon { width: 20px; height: 20px; max-width: 20px; max-height: 20px; }
+  .social-logins button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-    .overlay-success {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      animation: overlay-pop 0.35s ease;
-    }
+  .legal, .note { color: var(--muted); font-size: clamp(13px, 2vw, 14px); text-align: center; margin-top: 14px; }
+  .legal a, .note a { color: var(--accent); text-decoration: none; }
+  #error-message { color: var(--danger); min-height: 1.4em; text-align: center; font-size: 14px; margin-top: 14px; }
+  #success-message { color: #7ee787; min-height: 1.4em; text-align: center; font-size: 14px; margin-top: 8px; }
 
-    .overlay-success.show { display: flex; }
+  #avatar-preview { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+  #avatar-preview img { width: 40px; height: 40px; border-radius: 50%; }
 
-    .overlay-check {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #0ea5a5, #4ade80);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+  @media (max-width: 500px) {
+    .signup-container { max-width: 100%; border-radius: 0; padding: 20px; }
+    input, button { font-size: 16px; padding: 16px; }
+    .social-logins { display: flex; flex-direction: column; gap: 12px; }
+    .social-logins button { justify-content: center; }
+  }
+  @media (max-width: 350px) { .password-wrapper input { padding-right: 40px; } #toggle-password { font-size: 16px; } }
+  @media (min-height: 700px) { body { align-items: center; } }
+  @media (max-height: 699px) { body { align-items: flex-start; } }
 
-    .overlay-check svg {
-      width: 24px;
-      height: 24px;
-      stroke: #062022;
-      stroke-width: 3;
-      fill: none;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
+  #turnstile-widget { display: flex; justify-content: center; margin-top: 5px; min-height: 0; }
 
-    .overlay-success span { font-size: 15px; font-weight: 600; color: var(--accent); }
-
-    @keyframes overlay-pop {
-      0% { transform: scale(0.7); opacity: 0; }
-      60% { transform: scale(1.05); }
-      100% { transform: scale(1); opacity: 1; }
-    }
-
-    .overlay-retry {
-      display: none;
-      padding: 10px 28px;
-      border-radius: 8px;
-      background: rgba(255,255,255,0.06);
-      color: #e6eef6;
-      border: 1px solid rgba(255,255,255,0.08);
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 500;
-      transition: background 0.15s;
-    }
-
-    .overlay-retry.show { display: inline-block; }
-    .overlay-retry:hover { background: rgba(255,255,255,0.1); }
-
-    .overlay-error-text {
-      display: none;
-      color: var(--danger);
-      font-size: 13px;
-      text-align: center;
-    }
-
-    .overlay-error-text.show { display: block; }
-
-    /* ===========================
-       LOGIN CARD
-    =========================== */
-    .signup-container {
-      width: 100%;
-      max-width: min(var(--maxw), 95vw);
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border-radius: var(--radius);
-      padding: clamp(20px, 5vw, 32px);
-      box-shadow: 0 8px 40px rgba(2,6,23,0.75);
-      border: 1px solid rgba(255,255,255,0.03);
-      display: flex;
-      flex-direction: column;
-      margin: 20px 0;
-    }
-
-    h1 {
-      margin: 0 0 6px 0;
-      font-size: clamp(20px, 5vw, 26px);
-      text-align: center;
-      letter-spacing: -0.3px;
-    }
-
-    .subtitle { text-align: center; color: var(--muted); font-size: 14px; margin: 0 0 20px 0; }
-
-    form { display: flex; flex-direction: column; gap: 14px; }
-
-    input[type="email"],
-    input[type="password"],
-    input[type="text"] {
-      width: 100%;
-      padding: 14px 16px;
-      border-radius: 10px;
-      background: #071126;
-      color: #e6eef6;
-      border: 1px solid rgba(255,255,255,0.05);
-      font-size: clamp(15px, 2vw, 16px);
-      outline: none;
-      transition: border-color 0.2s ease;
-    }
-
-    input[type="email"]:focus,
-    input[type="password"]:focus,
-    input[type="text"]:focus { border-color: rgba(110, 231, 183, 0.35); }
-
-    /* Password toggle */
-    .password-wrapper { position: relative; display: flex; align-items: center; }
-    .password-wrapper input { padding-right: 50px; flex-grow: 1; }
-
-    #toggle-password {
-      position: absolute;
-      right: 8px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      color: var(--muted);
-      cursor: pointer;
-      font-size: 18px;
-      padding: 6px;
-      line-height: 1;
-    }
-
-    #toggle-password:hover { color: #e6eef6; }
-
-    /* Remember me */
-    .remember {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--muted);
-      font-size: 14px;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .remember input[type="checkbox"] {
-      width: 16px;
-      height: 16px;
-      accent-color: var(--accent);
-      cursor: pointer;
-    }
-
-    /* Divider */
-    .divider {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin: 18px 0 4px 0;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .divider::before,
-    .divider::after {
-      content: "";
-      flex: 1;
-      height: 1px;
-      background: rgba(255,255,255,0.06);
-    }
-
-    /* Buttons */
-    button[type="submit"],
-    .social-logins button {
-      width: 100%;
-      padding: 14px 0;
-      border-radius: 10px;
-      border: none;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 15px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      transition: all 0.15s ease;
-      min-height: 48px;
-    }
-
-    button[type="submit"] {
-      background: linear-gradient(90deg, #0ea5a5, #4ade80);
-      color: #062022;
-    }
-
-    button[type="submit"]:hover:not(:disabled) {
-      transform: scale(1.03);
-      box-shadow: 0 4px 20px rgba(78, 222, 128, 0.2);
-    }
-
-    button[type="submit"]:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-    /* Social logins */
-    .social-logins { display: flex; flex-direction: column; gap: 10px; }
-
-    .social-logins button {
-      background: #081424;
-      color: #e6eef6;
-      border: 1px solid rgba(255,255,255,0.04);
-      font-size: 14px;
-    }
-
-    .social-logins button:hover:not(:disabled) {
-      background: #0d1e34;
-      border-color: rgba(255,255,255,0.08);
-      transform: scale(1.02);
-    }
-
-    .social-logins button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-    .social-icon { width: 20px; height: 20px; display: inline-block; flex-shrink: 0; }
-
-    /* Messages */
-    .legal, .note {
-      color: var(--muted);
-      font-size: clamp(13px, 2vw, 14px);
-      text-align: center;
-      margin-top: 14px;
-      line-height: 1.5;
-    }
-
-    .legal a, .note a { color: var(--accent); text-decoration: none; }
-    .legal a:hover, .note a:hover { text-decoration: underline; }
-
-    #error-message {
-      color: var(--danger);
-      min-height: 1.4em;
-      text-align: center;
-      font-size: 14px;
-      margin-top: 4px;
-    }
-
-    #success-message {
-      color: #7ee787;
-      min-height: 1.4em;
-      text-align: center;
-      font-size: 14px;
-      margin-top: 4px;
-    }
-
-    /* Spinner */
-    .spinner {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid transparent;
-      border-top-color: currentColor;
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-      margin-right: 6px;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ===========================
-       RESPONSIVE
-    =========================== */
-    @media (max-width: 500px) {
-      .signup-container { max-width: 100%; border-radius: 0; padding: 20px; }
-      input, button { font-size: 16px; padding: 16px; }
-    }
-
-    @media (max-width: 350px) {
-      .password-wrapper input { padding-right: 40px; }
-      #toggle-password { font-size: 16px; }
-    }
-
-    @media (min-height: 700px) { body { align-items: center; } }
-    @media (max-height: 699px) { body { align-items: flex-start; } }
-  </style>
+  .remember { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 14px; }
+  .remember input { width: auto; }
+</style>
 </head>
 <body>
-
-  <!-- ===========================
-       TURNSTILE GATE OVERLAY
-  =========================== -->
-  <div id="turnstile-overlay" role="dialog" aria-modal="true" aria-label="Security verification">
-    <div class="overlay-brand">
-      <div class="logo-mark">H</div>
-      <h2>HeloxAi</h2>
-      <p>Verifying you're human</p>
-    </div>
-
-    <div class="overlay-loader" id="overlay-loader"></div>
-
-    <div id="overlay-turnstile"></div>
-
-    <div class="overlay-success" id="overlay-success">
-      <div class="overlay-check">
-        <svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg>
-      </div>
-      <span>Verified</span>
-    </div>
-
-    <p class="overlay-error-text" id="overlay-error-text">Verification failed. Please try again.</p>
-    <button class="overlay-retry" id="overlay-retry" type="button">Try Again</button>
-  </div>
-
-  <!-- ===========================
-       LOGIN CARD
-  =========================== -->
   <div class="signup-container" role="main" aria-labelledby="page-title">
     <h1 id="page-title">Welcome Back to HeloxAi</h1>
-    <p class="subtitle">Log in to continue</p>
 
     <div class="social-logins" aria-label="Social login options">
-      <button id="signup-google" type="button" aria-label="Continue with Google">
+      <button id="google-login" type="button" disabled title="Google login temporarily disabled">
         <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="" class="social-icon" />
         Continue with Google
       </button>
-      <button id="signup-github" type="button" aria-label="Continue with GitHub">
+      <button id="wallet-login" type="button">
+        <img src="https://www.svgrepo.com/show/331345/metamask.svg" class="social-icon" />
+        Continue with Wallet
+      </button>
+      <button id="github-login" type="button">
         <img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="" class="social-icon" />
         Continue with GitHub
       </button>
-      <button id="signup-discord" type="button" aria-label="Continue with Discord">
+      <button id="discord-login" type="button">
         <img src="https://www.svgrepo.com/show/353655/discord-icon.svg" alt="" class="social-icon" />
         Continue with Discord
       </button>
-      <button id="signup-wallet" type="button" aria-label="Continue with Wallet">
-        <img src="https://www.svgrepo.com/show/331345/metamask.svg" alt="" class="social-icon" />
-        Continue with Wallet
-      </button>
     </div>
 
-    <div class="divider">or log in with email</div>
-
-    <form id="login-form" aria-label="Login form" autocomplete="on" novalidate>
+    <form id="login-form" aria-label="Login form" autocomplete="on">
       <input type="email" name="email" id="email" placeholder="Email" aria-label="Email" required autocomplete="email" />
       <div class="password-wrapper">
         <input type="password" name="password" id="password" placeholder="Password" aria-label="Password" required autocomplete="current-password" />
-        <button type="button" id="toggle-password" aria-pressed="false" aria-label="Show password" title="Show password">&#128065;</button>
+        <button type="button" id="toggle-password" aria-pressed="false" aria-label="Show password">👁️</button>
       </div>
 
       <label class="remember">
-        <input type="checkbox" id="remember-me" aria-label="Remember me" />
-        Remember me
+        <input type="checkbox" id="remember-me" aria-label="Remember me" /> Remember me
       </label>
 
-      <button type="submit" id="login-btn" aria-busy="false">Log In</button>
+      <div id="turnstile-widget"></div>
 
-      <div id="error-message" role="alert" aria-live="assertive"></div>
-      <div id="success-message" role="status" aria-live="polite"></div>
+      <button type="submit" id="login-btn" aria-busy="false" aria-live="polite">
+        Log In <span id="login-spinner" hidden class="spinner" aria-hidden="true"></span>
+      </button>
     </form>
 
     <p class="note">
@@ -450,353 +169,287 @@
 
     <p class="legal">
       By logging in, you agree to our
-      <a href="terms.html" target="_blank" rel="noopener noreferrer">Terms of Service</a> and
-      <a href="priv.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
+      <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and
+      <a href="priv.html" target="_blank" rel="noopener">Privacy Policy</a>.
     </p>
+
+    <div id="error-message" role="alert" aria-live="assertive"></div>
+    <div id="success-message" role="status" aria-live="polite"></div>
+
+    <div id="mfa-section" hidden class="small" aria-hidden="true">
+      Two-factor authentication is supported. Enable it in <a href="account.html">Account Settings</a>.
+    </div>
   </div>
 
-  <!-- Load env vars -->
-  <script src="env.js"></script>
+<script src="env.js"></script>
 
-  <!-- Main application logic -->
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    /* ===========================
-       ENV + SUPABASE CLIENT
-    =========================== */
-    if (!window.__ENV__) {
-      throw new Error("env.js not loaded — define window.__ENV__ with SUPABASE_URL, SUPABASE_ANON_KEY, TURNSTILE_SITE_KEY");
+if (!window.__ENV__) throw new Error("env.js not loaded");
+
+const { SUPABASE_URL, SUPABASE_ANON_KEY, TURNSTILE_SITE_KEY } = window.__ENV__;
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* =========================
+   DOM ELEMENTS
+   ========================= */
+const form = document.getElementById("login-form");
+const emailField = document.getElementById("email");
+const passwordField = document.getElementById("password");
+const togglePassword = document.getElementById("toggle-password");
+const rememberMe = document.getElementById("remember-me");
+const loginBtn = document.getElementById("login-btn");
+const loginSpinner = document.getElementById("login-spinner");
+const errorMsg = document.getElementById("error-message");
+const successMsg = document.getElementById("success-message");
+const resetLink = document.getElementById("reset-link");
+const googleBtn = document.getElementById("google-login");
+const githubBtn = document.getElementById("github-login");
+const discordBtn = document.getElementById("discord-login");
+const adminLoginBtn = document.getElementById("admin-login-btn");
+const turnstileContainer = document.getElementById("turnstile-widget");
+
+/* =========================
+   Turnstile — Lazy Loaded
+   Only fetched when user
+   first focuses a form input
+   ========================= */
+let turnstileWidgetId = null;
+let turnstileToken = null;
+let turnstileLoaded = false;
+let turnstileLoading = false;
+
+function loadTurnstileScript() {
+  return new Promise((resolve, reject) => {
+    if (window.turnstile) { resolve(); return; }
+    if (turnstileLoading) {
+      // Already loading — wait for it
+      const wait = setInterval(() => {
+        if (window.turnstile) { clearInterval(wait); resolve(); }
+      }, 80);
+      return;
+    }
+    turnstileLoading = true;
+    const s = document.createElement("script");
+    s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+    s.async = true;
+    s.onload = () => { turnstileLoading = false; resolve(); };
+    s.onerror = () => { turnstileLoading = false; reject(new Error("Failed to load security check")); };
+    document.head.appendChild(s);
+  });
+}
+
+function renderTurnstile() {
+  if (turnstileWidgetId !== null) return;
+  if (!window.turnstile || !TURNSTILE_SITE_KEY) return;
+
+  turnstileWidgetId = window.turnstile.render('#turnstile-widget', {
+    sitekey: TURNSTILE_SITE_KEY,
+    theme: 'dark',
+    size: 'normal',
+    callback: (token) => { turnstileToken = token; },
+    'expired-callback': () => { turnstileToken = null; }
+  });
+}
+
+async function ensureTurnstile() {
+  if (turnstileLoaded) return;
+  try {
+    await loadTurnstileScript();
+    renderTurnstile();
+    turnstileLoaded = true;
+  } catch (e) {
+    console.warn("Turnstile unavailable:", e);
+  }
+}
+
+// Load Turnstile only when user interacts with the form
+let turnstileTriggered = false;
+function triggerTurnstileLoad() {
+  if (turnstileTriggered) return;
+  turnstileTriggered = true;
+  ensureTurnstile();
+}
+
+emailField.addEventListener("focus", triggerTurnstileLoad, { once: true });
+passwordField.addEventListener("focus", triggerTurnstileLoad, { once: true });
+
+/* =========================
+   Utilities
+   ========================= */
+togglePassword.addEventListener("click", () => {
+  const hidden = passwordField.type === "password";
+  passwordField.type = hidden ? "text" : "password";
+  togglePassword.textContent = hidden ? "🙈" : "👁️";
+});
+
+function setLoading(isLoading) {
+  loginBtn.disabled = isLoading;
+  loginSpinner.hidden = !isLoading;
+}
+
+function validateEmail(email) {
+  return /\S+@\S+\.\S+/.test(email);
+}
+
+/* =========================
+   Prefill email if remembered
+   ========================= */
+const savedEmail = localStorage.getItem("lastEmail");
+if (savedEmail) {
+  emailField.value = savedEmail;
+  rememberMe.checked = true;
+}
+
+/* =========================
+   LOGIN FORM SUBMIT
+   ========================= */
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  errorMsg.textContent = "";
+  successMsg.textContent = "";
+  setLoading(true);
+
+  const email = emailField.value.trim();
+  const password = passwordField.value;
+
+  if (!validateEmail(email)) {
+    errorMsg.textContent = "Invalid email address.";
+    setLoading(false);
+    return;
+  }
+
+  if (!password || password.length < 6) {
+    errorMsg.textContent = "Password must be at least 6 characters.";
+    setLoading(false);
+    return;
+  }
+
+  try {
+    // Make sure Turnstile is loaded before checking token
+    if (!turnstileLoaded) await ensureTurnstile();
+
+    if (!turnstileToken) {
+      throw new Error("Please complete the security check.");
     }
 
-    const {
-      SUPABASE_URL,
-      SUPABASE_ANON_KEY,
-      TURNSTILE_SITE_KEY
-    } = window.__ENV__;
+    // Optional: server-side verification
+    await fetch("/verify-turnstile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: turnstileToken })
+    });
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const REDIRECT_URL = `${window.location.origin}/confirm.html`;
+    if (rememberMe.checked) localStorage.setItem("lastEmail", email);
+    else localStorage.removeItem("lastEmail");
 
-    /* ===========================
-       DOM REFS
-    =========================== */
-    const form          = document.getElementById("login-form");
-    const emailField    = document.getElementById("email");
-    const passwordField = document.getElementById("password");
-    const togglePwBtn   = document.getElementById("toggle-password");
-    const rememberMe    = document.getElementById("remember-me");
-    const loginBtn      = document.getElementById("login-btn");
-    const errorMsg      = document.getElementById("error-message");
-    const successMsg    = document.getElementById("success-message");
-    const resetLink     = document.getElementById("reset-link");
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
 
-    // Overlay elements
-    const overlay       = document.getElementById("turnstile-overlay");
-    const overlayLoader = document.getElementById("overlay-loader");
-    const overlayCf     = document.getElementById("overlay-turnstile");
-    const overlayOk     = document.getElementById("overlay-success");
-    const overlayErr    = document.getElementById("overlay-error-text");
-    const overlayRetry  = document.getElementById("overlay-retry");
+    if (data?.user) {
+      const { data: userData } = await supabase
+        .from("users")
+        .select("is_banned")
+        .eq("id", data.user.id)
+        .single();
 
-    /* ===========================
-       STATE
-    =========================== */
-    let turnstileToken = null;
-    let turnstileVerified = false;
-    let turnstileWidgetId = null;
-
-    /* ===========================
-       TURNSTILE OVERLAY LOGIC
-    =========================== */
-    function showOverlayError(msg) {
-      overlayLoader.style.display = "none";
-      overlayCf.classList.remove("visible");
-      overlayErr.textContent = msg || "Verification failed. Please try again.";
-      overlayErr.classList.add("show");
-      overlayRetry.classList.add("show");
-    }
-
-    function renderTurnstileInOverlay() {
-      overlayLoader.style.display = "none";
-      overlayCf.classList.add("visible");
-
-      if (turnstileWidgetId !== null && window.turnstile) {
-        try { window.turnstile.remove(turnstileWidgetId); } catch (_) {}
+      if (userData?.is_banned) {
+        await supabase.auth.signOut();
+        throw new Error("Your account has been banned.");
       }
-
-      turnstileWidgetId = window.turnstile.render("#overlay-turnstile", {
-        sitekey: TURNSTILE_SITE_KEY,
-        theme: "dark",
-        appearance: "interaction-only",
-        callback: (token) => { turnstileToken = token; },
-        "expired-callback": () => { turnstileToken = null; },
-        "error-callback": () => {
-          turnstileToken = null;
-          showOverlayError("Could not load verification. Check your network and try again.");
-        }
-      });
     }
 
-    function dismissOverlay() {
-      turnstileVerified = true;
-      overlayCf.classList.remove("visible");
-      overlayLoader.style.display = "none";
-      overlayErr.classList.remove("show");
-      overlayRetry.classList.remove("show");
-      overlayOk.classList.add("show");
+    successMsg.textContent = "Login successful!";
+    setTimeout(() => location.href = "index.html", 800);
 
-      setTimeout(() => {
-        overlay.classList.add("dismissed");
-        setTimeout(() => {
-          if (turnstileWidgetId !== null && window.turnstile) {
-            try { window.turnstile.remove(turnstileWidgetId); } catch (_) {}
-            turnstileWidgetId = null;
-          }
-        }, 600);
-      }, 700);
-    }
-
-    async function verifyTokenWithServer(token) {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/dynamic-api`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "turnstile", token })
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Server verification failed.");
-      }
-      const data = await res.json();
-      if (!data.success) throw new Error("Verification rejected.");
-      return true;
-    }
-
-    // Watch for token, auto-verify, dismiss
-    function startTokenWatch() {
-      const iv = setInterval(async () => {
-        if (turnstileToken && !turnstileVerified) {
-          clearInterval(iv);
-          try {
-            await verifyTokenWithServer(turnstileToken);
-            dismissOverlay();
-          } catch (err) {
-            console.error("Turnstile verify failed:", err);
-            turnstileToken = null;
-            if (window.turnstile && turnstileWidgetId !== null) {
-              try { window.turnstile.reset(turnstileWidgetId); } catch (_) {}
-            }
-            showOverlayError(err.message || "Verification failed. Please try again.");
-          }
-        }
-      }, 250);
-    }
-
-    function initOverlayTurnstile() {
-      if (!window.turnstile) return;
-      clearInterval(turnstilePoll);
-      setTimeout(() => {
-        renderTurnstileInOverlay();
-        startTokenWatch();
-      }, 800);
-    }
-
-    const turnstilePoll = setInterval(() => {
-      if (window.turnstile) initOverlayTurnstile();
-    }, 150);
-
-    // Retry button
-    overlayRetry.addEventListener("click", () => {
-      overlayErr.classList.remove("show");
-      overlayRetry.classList.remove("show");
-      overlayLoader.style.display = "block";
+  } catch (err) {
+    console.error(err);
+    errorMsg.textContent = err.message || "Unexpected error occurred.";
+  } finally {
+    setLoading(false);
+    if (window.turnstile && turnstileWidgetId) {
+      window.turnstile.reset(turnstileWidgetId);
       turnstileToken = null;
-      setTimeout(() => {
-        renderTurnstileInOverlay();
-        startTokenWatch();
-      }, 400);
-    });
-
-    /* ===========================
-       PASSWORD TOGGLE
-    =========================== */
-    togglePwBtn.addEventListener("click", () => {
-      const show = passwordField.type === "password";
-      passwordField.type = show ? "text" : "password";
-      togglePwBtn.setAttribute("aria-pressed", String(show));
-      togglePwBtn.setAttribute("aria-label", show ? "Hide password" : "Show password");
-    });
-
-    /* ===========================
-       HELPERS
-    =========================== */
-    function validateEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
-
-    function setError(msg)   { errorMsg.textContent = msg; successMsg.textContent = ""; }
-    function setSuccess(msg) { successMsg.textContent = msg; errorMsg.textContent = ""; }
-    function clearMessages() { errorMsg.textContent = ""; successMsg.textContent = ""; }
-
-    function setLoading(on) {
-      loginBtn.disabled = on;
-      loginBtn.setAttribute("aria-busy", String(on));
-      if (on) {
-        loginBtn._prev = loginBtn.textContent;
-        loginBtn.innerHTML = '<span class="spinner"></span>Please wait\u2026';
-      } else {
-        loginBtn.textContent = loginBtn._prev || "Log In";
-      }
     }
+  }
+});
 
-    /* ===========================
-       PREFILL REMEMBERED EMAIL
-    =========================== */
-    const savedEmail = localStorage.getItem("lastEmail");
-    if (savedEmail) {
-      emailField.value = savedEmail;
-      rememberMe.checked = true;
-    }
+/* =========================
+   WALLET LOGIN
+   ========================= */
+const walletBtn = document.getElementById("wallet-login");
+walletBtn?.addEventListener("click", async () => {
+  errorMsg.textContent = "";
+  successMsg.textContent = "";
+  setLoading(true);
 
-    /* ===========================
-       SOCIAL LOGINS
-    =========================== */
-    async function socialLogin(provider, label) {
-      clearMessages();
-      try {
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider,
-          options: { redirectTo: REDIRECT_URL }
-        });
-        if (error) throw error;
-      } catch (err) {
-        console.error(`${label} login failed:`, err);
-        setError(`${label} login failed. Please try again.`);
-      }
-    }
+  try {
+    if (!window.ethereum) throw new Error("No wallet found. Install MetaMask.");
 
-    document.getElementById("signup-google").addEventListener("click",  () => socialLogin("google",  "Google"));
-    document.getElementById("signup-github").addEventListener("click",  () => socialLogin("github",  "GitHub"));
-    document.getElementById("signup-discord").addEventListener("click", () => socialLogin("discord", "Discord"));
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const address = await signer.getAddress();
 
-    /* ===========================
-       WALLET LOGIN
-    =========================== */
-    document.getElementById("signup-wallet").addEventListener("click", async () => {
-      clearMessages();
-      const btn = document.getElementById("signup-wallet");
-      btn.disabled = true;
-      try {
-        if (!window.ethereum) throw new Error("No wallet found. Install MetaMask first.");
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer   = await provider.getSigner();
-        const address  = await signer.getAddress();
-        const message  = `Sign this message to verify wallet ownership for HeloxAi: ${Date.now()}`;
-        const sig      = await signer.signMessage(message);
+    const { data: siweData, error: siweError } = await supabase.auth.signInWithWeb3({ chainId: 1, address });
+    if (siweError) throw siweError;
 
-        const res  = await fetch(`${SUPABASE_URL}/functions/v1/wallet-login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SUPABASE_ANON_KEY}` },
-          body: JSON.stringify({ address, signature: sig, message })
-        });
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.error || "Wallet login failed.");
+    const signature = await signer.signMessage(siweData.message);
+    const { error: verifyError } = await supabase.auth.verifyWeb3({ message: siweData.message, signature });
+    if (verifyError) throw verifyError;
 
-        // If the function returns a session, store it
-        if (json.access_token && json.refresh_token) {
-          await supabase.auth.setSession({
-            access_token: json.access_token,
-            refresh_token: json.refresh_token
-          });
-        }
+    successMsg.textContent = "Wallet login successful!";
+    setTimeout(() => location.href = "index.html", 800);
 
-        setSuccess("Wallet login successful!");
-        setTimeout(() => { window.location.href = "index.html"; }, 800);
-      } catch (err) {
-        console.error("Wallet error:", err);
-        setError(err.message || "Wallet login failed.");
-      } finally {
-        btn.disabled = false;
-      }
-    });
+  } catch (err) {
+    console.error(err);
+    errorMsg.textContent = err.message || "Wallet login failed.";
+  } finally { setLoading(false); }
+});
 
-    /* ===========================
-       EMAIL LOGIN (form submit)
-    =========================== */
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      clearMessages();
-
-      // Block if overlay hasn't passed
-      if (!turnstileVerified) {
-        setError("Please complete the security check first.");
-        return;
-      }
-
+/* =========================
+   OAuth LOGIN
+   ========================= */
+[["google", googleBtn], ["github", githubBtn], ["discord", discordBtn]].forEach(
+  ([provider, btn]) => {
+    btn?.addEventListener("click", async () => {
       setLoading(true);
-
-      const email    = emailField.value.trim().toLowerCase();
-      const password = passwordField.value;
-
-      try {
-        if (!validateEmail(email)) throw new Error("Please enter a valid email address.");
-        if (!password || password.length < 6) throw new Error("Password must be at least 6 characters.");
-
-        // Remember / forget email
-        if (rememberMe.checked) localStorage.setItem("lastEmail", email);
-        else localStorage.removeItem("lastEmail");
-
-        // Supabase login
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-
-        // Ban check
-        if (data?.user) {
-          const { data: profile } = await supabase
-            .from("users")
-            .select("is_banned")
-            .eq("id", data.user.id)
-            .single();
-
-          if (profile?.is_banned) {
-            await supabase.auth.signOut();
-            throw new Error("Your account has been suspended.");
-          }
-        }
-
-        setSuccess("Login successful!");
-        setTimeout(() => { window.location.href = "index.html"; }, 800);
-
-      } catch (err) {
-        console.error("Login error:", err);
-        setError(err.message || "Login failed. Please try again.");
-      } finally {
-        setLoading(false);
-      }
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: `${location.origin}/oauth-callback.html` }
+      });
+      setLoading(false);
+      if (error) errorMsg.textContent = error.message;
     });
+  }
+);
 
-    /* ===========================
-       PASSWORD RESET
-    =========================== */
-    resetLink.addEventListener("click", async (e) => {
-      e.preventDefault();
-      const email = prompt("Enter your email address:");
-      if (!email) return;
+/* =========================
+   PASSWORD RESET
+   ========================= */
+resetLink?.addEventListener("click", async (e) => {
+  e.preventDefault();
+  const email = prompt("Enter your email:");
+  if (!email) return;
 
-      if (!validateEmail(email.trim())) {
-        setError("Please enter a valid email address.");
-        return;
-      }
+  if (!validateEmail(email)) {
+    errorMsg.textContent = "Invalid email.";
+    return;
+  }
 
-      try {
-        const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
-          redirectTo: `${window.location.origin}/reset-complete.html`
-        });
-        if (error) throw error;
-        setSuccess("Password reset email sent! Check your inbox.");
-      } catch (err) {
-        console.error("Reset error:", err);
-        setError(err.message || "Failed to send reset email.");
-      }
-    });
-  </script>
+  setLoading(true);
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${location.origin}/reset-complete.html` });
+  setLoading(false);
+
+  if (error) errorMsg.textContent = error.message;
+  else successMsg.textContent = "Reset email sent!";
+});
+
+/* =========================
+   ADMIN LOGIN BUTTON
+   ========================= */
+adminLoginBtn?.addEventListener("click", () => window.location.href = "admin-login.html");
+
+</script>
 </body>
 </html>
