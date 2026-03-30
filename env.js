@@ -6,5 +6,5 @@ window.__ENV__ = {
   STRIPE_PAYMENT_LINK:"https://buy.stripe.com/7sY9AT2nb9Wv0vu3AN53O04",
   RECAPTCHA_SITE_KEY:"6Le6lZksAAAAAJrbiMWvHD4zUC3lHiNFCTLeAJgC",
   ONESIGNAL_APP_ID: "7fad2e88-14b3-42b4-84f6-19d924af5b1e",
-  APP_NAME: "HeloxAi"
+  APP_NAME: " HeloxAi"
 };
