@@ -239,251 +239,188 @@
 <script src="env.js"></script>
 
 <script type="module">
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-  if (!window.__ENV__) {
-    throw new Error("env.js not loaded");
-  }
+if (!window.__ENV__) throw new Error("env.js not loaded");
 
-  const {
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY,
-    TURNSTILE_SITE_KEY
-  } = window.__ENV__;
+const { SUPABASE_URL, SUPABASE_ANON_KEY, TURNSTILE_SITE_KEY } = window.__ENV__;
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+/* =========================
+   DOM ELEMENTS
+   ========================= */
+const form = document.getElementById("login-form");
+const emailField = document.getElementById("email");
+const passwordField = document.getElementById("password");
+const togglePassword = document.getElementById("toggle-password");
+const rememberMe = document.getElementById("remember-me");
+const loginBtn = document.getElementById("login-btn");
+const loginSpinner = document.getElementById("login-spinner");
+const errorMsg = document.getElementById("error-message");
+const successMsg = document.getElementById("success-message");
+const resetLink = document.getElementById("reset-link");
+const googleBtn = document.getElementById("google-login");
+const githubBtn = document.getElementById("github-login");
+const discordBtn = document.getElementById("discord-login");
+const adminLoginBtn = document.getElementById("admin-login-btn");
+const turnstileContainer = document.getElementById("turnstile-widget");
 
-  const form = document.getElementById("login-form");
-  const emailField = document.getElementById("email");
-  const passwordField = document.getElementById("password");
-  const togglePassword = document.getElementById("toggle-password");
-  const rememberMe = document.getElementById("remember-me");
-  const loginBtn = document.getElementById("login-btn");
-  const loginSpinner = document.getElementById("login-spinner");
-  const errorMsg = document.getElementById("error-message");
-  const successMsg = document.getElementById("success-message");
-  const resetLink = document.getElementById("reset-link");
-  const googleBtn = document.getElementById("google-login");
-  const githubBtn = document.getElementById("github-login");
-  const discordBtn = document.getElementById("discord-login");
-  const adminLoginBtn = document.getElementById("admin-login-btn");
-  const turnstileContainer = document.getElementById("turnstile-widget");
+/* =========================
+   Turnstile
+   ========================= */
+let turnstileWidgetId = null;
+let turnstileToken = null;
 
-  /* =========================
-     Turnstile Initialization
-     ========================= */
-  let turnstileWidgetId = null;
+function initTurnstile() {
+  if (!window.turnstile || !TURNSTILE_SITE_KEY) return;
 
-  function initTurnstile() {
-    if (!window.turnstile || !TURNSTILE_SITE_KEY) {
-      console.warn("Turnstile not ready or Site Key missing.");
-      return;
-    }
-    
-    if (turnstileWidgetId === null) {
-      turnstileWidgetId = turnstile.render('#turnstile-widget', {
-        sitekey: TURNSTILE_SITE_KEY,
-        theme: 'dark',
-        callback: function(token) {
-          console.log("Turnstile challenge passed");
-        }
-      });
-    }
-  }
-
-  const checkTurnstile = setInterval(() => {
-    if (window.turnstile) {
-      clearInterval(checkTurnstile);
-      initTurnstile();
-    }
-  }, 100);
-
-  // Prefill email
-  const savedEmail = localStorage.getItem("lastEmail");
-  if (savedEmail) {
-    emailField.value = savedEmail;
-    rememberMe.checked = true;
-  }
-
-  togglePassword.addEventListener("click", () => {
-    const hidden = passwordField.type === "password";
-    passwordField.type = hidden ? "text" : "password";
-    togglePassword.textContent = hidden ? "🙈" : "👁️";
-  });
-
-  function setLoading(isLoading) {
-    loginBtn.disabled = isLoading;
-    loginSpinner.hidden = !isLoading;
-  }
-
-  function validateEmail(email) {
-    return /\S+@\S+\.\S+/.test(email);
-  }
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    errorMsg.textContent = "";
-    successMsg.textContent = "";
-    setLoading(true);
-
-    const email = emailField.value.trim();
-    const password = passwordField.value;
-
-    if (!validateEmail(email)) {
-      errorMsg.textContent = "Invalid email address.";
-      setLoading(false);
-      return;
-    }
-
-    if (!password || password.length < 6) {
-      errorMsg.textContent = "Password must be at least 6 characters.";
-      setLoading(false);
-      return;
-    }
-
-    try {
-      /* =========================
-         ✅ Turnstile Verification
-         ========================= */
-      if (!window.turnstile || turnstileWidgetId === null) {
-         throw new Error("Security check is loading. Please wait and try again.");
-      }
-
-      const token = turnstile.getToken(turnstileWidgetId);
-
-      if (!token) {
-        turnstile.reset(turnstileWidgetId);
-        throw new Error("Please complete the security check.");
-      }
-
-      // Optional: Verify token with backend
-      // Even if not strictly enforced on backend yet, it's good practice to send it
-      const verify = await fetch("/verify-recaptcha", { 
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token })
-      });
-      
-      // Note: You might choose to ignore the result for login if not enforced server-side
-      // const verifyResult = await verify.json(); 
-
-      /* =========================
-         Supabase Login
-         ========================= */
-      if (rememberMe.checked) {
-        localStorage.setItem("lastEmail", email);
-      } else {
-        localStorage.removeItem("lastEmail");
-      }
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) throw error;
-      
-      // Check ban status after successful login
-      if (data?.user) {
-        const { data: userData, error: userError } = await supabase
-          .from("users")
-          .select("is_banned")
-          .eq("id", data.user.id)
-          .single();
-
-        if (userError) {
-          // If we can't verify status, proceed with caution or throw error
-          console.warn("Could not verify ban status:", userError.message);
-        }
-
-        if (userData?.is_banned) {
-          await supabase.auth.signOut();
-          throw new Error("Your account has been banned.");
-        }
-      }
-
-      setLoading(false);
-      successMsg.textContent = "Login successful!";
-      
-      // Reset turnstile on success
-      if(window.turnstile && turnstileWidgetId) turnstile.reset(turnstileWidgetId);
-
-      setTimeout(() => {
-        window.location.href = "index.html";
-      }, 800);
-
-    } catch (err) {
-      console.error(err);
-      setLoading(false);
-      errorMsg.textContent = err.message || "Unexpected error occurred.";
-      
-      // Reset turnstile on failure
-      if(window.turnstile && turnstileWidgetId) turnstile.reset(turnstileWidgetId);
-    }
-  });
-
-  // Admin login
-  adminLoginBtn?.addEventListener("click", () => {
-    window.location.href = "admin-login.html";
-  });
-
-  // Password reset
-  resetLink?.addEventListener("click", async (e) => {
-    e.preventDefault();
-    const email = prompt("Enter your email:");
-    if (!email) return; // User cancelled
-    
-    if (!validateEmail(email)) {
-      errorMsg.textContent = "Invalid email.";
-      return;
-    }
-
-    setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${location.origin}/reset-complete.html`
+  if (turnstileWidgetId === null) {
+    turnstileWidgetId = turnstile.render('#turnstile-widget', {
+      sitekey: TURNSTILE_SITE_KEY,
+      theme: 'dark',
+      callback: token => {
+        console.log("Turnstile challenge passed");
+        turnstileToken = token;
+      },
+      'expired-callback': () => { turnstileToken = null; }
     });
+  }
+}
+
+// Wait for Turnstile to load
+const checkTurnstile = setInterval(() => {
+  if (window.turnstile) {
+    clearInterval(checkTurnstile);
+    initTurnstile();
+  }
+}, 100);
+
+/* =========================
+   Utilities
+   ========================= */
+togglePassword.addEventListener("click", () => {
+  const hidden = passwordField.type === "password";
+  passwordField.type = hidden ? "text" : "password";
+  togglePassword.textContent = hidden ? "🙈" : "👁️";
+});
+
+function setLoading(isLoading) {
+  loginBtn.disabled = isLoading;
+  loginSpinner.hidden = !isLoading;
+}
+
+function validateEmail(email) {
+  return /\S+@\S+\.\S+/.test(email);
+}
+
+/* =========================
+   Prefill email if remembered
+   ========================= */
+const savedEmail = localStorage.getItem("lastEmail");
+if (savedEmail) {
+  emailField.value = savedEmail;
+  rememberMe.checked = true;
+}
+
+/* =========================
+   LOGIN FORM SUBMIT
+   ========================= */
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  errorMsg.textContent = "";
+  successMsg.textContent = "";
+  setLoading(true);
+
+  const email = emailField.value.trim();
+  const password = passwordField.value;
+
+  if (!validateEmail(email)) {
+    errorMsg.textContent = "Invalid email address.";
     setLoading(false);
+    return;
+  }
 
-    if (error) errorMsg.textContent = error.message;
-    else successMsg.textContent = "Reset email sent!";
-  });
+  if (!password || password.length < 6) {
+    errorMsg.textContent = "Password must be at least 6 characters.";
+    setLoading(false);
+    return;
+  }
 
+  try {
+    /* =========================
+       Turnstile Verification
+       ========================= */
+    if (!turnstileToken) {
+      throw new Error("Please complete the security check.");
+    }
+
+    // Optional: send token to backend
+    await fetch("/verify-turnstile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: turnstileToken })
+    });
+
+    /* =========================
+       Supabase Login
+       ========================= */
+    if (rememberMe.checked) localStorage.setItem("lastEmail", email);
+    else localStorage.removeItem("lastEmail");
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+
+    if (data?.user) {
+      // Check ban status
+      const { data: userData } = await supabase
+        .from("users")
+        .select("is_banned")
+        .eq("id", data.user.id)
+        .single();
+
+      if (userData?.is_banned) {
+        await supabase.auth.signOut();
+        throw new Error("Your account has been banned.");
+      }
+    }
+
+    successMsg.textContent = "Login successful!";
+    setTimeout(() => location.href = "index.html", 800);
+
+  } catch (err) {
+    console.error(err);
+    errorMsg.textContent = err.message || "Unexpected error occurred.";
+  } finally {
+    setLoading(false);
+    // Reset Turnstile
+    if (window.turnstile && turnstileWidgetId) {
+      turnstile.reset(turnstileWidgetId);
+      turnstileToken = null;
+    }
+  }
+});
+
+/* =========================
+   WALLET LOGIN
+   ========================= */
 const walletBtn = document.getElementById("wallet-login");
-
 walletBtn?.addEventListener("click", async () => {
   errorMsg.textContent = "";
   successMsg.textContent = "";
   setLoading(true);
 
   try {
-    if (!window.ethereum) {
-      throw new Error("No wallet found. Please install MetaMask.");
-    }
+    if (!window.ethereum) throw new Error("No wallet found. Install MetaMask.");
 
-    // 1️⃣ Connect wallet
     const provider = new ethers.BrowserProvider(window.ethereum);
     const signer = await provider.getSigner();
     const address = await signer.getAddress();
 
-    // 2️⃣ Ask Supabase for SIWE message
-    const { data: siweData, error: siweError } =
-      await supabase.auth.signInWithWeb3({
-        chainId: 1, // mainnet (change if needed)
-        address
-      });
-
+    const { data: siweData, error: siweError } = await supabase.auth.signInWithWeb3({ chainId: 1, address });
     if (siweError) throw siweError;
 
-    // 3️⃣ Sign the message Supabase gives you
     const signature = await signer.signMessage(siweData.message);
-
-    // 4️⃣ Verify signature with Supabase
-    const { error: verifyError } =
-      await supabase.auth.verifyWeb3({
-        message: siweData.message,
-        signature
-      });
-
+    const { error: verifyError } = await supabase.auth.verifyWeb3({ message: siweData.message, signature });
     if (verifyError) throw verifyError;
 
     successMsg.textContent = "Wallet login successful!";
@@ -492,25 +429,52 @@ walletBtn?.addEventListener("click", async () => {
   } catch (err) {
     console.error(err);
     errorMsg.textContent = err.message || "Wallet login failed.";
-  } finally {
-    setLoading(false);
-  }
+  } finally { setLoading(false); }
 });
 
-  // OAuth
-  [["google", googleBtn], ["github", githubBtn], ["discord", discordBtn]].forEach(
-    ([provider, btn]) => {
-      btn?.addEventListener("click", async () => {
-        setLoading(true);
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider,
-          options: { redirectTo: `${location.origin}/oauth-callback.html` }
-        });
-        setLoading(false);
-        if (error) errorMsg.textContent = error.message;
+/* =========================
+   OAuth LOGIN
+   ========================= */
+[["google", googleBtn], ["github", githubBtn], ["discord", discordBtn]].forEach(
+  ([provider, btn]) => {
+    btn?.addEventListener("click", async () => {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: `${location.origin}/oauth-callback.html` }
       });
-    }
-  );
+      setLoading(false);
+      if (error) errorMsg.textContent = error.message;
+    });
+  }
+);
+
+/* =========================
+   PASSWORD RESET
+   ========================= */
+resetLink?.addEventListener("click", async (e) => {
+  e.preventDefault();
+  const email = prompt("Enter your email:");
+  if (!email) return;
+
+  if (!validateEmail(email)) {
+    errorMsg.textContent = "Invalid email.";
+    return;
+  }
+
+  setLoading(true);
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${location.origin}/reset-complete.html` });
+  setLoading(false);
+
+  if (error) errorMsg.textContent = error.message;
+  else successMsg.textContent = "Reset email sent!";
+});
+
+/* =========================
+   ADMIN LOGIN BUTTON
+   ========================= */
+adminLoginBtn?.addEventListener("click", () => window.location.href = "admin-login.html");
+
 </script>
 </body>
 </html>
