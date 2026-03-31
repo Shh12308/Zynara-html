@@ -560,7 +560,7 @@ const preorderBtn = document.getElementById("preorderBtn");
 const spinner = document.getElementById("loadingSpinner");
 
 // ----------------------------
-// AUTH
+// AUTH HELPERS
 // ----------------------------
 async function getCurrentUser() {
   const { data } = await supabase.auth.getUser();
@@ -587,14 +587,16 @@ async function updateAuthUI() {
   }
 }
 
+// Initial UI update
 updateAuthUI();
 
+// Listen for auth changes
 supabase.auth.onAuthStateChange(() => {
   updateAuthUI();
 });
 
 // ----------------------------
-// PREORDER FLOW (WORKING)
+// PREORDER FLOW
 // ----------------------------
 preorderBtn.addEventListener("click", async () => {
   spinner.style.display = "flex"; // show spinner
@@ -604,45 +606,48 @@ preorderBtn.addEventListener("click", async () => {
 
     // 1️⃣ Get current user
     const user = await getCurrentUser();
-    console.log("User object:", user);
-
     if (!user) {
       spinner.style.display = "none";
       alert("You must be logged in to preorder.");
       return;
     }
 
-    // 2️⃣ Call Supabase Edge Function WITHOUT user token
+    // 2️⃣ Get user JWT
+    const token = await getAccessToken();
+    if (!token) throw new Error("User session expired. Please login again.");
+
+    // 3️⃣ Call Supabase Edge Function with Authorization header
     const functionUrl = "https://acbnqeeukfxewiqswgbw.supabase.co/functions/v1/clever-action";
     console.log("Calling Supabase function:", functionUrl);
 
     const response = await fetch(functionUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}` // ✅ send JWT
+      },
       body: JSON.stringify({
         userId: user.id,
         email: user.email,
-        plan: "lifetime",          // adjust as needed
+        plan: "lifetime",
         provider: "stripe",
-        priceId: "plink_1TH84IElFmwafbRyiU98lsWP"  // replace with your Stripe price ID
+        priceId: "plink_1TH84IElFmwafbRyiU98lsWP"
       }),
     });
 
     console.log("Function response status:", response.status);
-
     const result = await response.json();
     console.log("Function response JSON:", result);
 
     if (!response.ok) {
-      throw new Error(result.error || "Supabase function returned an error");
+      throw new Error(result.message || "Supabase function returned an error");
     }
 
-    // 3️⃣ Redirect to Stripe checkout
-    const stripeLink = STRIPE_PAYMENT_LINK;
-    if (!stripeLink) throw new Error("Stripe payment link is missing. Check your env.js");
+    // 4️⃣ Redirect to Stripe checkout
+    if (!STRIPE_PAYMENT_LINK) throw new Error("Stripe payment link is missing. Check your env.js");
 
-    const separator = stripeLink.includes("?") ? "&" : "?";
-    const checkoutUrl = `${stripeLink}${separator}prefilled_email=${encodeURIComponent(user.email)}`;
+    const separator = STRIPE_PAYMENT_LINK.includes("?") ? "&" : "?";
+    const checkoutUrl = `${STRIPE_PAYMENT_LINK}${separator}prefilled_email=${encodeURIComponent(user.email)}`;
 
     console.log("Redirecting to Stripe checkout:", checkoutUrl);
     window.location.href = checkoutUrl;
