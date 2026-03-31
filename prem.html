@@ -599,50 +599,78 @@ supabase.auth.onAuthStateChange(() => {
 preorderBtn.addEventListener("click", async () => {
   spinner.style.display = "block";
 
-  const user = await getCurrentUser();
-
-  if (!user) {
-    spinner.style.display = "none";
-    alert("Please log in first.");
-    return;
-  }
-
   try {
-    const token = await getAccessToken();
+    console.log("➡️ Preorder button clicked");
 
-    // 🔥 CALL YOUR SUPABASE EDGE FUNCTION
-    const response = await fetch(
-      "https://acbnqeeukfxewiqswgbw.supabase.co/functions/v1/clever-action",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          email: user.email,
-          action: "preorder"
-        })
-      }
-    );
+    // 1️⃣ Get current user
+    const user = await getCurrentUser();
+    console.log("User object:", user);
 
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(result.error || "Function failed");
+    if (!user) {
+      spinner.style.display = "none";
+      alert("You must be logged in to preorder.");
+      return;
     }
 
-    // ✅ REDIRECT TO STRIPE
-    const separator = STRIPE_PAYMENT_LINK.includes("?") ? "&" : "?";
-    const checkoutUrl =
-      `${STRIPE_PAYMENT_LINK}${separator}prefilled_email=${encodeURIComponent(user.email)}`;
+    // 2️⃣ Get access token
+    const token = await getAccessToken();
+    console.log("Access token:", token);
 
+    if (!token) {
+      spinner.style.display = "none";
+      alert("Could not retrieve session token. Try logging in again.");
+      return;
+    }
+
+    // 3️⃣ Call Supabase Edge Function
+    const functionUrl = "https://acbnqeeukfxewiqswgbw.supabase.co/functions/v1/clever-action";
+    console.log("Calling Supabase function:", functionUrl);
+
+    const response = await fetch(functionUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        email: user.email,
+        action: "preorder"
+      })
+    });
+
+    console.log("Function response status:", response.status);
+
+    let result;
+    try {
+      result = await response.json();
+      console.log("Function response JSON:", result);
+    } catch (jsonErr) {
+      console.error("Failed to parse JSON from function:", jsonErr);
+      throw new Error("Invalid response from server.");
+    }
+
+    if (!response.ok) {
+      throw new Error(result.error || "Supabase function returned an error");
+    }
+
+    // 4️⃣ Redirect to Stripe
+    const stripeLink = STRIPE_PAYMENT_LINK;
+    console.log("Stripe payment link:", stripeLink);
+
+    if (!stripeLink) {
+      throw new Error("Stripe payment link is missing. Check your env.js");
+    }
+
+    const separator = stripeLink.includes("?") ? "&" : "?";
+    const checkoutUrl = `${stripeLink}${separator}prefilled_email=${encodeURIComponent(user.email)}`;
+
+    console.log("Redirecting to Stripe checkout:", checkoutUrl);
     window.location.href = checkoutUrl;
 
   } catch (err) {
-    console.error(err);
+    console.error("❌ Preorder failed:", err);
     spinner.style.display = "none";
-    alert("Something went wrong. Try again.");
+    alert(`Something went wrong: ${err.message}`);
   }
 });
 </script>
