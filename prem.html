@@ -602,9 +602,6 @@ preorderBtn.addEventListener("click", async () => {
   spinner.style.display = "flex"; // show spinner
 
   try {
-    console.log("➡️ Preorder button clicked");
-
-    // 1️⃣ Get current user
     const user = await getCurrentUser();
     if (!user) {
       spinner.style.display = "none";
@@ -612,42 +609,14 @@ preorderBtn.addEventListener("click", async () => {
       return;
     }
 
-    // 2️⃣ Get user JWT
-    const token = await getAccessToken();
-    if (!token) throw new Error("User session expired. Please login again.");
-
-    // 3️⃣ Call Supabase Edge Function with Authorization header
-    const functionUrl = "https://acbnqeeukfxewiqswgbw.supabase.co/functions/v1/clever-action";
-    console.log("Calling Supabase function:", functionUrl);
-
-    const response = await fetch(functionUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}` // ✅ send JWT
-      },
-      body: JSON.stringify({
-        userId: user.id,
-        email: user.email,
-        plan: "lifetime",
-        provider: "stripe",
-        priceId: "plink_1TH84IElFmwafbRyiU98lsWP"
-      }),
-    });
-
-    console.log("Function response status:", response.status);
-    const result = await response.json();
-    console.log("Function response JSON:", result);
-
-    if (!response.ok) {
-      throw new Error(result.message || "Supabase function returned an error");
-    }
-
-    // 4️⃣ Redirect to Stripe checkout
+    // Redirect to Stripe checkout
     if (!STRIPE_PAYMENT_LINK) throw new Error("Stripe payment link is missing. Check your env.js");
 
+    // Add client_reference_id so webhook knows which user to update
     const separator = STRIPE_PAYMENT_LINK.includes("?") ? "&" : "?";
-    const checkoutUrl = `${STRIPE_PAYMENT_LINK}${separator}prefilled_email=${encodeURIComponent(user.email)}`;
+    const checkoutUrl = `${STRIPE_PAYMENT_LINK}${separator}` +
+                        `prefilled_email=${encodeURIComponent(user.email)}` +
+                        `&client_reference_id=${user.id}`; // ✅ critical for webhook
 
     console.log("Redirecting to Stripe checkout:", checkoutUrl);
     window.location.href = checkoutUrl;
@@ -658,6 +627,36 @@ preorderBtn.addEventListener("click", async () => {
     alert(`Something went wrong: ${err.message}`);
   }
 });
+</script>
+  <script>
+  // Set the target date (April 10, 2026)
+  const targetDate = new Date("2026-04-10T00:00:00").getTime();
+
+  const countdownEl = document.getElementById("countdown");
+
+  function updateCountdown() {
+    const now = new Date().getTime();
+    const distance = targetDate - now;
+
+    if (distance <= 0) {
+      countdownEl.textContent = "Preorder offer ended!";
+      clearInterval(timerInterval);
+      return;
+    }
+
+    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+    countdownEl.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+  }
+
+  // Update every second
+  const timerInterval = setInterval(updateCountdown, 1000);
+
+  // Initial call
+  updateCountdown();
 </script>
 </body>
 </html>
