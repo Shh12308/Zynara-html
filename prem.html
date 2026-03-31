@@ -594,10 +594,10 @@ supabase.auth.onAuthStateChange(() => {
 });
 
 // ----------------------------
-// PREORDER FLOW (UPDATED)
+// PREORDER FLOW (WORKING)
 // ----------------------------
 preorderBtn.addEventListener("click", async () => {
-  spinner.style.display = "block";
+  spinner.style.display = "flex"; // show spinner
 
   try {
     console.log("➡️ Preorder button clicked");
@@ -612,54 +612,34 @@ preorderBtn.addEventListener("click", async () => {
       return;
     }
 
-    // 2️⃣ Get access token
-    const token = await getAccessToken();
-    console.log("Access token:", token);
-
-    if (!token) {
-      spinner.style.display = "none";
-      alert("Could not retrieve session token. Try logging in again.");
-      return;
-    }
-
-    // 3️⃣ Call Supabase Edge Function
+    // 2️⃣ Call Supabase Edge Function WITHOUT user token
     const functionUrl = "https://acbnqeeukfxewiqswgbw.supabase.co/functions/v1/clever-action";
     console.log("Calling Supabase function:", functionUrl);
 
     const response = await fetch(functionUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        userId: user.id,
         email: user.email,
-        action: "preorder"
-      })
+        plan: "lifetime",          // adjust as needed
+        provider: "stripe",
+        priceId: "plink_1TH84IElFmwafbRyiU98lsWP"  // replace with your Stripe price ID
+      }),
     });
 
     console.log("Function response status:", response.status);
 
-    let result;
-    try {
-      result = await response.json();
-      console.log("Function response JSON:", result);
-    } catch (jsonErr) {
-      console.error("Failed to parse JSON from function:", jsonErr);
-      throw new Error("Invalid response from server.");
-    }
+    const result = await response.json();
+    console.log("Function response JSON:", result);
 
     if (!response.ok) {
       throw new Error(result.error || "Supabase function returned an error");
     }
 
-    // 4️⃣ Redirect to Stripe
+    // 3️⃣ Redirect to Stripe checkout
     const stripeLink = STRIPE_PAYMENT_LINK;
-    console.log("Stripe payment link:", stripeLink);
-
-    if (!stripeLink) {
-      throw new Error("Stripe payment link is missing. Check your env.js");
-    }
+    if (!stripeLink) throw new Error("Stripe payment link is missing. Check your env.js");
 
     const separator = stripeLink.includes("?") ? "&" : "?";
     const checkoutUrl = `${stripeLink}${separator}prefilled_email=${encodeURIComponent(user.email)}`;
