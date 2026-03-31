@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>HeloxAi – Login / Sign Up</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f1724;
+      --card: #0b1220;
+      --accent: #6ee7b7;
+      --accent-dim: rgba(110, 231, 183, 0.15);
+      --muted: #9aa4b2;
+      --danger: #ff6b6b;
+      --success: #7ee787;
+      --input-bg: #071126;
+      --btn-start: #0ea5a5;
+      --btn-end: #4ade80;
+      --social-bg: #081424;
+      --maxw: 440px;
+      --radius: 14px;
+      --radius-sm: 10px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: linear-gradient(180deg, #071028 0%, #0f1724 100%);
+      color: #e6eef6;
+      font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      justify-content: center;
+      padding: clamp(12px, 5vw, 24px);
+      overflow-y: auto;
+    }
+
+    /* ── Ambient background blobs ── */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      filter: blur(100px);
+      opacity: 0.35;
+      z-index: 0;
+    }
+    body::before {
+      width: 340px; height: 340px;
+      background: radial-gradient(circle, #0ea5a5, transparent 70%);
+      top: -80px; left: -60px;
+      animation: drift1 18s ease-in-out infinite alternate;
+    }
+    body::after {
+      width: 280px; height: 280px;
+      background: radial-gradient(circle, #4ade80, transparent 70%);
+      bottom: -60px; right: -40px;
+      animation: drift2 22s ease-in-out infinite alternate;
+    }
+    @keyframes drift1 { to { transform: translate(60px, 40px) scale(1.15); } }
+    @keyframes drift2 { to { transform: translate(-50px, -30px) scale(1.1); } }
+
+    /* ── Card ── */
+    .auth-card {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: min(var(--maxw), 95vw);
+      background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.008));
+      border-radius: var(--radius);
+      padding: clamp(22px, 5vw, 34px);
+      box-shadow: 0 8px 48px rgba(2,6,23,0.8), inset 0 1px 0 rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.04);
+      display: flex;
+      flex-direction: column;
+      margin: 20px 0;
+      backdrop-filter: blur(6px);
+    }
+
+    /* ── Logo / Brand ── */
+    .brand {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .brand-logo {
+      width: 44px; height: 44px;
+      margin: 0 auto 10px auto;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--btn-start), var(--btn-end));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 20px; color: #062022;
+      box-shadow: 0 4px 20px rgba(14,165,165,0.35);
+    }
+    .brand h1 {
+      font-size: clamp(18px, 4.5vw, 24px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    /* ── Tab Switcher ── */
+    .tab-switcher {
+      display: flex;
+      background: rgba(255,255,255,0.03);
+      border-radius: var(--radius-sm);
+      padding: 3px;
+      margin-bottom: 20px;
+      position: relative;
+      border: 1px solid rgba(255,255,255,0.04);
+    }
+    .tab-switcher::before {
+      content: '';
+      position: absolute;
+      top: 3px; bottom: 3px;
+      width: calc(50% - 3px);
+      border-radius: 8px;
+      background: linear-gradient(90deg, var(--btn-start), var(--btn-end));
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 0;
+    }
+    .tab-switcher.signup-active::before {
+      transform: translateX(100%);
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px 0;
+      border: none;
+      background: none;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      position: relative;
+      z-index: 1;
+      border-radius: 8px;
+      transition: color 0.3s;
+      font-family: inherit;
+    }
+    .tab-btn.active {
+      color: #062022;
+    }
+
+    /* ── Panels ── */
+    .panel {
+      display: none;
+      flex-direction: column;
+      animation: panelIn 0.35s ease;
+    }
+    .panel.active { display: flex; }
+    @keyframes panelIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Social Buttons ── */
+    .social-logins {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .social-logins button {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255,255,255,0.04);
+      background: var(--social-bg);
+      color: #e6eef6;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+    .social-logins button:hover:not(:disabled) {
+      background: rgba(255,255,255,0.06);
+      transform: scale(1.02);
+      border-color: rgba(255,255,255,0.08);
+    }
+    .social-logins button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .social-icon {
+      width: 20px; height: 20px;
+      flex-shrink: 0;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.06);
+    }
+
+    /* ── Forms ── */
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    input[type="email"],
+    input[type="password"],
+    input[type="text"] {
+      width: 100%;
+      padding: 13px 16px;
+      border-radius: var(--radius-sm);
+      background: var(--input-bg);
+      color: #e6eef6;
+      border: 1px solid rgba(255,255,255,0.05);
+      font-size: clamp(14px, 2vw, 15px);
+      font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    input:focus {
+      border-color: rgba(110,231,183,0.3);
+      box-shadow: 0 0 0 3px rgba(110,231,183,0.08);
+    }
+    input::placeholder { color: rgba(255,255,255,0.2); }
+
+    /* ── Password Wrapper ── */
+    .password-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .password-wrapper input { padding-right: 48px; flex-grow: 1; }
+    #toggle-login-pw,
+    #toggle-signup-pw {
+      position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: var(--muted);
+      cursor: pointer; font-size: 17px; padding: 6px;
+      line-height: 1;
+    }
+
+    /* ── Password Strength ── */
+    .strength-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: -4px;
+    }
+    .strength-bar-track {
+      flex: 1;
+      height: 4px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .strength-bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 4px;
+      transition: width 0.3s, background 0.3s;
+    }
+    .strength-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      min-width: 48px;
+      text-align: right;
+    }
+
+    /* ── Remember Me ── */
+    .remember-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .remember-row input[type="checkbox"] {
+      width: 16px; height: 16px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    /* ── Submit Button ── */
+    .submit-btn {
+      width: 100%;
+      padding: 13px 0;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 15px;
+      font-family: inherit;
+      background: linear-gradient(90deg, var(--btn-start), var(--btn-end));
+      color: #062022;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+      min-height: 48px;
+      position: relative;
+      overflow: hidden;
+    }
+    .submit-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.5s;
+    }
+    .submit-btn:hover::before { transform: translateX(100%); }
+    .submit-btn:hover { transform: scale(1.02); box-shadow: 0 4px 24px rgba(14,165,165,0.3); }
+    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .submit-btn:disabled::before { display: none; }
+
+    /* ── Spinner ── */
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2.5px solid rgba(6,32,34,0.3);
+      border-top-color: #062022;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Turnstile ── */
+    #turnstile-widget {
+      display: flex;
+      justify-content: center;
+      min-height: 0;
+      margin: 4px 0;
+    }
+
+    /* ── Links Row ── */
+    .links-row {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .links-row a {
+      color: var(--accent);
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+    .links-row a:hover { opacity: 0.8; text-decoration: underline; }
+
+    /* ── Messages ── */
+    .msg {
+      min-height: 1.3em;
+      text-align: center;
+      font-size: 13px;
+      margin-top: 10px;
+      line-height: 1.4;
+    }
+    .msg.error { color: var(--danger); }
+    .msg.success { color: var(--success); }
+
+    /* ── Legal ── */
+    .legal {
+      color: var(--muted);
+      font-size: 11px;
+      text-align: center;
+      margin-top: 16px;
+      line-height: 1.5;
+    }
+    .legal a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .legal a:hover { text-decoration: underline; }
+
+    /* ── Admin Button ── */
+    .admin-btn {
+      width: 100%;
+      padding: 11px 0;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255,107,107,0.2);
+      background: rgba(255,59,59,0.08);
+      color: #ff6b6b;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      font-family: inherit;
+      margin-top: 12px;
+      transition: all 0.15s ease;
+    }
+    .admin-btn:hover {
+      background: rgba(255,59,59,0.15);
+      transform: scale(1.02);
+    }
+
+    /* ── Password Hint ── */
+    .pw-hint {
+      font-size: 11px;
+      color: rgba(255,255,255,0.25);
+      margin-top: -6px;
+      line-height: 1.4;
+    }
+
+    /* ── Cookie Banner ── */
+    .cookie-banner {
+      position: fixed;
+      bottom: 20px; left: 20px; right: 20px;
+      background: #1a2540;
+      color: #e2e8f0;
+      padding: 16px 18px;
+      border: 1px solid rgba(110,231,183,0.2);
+      border-radius: var(--radius-sm);
+      z-index: 1000;
+      display: none;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+    .cookie-banner p {
+      margin: 0 0 12px 0;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .cookie-banner a { color: var(--accent); text-decoration: underline; }
+    .cookie-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .cookie-actions button {
+      padding: 8px 18px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    .cookie-accept {
+      background: var(--accent);
+      color: #062022;
+    }
+    .cookie-accept:hover { transform: scale(1.04); }
+    .cookie-decline {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid rgba(110,231,183,0.3);
+    }
+    .cookie-decline:hover { background: rgba(110,231,183,0.08); }
+
+    /* ── Responsive ── */
+    @media (max-width: 500px) {
+      .auth-card { max-width: 100%; border-radius: 0; padding: 20px; margin: 0; }
+      input, .submit-btn, .social-logins button { font-size: 16px; }
+      .social-logins button { justify-content: center; }
+      .cookie-banner { left: 12px; right: 12px; bottom: 12px; }
+    }
+    @media (min-height: 720px) { body { align-items: center; } }
+    @media (max-height: 719px) { body { align-items: flex-start; } }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="auth-card" role="main" aria-labelledby="page-title">
+    <!-- Brand -->
+    <div class="brand">
+      <div class="brand-logo" aria-hidden="true">H</div>
+      <h1 id="page-title">HeloxAi</h1>
+    </div>
+
+    <!-- Tab Switcher -->
+    <div class="tab-switcher" id="tab-switcher" role="tablist" aria-label="Login or Sign Up">
+      <button class="tab-btn active" id="tab-login" role="tab" aria-selected="true" aria-controls="panel-login">Log In</button>
+      <button class="tab-btn" id="tab-signup" role="tab" aria-selected="false" aria-controls="panel-signup">Sign Up</button>
+    </div>
+
+    <!-- ════════════ LOGIN PANEL ════════════ -->
+    <div class="panel active" id="panel-login" role="tabpanel" aria-labelledby="tab-login">
+
+      <div class="social-logins" aria-label="Social login options">
+        <button id="login-google" type="button" disabled title="Google login temporarily disabled">
+          <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="" class="social-icon" />
+          Continue with Google
+        </button>
+        <button id="login-wallet" type="button">
+          <img src="https://www.svgrepo.com/show/331345/metamask.svg" alt="" class="social-icon" />
+          Continue with Wallet
+        </button>
+        <button id="login-github" type="button">
+          <img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="" class="social-icon" />
+          Continue with GitHub
+        </button>
+        <button id="login-discord" type="button">
+          <img src="https://www.svgrepo.com/show/353655/discord-icon.svg" alt="" class="social-icon" />
+          Continue with Discord
+        </button>
+      </div>
+
+      <div class="divider"><span>or</span></div>
+
+      <form id="login-form" class="auth-form" autocomplete="on" aria-label="Login form">
+        <input type="email" id="login-email" placeholder="Email" aria-label="Email" required autocomplete="email" />
+        <div class="password-wrapper">
+          <input type="password" id="login-password" placeholder="Password" aria-label="Password" required autocomplete="current-password" />
+          <button type="button" id="toggle-login-pw" aria-pressed="false" aria-label="Show password">👁️</button>
+        </div>
+
+        <label class="remember-row">
+          <input type="checkbox" id="remember-me" />
+          Remember me
+        </label>
+
+        <div id="turnstile-login"></div>
+
+        <button type="submit" class="submit-btn" id="login-btn">
+          Log In
+          <span class="spinner" id="login-spinner" hidden aria-hidden="true"></span>
+        </button>
+      </form>
+
+      <div class="links-row">
+        <a href="#" id="reset-link">Forgot password?</a>
+      </div>
+
+      <div class="msg error" id="login-error" role="alert" aria-live="assertive"></div>
+      <div class="msg success" id="login-success" role="status" aria-live="polite"></div>
+
+      <button class="admin-btn" id="admin-login-btn" type="button">Admin Portal</button>
+    </div>
+
+    <!-- ════════════ SIGNUP PANEL ════════════ -->
+    <div class="panel" id="panel-signup" role="tabpanel" aria-labelledby="tab-signup">
+
+      <div class="social-logins" aria-label="Social signup options">
+        <button id="signup-google" type="button" disabled title="Google login temporarily disabled">
+          <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="" class="social-icon" />
+          Continue with Google
+        </button>
+        <button id="signup-wallet" type="button">
+          <img src="https://www.svgrepo.com/show/331345/metamask.svg" alt="" class="social-icon" />
+          Sign up with Wallet
+        </button>
+        <button id="signup-github" type="button">
+          <img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="" class="social-icon" />
+          Sign up with GitHub
+        </button>
+        <button id="signup-discord" type="button">
+          <img src="https://www.svgrepo.com/show/353655/discord-icon.svg" alt="" class="social-icon" />
+          Sign up with Discord
+        </button>
+      </div>
+
+      <div class="divider"><span>or</span></div>
+
+      <form id="signup-form" class="auth-form" autocomplete="on" novalidate aria-label="Sign up form">
+        <input type="text" id="signup-name" placeholder="Full Name" aria-label="Full Name" required autocomplete="name" />
+        <input type="text" id="signup-username" placeholder="Username" aria-label="Username" required autocomplete="username" />
+        <input type="email" id="signup-email" placeholder="Email" aria-label="Email" required autocomplete="email" />
+
+        <div class="password-wrapper">
+          <input type="password" id="signup-password" placeholder="Password" aria-label="Password" required autocomplete="new-password" />
+          <button type="button" id="toggle-signup-pw" aria-pressed="false" aria-label="Show password">👁️</button>
+        </div>
+
+        <div class="strength-row">
+          <div class="strength-bar-track">
+            <div class="strength-bar-fill" id="strength-fill"></div>
+          </div>
+          <span class="strength-label" id="strength-label">--</span>
+        </div>
+        <p class="pw-hint">8+ characters with uppercase, lowercase, numbers, and symbols.</p>
+
+        <div id="turnstile-signup"></div>
+
+        <button type="submit" class="submit-btn" id="signup-btn">
+          Create Account
+          <span class="spinner" id="signup-spinner" hidden aria-hidden="true"></span>
+        </button>
+      </form>
+
+      <div class="msg error" id="signup-error" role="alert" aria-live="assertive"></div>
+      <div class="msg success" id="signup-success" role="status" aria-live="polite"></div>
+    </div>
+
+    <!-- Legal -->
+    <div class="legal">
+      By continuing, you agree to our
+      <a href="terms.html" target="_blank" rel="noopener">Terms</a> and
+      <a href="priv.html" target="_blank" rel="noopener">Privacy Policy</a>.
+    </div>
+  </div>
+
+  <!-- Cookie Consent Banner -->
+  <div class="cookie-banner" id="cookie-banner">
+    <p>
+      We use cookies and local storage to improve your experience. By continuing, you agree to our
+      <a href="priv.html">Privacy Policy</a>.
+    </p>
+    <div class="cookie-actions">
+      <button class="cookie-accept" id="cookie-accept">Accept</button>
+      <button class="cookie-decline" id="cookie-decline">Decline</button>
+    </div>
+  </div>
+
+  <script src="env.js"></script>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+    if (!window.__ENV__) throw new Error("env.js not loaded");
+
+    const { SUPABASE_URL, SUPABASE_ANON_KEY, TURNSTILE_SITE_KEY } = window.__ENV__;
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const ADMIN_DOMAIN = "@heloxai.xyz";
+
+    /* ════════════════════════════════════
+       TAB SWITCHING
+       ════════════════════════════════════ */
+    const tabSwitcher = document.getElementById("tab-switcher");
+    const tabLogin = document.getElementById("tab-login");
+    const tabSignup = document.getElementById("tab-signup");
+    const panelLogin = document.getElementById("panel-login");
+    const panelSignup = document.getElementById("panel-signup");
+
+    function switchTab(tab) {
+      const isSignup = tab === "signup";
+      tabSwitcher.classList.toggle("signup-active", isSignup);
+      tabLogin.classList.toggle("active", !isSignup);
+      tabSignup.classList.toggle("active", isSignup);
+      tabLogin.setAttribute("aria-selected", !isSignup);
+      tabSignup.setAttribute("aria-selected", isSignup);
+      panelLogin.classList.toggle("active", !isSignup);
+      panelSignup.classList.toggle("active", isSignup);
+
+      // Clear messages
+      document.getElementById("login-error").textContent = "";
+      document.getElementById("login-success").textContent = "";
+      document.getElementById("signup-error").textContent = "";
+      document.getElementById("signup-success").textContent = "";
+
+      // Lazy-load Turnstile for the active panel
+      if (!isSignup) triggerLoginTurnstile();
+      else triggerSignupTurnstile();
+    }
+
+    tabLogin.addEventListener("click", () => switchTab("login"));
+    tabSignup.addEventListener("click", () => switchTab("signup"));
+
+    /* ════════════════════════════════════
+       TURNSTILE — LAZY LOADED PER PANEL
+       ════════════════════════════════════ */
+    let turnstileScriptLoaded = false;
+    let turnstileScriptLoading = false;
+
+    function loadTurnstileScript() {
+      return new Promise((resolve, reject) => {
+        if (window.turnstile) { turnstileScriptLoaded = true; resolve(); return; }
+        if (turnstileScriptLoading) {
+          const wait = setInterval(() => {
+            if (window.turnstile) { clearInterval(wait); turnstileScriptLoaded = true; resolve(); }
+          }, 80);
+          return;
+        }
+        turnstileScriptLoading = true;
+        const s = document.createElement("script");
+        s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+        s.async = true;
+        s.onload = () => { turnstileScriptLoading = false; turnstileScriptLoaded = true; resolve(); };
+        s.onerror = () => { turnstileScriptLoading = false; reject(new Error("Security check failed to load")); };
+        document.head.appendChild(s);
+      });
+    }
+
+    // Login turnstile
+    let loginWidgetId = null, loginTurnstileToken = null, loginTurnstileReady = false, loginTurnstileTriggered = false;
+    function triggerLoginTurnstile() {
+      if (loginTurnstileTriggered) return;
+      loginTurnstileTriggered = true;
+      (async () => {
+        try {
+          await loadTurnstileScript();
+          if (!window.turnstile || !TURNSTILE_SITE_KEY) return;
+          loginWidgetId = window.turnstile.render("#turnstile-login", {
+            sitekey: TURNSTILE_SITE_KEY, theme: "dark", size: "normal",
+            callback: (t) => { loginTurnstileToken = t; },
+            "expired-callback": () => { loginTurnstileToken = null; }
+          });
+          loginTurnstileReady = true;
+        } catch (e) { console.warn("Login Turnstile:", e); }
+      })();
+    }
+    document.getElementById("login-email").addEventListener("focus", () => triggerLoginTurnstile(), { once: true });
+    document.getElementById("login-password").addEventListener("focus", () => triggerLoginTurnstile(), { once: true });
+
+    // Signup turnstile
+    let signupWidgetId = null, signupTurnstileToken = null, signupTurnstileReady = false, signupTurnstileTriggered = false;
+    function triggerSignupTurnstile() {
+      if (signupTurnstileTriggered) return;
+      signupTurnstileTriggered = true;
+      (async () => {
+        try {
+          await loadTurnstileScript();
+          if (!window.turnstile || !TURNSTILE_SITE_KEY) return;
+          signupWidgetId = window.turnstile.render("#turnstile-signup", {
+            sitekey: TURNSTILE_SITE_KEY, theme: "dark", size: "normal",
+            callback: (t) => { signupTurnstileToken = t; },
+            "expired-callback": () => { signupTurnstileToken = null; }
+          });
+          signupTurnstileReady = true;
+        } catch (e) { console.warn("Signup Turnstile:", e); }
+      })();
+    }
+    document.getElementById("signup-name").addEventListener("focus", () => triggerSignupTurnstile(), { once: true });
+    document.getElementById("signup-email").addEventListener("focus", () => triggerSignupTurnstile(), { once: true });
+    document.getElementById("signup-password").addEventListener("focus", () => triggerSignupTurnstile(), { once: true });
+
+    /* ════════════════════════════════════
+       UTILITIES
+       ════════════════════════════════════ */
+    function validateEmail(email) { return /\S+@\S+\.\S+/.test(email); }
+
+    function togglePw(inputId, btnId) {
+      const input = document.getElementById(inputId);
+      const btn = document.getElementById(btnId);
+      btn.addEventListener("click", () => {
+        const show = input.type === "password";
+        input.type = show ? "text" : "password";
+        btn.textContent = show ? "🙈" : "👁️";
+        btn.setAttribute("aria-pressed", show);
+      });
+    }
+    togglePw("login-password", "toggle-login-pw");
+    togglePw("signup-password", "toggle-signup-pw");
+
+    function setLoading(btn, spinner, isLoading) {
+      btn.disabled = isLoading;
+      spinner.hidden = !isLoading;
+    }
+
+    /* ════════════════════════════════════
+       PASSWORD STRENGTH METER
+       ════════════════════════════════════ */
+    const strengthFill = document.getElementById("strength-fill");
+    const strengthLabel = document.getElementById("strength-label");
+    const strengthColors = ["#ff4444", "#ff6b35", "#f0c040", "#7ee787", "#4ade80"];
+    const strengthNames = ["Weak", "Fair", "Good", "Strong", "Excellent"];
+
+    function getStrength(pw) {
+      let s = 0;
+      if (pw.length >= 8) s++;
+      if (/[a-z]/.test(pw)) s++;
+      if (/[A-Z]/.test(pw)) s++;
+      if (/[0-9]/.test(pw)) s++;
+      if (/[^A-Za-z0-9]/.test(pw)) s++;
+      return s;
+    }
+
+    document.getElementById("signup-password").addEventListener("input", (e) => {
+      const s = getStrength(e.target.value);
+      const pct = (s / 5) * 100;
+      strengthFill.style.width = pct + "%";
+      strengthFill.style.background = s > 0 ? strengthColors[s - 1] : "transparent";
+      strengthLabel.textContent = s > 0 ? strengthNames[s - 1] : "--";
+      strengthLabel.style.color = s > 0 ? strengthColors[s - 1] : "var(--muted)";
+    });
+
+    /* ════════════════════════════════════
+       PREFILL REMEMBERED EMAIL
+       ════════════════════════════════════ */
+    const savedEmail = localStorage.getItem("lastEmail");
+    if (savedEmail) {
+      document.getElementById("login-email").value = savedEmail;
+      document.getElementById("remember-me").checked = true;
+    }
+
+    /* ════════════════════════════════════
+       LOGIN SUBMIT
+       ════════════════════════════════════ */
+    const loginForm = document.getElementById("login-form");
+    const loginBtn = document.getElementById("login-btn");
+    const loginSpinner = document.getElementById("login-spinner");
+    const loginError = document.getElementById("login-error");
+    const loginSuccess = document.getElementById("login-success");
+
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      loginError.textContent = "";
+      loginSuccess.textContent = "";
+      setLoading(loginBtn, loginSpinner, true);
+
+      const email = document.getElementById("login-email").value.trim();
+      const password = document.getElementById("login-password").value;
+
+      if (!validateEmail(email)) {
+        loginError.textContent = "Invalid email address.";
+        setLoading(loginBtn, loginSpinner, false);
+        return;
+      }
+      if (password.length < 6) {
+        loginError.textContent = "Password must be at least 6 characters.";
+        setLoading(loginBtn, loginSpinner, false);
+        return;
+      }
+
+      try {
+        if (!loginTurnstileReady) await triggerLoginTurnstile();
+        if (!loginTurnstileToken) {
+          if (window.turnstile && loginWidgetId) window.turnstile.reset(loginWidgetId);
+          throw new Error("Please complete the security check.");
+        }
+
+        await fetch("/verify-turnstile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: loginTurnstileToken })
+        });
+
+        if (document.getElementById("remember-me").checked) localStorage.setItem("lastEmail", email);
+        else localStorage.removeItem("lastEmail");
+
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+
+        if (data?.user) {
+          const { data: ud } = await supabase.from("users").select("is_banned").eq("id", data.user.id).single();
+          if (ud?.is_banned) {
+            await supabase.auth.signOut();
+            throw new Error("Your account has been banned.");
+          }
+        }
+
+        loginSuccess.textContent = "Login successful!";
+        setTimeout(() => location.href = "index.html", 800);
+
+      } catch (err) {
+        loginError.textContent = err.message || "Unexpected error occurred.";
+      } finally {
+        setLoading(loginBtn, loginSpinner, false);
+        if (window.turnstile && loginWidgetId) {
+          window.turnstile.reset(loginWidgetId);
+          loginTurnstileToken = null;
+        }
+      }
+    });
+
+    /* ════════════════════════════════════
+       SIGNUP SUBMIT
+       ════════════════════════════════════ */
+    const signupForm = document.getElementById("signup-form");
+    const signupBtn = document.getElementById("signup-btn");
+    const signupSpinner = document.getElementById("signup-spinner");
+    const signupError = document.getElementById("signup-error");
+    const signupSuccess = document.getElementById("signup-success");
+
+    async function createUserProfile(userId, username) {
+      await supabase.from("users").insert({
+        id: userId, username, role: "user", plan: "free",
+        is_banned: false, preferences: {}, last_active: new Date().toISOString()
+      });
+    }
+
+    signupForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      signupError.textContent = "";
+      signupSuccess.textContent = "";
+      setLoading(signupBtn, signupSpinner, true);
+
+      const name = document.getElementById("signup-name").value.trim();
+      const username = document.getElementById("signup-username").value.trim();
+      const email = document.getElementById("signup-email").value.trim().toLowerCase();
+      const password = document.getElementById("signup-password").value;
+
+      if (!name || !username || !email || !password) {
+        signupError.textContent = "Please fill out all fields.";
+        setLoading(signupBtn, signupSpinner, false);
+        return;
+      }
+      if (!validateEmail(email)) {
+        signupError.textContent = "Invalid email address.";
+        setLoading(signupBtn, signupSpinner, false);
+        return;
+      }
+      if (email.endsWith(ADMIN_DOMAIN)) {
+        signupError.textContent = "This email domain is reserved for administrators.";
+        setLoading(signupBtn, signupSpinner, false);
+        return;
+      }
+      if (getStrength(password) < 5) {
+        signupError.textContent = "Password must include uppercase, lowercase, numbers, and symbols (8+ chars).";
+        setLoading(signupBtn, signupSpinner, false);
+        return;
+      }
+
+      try {
+        if (!signupTurnstileReady) await triggerSignupTurnstile();
+        if (!window.turnstile || signupWidgetId === null) {
+          throw new Error("Security check is loading. Please wait and try again.");
+        }
+        if (!signupTurnstileToken) {
+          window.turnstile.reset(signupWidgetId);
+          throw new Error("Please complete the security check.");
+        }
+
+        const verify = await fetch("/verify-turnstile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: signupTurnstileToken })
+        });
+        const vResult = await verify.json();
+        if (!vResult.success) {
+          window.turnstile.reset(signupWidgetId);
+          signupTurnstileToken = null;
+          throw new Error("Security verification failed.");
+        }
+
+        const { data, error } = await supabase.auth.signUp({
+          email, password,
+          options: {
+            data: { full_name: name, username },
+            emailRedirectTo: `${location.origin}/confirm.html`
+          }
+        });
+        if (error) throw error;
+
+        if (data?.user) await createUserProfile(data.user.id, username);
+
+        signupSuccess.textContent = "Success! Check your email to confirm your account.";
+        signupForm.reset();
+        strengthFill.style.width = "0%";
+        strengthLabel.textContent = "--";
+        strengthLabel.style.color = "var(--muted)";
+        window.turnstile.reset(signupWidgetId);
+
+      } catch (err) {
+        signupError.textContent = err.message || "Signup failed.";
+      } finally {
+        setLoading(signupBtn, signupSpinner, false);
+      }
+    });
+
+    /* ════════════════════════════════════
+       WALLET LOGIN / SIGNUP
+       ════════════════════════════════════ */
+    async function walletAuth(errorEl, successEl) {
+      errorEl.textContent = "";
+      successEl.textContent = "";
+
+      try {
+        if (!window.ethereum) throw new Error("No wallet found. Install MetaMask.");
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        const address = await signer.getAddress();
+
+        const { data: siweData, error: siweErr } = await supabase.auth.signInWithWeb3({ chainId: 1, address });
+        if (siweErr) throw siweErr;
+
+        const signature = await signer.signMessage(siweData.message);
+        const { error: vErr } = await supabase.auth.verifyWeb3({ message: siweData.message, signature });
+        if (vErr) throw vErr;
+
+        successEl.textContent = "Wallet connected!";
+        setTimeout(() => location.href = "index.html", 800);
+      } catch (err) {
+        errorEl.textContent = err.message || "Wallet authentication failed.";
+      }
+    }
+
+    document.getElementById("login-wallet")?.addEventListener("click", () => walletAuth(loginError, loginSuccess));
+    document.getElementById("signup-wallet")?.addEventListener("click", () => walletAuth(signupError, signupSuccess));
+
+    /* ════════════════════════════════════
+       OAUTH (GITHUB, DISCORD, GOOGLE)
+       ════════════════════════════════════ */
+    const oauthMap = [
+      ["login-google", "google"],
+      ["login-github", "github"],
+      ["login-discord", "discord"],
+      ["signup-google", "google"],
+      ["signup-github", "github"],
+      ["signup-discord", "discord"]
+    ];
+    oauthMap.forEach(([btnId, provider]) => {
+      document.getElementById(btnId)?.addEventListener("click", async () => {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider,
+          options: { redirectTo: `${location.origin}/oauth-callback.html` }
+        });
+        if (error) {
+          const isSignup = btnId.startsWith("signup");
+          document.getElementById(isSignup ? "signup-error" : "login-error").textContent = error.message;
+        }
+      });
+    });
+
+    /* ════════════════════════════════════
+       PASSWORD RESET
+       ════════════════════════════════════ */
+    document.getElementById("reset-link")?.addEventListener("click", async (e) => {
+      e.preventDefault();
+      const email = prompt("Enter your email address:");
+      if (!email) return;
+      if (!validateEmail(email)) { loginError.textContent = "Invalid email."; return; }
+
+      setLoading(loginBtn, loginSpinner, true);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${location.origin}/reset-complete.html`
+      });
+      setLoading(loginBtn, loginSpinner, false);
+      if (error) loginError.textContent = error.message;
+      else loginSuccess.textContent = "Reset email sent!";
+    });
+
+    /* ════════════════════════════════════
+       ADMIN BUTTON
+       ════════════════════════════════════ */
+    document.getElementById("admin-login-btn")?.addEventListener("click", () => {
+      window.location.href = "admin-login.html";
+    });
+
+    /* ════════════════════════════════════
+       COOKIE CONSENT
+       ════════════════════════════════════ */
+    const cookieBanner = document.getElementById("cookie-banner");
+    if (!localStorage.getItem("heloxai_cookie_consent")) {
+      cookieBanner.style.display = "block";
+    }
+    document.getElementById("cookie-accept").addEventListener("click", () => {
+      localStorage.setItem("heloxai_cookie_consent", "accepted");
+      cookieBanner.style.display = "none";
+    });
+    document.getElementById("cookie-decline").addEventListener("click", () => {
+      localStorage.setItem("heloxai_cookie_consent", "declined");
+      cookieBanner.style.display = "none";
+    });
+
+  </script>
+</body>
+</html>
