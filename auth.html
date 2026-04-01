@@ -13,7 +13,6 @@
     :root {
       --bg: #0f1724;
       --bg-deep: #071028;
-      --card: #0b1220;
       --card-input: #071126;
       --accent: #6ee7b7;
       --accent2: #0ea5a5;
@@ -21,14 +20,13 @@
       --muted: #9aa4b2;
       --fg: #e6eef6;
       --danger: #ff6b6b;
-      --border: rgba(255,255,255,0.05);
+      --border: rgba(255,255,255,0.07);
       --border-light: rgba(255,255,255,0.03);
       --radius: 14px;
       --radius-sm: 10px;
       --font: 'Space Grotesk', system-ui, -apple-system, sans-serif;
       --mono: 'IBM Plex Mono', monospace;
     }
-
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     html, body {
@@ -39,7 +37,6 @@
       font-size: 16px;
       overflow-x: hidden;
     }
-
     body {
       display: flex;
       justify-content: center;
@@ -47,12 +44,10 @@
       padding: clamp(12px, 4vw, 24px);
       overflow-y: auto;
     }
-
-    /* Animated background particles */
     body::before {
       content: '';
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
+      inset: 0;
       background:
         radial-gradient(ellipse 600px 400px at 20% 20%, rgba(14,165,165,0.06) 0%, transparent 70%),
         radial-gradient(ellipse 500px 500px at 80% 70%, rgba(110,231,183,0.04) 0%, transparent 70%),
@@ -61,69 +56,33 @@
       z-index: 0;
       animation: bgShift 20s ease-in-out infinite alternate;
     }
-
     @keyframes bgShift {
       0% { opacity: 0.7; transform: scale(1); }
       50% { opacity: 1; transform: scale(1.05); }
       100% { opacity: 0.8; transform: scale(1.02); }
     }
-
-    /* Floating orbs */
     .orb {
-      position: fixed;
-      border-radius: 50%;
-      filter: blur(80px);
-      pointer-events: none;
-      z-index: 0;
+      position: fixed; border-radius: 50%; filter: blur(80px);
+      pointer-events: none; z-index: 0;
       animation: orbFloat 18s ease-in-out infinite;
     }
-    .orb-1 {
-      width: 300px; height: 300px;
-      background: rgba(14,165,165,0.08);
-      top: -80px; left: -60px;
-      animation-delay: 0s;
-    }
-    .orb-2 {
-      width: 250px; height: 250px;
-      background: rgba(110,231,183,0.06);
-      bottom: -60px; right: -40px;
-      animation-delay: -6s;
-      animation-duration: 22s;
-    }
-    .orb-3 {
-      width: 180px; height: 180px;
-      background: rgba(74,222,128,0.05);
-      top: 40%; right: 10%;
-      animation-delay: -12s;
-      animation-duration: 15s;
-    }
-
+    .orb-1 { width: 300px; height: 300px; background: rgba(14,165,165,0.08); top: -80px; left: -60px; }
+    .orb-2 { width: 250px; height: 250px; background: rgba(110,231,183,0.06); bottom: -60px; right: -40px; animation-delay: -6s; animation-duration: 22s; }
+    .orb-3 { width: 180px; height: 180px; background: rgba(74,222,128,0.05); top: 40%; right: 10%; animation-delay: -12s; animation-duration: 15s; }
     @keyframes orbFloat {
       0%, 100% { transform: translate(0, 0) scale(1); }
       33% { transform: translate(30px, -20px) scale(1.1); }
       66% { transform: translate(-20px, 15px) scale(0.95); }
     }
 
-    /* Main container */
     .auth-container {
-      position: relative;
-      z-index: 1;
-      width: 100%;
-      max-width: min(440px, 95vw);
-      margin: 20px 0;
+      position: relative; z-index: 1;
+      width: 100%; max-width: min(440px, 95vw); margin: 20px 0;
     }
-
-    /* Logo / Brand */
-    .brand {
-      text-align: center;
-      margin-bottom: 20px;
-    }
+    .brand { text-align: center; margin-bottom: 20px; }
     .brand-logo {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-      color: var(--fg);
+      display: inline-flex; align-items: center; gap: 10px;
+      text-decoration: none; color: var(--fg);
     }
     .brand-icon {
       width: 40px; height: 40px;
@@ -138,59 +97,36 @@
       0%, 100% { box-shadow: 0 4px 20px rgba(14,165,165,0.3); }
       50% { box-shadow: 0 4px 30px rgba(110,231,183,0.4); }
     }
-    .brand-name {
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-    }
+    .brand-name { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
     .brand-name span {
       background: linear-gradient(90deg, var(--accent2), var(--accent3));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
 
-    /* Card */
     .auth-card {
       background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.008));
       border-radius: var(--radius);
       border: 1px solid var(--border-light);
-      box-shadow:
-        0 8px 40px rgba(2,6,23,0.75),
-        inset 0 1px 0 rgba(255,255,255,0.03);
-      overflow: hidden;
-      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 40px rgba(2,6,23,0.75), inset 0 1px 0 rgba(255,255,255,0.03);
+      overflow: hidden; backdrop-filter: blur(10px);
     }
 
-    /* Tab bar */
     .tab-bar {
-      display: flex;
-      position: relative;
+      display: flex; position: relative;
       background: rgba(0,0,0,0.2);
       border-bottom: 1px solid var(--border-light);
     }
     .tab-btn {
-      flex: 1;
-      padding: 16px 0;
-      background: none;
-      border: none;
-      color: var(--muted);
-      font-family: var(--font);
-      font-size: 15px;
-      font-weight: 500;
-      cursor: pointer;
+      flex: 1; padding: 16px 0; background: transparent; border: none;
+      color: var(--muted); font-family: var(--font); font-size: 15px;
+      font-weight: 500; cursor: pointer; position: relative; z-index: 1;
+      -webkit-appearance: none; appearance: none; outline: none;
       transition: color 0.25s ease;
-      position: relative;
-      z-index: 1;
     }
     .tab-btn:hover { color: var(--fg); }
     .tab-btn.active { color: var(--accent); }
     .tab-indicator {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 50%;
-      height: 2px;
+      position: absolute; bottom: 0; left: 0; width: 50%; height: 2px;
       background: linear-gradient(90deg, var(--accent2), var(--accent3));
       transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
       border-radius: 2px 2px 0 0;
@@ -198,351 +134,200 @@
     }
     .tab-indicator.right { transform: translateX(100%); }
 
-    /* Tab panels */
-    .tab-panel {
-      display: none;
-      padding: clamp(20px, 5vw, 28px);
-      animation: panelIn 0.35s ease;
-    }
+    .tab-panel { display: none; padding: clamp(20px, 5vw, 28px); animation: panelIn 0.35s ease; }
     .tab-panel.active { display: block; }
-
-    @keyframes panelIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes panelIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
     .panel-title {
-      font-size: clamp(18px, 4vw, 22px);
-      font-weight: 600;
-      text-align: center;
-      margin-bottom: 20px;
-      letter-spacing: -0.3px;
+      font-size: clamp(18px, 4vw, 22px); font-weight: 600;
+      text-align: center; margin-bottom: 20px; letter-spacing: -0.3px;
     }
 
-    /* Social logins */
-    .social-logins {
-      display: grid;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    .social-logins button {
-      width: 100%;
-      padding: 12px 14px;
+    .social-logins { display: grid; gap: 10px; margin-bottom: 20px; }
+    .social-btn {
+      display: flex; align-items: center; gap: 12px;
+      width: 100%; padding: 13px 16px;
       border-radius: var(--radius-sm);
       border: 1px solid var(--border);
-      background: rgba(8,20,36,0.8);
-      color: var(--fg);
-      cursor: pointer;
-      font-family: var(--font);
-      font-size: 14px;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      transition: all 0.2s ease;
+      background: rgba(8,20,36,0.85);
+      color: var(--fg); font-family: var(--font);
+      font-size: 14px; font-weight: 500; cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+      -webkit-appearance: none; appearance: none; outline: none;
     }
-    .social-logins button:hover:not(:disabled) {
-      background: rgba(14,165,165,0.08);
-      border-color: rgba(14,165,165,0.2);
-      transform: translateY(-1px);
+    .social-btn:hover:not(:disabled) {
+      background: rgba(14,165,165,0.08); border-color: rgba(14,165,165,0.25);
+      transform: translateY(-1px); box-shadow: 0 4px 16px rgba(14,165,165,0.1);
     }
-    .social-logins button:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-      transform: none;
+    .social-btn:active:not(:disabled) { transform: translateY(0); box-shadow: none; }
+    .social-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .social-btn[data-provider="wallet"]:hover:not(:disabled) {
+      background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.25);
+      box-shadow: 0 4px 16px rgba(245,158,11,0.08);
     }
-    .social-icon {
-      width: 20px; height: 20px;
-      flex-shrink: 0;
+    .social-btn[data-provider="github"]:hover:not(:disabled) {
+      background: rgba(230,230,230,0.06); border-color: rgba(230,230,230,0.15);
+    }
+    .social-btn[data-provider="discord"]:hover:not(:disabled) {
+      background: rgba(88,101,242,0.08); border-color: rgba(88,101,242,0.25);
+      box-shadow: 0 4px 16px rgba(88,101,242,0.08);
+    }
+    .social-btn[data-provider="google"]:hover:not(:disabled) {
+      background: rgba(234,67,53,0.07); border-color: rgba(234,67,53,0.2);
+      box-shadow: 0 4px 16px rgba(234,67,53,0.06);
+    }
+    .social-btn .social-icon { width: 20px; height: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    .social-btn .social-icon img { width: 20px; height: 20px; display: block; }
+    .social-btn .btn-label { flex: 1; text-align: left; }
+    .social-btn .btn-spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.15); border-top-color: var(--fg);
+      border-radius: 50%; animation: spin 0.6s linear infinite;
+      flex-shrink: 0; display: none;
+    }
+    .social-btn.is-loading .btn-label { opacity: 0.5; }
+    .social-btn.is-loading .btn-spinner { display: block; }
+    .social-btn.is-loading { pointer-events: none; }
+    .social-btn .disabled-badge {
+      font-size: 10px; color: var(--muted); opacity: 0.7;
+      font-weight: 400; flex-shrink: 0;
     }
 
-    /* Divider */
     .divider {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      margin: 18px 0;
-      color: var(--muted);
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
+      display: flex; align-items: center; gap: 14px; margin: 18px 0;
+      color: var(--muted); font-size: 11px; text-transform: uppercase;
+      letter-spacing: 1.2px; font-weight: 500;
     }
-    .divider::before, .divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-    /* Form */
     form { display: flex; flex-direction: column; gap: 12px; }
+    input[type="email"], input[type="password"], input[type="text"] {
+      width: 100%; padding: 13px 16px; border-radius: var(--radius-sm);
+      background: var(--card-input); color: var(--fg); border: 1px solid var(--border);
+      font-family: var(--font); font-size: 15px; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus { border-color: rgba(14,165,165,0.4); box-shadow: 0 0 0 3px rgba(14,165,165,0.1); }
+    input::placeholder { color: rgba(154,164,178,0.5); }
 
-    input[type="email"],
-    input[type="password"],
-    input[type="text"] {
-      width: 100%;
-      padding: 13px 16px;
-      border-radius: var(--radius-sm);
-      background: var(--card-input);
-      color: var(--fg);
-      border: 1px solid var(--border);
-      font-family: var(--font);
-      font-size: 15px;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
-      outline: none;
-    }
-    input:focus {
-      border-color: rgba(14,165,165,0.4);
-      box-shadow: 0 0 0 3px rgba(14,165,165,0.1);
-    }
-    input::placeholder { color: rgba(154,164,178,0.6); }
-
-    .password-wrapper {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
+    .password-wrapper { position: relative; display: flex; align-items: center; }
     .password-wrapper input { padding-right: 48px; flex-grow: 1; }
-
     .toggle-pw {
-      position: absolute;
-      right: 6px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      color: var(--muted);
-      cursor: pointer;
-      font-size: 16px;
-      padding: 6px;
-      border-radius: 6px;
-      transition: color 0.2s ease, background 0.2s ease;
+      position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+      background: transparent; border: none; color: var(--muted);
+      cursor: pointer; font-size: 15px; padding: 8px; border-radius: 6px;
+      transition: color 0.2s, background 0.2s;
+      -webkit-appearance: none; appearance: none; outline: none;
     }
     .toggle-pw:hover { color: var(--fg); background: rgba(255,255,255,0.05); }
 
-    /* Password strength */
     .strength-wrap { margin-top: -6px; }
-    .strength-bar {
-      height: 4px;
-      border-radius: 4px;
-      background: rgba(255,255,255,0.05);
-      overflow: hidden;
-      margin-top: 4px;
-    }
-    .strength-fill {
-      height: 100%;
-      width: 0%;
-      border-radius: 4px;
-      transition: width 0.3s ease, background 0.3s ease;
-    }
-    .strength-label {
-      font-size: 11px;
-      margin-top: 4px;
-      color: var(--muted);
-      font-family: var(--mono);
-      min-height: 16px;
-    }
-    .hint-text {
-      font-size: 12px;
-      color: rgba(154,164,178,0.6);
-      line-height: 1.4;
-      margin-top: -4px;
-    }
+    .strength-bar { height: 4px; border-radius: 4px; background: rgba(255,255,255,0.05); overflow: hidden; margin-top: 4px; }
+    .strength-fill { height: 100%; width: 0%; border-radius: 4px; transition: width 0.3s, background 0.3s; }
+    .strength-label { font-size: 11px; margin-top: 4px; color: var(--muted); font-family: var(--mono); min-height: 16px; }
+    .hint-text { font-size: 12px; color: rgba(154,164,178,0.5); line-height: 1.4; margin-top: -4px; }
 
-    /* Remember me */
-    .remember-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .remember-label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--muted);
-      font-size: 13px;
-      cursor: pointer;
-    }
-    .remember-label input[type="checkbox"] {
-      width: auto;
-      accent-color: var(--accent2);
-      cursor: pointer;
-    }
+    .remember-row { display: flex; align-items: center; justify-content: space-between; }
+    .remember-label { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; cursor: pointer; }
+    .remember-label input[type="checkbox"] { width: auto; accent-color: var(--accent2); cursor: pointer; }
     .forgot-link {
-      color: var(--accent);
-      font-size: 13px;
-      text-decoration: none;
-      transition: color 0.2s ease;
+      color: var(--accent); font-size: 13px; text-decoration: none; font-weight: 500;
+      background: transparent; border: none; cursor: pointer; font-family: var(--font);
+      padding: 0; -webkit-appearance: none; appearance: none; outline: none;
+      transition: color 0.2s;
     }
     .forgot-link:hover { color: var(--accent3); }
 
-    /* Turnstile */
-    #login-turnstile, #signup-turnstile {
-      display: flex;
-      justify-content: center;
-      min-height: 0;
-    }
+    .turnstile-wrap { display: flex; justify-content: center; min-height: 0; }
 
-    /* Submit buttons */
     .submit-btn {
-      width: 100%;
-      padding: 14px 0;
-      border-radius: var(--radius-sm);
-      border: none;
-      cursor: pointer;
-      font-family: var(--font);
-      font-size: 15px;
-      font-weight: 600;
-      background: linear-gradient(90deg, var(--accent2), var(--accent3));
-      color: #062022;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: all 0.2s ease;
-      margin-top: 4px;
-      min-height: 48px;
-      position: relative;
-      overflow: hidden;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; padding: 14px 24px; border-radius: var(--radius-sm);
+      border: none; background: linear-gradient(90deg, var(--accent2), var(--accent3));
+      color: #062022; font-family: var(--font); font-size: 15px; font-weight: 600;
+      cursor: pointer; margin-top: 4px; min-height: 50px; position: relative;
+      overflow: hidden; letter-spacing: 0.2px;
+      -webkit-appearance: none; appearance: none; outline: none;
+      transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
     }
     .submit-btn::before {
-      content: '';
-      position: absolute;
-      top: 0; left: -100%; width: 100%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
-      transition: left 0.5s ease;
+      content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+      transition: left 0.5s;
     }
     .submit-btn:hover:not(:disabled)::before { left: 100%; }
-    .submit-btn:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 24px rgba(14,165,165,0.35);
-    }
-    .submit-btn:active:not(:disabled) { transform: translateY(0); }
-    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-
-    /* Spinner */
-    .spinner {
+    .submit-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(14,165,165,0.35); }
+    .submit-btn:active:not(:disabled) { transform: translateY(0); box-shadow: 0 2px 8px rgba(14,165,165,0.2); }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .submit-btn .spinner {
       width: 18px; height: 18px;
-      border: 2px solid rgba(6,32,34,0.3);
-      border-top-color: #062022;
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
+      border: 2.5px solid rgba(6,32,34,0.25); border-top-color: #062022;
+      border-radius: 50%; animation: spin 0.6s linear infinite; flex-shrink: 0;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Messages */
-    .msg-error {
-      color: var(--danger);
-      font-size: 13px;
-      text-align: center;
-      min-height: 0;
-      margin-top: 10px;
-      transition: opacity 0.2s ease;
-    }
-    .msg-success {
-      color: #7ee787;
-      font-size: 13px;
-      text-align: center;
-      min-height: 0;
-      margin-top: 6px;
-      transition: opacity 0.2s ease;
-    }
+    .msg-error { color: var(--danger); font-size: 13px; text-align: center; min-height: 0; margin-top: 10px; }
+    .msg-success { color: #7ee787; font-size: 13px; text-align: center; min-height: 0; margin-top: 6px; }
 
-    /* Footer */
+    .admin-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; margin-top: 16px; padding: 11px 0;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255,107,107,0.15);
+      background: rgba(255,107,107,0.04);
+      color: rgba(255,107,107,0.7);
+      font-family: var(--font); font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all 0.2s;
+      -webkit-appearance: none; appearance: none; outline: none;
+    }
+    .admin-btn:hover { background: rgba(255,107,107,0.1); border-color: rgba(255,107,107,0.3); color: var(--danger); transform: translateY(-1px); }
+    .admin-btn:active { transform: translateY(0); }
+
     .auth-footer {
       padding: 16px clamp(20px, 5vw, 28px);
       border-top: 1px solid var(--border-light);
-      text-align: center;
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.6;
+      text-align: center; font-size: 13px; color: var(--muted); line-height: 1.6;
     }
-    .auth-footer a {
-      color: var(--accent);
-      text-decoration: none;
-      transition: color 0.2s ease;
-    }
+    .auth-footer a { color: var(--accent); text-decoration: none; transition: color 0.2s; }
     .auth-footer a:hover { color: var(--accent3); }
 
-    /* Cookie banner */
     .cookie-banner {
-      position: fixed;
-      bottom: 20px;
-      left: 20px;
-      right: 20px;
-      background: #1e293b;
-      color: #f1f5f9;
-      padding: 16px 18px;
-      border: 1px solid rgba(14,165,165,0.3);
-      border-radius: 12px;
-      display: none;
-      z-index: 1000;
-      font-family: var(--font);
-      font-size: 13px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
-      animation: slideUp 0.3s ease;
+      position: fixed; bottom: 20px; left: 20px; right: 20px;
+      background: rgba(15,23,42,0.95); color: #f1f5f9;
+      padding: 18px 20px; border: 1px solid rgba(14,165,165,0.2);
+      border-radius: 14px; display: none; z-index: 1000;
+      font-family: var(--font); font-size: 13px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5); backdrop-filter: blur(16px);
     }
+    .cookie-banner.visible { display: block; animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
     @keyframes slideUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translateY(24px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
-    .cookie-banner p { margin: 0 0 12px 0; line-height: 1.5; }
-    .cookie-banner a { color: var(--accent); text-decoration: underline; }
+    .cookie-banner p { margin: 0 0 14px 0; line-height: 1.5; }
+    .cookie-banner a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
     .cookie-actions { display: flex; gap: 10px; }
     .cookie-accept {
-      background: var(--accent2);
-      color: #062022;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-      font-family: var(--font);
-      font-size: 13px;
-      transition: background 0.2s ease;
+      background: linear-gradient(90deg, var(--accent2), var(--accent3));
+      color: #062022; border: none; padding: 9px 20px; border-radius: 8px;
+      cursor: pointer; font-weight: 600; font-family: var(--font); font-size: 13px;
+      -webkit-appearance: none; appearance: none; outline: none;
+      transition: transform 0.15s, box-shadow 0.15s;
     }
-    .cookie-accept:hover { background: var(--accent3); }
+    .cookie-accept:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(14,165,165,0.3); }
+    .cookie-accept:active { transform: translateY(0); }
     .cookie-decline {
-      background: transparent;
-      color: var(--accent2);
-      border: 1px solid rgba(14,165,165,0.3);
-      padding: 8px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-family: var(--font);
-      font-size: 13px;
-      transition: all 0.2s ease;
+      background: transparent; color: var(--muted);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 9px 20px; border-radius: 8px; cursor: pointer;
+      font-family: var(--font); font-size: 13px;
+      -webkit-appearance: none; appearance: none; outline: none;
+      transition: all 0.15s;
     }
-    .cookie-decline:hover { border-color: var(--accent2); }
+    .cookie-decline:hover { border-color: rgba(255,255,255,0.2); color: var(--fg); background: rgba(255,255,255,0.03); }
 
-    /* Admin button */
-    .admin-btn {
-      display: block;
-      width: 100%;
-      margin-top: 14px;
-      padding: 10px 0;
-      border-radius: var(--radius-sm);
-      border: 1px solid rgba(255,107,107,0.2);
-      background: rgba(255,107,107,0.06);
-      color: var(--danger);
-      cursor: pointer;
-      font-family: var(--font);
-      font-size: 13px;
-      font-weight: 500;
-      transition: all 0.2s ease;
-    }
-    .admin-btn:hover {
-      background: rgba(255,107,107,0.12);
-      border-color: rgba(255,107,107,0.35);
-    }
+    :focus-visible { outline: 2px solid var(--accent2); outline-offset: 2px; }
 
-    /* Focus visible */
-    :focus-visible {
-      outline: 2px solid var(--accent2);
-      outline-offset: 2px;
-    }
-
-    /* Reduced motion */
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.01ms !important;
@@ -550,14 +335,15 @@
         transition-duration: 0.01ms !important;
       }
     }
-
-    /* Responsive */
     @media (max-width: 480px) {
       .auth-container { max-width: 100%; }
       .auth-card { border-radius: 0; }
       body { padding: 0; }
       .tab-btn { font-size: 14px; padding: 14px 0; }
-      .social-logins button { justify-content: center; }
+      .social-btn { justify-content: center; gap: 10px; }
+      .social-btn .btn-label { text-align: center; }
+      .social-btn .disabled-badge { display: none; }
+      .cookie-banner { left: 12px; right: 12px; bottom: 12px; }
     }
     @media (min-height: 750px) { body { align-items: center; } }
     @media (max-height: 749px) { body { align-items: flex-start; } }
@@ -565,13 +351,11 @@
 </head>
 <body>
 
-  <!-- Background orbs -->
   <div class="orb orb-1" aria-hidden="true"></div>
   <div class="orb orb-2" aria-hidden="true"></div>
   <div class="orb orb-3" aria-hidden="true"></div>
 
   <div class="auth-container" role="main">
-    <!-- Brand -->
     <div class="brand">
       <a href="index.html" class="brand-logo" aria-label="HeloxAi Home">
         <div class="brand-icon">H</div>
@@ -579,132 +363,103 @@
       </a>
     </div>
 
-    <!-- Card -->
     <div class="auth-card">
-      <!-- Tabs -->
       <div class="tab-bar" role="tablist" aria-label="Login or Sign Up">
         <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-login" id="tab-login" data-tab="login">Log In</button>
         <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-signup" id="tab-signup" data-tab="signup">Sign Up</button>
         <div class="tab-indicator" aria-hidden="true"></div>
       </div>
 
-      <!-- LOGIN PANEL -->
+      <!-- LOGIN -->
       <div class="tab-panel active" id="panel-login" role="tabpanel" aria-labelledby="tab-login">
         <h2 class="panel-title">Welcome Back</h2>
-
-        <div class="social-logins" aria-label="Social login options">
-          <button id="login-google" type="button" disabled title="Google login temporarily disabled">
-            <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="" class="social-icon" />
-            Continue with Google
+        <div class="social-logins">
+          <button class="social-btn" id="login-google" type="button" data-provider="google">
+            <span class="social-icon"><img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="" /></span>
+            <span class="btn-label">Continue with Google</span>
+            <span class="btn-spinner" aria-hidden="true"></span>
           </button>
-          <button id="login-wallet" type="button">
-            <img src="https://www.svgrepo.com/show/331345/metamask.svg" alt="" class="social-icon" />
-            Continue with Wallet
+          <button class="social-btn" id="login-wallet" type="button" data-provider="wallet">
+            <span class="social-icon"><img src="https://www.svgrepo.com/show/331345/metamask.svg" alt="" /></span>
+            <span class="btn-label">Continue with Wallet</span>
+            <span class="btn-spinner" aria-hidden="true"></span>
           </button>
-          <button id="login-github" type="button">
-            <img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="" class="social-icon" />
-            Continue with GitHub
+          <button class="social-btn" id="login-github" type="button" data-provider="github">
+            <span class="social-icon"><img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="" /></span>
+            <span class="btn-label">Continue with GitHub</span>
+            <span class="btn-spinner" aria-hidden="true"></span>
           </button>
-          <button id="login-discord" type="button">
-            <img src="https://www.svgrepo.com/show/353655/discord-icon.svg" alt="" class="social-icon" />
-            Continue with Discord
+          <button class="social-btn" id="login-discord" type="button" data-provider="discord">
+            <span class="social-icon"><img src="https://www.svgrepo.com/show/353655/discord-icon.svg" alt="" /></span>
+            <span class="btn-label">Continue with Discord</span>
+            <span class="btn-spinner" aria-hidden="true"></span>
           </button>
         </div>
-
         <div class="divider">or use email</div>
-
         <form id="login-form" autocomplete="on" novalidate>
           <input type="email" id="login-email" placeholder="Email" aria-label="Email" required autocomplete="email" />
           <div class="password-wrapper">
             <input type="password" id="login-password" placeholder="Password" aria-label="Password" required autocomplete="current-password" />
-            <button type="button" class="toggle-pw" data-target="login-password" aria-label="Show password">
-              <i class="fa-regular fa-eye"></i>
-            </button>
+            <button type="button" class="toggle-pw" data-target="login-password" aria-label="Show password"><i class="fa-regular fa-eye"></i></button>
           </div>
-
           <div class="remember-row">
-            <label class="remember-label">
-              <input type="checkbox" id="remember-me" /> Remember me
-            </label>
-            <a href="#" class="forgot-link" id="forgot-link">Forgot password?</a>
+            <label class="remember-label"><input type="checkbox" id="remember-me" /> Remember me</label>
+            <button type="button" class="forgot-link" id="forgot-link">Forgot password?</button>
           </div>
-
-          <div id="login-turnstile"></div>
-
-          <button type="submit" class="submit-btn" id="login-btn">
-            Log In
-            <span class="spinner" id="login-spinner" hidden aria-hidden="true"></span>
-          </button>
-
+          <div class="turnstile-wrap" id="login-turnstile"></div>
+          <button type="submit" class="submit-btn" id="login-btn">Log In<span class="spinner" id="login-spinner" hidden aria-hidden="true"></span></button>
           <div class="msg-error" id="login-error" role="alert" aria-live="assertive"></div>
           <div class="msg-success" id="login-success" role="status" aria-live="polite"></div>
         </form>
-
-        <button class="admin-btn" id="admin-btn" type="button">
-          <i class="fa-solid fa-shield-halved"></i>&ensp;Admin Login
-        </button>
+        <button class="admin-btn" id="admin-btn" type="button"><i class="fa-solid fa-shield-halved"></i><span>Admin Login</span></button>
       </div>
 
-      <!-- SIGNUP PANEL -->
+      <!-- SIGNUP -->
       <div class="tab-panel" id="panel-signup" role="tabpanel" aria-labelledby="tab-signup">
         <h2 class="panel-title">Create Your Account</h2>
-
-        <div class="social-logins" aria-label="Social signup options">
-          <button id="signup-google" type="button" disabled title="Google signup temporarily disabled">
-            <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="" class="social-icon" />
-            Sign up with Google
+        <div class="social-logins">
+          <button class="social-btn" id="signup-google" type="button" data-provider="google">
+            <span class="social-icon"><img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="" /></span>
+            <span class="btn-label">Sign up with Google</span>
+            <span class="btn-spinner" aria-hidden="true"></span>
           </button>
-          <button id="signup-wallet" type="button">
-            <img src="https://www.svgrepo.com/show/331345/metamask.svg" alt="" class="social-icon" />
-            Sign up with Wallet
+          <button class="social-btn" id="signup-wallet" type="button" data-provider="wallet">
+            <span class="social-icon"><img src="https://www.svgrepo.com/show/331345/metamask.svg" alt="" /></span>
+            <span class="btn-label">Sign up with Wallet</span>
+            <span class="btn-spinner" aria-hidden="true"></span>
           </button>
-          <button id="signup-github" type="button">
-            <img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="" class="social-icon" />
-            Sign up with GitHub
+          <button class="social-btn" id="signup-github" type="button" data-provider="github">
+            <span class="social-icon"><img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="" /></span>
+            <span class="btn-label">Sign up with GitHub</span>
+            <span class="btn-spinner" aria-hidden="true"></span>
           </button>
-          <button id="signup-discord" type="button">
-            <img src="https://www.svgrepo.com/show/353655/discord-icon.svg" alt="" class="social-icon" />
-            Sign up with Discord
+          <button class="social-btn" id="signup-discord" type="button" data-provider="discord">
+            <span class="social-icon"><img src="https://www.svgrepo.com/show/353655/discord-icon.svg" alt="" /></span>
+            <span class="btn-label">Sign up with Discord</span>
+            <span class="btn-spinner" aria-hidden="true"></span>
           </button>
         </div>
-
         <div class="divider">or use email</div>
-
         <form id="signup-form" autocomplete="on" novalidate>
           <input type="text" id="signup-name" placeholder="Full Name" aria-label="Full Name" required autocomplete="name" />
           <input type="text" id="signup-username" placeholder="Username" aria-label="Username" required autocomplete="username" />
           <input type="email" id="signup-email" placeholder="Email" aria-label="Email" required autocomplete="email" />
           <div class="password-wrapper">
             <input type="password" id="signup-password" placeholder="Password" aria-label="Password" required autocomplete="new-password" />
-            <button type="button" class="toggle-pw" data-target="signup-password" aria-label="Show password">
-              <i class="fa-regular fa-eye"></i>
-            </button>
+            <button type="button" class="toggle-pw" data-target="signup-password" aria-label="Show password"><i class="fa-regular fa-eye"></i></button>
           </div>
-
           <div class="strength-wrap">
-            <div class="strength-bar">
-              <div class="strength-fill" id="strength-fill"></div>
-            </div>
+            <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
             <div class="strength-label" id="strength-label"></div>
           </div>
-
-          <div class="hint-text">
-            At least 8 characters with uppercase, lowercase, numbers, and special characters.
-          </div>
-
-          <div id="signup-turnstile"></div>
-
-          <button type="submit" class="submit-btn" id="signup-btn">
-            Sign Up
-            <span class="spinner" id="signup-spinner" hidden aria-hidden="true"></span>
-          </button>
-
+          <div class="hint-text">At least 8 characters with uppercase, lowercase, numbers, and special characters.</div>
+          <div class="turnstile-wrap" id="signup-turnstile"></div>
+          <button type="submit" class="submit-btn" id="signup-btn">Sign Up<span class="spinner" id="signup-spinner" hidden aria-hidden="true"></span></button>
           <div class="msg-error" id="signup-error" role="alert" aria-live="assertive"></div>
           <div class="msg-success" id="signup-success" role="status" aria-live="polite"></div>
         </form>
       </div>
 
-      <!-- Footer -->
       <div class="auth-footer">
         By continuing, you agree to our
         <a href="terms.html" target="_blank" rel="noopener">Terms</a> and
@@ -713,12 +468,8 @@
     </div>
   </div>
 
-  <!-- Cookie Consent -->
   <div class="cookie-banner" id="cookie-banner" role="dialog" aria-label="Cookie consent">
-    <p>
-      <i class="fa-solid fa-cookie-bite"></i>&ensp;We use cookies and local storage to improve your experience. By continuing, you agree to our
-      <a href="priv.html">Privacy Policy</a>.
-    </p>
+    <p><i class="fa-solid fa-cookie-bite" style="color:var(--accent2)"></i>&ensp;We use cookies and local storage to improve your experience. By continuing, you agree to our <a href="priv.html">Privacy Policy</a>.</p>
     <div class="cookie-actions">
       <button class="cookie-accept" id="cookie-accept">Accept</button>
       <button class="cookie-decline" id="cookie-decline">Decline</button>
@@ -728,64 +479,52 @@
   <script src="env.js"></script>
 
   <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+    /* ═══════════════════════════════════
+       Pure UI — always runs, no deps
+       ═══════════════════════════════════ */
 
-    if (!window.__ENV__) throw new Error("env.js not loaded");
-
-    const { SUPABASE_URL, SUPABASE_ANON_KEY, TURNSTILE_SITE_KEY } = window.__ENV__;
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const ADMIN_DOMAIN = "@heloxai.xyz";
-
-    /* =============================
-       TAB SWITCHING
-       ============================= */
+    // Tab switching
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabPanels = document.querySelectorAll('.tab-panel');
     const tabIndicator = document.querySelector('.tab-indicator');
 
     tabBtns.forEach(btn => {
       btn.addEventListener('click', () => {
-        const target = btn.dataset.tab;
+        const t = btn.dataset.tab;
         tabBtns.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
         tabPanels.forEach(p => p.classList.remove('active'));
         btn.classList.add('active');
         btn.setAttribute('aria-selected', 'true');
-        document.getElementById(`panel-${target}`).classList.add('active');
-        tabIndicator.classList.toggle('right', target === 'signup');
+        document.getElementById('panel-' + t).classList.add('active');
+        tabIndicator.classList.toggle('right', t === 'signup');
       });
     });
 
-    /* =============================
-       PASSWORD TOGGLE (both forms)
-       ============================= */
+    // Password visibility toggles
     document.querySelectorAll('.toggle-pw').forEach(btn => {
       btn.addEventListener('click', () => {
-        const input = document.getElementById(btn.dataset.target);
-        const icon = btn.querySelector('i');
-        const show = input.type === 'password';
-        input.type = show ? 'text' : 'password';
-        icon.className = show ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+        const inp = document.getElementById(btn.dataset.target);
+        const ico = btn.querySelector('i');
+        const show = inp.type === 'password';
+        inp.type = show ? 'text' : 'password';
+        ico.className = show ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
         btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
       });
     });
 
-    /* =============================
-       PASSWORD STRENGTH METER
-       ============================= */
-    const signupPw = document.getElementById('signup-password');
-    const strengthFill = document.getElementById('strength-fill');
-    const strengthLabel = document.getElementById('strength-label');
-
-    const strengthLevels = [
-      { label: '', color: 'transparent' },
-      { label: 'Very weak', color: '#ff6b6b' },
-      { label: 'Weak', color: '#ff9f43' },
-      { label: 'Fair', color: '#feca57' },
-      { label: 'Strong', color: '#48dbfb' },
-      { label: 'Excellent', color: '#6ee7b7' }
+    // Password strength
+    const sPw = document.getElementById('signup-password');
+    const sFill = document.getElementById('strength-fill');
+    const sLabel = document.getElementById('strength-label');
+    const sLevels = [
+      { l: '', c: 'transparent' },
+      { l: 'Very weak', c: '#ff6b6b' },
+      { l: 'Weak', c: '#ff9f43' },
+      { l: 'Fair', c: '#feca57' },
+      { l: 'Strong', c: '#48dbfb' },
+      { l: 'Excellent', c: '#6ee7b7' }
     ];
-
-    function calcStrength(pw) {
+    function calcStr(pw) {
       let s = 0;
       if (pw.length >= 8) s++;
       if (/[a-z]/.test(pw)) s++;
@@ -794,324 +533,471 @@
       if (/[^A-Za-z0-9]/.test(pw)) s++;
       return s;
     }
-
-    signupPw.addEventListener('input', () => {
-      const s = calcStrength(signupPw.value);
-      const lvl = strengthLevels[s];
-      strengthFill.style.width = `${s * 20}%`;
-      strengthFill.style.background = lvl.color;
-      strengthLabel.textContent = signupPw.value ? lvl.label : '';
-      strengthLabel.style.color = lvl.color;
+    sPw.addEventListener('input', () => {
+      const s = calcStr(sPw.value);
+      const lv = sLevels[s];
+      sFill.style.width = (s * 20) + '%';
+      sFill.style.background = lv.c;
+      sLabel.textContent = sPw.value ? lv.l : '';
+      sLabel.style.color = lv.c;
     });
 
-    /* =============================
-       TURNSTILE — LAZY LOAD
-       ============================= */
-    let turnstileLoaded = false;
-    let turnstileLoading = false;
-    let loginWidgetId = null;
-    let signupWidgetId = null;
-    let loginToken = null;
-    let signupToken = null;
+    // Cookie consent
+    const cBanner = document.getElementById('cookie-banner');
+    if (!localStorage.getItem('heloxai_cookie_consent')) cBanner.classList.add('visible');
+    document.getElementById('cookie-accept').addEventListener('click', () => {
+      localStorage.setItem('heloxai_cookie_consent', 'accepted');
+      cBanner.classList.remove('visible');
+    });
+    document.getElementById('cookie-decline').addEventListener('click', () => {
+      localStorage.setItem('heloxai_cookie_consent', 'declined');
+      cBanner.classList.remove('visible');
+    });
 
-    function loadTurnstileScript() {
+    // Admin
+    document.getElementById('admin-btn').addEventListener('click', () => {
+      window.location.href = 'admin-login.html';
+    });
+
+    // Prefill remembered email
+    const saved = localStorage.getItem('lastEmail');
+    if (saved) {
+      document.getElementById('login-email').value = saved;
+      document.getElementById('remember-me').checked = true;
+    }
+
+    /* ═══════════════════════════════════
+       Shared helpers
+       ═══════════════════════════════════ */
+    const validEmail = e => /\S+@\S+\.\S+/.test(e);
+
+    function setSubmitLoading(btn, sp, on) {
+      btn.disabled = on;
+      sp.hidden = !on;
+    }
+
+    function setSocialLoading(btn, on) {
+      if (on) {
+        btn.classList.add('is-loading');
+        btn.disabled = true;
+      } else {
+        btn.classList.remove('is-loading');
+        // Only re-enable if not marked as permanently disabled
+        if (!btn.dataset.alwaysDisabled) btn.disabled = false;
+      }
+    }
+
+    // Show error on a specific panel
+    function showMsg(type, panel, text) {
+      const el = document.getElementById(panel + '-' + type);
+      if (el) el.textContent = text;
+    }
+    function clearMsgs(panel) {
+      showMsg('error', panel, '');
+      showMsg('success', panel, '');
+    }
+
+    /* ═══════════════════════════════════
+       Supabase — graceful init
+       ═══════════════════════════════════ */
+    const ENV = window.__ENV__;
+    let sb = null; // supabase client
+
+    if (ENV && ENV.SUPABASE_URL && ENV.SUPABASE_ANON_KEY) {
+      try {
+        const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm');
+        sb = createClient(ENV.SUPABASE_URL, ENV.SUPABASE_ANON_KEY);
+      } catch (err) {
+        console.error('Supabase init failed:', err);
+      }
+    }
+
+    const ADMIN_DOMAIN = '@heloxai.xyz';
+    const TS_KEY = (ENV && ENV.TURNSTILE_SITE_KEY) ? ENV.TURNSTILE_SITE_KEY : null;
+
+    // If no backend, disable interactive buttons gracefully
+    if (!sb) {
+      document.querySelectorAll('.social-btn').forEach(btn => {
+        btn.disabled = true;
+        btn.dataset.alwaysDisabled = '1';
+        // Don't add badge if one already exists
+        if (!btn.querySelector('.disabled-badge')) {
+          const b = document.createElement('span');
+          b.className = 'disabled-badge';
+          b.textContent = 'Offline';
+          btn.appendChild(b);
+        }
+      });
+      document.querySelectorAll('.submit-btn').forEach(b => b.disabled = true);
+      showMsg('error', 'login', 'Service is currently unavailable.');
+      showMsg('error', 'signup', 'Service is currently unavailable.');
+    }
+
+    /* ═══════════════════════════════════
+       Turnstile — lazy load
+       ═══════════════════════════════════ */
+    let tsLoaded = false, tsLoading = false;
+    let loginWid = null, signupWid = null, loginTok = null, signupTok = null;
+
+    function loadTSScript() {
       return new Promise((resolve, reject) => {
         if (window.turnstile) { resolve(); return; }
-        if (turnstileLoading) {
+        if (tsLoading) {
           const w = setInterval(() => { if (window.turnstile) { clearInterval(w); resolve(); } }, 80);
           return;
         }
-        turnstileLoading = true;
+        tsLoading = true;
         const s = document.createElement('script');
         s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
         s.async = true;
-        s.onload = () => { turnstileLoading = false; resolve(); };
-        s.onerror = () => { turnstileLoading = false; reject(new Error('Security check failed to load')); };
+        s.onload = () => { tsLoading = false; resolve(); };
+        s.onerror = () => { tsLoading = false; reject(new Error('Security check failed to load')); };
         document.head.appendChild(s);
       });
     }
 
-    function renderWidget(containerId, widgetVar) {
-      if (!window.turnstile || !TURNSTILE_SITE_KEY) return null;
-      return window.turnstile.render(`#${containerId}`, {
-        sitekey: TURNSTILE_SITE_KEY,
-        theme: 'dark',
-        size: 'normal',
-        callback: (token) => { widgetVar === 'login' ? (loginToken = token) : (signupToken = token); },
-        'expired-callback': () => { widgetVar === 'login' ? (loginToken = null) : (signupToken = null); }
+    function renderTS(containerId, setter) {
+      if (!window.turnstile || !TS_KEY) return null;
+      return window.turnstile.render('#' + containerId, {
+        sitekey: TS_KEY, theme: 'dark', size: 'normal',
+        callback: setter,
+        'expired-callback': () => setter(null)
       });
     }
 
-    async function ensureTurnstile() {
-      if (turnstileLoaded) return;
+    async function ensureTS() {
+      if (tsLoaded) return;
       try {
-        await loadTurnstileScript();
-        loginWidgetId = renderWidget('login-turnstile', 'login');
-        signupWidgetId = renderWidget('signup-turnstile', 'signup');
-        turnstileLoaded = true;
+        await loadTSScript();
+        loginWid = renderTS('login-turnstile', t => { loginTok = t; });
+        signupWid = renderTS('signup-turnstile', t => { signupTok = t; });
+        tsLoaded = true;
       } catch (e) { console.warn('Turnstile unavailable:', e); }
     }
 
-    // Trigger on first form focus
-    let turnstileTriggered = false;
-    function triggerTurnstile() {
-      if (turnstileTriggered) return;
-      turnstileTriggered = true;
-      ensureTurnstile();
-    }
-    document.getElementById('login-email')?.addEventListener('focus', triggerTurnstile, { once: true });
-    document.getElementById('login-password')?.addEventListener('focus', triggerTurnstile, { once: true });
-    document.getElementById('signup-name')?.addEventListener('focus', triggerTurnstile, { once: true });
-    document.getElementById('signup-email')?.addEventListener('focus', triggerTurnstile, { once: true });
+    let tsTriggered = false;
+    function triggerTS() { if (tsTriggered) return; tsTriggered = true; ensureTS(); }
+    ['login-email', 'login-password', 'signup-name', 'signup-email'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('focus', triggerTS, { once: true });
+    });
 
-    function resetTurnstile(widgetId) {
-      if (window.turnstile && widgetId !== null) window.turnstile.reset(widgetId);
+    function resetTS(wid) {
+      if (window.turnstile && wid !== null) window.turnstile.reset(wid);
     }
 
-    /* =============================
-       HELPERS
-       ============================= */
-    function validateEmail(e) { return /\S+@\S+\.\S+/.test(e); }
-
-    function setLoading(btn, spinner, loading) {
-      btn.disabled = loading;
-      spinner.hidden = !loading;
+    /* ═══════════════════════════════════
+       OAUTH helper — used by all social buttons
+       ═══════════════════════════════════ */
+    function handleOAuth(provider, btnId, panel, redirectTo) {
+      document.getElementById(btnId).addEventListener('click', async function () {
+        if (!sb) return;
+        clearMsgs(panel);
+        setSocialLoading(this, true);
+        try {
+          const { error } = await sb.auth.signInWithOAuth({
+            provider: provider,
+            options: { redirectTo: redirectTo }
+          });
+          if (error) throw error;
+          // Browser redirects — no need to reset loading
+        } catch (err) {
+          showMsg('error', panel, err.message || provider + ' login failed.');
+          setSocialLoading(this, false);
+        }
+      });
     }
 
-    /* =============================
-       PREFILL LOGIN EMAIL
-       ============================= */
-    const savedEmail = localStorage.getItem('lastEmail');
-    if (savedEmail) {
-      document.getElementById('login-email').value = savedEmail;
-      document.getElementById('remember-me').checked = true;
-    }
+    // Login OAuth — Google, GitHub, Discord
+    handleOAuth('google',  'login-google',  'login', location.origin + '/oauth-callback.html');
+    handleOAuth('github',  'login-github',  'login', location.origin + '/oauth-callback.html');
+    handleOAuth('discord', 'login-discord', 'login', location.origin + '/oauth-callback.html');
 
-    /* =============================
-       LOGIN FORM
-       ============================= */
-    const loginForm = document.getElementById('login-form');
-    const loginBtn = document.getElementById('login-btn');
-    const loginSpinner = document.getElementById('login-spinner');
-    const loginError = document.getElementById('login-error');
-    const loginSuccess = document.getElementById('login-success');
+    // Signup OAuth — Google, GitHub, Discord
+    handleOAuth('google',  'signup-google',  'signup', location.origin + '/callback');
+    handleOAuth('github',  'signup-github',  'signup', location.origin + '/callback');
+    handleOAuth('discord', 'signup-discord', 'signup', location.origin + '/callback');
 
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      loginError.textContent = '';
-      loginSuccess.textContent = '';
-      setLoading(loginBtn, loginSpinner, true);
-
-      const email = document.getElementById('login-email').value.trim();
-      const password = document.getElementById('login-password').value;
-
-      if (!validateEmail(email)) { loginError.textContent = 'Invalid email address.'; setLoading(loginBtn, loginSpinner, false); return; }
-      if (password.length < 6) { loginError.textContent = 'Password must be at least 6 characters.'; setLoading(loginBtn, loginSpinner, false); return; }
-
+    /* ═══════════════════════════════════
+       Wallet — Login
+       ═══════════════════════════════════ */
+    document.getElementById('login-wallet').addEventListener('click', async function () {
+      if (!sb) return;
+      clearMsgs('login');
+      setSocialLoading(this, true);
       try {
-        if (!turnstileLoaded) await ensureTurnstile();
-        if (!loginToken) { resetTurnstile(loginWidgetId); loginToken = null; throw new Error('Please complete the security check.'); }
+        if (!window.ethereum) throw new Error('No wallet found. Please install MetaMask.');
 
-        await fetch('/verify-turnstile', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: loginToken })
-        });
-
-        if (document.getElementById('remember-me').checked) localStorage.setItem('lastEmail', email);
-        else localStorage.removeItem('lastEmail');
-
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-
-        if (data?.user) {
-          const { data: ud } = await supabase.from('users').select('is_banned').eq('id', data.user.id).single();
-          if (ud?.is_banned) { await supabase.auth.signOut(); throw new Error('Your account has been banned.'); }
+        // Check if Supabase has signInWithWeb3 (not in standard client)
+        if (typeof sb.auth.signInWithWeb3 !== 'function') {
+          throw new Error('Wallet authentication is not configured on this instance.');
         }
 
-        loginSuccess.textContent = 'Login successful!';
-        setTimeout(() => location.href = 'index.html', 800);
+        const prov = new ethers.BrowserProvider(window.ethereum);
+        const signer = await prov.getSigner();
+        const addr = await signer.getAddress();
+        const { data: sd, error: se } = await sb.auth.signInWithWeb3({ chainId: 1, address: addr });
+        if (se) throw se;
+        const sig = await signer.signMessage(sd.message);
+        const { error: ve } = await sb.auth.verifyWeb3({ message: sd.message, signature: sig });
+        if (ve) throw ve;
+        showMsg('success', 'login', 'Wallet login successful!');
+        setTimeout(() => { location.href = 'index.html'; }, 800);
       } catch (err) {
-        loginError.textContent = err.message || 'An unexpected error occurred.';
-      } finally {
-        setLoading(loginBtn, loginSpinner, false);
-        resetTurnstile(loginWidgetId);
-        loginToken = null;
+        showMsg('error', 'login', err.message || 'Wallet login failed.');
+        setSocialLoading(this, false);
       }
     });
 
-    /* =============================
-       SIGNUP FORM
-       ============================= */
+    /* ═══════════════════════════════════
+       Wallet — Signup
+       ═══════════════════════════════════ */
+    document.getElementById('signup-wallet').addEventListener('click', async function () {
+      if (!sb) return;
+      clearMsgs('signup');
+      setSocialLoading(this, true);
+      try {
+        if (!window.ethereum) throw new Error('No wallet found. Please install MetaMask.');
+
+        if (typeof sb.auth.signInWithWeb3 !== 'function') {
+          throw new Error('Wallet authentication is not configured on this instance.');
+        }
+
+        const prov = new ethers.BrowserProvider(window.ethereum);
+        const signer = await prov.getSigner();
+        const addr = await signer.getAddress();
+        const { data: sd, error: se } = await sb.auth.signInWithWeb3({ chainId: 1, address: addr });
+        if (se) throw se;
+        const sig = await signer.signMessage(sd.message);
+        const { error: ve } = await sb.auth.verifyWeb3({ message: sd.message, signature: sig });
+        if (ve) throw ve;
+        showMsg('success', 'signup', 'Wallet connected!');
+        setTimeout(() => { location.href = 'index.html'; }, 800);
+      } catch (err) {
+        showMsg('error', 'signup', err.message || 'Wallet signup failed.');
+        setSocialLoading(this, false);
+      }
+    });
+
+    /* ═══════════════════════════════════
+       Email Login
+       ═══════════════════════════════════ */
+    const loginForm = document.getElementById('login-form');
+    const loginBtn = document.getElementById('login-btn');
+    const loginSp = document.getElementById('login-spinner');
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearMsgs('login');
+      setSubmitLoading(loginBtn, loginSp, true);
+
+      const email = document.getElementById('login-email').value.trim();
+      const pw = document.getElementById('login-password').value;
+
+      if (!validEmail(email)) {
+        showMsg('error', 'login', 'Invalid email address.');
+        setSubmitLoading(loginBtn, loginSp, false);
+        return;
+      }
+      if (pw.length < 6) {
+        showMsg('error', 'login', 'Password must be at least 6 characters.');
+        setSubmitLoading(loginBtn, loginSp, false);
+        return;
+      }
+      if (!sb) {
+        showMsg('error', 'login', 'Service unavailable.');
+        setSubmitLoading(loginBtn, loginSp, false);
+        return;
+      }
+
+      try {
+        if (!tsLoaded) await ensureTS();
+        if (!loginTok) {
+          resetTS(loginWid);
+          loginTok = null;
+          throw new Error('Please complete the security check.');
+        }
+
+        // Verify Turnstile server-side
+        const vRes = await fetch('/verify-turnstile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: loginTok })
+        });
+        // Don't throw on non-OK — dev environments may not have the endpoint
+        if (vRes.ok) {
+          const vData = await vRes.json();
+          if (!vData.success) {
+            resetTS(loginWid);
+            loginTok = null;
+            throw new Error('Security verification failed.');
+          }
+        }
+
+        // Remember email
+        if (document.getElementById('remember-me').checked) {
+          localStorage.setItem('lastEmail', email);
+        } else {
+          localStorage.removeItem('lastEmail');
+        }
+
+        const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
+        if (error) throw error;
+
+        // Check ban status
+        if (data && data.user) {
+          const { data: ud } = await sb.from('users').select('is_banned').eq('id', data.user.id).single();
+          if (ud && ud.is_banned) {
+            await sb.auth.signOut();
+            throw new Error('Your account has been banned.');
+          }
+        }
+
+        showMsg('success', 'login', 'Login successful!');
+        setTimeout(() => { location.href = 'index.html'; }, 800);
+
+      } catch (err) {
+        showMsg('error', 'login', err.message || 'An unexpected error occurred.');
+      } finally {
+        setSubmitLoading(loginBtn, loginSp, false);
+        resetTS(loginWid);
+        loginTok = null;
+      }
+    });
+
+    /* ═══════════════════════════════════
+       Email Signup
+       ═══════════════════════════════════ */
     const signupForm = document.getElementById('signup-form');
     const signupBtn = document.getElementById('signup-btn');
-    const signupSpinner = document.getElementById('signup-spinner');
-    const signupError = document.getElementById('signup-error');
-    const signupSuccess = document.getElementById('signup-success');
+    const signupSp = document.getElementById('signup-spinner');
 
-    async function createUserProfile(userId, username) {
-      await supabase.from('users').insert({
-        id: userId, username, role: 'user', plan: 'free',
+    async function createProfile(uid, uname) {
+      await sb.from('users').insert({
+        id: uid, username: uname, role: 'user', plan: 'free',
         is_banned: false, preferences: {}, last_active: new Date().toISOString()
       });
     }
 
     signupForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      signupError.textContent = '';
-      signupSuccess.textContent = '';
-      setLoading(signupBtn, signupSpinner, true);
+      clearMsgs('signup');
+      setSubmitLoading(signupBtn, signupSp, true);
 
       const name = document.getElementById('signup-name').value.trim();
-      const username = document.getElementById('signup-username').value.trim();
+      const uname = document.getElementById('signup-username').value.trim();
       const email = document.getElementById('signup-email').value.trim().toLowerCase();
-      const password = document.getElementById('signup-password').value;
+      const pw = document.getElementById('signup-password').value;
 
-      if (!name || !username || !email || !password) { signupError.textContent = 'Please fill out all fields.'; setLoading(signupBtn, signupSpinner, false); return; }
-      if (!validateEmail(email)) { signupError.textContent = 'Invalid email address.'; setLoading(signupBtn, signupSpinner, false); return; }
-      if (email.endsWith(ADMIN_DOMAIN)) { signupError.textContent = 'This email domain is reserved for administrators.'; setLoading(signupBtn, signupSpinner, false); return; }
-      if (calcStrength(password) < 5) { signupError.textContent = 'Password does not meet all requirements.'; setLoading(signupBtn, signupSpinner, false); return; }
+      if (!name || !uname || !email || !pw) {
+        showMsg('error', 'signup', 'Please fill out all fields.');
+        setSubmitLoading(signupBtn, signupSp, false);
+        return;
+      }
+      if (!validEmail(email)) {
+        showMsg('error', 'signup', 'Invalid email address.');
+        setSubmitLoading(signupBtn, signupSp, false);
+        return;
+      }
+      if (email.endsWith(ADMIN_DOMAIN)) {
+        showMsg('error', 'signup', 'This email domain is reserved for administrators.');
+        setSubmitLoading(signupBtn, signupSp, false);
+        return;
+      }
+      if (calcStr(pw) < 5) {
+        showMsg('error', 'signup', 'Password does not meet all requirements.');
+        setSubmitLoading(signupBtn, signupSp, false);
+        return;
+      }
+      if (!sb) {
+        showMsg('error', 'signup', 'Service unavailable.');
+        setSubmitLoading(signupBtn, signupSp, false);
+        return;
+      }
 
       try {
-        if (!turnstileLoaded) await ensureTurnstile();
-        if (!window.turnstile || signupWidgetId === null) throw new Error('Security check is loading. Please wait.');
-        if (!signupToken) { resetTurnstile(signupWidgetId); signupToken = null; throw new Error('Please complete the security check.'); }
+        if (!tsLoaded) await ensureTS();
+        if (!window.turnstile || signupWid === null) {
+          throw new Error('Security check is loading. Please wait.');
+        }
+        if (!signupTok) {
+          resetTS(signupWid);
+          signupTok = null;
+          throw new Error('Please complete the security check.');
+        }
 
-        const verify = await fetch('/verify-turnstile', {
+        // Verify Turnstile
+        const vRes = await fetch('/verify-turnstile', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: signupToken })
+          body: JSON.stringify({ token: signupTok })
         });
-        const vr = await verify.json();
-        if (!vr.success) { resetTurnstile(signupWidgetId); signupToken = null; throw new Error('Security verification failed.'); }
+        if (vRes.ok) {
+          const vData = await vRes.json();
+          if (!vData.success) {
+            resetTS(signupWid);
+            signupTok = null;
+            throw new Error('Security verification failed.');
+          }
+        }
 
-        const { data, error } = await supabase.auth.signUp({
-          email, password,
+        // Supabase signup
+        const { data, error } = await sb.auth.signUp({
+          email: email,
+          password: pw,
           options: {
-            data: { full_name: name, username },
-            emailRedirectTo: `${location.origin}/confirm.html`
+            data: { full_name: name, username: uname },
+            emailRedirectTo: location.origin + '/confirm.html'
           }
         });
         if (error) throw error;
 
-        if (data?.user) await createUserProfile(data.user.id, username);
+        // Create user profile
+        if (data && data.user) {
+          await createProfile(data.user.id, uname);
+        }
 
-        signupSuccess.textContent = 'Success! Check your email to confirm your account.';
+        showMsg('success', 'signup', 'Success! Check your email to confirm your account.');
         signupForm.reset();
-        strengthFill.style.width = '0%';
-        strengthLabel.textContent = '';
-        resetTurnstile(signupWidgetId);
+        sFill.style.width = '0%';
+        sLabel.textContent = '';
+        resetTS(signupWid);
+
       } catch (err) {
-        signupError.textContent = err.message || 'Signup failed.';
+        showMsg('error', 'signup', err.message || 'Signup failed.');
       } finally {
-        setLoading(signupBtn, signupSpinner, false);
+        setSubmitLoading(signupBtn, signupSp, false);
       }
     });
 
-    /* =============================
-       WALLET LOGIN
-       ============================= */
-    document.getElementById('login-wallet')?.addEventListener('click', async () => {
-      loginError.textContent = ''; loginSuccess.textContent = '';
-      setLoading(loginBtn, loginSpinner, true);
-      try {
-        if (!window.ethereum) throw new Error('No wallet found. Install MetaMask.');
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await provider.getSigner();
-        const address = await signer.getAddress();
-        const { data: siweData, error: siweErr } = await supabase.auth.signInWithWeb3({ chainId: 1, address });
-        if (siweErr) throw siweErr;
-        const sig = await signer.signMessage(siweData.message);
-        const { error: vErr } = await supabase.auth.verifyWeb3({ message: siweData.message, signature: sig });
-        if (vErr) throw vErr;
-        loginSuccess.textContent = 'Wallet login successful!';
-        setTimeout(() => location.href = 'index.html', 800);
-      } catch (err) { loginError.textContent = err.message || 'Wallet login failed.'; }
-      finally { setLoading(loginBtn, loginSpinner, false); }
-    });
-
-    /* =============================
-       WALLET SIGNUP
-       ============================= */
-    document.getElementById('signup-wallet')?.addEventListener('click', async () => {
-      signupError.textContent = ''; signupSuccess.textContent = '';
-      setLoading(signupBtn, signupSpinner, true);
-      try {
-        if (!window.ethereum) throw new Error('No wallet detected. Install MetaMask.');
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await provider.getSigner();
-        const address = await signer.getAddress();
-        const { data: siweData, error: siweErr } = await supabase.auth.signInWithWeb3({ chainId: 1, address });
-        if (siweErr) throw siweErr;
-        const sig = await signer.signMessage(siweData.message);
-        const { error: vErr } = await supabase.auth.verifyWeb3({ message: siweData.message, signature: sig });
-        if (vErr) throw vErr;
-        signupSuccess.textContent = 'Wallet connected!';
-        setTimeout(() => location.href = 'index.html', 800);
-      } catch (err) { signupError.textContent = err.message || 'Wallet signup failed.'; }
-      finally { setLoading(signupBtn, signupSpinner, false); }
-    });
-
-    /* =============================
-       OAUTH — LOGIN
-       ============================= */
-    [['google', 'login-google'], ['github', 'login-github'], ['discord', 'login-discord']].forEach(([p, id]) => {
-      document.getElementById(id)?.addEventListener('click', async () => {
-        setLoading(loginBtn, loginSpinner, true);
-        const { error } = await supabase.auth.signInWithOAuth({ provider: p, options: { redirectTo: `${location.origin}/oauth-callback.html` } });
-        setLoading(loginBtn, loginSpinner, false);
-        if (error) loginError.textContent = error.message;
-      });
-    });
-
-    /* =============================
-       OAUTH — SIGNUP
-       ============================= */
-    [['google', 'signup-google'], ['github', 'signup-github'], ['discord', 'signup-discord']].forEach(([p, id]) => {
-      document.getElementById(id)?.addEventListener('click', async () => {
-        setLoading(signupBtn, signupSpinner, true);
-        const { error } = await supabase.auth.signInWithOAuth({ provider: p, options: { redirectTo: `${location.origin}/callback` } });
-        setLoading(signupBtn, signupSpinner, false);
-        if (error) signupError.textContent = error.message;
-      });
-    });
-
-    /* =============================
-       FORGOT PASSWORD
-       ============================= */
-    document.getElementById('forgot-link')?.addEventListener('click', async (e) => {
+    /* ═══════════════════════════════════
+       Forgot Password
+       ═══════════════════════════════════ */
+    document.getElementById('forgot-link').addEventListener('click', async (e) => {
       e.preventDefault();
+      if (!sb) {
+        showMsg('error', 'login', 'Service unavailable.');
+        return;
+      }
       const email = prompt('Enter your email address:');
       if (!email) return;
-      if (!validateEmail(email)) { loginError.textContent = 'Invalid email.'; return; }
-      setLoading(loginBtn, loginSpinner, true);
-      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${location.origin}/reset-complete.html` });
-      setLoading(loginBtn, loginSpinner, false);
-      if (error) loginError.textContent = error.message;
-      else loginSuccess.textContent = 'Reset email sent!';
+      if (!validEmail(email)) {
+        showMsg('error', 'login', 'Invalid email.');
+        return;
+      }
+      setSubmitLoading(loginBtn, loginSp, true);
+      try {
+        const { error } = await sb.auth.resetPasswordForEmail(email, {
+          redirectTo: location.origin + '/reset-complete.html'
+        });
+        if (error) throw error;
+        showMsg('success', 'login', 'Reset email sent!');
+      } catch (err) {
+        showMsg('error', 'login', err.message || 'Failed to send reset email.');
+      } finally {
+        setSubmitLoading(loginBtn, loginSp, false);
+      }
     });
-
-    /* =============================
-       ADMIN LOGIN
-       ============================= */
-    document.getElementById('admin-btn')?.addEventListener('click', () => { window.location.href = 'admin-login.html'; });
-
-    /* =============================
-       COOKIE CONSENT
-       ============================= */
-    document.addEventListener('DOMContentLoaded', () => {
-      const banner = document.getElementById('cookie-banner');
-      if (!localStorage.getItem('heloxai_cookie_consent')) banner.style.display = 'block';
-      document.getElementById('cookie-accept').addEventListener('click', () => {
-        localStorage.setItem('heloxai_cookie_consent', 'accepted');
-        banner.style.display = 'none';
-      });
-      document.getElementById('cookie-decline').addEventListener('click', () => {
-        localStorage.setItem('heloxai_cookie_consent', 'declined');
-        banner.style.display = 'none';
-      });
-    });
-
   </script>
 </body>
 </html>
