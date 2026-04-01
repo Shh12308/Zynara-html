@@ -114,7 +114,7 @@ const providerBadge = document.getElementById("provider-badge");
 
 async function loadUser() {
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) { window.location.href="login.html"; return; }
+  if (!user) { window.location.href="auth.html"; return; }
 
   userEmailSpan.textContent = user.email;
 
@@ -160,7 +160,7 @@ loadUser();
 
 document.getElementById("logout-btn").addEventListener("click", async () => {
   await supabase.auth.signOut();
-  window.location.href="login.html";
+  window.location.href="auth.html";
 });
 </script>
 </body>
