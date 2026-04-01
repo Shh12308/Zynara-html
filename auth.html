@@ -582,12 +582,10 @@
         btn.disabled = true;
       } else {
         btn.classList.remove('is-loading');
-        // Only re-enable if not marked as permanently disabled
         if (!btn.dataset.alwaysDisabled) btn.disabled = false;
       }
     }
 
-    // Show error on a specific panel
     function showMsg(type, panel, text) {
       const el = document.getElementById(panel + '-' + type);
       if (el) el.textContent = text;
@@ -601,7 +599,7 @@
        Supabase — graceful init
        ═══════════════════════════════════ */
     const ENV = window.__ENV__;
-    let sb = null; // supabase client
+    let sb = null;
 
     if (ENV && ENV.SUPABASE_URL && ENV.SUPABASE_ANON_KEY) {
       try {
@@ -615,12 +613,10 @@
     const ADMIN_DOMAIN = '@heloxa.xyz';
     const TS_KEY = (ENV && ENV.TURNSTILE_SITE_KEY) ? ENV.TURNSTILE_SITE_KEY : null;
 
-    // If no backend, disable interactive buttons gracefully
     if (!sb) {
       document.querySelectorAll('.social-btn').forEach(btn => {
         btn.disabled = true;
         btn.dataset.alwaysDisabled = '1';
-        // Don't add badge if one already exists
         if (!btn.querySelector('.disabled-badge')) {
           const b = document.createElement('span');
           b.className = 'disabled-badge';
@@ -687,7 +683,7 @@
     }
 
     /* ═══════════════════════════════════
-       OAUTH helper — used by all social buttons
+       OAUTH helper
        ═══════════════════════════════════ */
     function handleOAuth(provider, btnId, panel, redirectTo) {
       document.getElementById(btnId).addEventListener('click', async function () {
@@ -700,7 +696,6 @@
             options: { redirectTo: redirectTo }
           });
           if (error) throw error;
-          // Browser redirects — no need to reset loading
         } catch (err) {
           showMsg('error', panel, err.message || provider + ' login failed.');
           setSocialLoading(this, false);
@@ -708,12 +703,9 @@
       });
     }
 
-    // Login OAuth — Google, GitHub, Discord
     handleOAuth('google',  'login-google',  'login', location.origin + '/oauth-callback.html');
     handleOAuth('github',  'login-github',  'login', location.origin + '/oauth-callback.html');
     handleOAuth('discord', 'login-discord', 'login', location.origin + '/oauth-callback.html');
-
-    // Signup OAuth — Google, GitHub, Discord
     handleOAuth('google',  'signup-google',  'signup', location.origin + '/callback');
     handleOAuth('github',  'signup-github',  'signup', location.origin + '/callback');
     handleOAuth('discord', 'signup-discord', 'signup', location.origin + '/callback');
@@ -727,12 +719,9 @@
       setSocialLoading(this, true);
       try {
         if (!window.ethereum) throw new Error('No wallet found. Please install MetaMask.');
-
-        // Check if Supabase has signInWithWeb3 (not in standard client)
         if (typeof sb.auth.signInWithWeb3 !== 'function') {
           throw new Error('Wallet authentication is not configured on this instance.');
         }
-
         const prov = new ethers.BrowserProvider(window.ethereum);
         const signer = await prov.getSigner();
         const addr = await signer.getAddress();
@@ -758,11 +747,9 @@
       setSocialLoading(this, true);
       try {
         if (!window.ethereum) throw new Error('No wallet found. Please install MetaMask.');
-
         if (typeof sb.auth.signInWithWeb3 !== 'function') {
           throw new Error('Wallet authentication is not configured on this instance.');
         }
-
         const prov = new ethers.BrowserProvider(window.ethereum);
         const signer = await prov.getSigner();
         const addr = await signer.getAddress();
@@ -818,13 +805,11 @@
           throw new Error('Please complete the security check.');
         }
 
-        // Verify Turnstile server-side
         const vRes = await fetch('/verify-turnstile', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token: loginTok })
         });
-        // Don't throw on non-OK — dev environments may not have the endpoint
         if (vRes.ok) {
           const vData = await vRes.json();
           if (!vData.success) {
@@ -834,7 +819,6 @@
           }
         }
 
-        // Remember email
         if (document.getElementById('remember-me').checked) {
           localStorage.setItem('lastEmail', email);
         } else {
@@ -844,7 +828,6 @@
         const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
         if (error) throw error;
 
-        // Check ban status
         if (data && data.user) {
           const { data: ud } = await sb.from('users').select('is_banned').eq('id', data.user.id).single();
           if (ud && ud.is_banned) {
@@ -866,17 +849,44 @@
     });
 
     /* ═══════════════════════════════════
-       Email Signup
+       Email Signup — FIXED
        ═══════════════════════════════════ */
     const signupForm = document.getElementById('signup-form');
     const signupBtn = document.getElementById('signup-btn');
     const signupSp = document.getElementById('signup-spinner');
 
-    async function createProfile(uid, uname) {
-      await sb.from('users').insert({
-        id: uid, username: uname, role: 'user', plan: 'free',
-        is_banned: false, preferences: {}, last_active: new Date().toISOString()
-      });
+    /**
+     * Create or update a user profile row.
+     * Uses upsert so that if the row already exists (race condition,
+     * duplicate submit, or triggered from confirm callback), it won't
+     * throw a unique-constraint error — it just updates.
+     */
+    async function createOrUpdateProfile(uid, uname, fullName) {
+      const { error } = await sb.from('users').upsert(
+        {
+          id: uid,
+          username: uname,
+          full_name: fullName || null,
+          role: 'user',
+          plan: 'free',
+          is_banned: false,
+          preferences: {},
+          last_active: new Date().toISOString()
+        },
+        { onConflict: 'id' }
+      );
+      if (error) {
+        // Log but don't throw — profile creation shouldn't block the signup flow.
+        // The confirm callback or a database trigger can handle it later.
+        console.error('Profile upsert failed:', error.message);
+      }
+    }
+
+    /**
+     * Username validation: alphanumeric + underscores, 3-20 chars, no leading underscore.
+     */
+    function validUsername(u) {
+      return /^[a-zA-Z0-9][a-zA-Z0-9_]{2,19}$/.test(u);
     }
 
     signupForm.addEventListener('submit', async (e) => {
@@ -889,8 +899,14 @@
       const email = document.getElementById('signup-email').value.trim().toLowerCase();
       const pw = document.getElementById('signup-password').value;
 
+      // ── Client-side validation ──
       if (!name || !uname || !email || !pw) {
         showMsg('error', 'signup', 'Please fill out all fields.');
+        setSubmitLoading(signupBtn, signupSp, false);
+        return;
+      }
+      if (!validUsername(uname)) {
+        showMsg('error', 'signup', 'Username must be 3-20 characters (letters, numbers, underscores), and cannot start with an underscore.');
         setSubmitLoading(signupBtn, signupSp, false);
         return;
       }
@@ -916,6 +932,7 @@
       }
 
       try {
+        // ── Turnstile verification ──
         if (!tsLoaded) await ensureTS();
         if (!window.turnstile || signupWid === null) {
           throw new Error('Security check is loading. Please wait.');
@@ -926,7 +943,6 @@
           throw new Error('Please complete the security check.');
         }
 
-        // Verify Turnstile
         const vRes = await fetch('/verify-turnstile', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -941,7 +957,22 @@
           }
         }
 
-        // Supabase signup
+        // ── Check username availability before calling signUp ──
+        // This prevents creating an auth user whose profile can't be written.
+        const { data: existingUname, error: unameErr } = await sb
+          .from('users')
+          .select('id')
+          .eq('username', uname)
+          .maybeSingle();
+
+        if (unameErr) {
+          console.warn('Username check failed:', unameErr.message);
+          // Don't block on a DB error — let the upsert handle it gracefully.
+        } else if (existingUname) {
+          throw new Error('This username is already taken. Please choose another.');
+        }
+
+        // ── Supabase auth signup ──
         const { data, error } = await sb.auth.signUp({
           email: email,
           password: pw,
@@ -952,9 +983,31 @@
         });
         if (error) throw error;
 
-        // Create user profile
+        /*
+         * CRITICAL FIX:
+         * When email confirmation is enabled, Supabase returns the EXISTING
+         * unconfirmed user (with data.user populated) instead of throwing an
+         * error when the same email signs up again. The telltale sign is
+         * data.user.identities being an EMPTY array — meaning no NEW identity
+         * was created. Without this check, the code would proceed to create
+         * a duplicate profile and show a false "success" message.
+         */
+        if (data.user && data.user.identities && data.user.identities.length === 0) {
+          throw new Error(
+            'An account with this email already exists. ' +
+            'Please check your inbox for a confirmation email, or try logging in.'
+          );
+        }
+
+        /*
+         * Only create the profile if we actually got a new user back.
+         * We use upsert (not insert) as a safety net against edge cases:
+         *   - Race conditions from double-clicks
+         *   - Profile already created by a database trigger
+         *   - Confirm callback creating the profile before this runs
+         */
         if (data && data.user) {
-          await createProfile(data.user.id, uname);
+          await createOrUpdateProfile(data.user.id, uname, name);
         }
 
         showMsg('success', 'signup', 'Success! Check your email to confirm your account.');
