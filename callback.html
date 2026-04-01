@@ -166,7 +166,7 @@
     /* Guard: env.js must be loaded */
     if (!window.__ENV__) {
       showError("Configuration error. Please refresh the page.", "env.js not loaded — window.__ENV__ is undefined");
-      retryBtn.addEventListener("click", () => { window.location.replace("login.html"); });
+      retryBtn.addEventListener("click", () => { window.location.replace("auth.html"); });
       throw new Error("env.js not loaded");
     }
 
@@ -191,7 +191,7 @@
             "Authentication could not be completed. You may need to try logging in again.",
             error.message
           );
-          retryBtn.addEventListener("click", () => { window.location.replace("login.html"); });
+          retryBtn.addEventListener("click", () => { window.location.replace("auth.html"); });
           return;
         }
 
@@ -204,7 +204,7 @@
             "Something went wrong — no session was created. Please try again.",
             "getSession() returned null after exchangeCodeForSession"
           );
-          retryBtn.addEventListener("click", () => { window.location.replace("login.html"); });
+          retryBtn.addEventListener("click", () => { window.location.replace("auth.html"); });
           return;
         }
 
@@ -220,7 +220,7 @@
           "An unexpected error occurred during login. Please try again.",
           err.message || String(err)
         );
-        retryBtn.addEventListener("click", () => { window.location.replace("login.html"); });
+        retryBtn.addEventListener("click", () => { window.location.replace("auth.html"); });
       }
     }
 
