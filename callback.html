@@ -147,84 +147,85 @@
 
   <script src="env.js"></script>
 
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-    const card       = document.getElementById("callback-card");
-    const title      = document.getElementById("status-title");
-    const text       = document.getElementById("status-text");
-    const detail     = document.getElementById("error-detail");
-    const retryBtn   = document.getElementById("retry-btn");
+const card     = document.getElementById("callback-card");
+const title    = document.getElementById("status-title");
+const text     = document.getElementById("status-text");
+const detail   = document.getElementById("error-detail");
+const retryBtn = document.getElementById("retry-btn");
 
-    function showError(message, raw) {
-      card.classList.add("error");
-      title.textContent = "Login failed";
-      text.textContent  = message;
-      detail.textContent = raw || "";
+function showError(message, raw) {
+  card.classList.add("error");
+  title.textContent = "Login failed";
+  text.textContent  = message;
+  detail.textContent = raw || "";
+  retryBtn.onclick = () => window.location.replace("auth.html");
+}
+
+/* ENV CHECK */
+if (!window.__ENV__) {
+  showError("Configuration error", "env.js not loaded");
+  throw new Error("env.js missing");
+}
+
+const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.__ENV__;
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+async function handleAuthCallback() {
+  try {
+    const url = new URL(window.location.href);
+
+    const code  = url.searchParams.get("code");
+    const error = url.searchParams.get("error");
+
+    console.log("OAuth URL:", window.location.href);
+
+    /* Handle provider-side error */
+    if (error) {
+      showError("OAuth provider returned an error.", error);
+      return;
     }
 
-    /* Guard: env.js must be loaded */
-    if (!window.__ENV__) {
-      showError("Configuration error. Please refresh the page.", "env.js not loaded — window.__ENV__ is undefined");
-      retryBtn.addEventListener("click", () => { window.location.replace("auth.html"); });
-      throw new Error("env.js not loaded");
+    /* 🚨 CRITICAL: Ensure code exists */
+    if (!code) {
+      showError(
+        "Missing authentication code.",
+        "No ?code= found in URL. Check OAuth redirect configuration."
+      );
+      return;
     }
 
-    const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.__ENV__;
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    /* ✅ Correct usage */
+    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
-    async function handleAuthCallback() {
-      try {
-        /*
-          Supabase v2 OAuth flow:
-          After the provider redirects back here with ?code=...&state=...,
-          we must exchange that code for a session. This is required for
-          all OAuth providers, especially Discord.
-        */
-        const { error } = await supabase.auth.exchangeCodeForSession(
-          window.location.href
-        );
-
-        if (error) {
-          console.error("OAuth exchange failed:", error);
-          showError(
-            "Authentication could not be completed. You may need to try logging in again.",
-            error.message
-          );
-          retryBtn.addEventListener("click", () => { window.location.replace("auth.html"); });
-          return;
-        }
-
-        /* Verify the session actually landed */
-        const { data: { session } } = await supabase.auth.getSession();
-
-        if (!session) {
-          console.error("No session found after successful exchange.");
-          showError(
-            "Something went wrong — no session was created. Please try again.",
-            "getSession() returned null after exchangeCodeForSession"
-          );
-          retryBtn.addEventListener("click", () => { window.location.replace("auth.html"); });
-          return;
-        }
-
-        /* Clean the URL — remove query params so it doesn't linger */
-        window.history.replaceState({}, document.title, "/callback.html");
-
-        /* Success — send user to the app */
-        window.location.replace("/index.html");
-
-      } catch (err) {
-        console.error("Authentication processing failed:", err);
-        showError(
-          "An unexpected error occurred during login. Please try again.",
-          err.message || String(err)
-        );
-        retryBtn.addEventListener("click", () => { window.location.replace("auth.html"); });
-      }
+    if (exchangeError) {
+      console.error("Exchange error:", exchangeError);
+      showError("Authentication failed.", exchangeError.message);
+      return;
     }
 
-    handleAuthCallback();
-  </script>
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      showError("No session created after login.");
+      return;
+    }
+
+    /* Clean URL (IMPORTANT: match your real route) */
+    window.history.replaceState({}, document.title, "/callback");
+
+    /* Redirect */
+    window.location.replace("/index.html");
+
+  } catch (err) {
+    console.error(err);
+    showError("Unexpected error.", err.message || String(err));
+  }
+}
+
+handleAuthCallback();
+</script>
 </body>
 </html>
