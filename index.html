@@ -985,41 +985,97 @@ function sendMsg(text){
 }
 
 function sendToAI(text){
-  S.streaming=true;S.abort=new AbortController();S.streamId=uid();
-  addTyping();updateCB();var full='',base=aiUrl();
+  if(!text) return;
+  S.streaming = true;
+  S.abort = new AbortController();
+  S.streamId = uid();
+  addTyping();
+  updateCB();
 
-  /* Create chat if needed */
-  var p=S.chatId?Promise.resolve(S.chatId):fetch(base+'/newchat',{method:'POST',headers:authH(),body:JSON.stringify({plan:plan(),ai_url:base})}).then(function(r){return r.json()}).then(function(d){return d.conversation_id}).catch(function(){return uid()});
+  let full = '';
+  const base = aiUrl();
 
-  p.then(function(cid){
-    S.chatId=cid;$('hdrTitle').textContent='HeloxAi';
+  // Ensure we have a conversation ID
+  let p = S.chatId
+    ? Promise.resolve(S.chatId)
+    : fetch(base + '/newchat', {
+        method: 'POST',
+        headers: authH(),
+        body: JSON.stringify({ plan: plan(), ai_url: base })
+      }).then(r => r.json())
+        .then(d => d.conversation_id)
+        .catch(() => uid());
 
-    /* Route image generation to /vision, everything else to /ask/universal */
-    var endpoint,payload;
-    if(isImage(text)){
-      /* Extract the actual prompt after the trigger phrase */
-      var imgPrompt=text;
-      for(var i=0;i<IMAGE_KW.length;i++){
-        var idx=text.toLowerCase().indexOf(IMAGE_KW[i]);
-        if(idx!==-1){imgPrompt=text.slice(idx+IMAGE_KW[i].length).trim();break}
+  p.then(cid => {
+    S.chatId = cid;
+    $('hdrTitle').textContent = 'HeloxAi';
+
+    const isImgReq = isImage(text);
+
+    let endpoint, payload;
+
+    if (isImgReq) {
+      // Image generation
+      let imgPrompt = text;
+      for (let kw of IMAGE_KW) {
+        let idx = text.toLowerCase().indexOf(kw);
+        if (idx !== -1) {
+          imgPrompt = text.slice(idx + kw.length).trim();
+          break;
+        }
       }
-      endpoint='/vision';
-      payload={prompt:imgPrompt||text,conversation_id:cid,stream_id:S.streamId,plan:plan(),ai_url:base}
-    }else{
-      endpoint='/ask/universal';
-      payload={message:text,conversation_id:cid,stream_id:S.streamId,plan:plan(),ai_url:base}
+      endpoint = '/vision';
+      payload = { prompt: imgPrompt || text, conversation_id: cid, stream_id: S.streamId, plan: plan(), ai_url: base };
+    } else {
+      // Text request → universal SSE
+      endpoint = '/ask/universal';
+      payload = { message: text, conversation_id: cid, stream_id: S.streamId, plan: plan(), ai_url: base };
     }
 
-    return fetch(base+endpoint,{method:'POST',headers:authH(),signal:S.abort.signal,body:JSON.stringify(payload)})
-  }).then(function(res){
-    if(!res.ok)throw new Error('HTTP '+res.status);rmTyping();
-    S.msgs.push({id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()});renderAll();
-    return streamRes(res,function(c){full+=c},function(){updateLastAI(full);addToGallery(full);loadChatList()})
-  }).catch(function(e){
+    // POST request with SSE
+    return fetch(base + endpoint, {
+      method: 'POST',
+      headers: authH(),
+      signal: S.abort.signal,
+      body: JSON.stringify(payload)
+    });
+  })
+  .then(res => {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     rmTyping();
-    if(e.name==='AbortError'){if(full)updateLastAI(full);else if(S.msgs.length&&S.msgs[S.msgs.length-1].role==='assistant'&&!S.msgs[S.msgs.length-1].content){S.msgs.pop();renderAll()}toast('Generation stopped','inf')}
-    else{S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});renderAll();toast('Request failed','err')}
-  }).finally(function(){S.streaming=false;S.abort=null;S.streamId=null;updateCB()})
+    S.msgs.push({ id: uid(), role: 'assistant', content: '', liked: false, disliked: false, time: now() });
+    renderAll();
+
+    // Stream SSE
+    return streamRes(res, chunk => {
+      full += chunk;
+    }, () => {
+      updateLastAI(full);
+      addToGallery(full);
+      loadChatList();
+    });
+  })
+  .catch(e => {
+    rmTyping();
+    if (e.name === 'AbortError') {
+      if (full) updateLastAI(full);
+      else if (S.msgs.length && S.msgs[S.msgs.length-1].role==='assistant' && !S.msgs[S.msgs.length-1].content) {
+        S.msgs.pop();
+        renderAll();
+      }
+      toast('Generation stopped', 'inf');
+    } else {
+      S.msgs.push({ id: uid(), role: 'assistant', content: '**Error:** ' + e.message, liked: false, disliked: false, time: now() });
+      renderAll();
+      toast('Request failed', 'err');
+    }
+  })
+  .finally(() => {
+    S.streaming = false;
+    S.abort = null;
+    S.streamId = null;
+    updateCB();
+  });
 }
 
 /* ================================================================
