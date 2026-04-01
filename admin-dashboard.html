@@ -3,363 +3,1216 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>HeloxAi Admin Dashboard</title>
-
+<title>HeloxAi — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
+/* ── Variables & Reset ── */
 :root {
-  --bg: #0f1724;
-  --sidebar: #0b1220;
-  --panel: #0f1724;
-  --border: rgba(255,255,255,.06);
-  --text: #e6eef6;
-  --muted: #9aa4b2;
-  --accent: #22c55e;
+  --bg-deep: #050810;
+  --bg: #0a0e17;
+  --bg-raised: #0f1520;
+  --bg-card: #111827;
+  --sidebar-bg: #080c14;
+  --border: rgba(255,255,255,0.06);
+  --border-hover: rgba(255,255,255,0.12);
+  --accent: #00ff88;
+  --accent-dim: rgba(0,255,136,0.1);
+  --accent-mid: rgba(0,255,136,0.25);
   --danger: #ef4444;
+  --danger-dim: rgba(239,68,68,0.1);
+  --warning: #f59e0b;
+  --warning-dim: rgba(245,158,11,0.1);
+  --info: #3b82f6;
+  --info-dim: rgba(59,130,246,0.1);
+  --text: #c8d6e5;
+  --text-bright: #f1f5f9;
+  --text-dim: #64748b;
+  --text-muted: #475569;
+  --sidebar-w: 260px;
+  --topbar-h: 58px;
   --radius: 12px;
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{height:100vh;display:flex;background:var(--bg);color:var(--text);font-family:'Space Grotesk',system-ui,sans-serif;overflow:hidden}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.14)}
+input,button,select,textarea{font-family:inherit}
+
+/* ── Sidebar ── */
+.sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--sidebar-bg);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100;transition:transform .3s ease}
+.sidebar-brand{padding:20px 20px 24px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)}
+.brand-icon{width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.brand-icon svg{width:100%;height:100%;filter:drop-shadow(0 0 6px rgba(0,255,136,0.3))}
+.brand-text{font-size:17px;font-weight:700;color:var(--text-bright);letter-spacing:-0.3px}
+.brand-tag{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--accent);background:var(--accent-dim);padding:2px 7px;border-radius:4px;margin-left:4px;vertical-align:middle}
+.sidebar-nav{flex:1;padding:12px 10px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.nav-btn{display:flex;align-items:center;gap:12px;padding:11px 14px;border:none;background:none;color:var(--text-dim);border-radius:var(--radius-sm);cursor:pointer;font-size:13.5px;font-weight:500;text-align:left;transition:all .2s;border-left:3px solid transparent;width:100%}
+.nav-btn i{width:18px;text-align:center;font-size:14px;transition:color .2s}
+.nav-btn:hover{color:var(--text);background:rgba(255,255,255,0.03)}
+.nav-btn.active{color:var(--accent);background:var(--accent-dim);border-left-color:var(--accent)}
+.nav-btn.active i{color:var(--accent)}
+.sidebar-footer{padding:10px;border-top:1px solid var(--border)}
+.logout-btn{display:flex;align-items:center;gap:12px;padding:11px 14px;border:none;background:none;color:var(--danger);border-radius:var(--radius-sm);cursor:pointer;font-size:13.5px;font-weight:500;width:100%;transition:background .2s}
+.logout-btn:hover{background:var(--danger-dim)}
+.logout-btn i{width:18px;text-align:center;font-size:14px}
+
+/* ── Mobile Overlay ── */
+.mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:90;backdrop-filter:blur(2px)}
+.mobile-overlay.show{display:block}
+
+/* ── Main Wrapper ── */
+.main-wrapper{flex:1;display:flex;flex-direction:column;min-width:0;position:relative}
+
+/* ── Topbar ── */
+.topbar{height:var(--topbar-h);min-height:var(--topbar-h);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:rgba(10,14,23,0.8);backdrop-filter:blur(12px);z-index:50}
+.topbar-left{display:flex;align-items:center;gap:14px}
+.hamburger{display:none;background:none;border:none;color:var(--text-dim);font-size:18px;cursor:pointer;padding:4px}
+.topbar-title{font-size:16px;font-weight:600;color:var(--text-bright)}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.live-indicator{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-dim);font-family:'JetBrains Mono',monospace}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent-mid);animation:livePulse 2s ease-in-out infinite}
+@keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+.topbar-clock{font-size:12px;color:var(--text-muted);font-family:'JetBrains Mono',monospace}
+.admin-chip{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 5px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:100px;font-size:12px;color:var(--text-dim)}
+.admin-avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#00cc6a,#00ff88);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--bg-deep)}
+
+/* ── Content Area ── */
+.content{flex:1;overflow-y:auto;padding:24px;position:relative}
+.content::before{content:'';position:fixed;top:0;left:var(--sidebar-w);right:0;bottom:0;pointer-events:none;z-index:0;background-image:radial-gradient(rgba(0,255,136,0.015) 1px,transparent 1px);background-size:32px 32px}
+.section{display:none;position:relative;z-index:1}
+.section.active{display:block;animation:sectionIn .35s ease-out}
+@keyframes sectionIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Section Toolbar ── */
+.section-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.toolbar-search{flex:1;min-width:200px;max-width:340px;padding:9px 14px 9px 38px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-raised);color:var(--text-bright);font-size:13px;outline:none;transition:border-color .2s}
+.toolbar-search:focus{border-color:var(--accent-mid)}
+.toolbar-search-wrap{position:relative;flex:1;min-width:200px;max-width:340px}
+.toolbar-search-wrap i{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:13px;pointer-events:none}
+.toolbar-select{padding:9px 32px 9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-raised);color:var(--text);font-size:13px;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.toolbar-select:focus{border-color:var(--accent-mid)}
+
+/* ── Stat Cards ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;display:flex;align-items:flex-start;gap:14px;transition:border-color .2s,box-shadow .2s}
+.stat-card:hover{border-color:var(--border-hover);box-shadow:0 4px 20px rgba(0,0,0,0.2)}
+.stat-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.stat-info{flex:1;min-width:0}
+.stat-label{display:block;font-size:12px;color:var(--text-dim);margin-bottom:4px;font-weight:500}
+.stat-value{display:block;font-size:26px;font-weight:700;color:var(--text-bright);letter-spacing:-0.5px;font-family:'JetBrains Mono',monospace}
+.stat-trend{display:flex;align-items:center;gap:3px;font-size:11px;font-weight:600;margin-top:6px;font-family:'JetBrains Mono',monospace}
+.stat-trend.up{color:var(--accent)}
+.stat-trend.down{color:var(--danger)}
+.stat-trend.neutral{color:var(--text-muted)}
+
+/* ── Charts ── */
+.charts-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;margin-bottom:24px}
+.chart-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.chart-card h3{font-size:13px;font-weight:600;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.chart-card h3 i{color:var(--text-dim);font-size:12px}
+.chart-canvas-wrap{position:relative;width:100%;height:220px}
+.chart-canvas-wrap canvas{width:100%!important;height:100%!important}
+
+/* ── Recent Conversations ── */
+.recent-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.recent-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.recent-header h3{font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}
+.recent-header h3 i{color:var(--text-dim);font-size:12px}
+.recent-list{max-height:320px;overflow-y:auto}
+.recent-item{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.recent-item:last-child{border-bottom:none}
+.recent-item:hover{background:rgba(255,255,255,0.02)}
+.recent-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.recent-meta{flex:1;min-width:0}
+.recent-name{font-size:13px;font-weight:500;color:var(--text-bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.recent-sub{font-size:11px;color:var(--text-dim);margin-top:2px}
+.recent-right{text-align:right;flex-shrink:0}
+.recent-model{font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px;background:var(--accent-dim);color:var(--accent);font-family:'JetBrains Mono',monospace}
+.recent-time{font-size:11px;color:var(--text-muted);margin-top:4px;font-family:'JetBrains Mono',monospace}
+
+/* ── Tables ── */
+.table-wrap{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.table-wrap table{width:100%;border-collapse:collapse}
+.table-wrap th,.table-wrap td{padding:12px 16px;text-align:left;font-size:13px;border-bottom:1px solid var(--border)}
+.table-wrap th{color:var(--text-dim);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.6px;background:rgba(255,255,255,0.015)}
+.table-wrap tr:last-child td{border-bottom:none}
+.table-wrap tr:hover td{background:rgba(255,255,255,0.015)}
+.table-wrap .mono{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-dim)}
+
+/* ── Badges & Tags ── */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge-admin{background:rgba(168,85,247,0.12);color:#c084fc}
+.badge-user{background:rgba(100,116,139,0.15);color:#94a3b8}
+.badge-staff{background:rgba(6,182,212,0.12);color:#22d3ee}
+.badge-banned{background:var(--danger-dim);color:#fca5a5}
+.badge-active{background:var(--accent-dim);color:var(--accent)}
+.badge-archived{background:rgba(100,116,139,0.1);color:#94a3b8}
+.badge-flagged{background:var(--warning-dim);color:#fcd34d}
+.badge-pending{background:var(--info-dim);color:#93c5fd}
+.badge-expired{background:rgba(100,116,139,0.08);color:#64748b}
+.badge-accepted{background:var(--accent-dim);color:var(--accent)}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius-xs);border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn-ban{background:var(--danger-dim);color:#fca5a5;border:1px solid rgba(239,68,68,0.15)}
+.btn-ban:hover{background:rgba(239,68,68,0.2)}
+.btn-unban{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(0,255,136,0.15)}
+.btn-unban:hover{background:rgba(0,255,136,0.18)}
+.btn-view{background:transparent;color:var(--text-dim);border:1px solid var(--border)}
+.btn-view:hover{color:var(--accent);border-color:var(--accent-mid)}
+.btn-primary{background:linear-gradient(135deg,#00cc6a,#00ff88);color:var(--bg-deep);font-weight:700}
+.btn-primary:hover{box-shadow:0 4px 16px rgba(0,255,136,0.25);transform:translateY(-1px)}
+.btn-primary:active{transform:translateY(0) scale(.98)}
+.btn-danger-outline{background:transparent;color:var(--danger);border:1px solid rgba(239,68,68,0.2)}
+.btn-danger-outline:hover{background:var(--danger-dim)}
+
+/* ── Models Grid ── */
+.models-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.model-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;transition:border-color .2s,box-shadow .2s}
+.model-card:hover{border-color:var(--border-hover);box-shadow:0 4px 20px rgba(0,0,0,0.2)}
+.model-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.model-name{font-size:15px;font-weight:700;color:var(--text-bright);display:flex;align-items:center;gap:8px}
+.model-name i{color:var(--accent);font-size:14px}
+.model-status{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.model-status .dot{width:6px;height:6px;border-radius:50%}
+.model-status.online .dot{background:var(--accent);box-shadow:0 0 6px var(--accent-mid)}
+.model-status.online{color:var(--accent)}
+.model-status.offline .dot{background:var(--text-muted)}
+.model-status.offline{color:var(--text-muted)}
+.model-desc{font-size:12px;color:var(--text-dim);line-height:1.5;margin-bottom:16px}
+.model-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.model-stat{background:rgba(255,255,255,0.02);border-radius:var(--radius-xs);padding:10px 12px}
+.model-stat-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.model-stat-value{font-size:16px;font-weight:700;color:var(--text-bright);font-family:'JetBrains Mono',monospace}
+.model-bar{height:4px;background:rgba(255,255,255,0.05);border-radius:2px;margin-top:16px;overflow:hidden}
+.model-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),#00cc6a);transition:width .6s ease}
+
+/* ── Invite Form ── */
+.invite-form{display:flex;gap:10px;margin-bottom:20px;max-width:460px}
+.invite-form input{flex:1;padding:10px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-raised);color:var(--text-bright);font-size:13px;outline:none;transition:border-color .2s}
+.invite-form input:focus{border-color:var(--accent-mid)}
+.invite-form input::placeholder{color:var(--text-muted)}
+
+/* ── Modal ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:200;justify-content:center;align-items:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);width:100%;max-width:640px;max-height:80vh;display:flex;flex-direction:column;animation:modalIn .3s ease-out}
+@keyframes modalIn{from{opacity:0;transform:scale(.96) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border)}
+.modal-header h3{font-size:15px;font-weight:600;color:var(--text-bright)}
+.modal-close{background:none;border:none;color:var(--text-dim);font-size:20px;cursor:pointer;padding:4px;line-height:1;transition:color .2s}
+.modal-close:hover{color:var(--text-bright)}
+.modal-body{flex:1;overflow-y:auto;padding:22px}
+.msg{display:flex;gap:10px;margin-bottom:16px;max-width:85%}
+.msg.user{margin-left:auto;flex-direction:row-reverse}
+.msg-role{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;padding:0 4px}
+.msg.user .msg-role{text-align:right;color:var(--accent)}
+.msg.assistant .msg-role{color:var(--info)}
+.msg-bubble{padding:12px 16px;border-radius:var(--radius-sm);font-size:13px;line-height:1.6;word-break:break-word}
+.msg.user .msg-bubble{background:var(--accent-dim);color:var(--text-bright);border-bottom-right-radius:4px}
+.msg.assistant .msg-bubble{background:rgba(255,255,255,0.04);color:var(--text);border-bottom-left-radius:4px}
+.msg-time{font-size:10px;color:var(--text-muted);margin-top:4px;padding:0 4px;font-family:'JetBrains Mono',monospace}
+.msg.user .msg-time{text-align:right}
+
+/* ── Empty & Error States ── */
+.state-msg{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;color:var(--text-muted);text-align:center;gap:10px}
+.state-msg i{font-size:36px;opacity:.3}
+.state-msg p{font-size:13px;max-width:300px}
+
+/* ── Toast ── */
+.toast-container{position:fixed;top:20px;right:20px;z-index:300;display:flex;flex-direction:column;gap:8px}
+.toast{display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:var(--radius-sm);font-size:12px;font-family:'JetBrains Mono',monospace;backdrop-filter:blur(16px);box-shadow:0 8px 32px rgba(0,0,0,0.4);animation:toastIn .35s ease-out both;max-width:360px}
+.toast-error{background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.2);color:#fca5a5}
+.toast-success{background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.15);color:var(--accent)}
+.toast.removing{animation:toastOut .25s ease-in both}
+@keyframes toastIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+@keyframes toastOut{to{opacity:0;transform:translateX(30px)}}
+
+/* ── Responsive ── */
+@media(max-width:1024px){
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .charts-grid{grid-template-columns:1fr}
+}
+@media(max-width:768px){
+  .sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .hamburger{display:block}
+  .topbar{padding:0 16px}
+  .content{padding:16px}
+  .content::before{left:0}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .models-grid{grid-template-columns:1fr}
+  .invite-form{flex-direction:column}
+  .admin-chip span{display:none}
+}
+@media(max-width:480px){
+  .stats-grid{grid-template-columns:1fr}
+  .toolbar-search-wrap{max-width:none}
 }
 
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  height: 100vh;
-  display: flex;
-  background: var(--bg);
-  color: var(--text);
+/* ── Reduced Motion ── */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
 }
-
-/* Sidebar */
-.sidebar {
-  width: 260px;
-  background: var(--sidebar);
-  border-right: 1px solid var(--border);
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebar h1 {
-  font-size: 20px;
-  margin: 0 0 24px;
-}
-
-.sidebar button {
-  background: none;
-  border: none;
-  color: var(--text);
-  padding: 12px;
-  border-radius: 8px;
-  text-align: left;
-  cursor: pointer;
-  font-size: 15px;
-}
-
-.sidebar button:hover {
-  background: rgba(255,255,255,.05);
-}
-
-.sidebar .logout {
-  margin-top: auto;
-  color: var(--danger);
-}
-
-/* Main */
-.main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.header {
-  padding: 16px 24px;
-  border-bottom: 1px solid var(--border);
-  font-size: 18px;
-}
-
-.content {
-  padding: 24px;
-  overflow-y: auto;
-}
-
-/* Table */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: var(--sidebar);
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-
-th, td {
-  padding: 14px;
-  border-bottom: 1px solid var(--border);
-  text-align: left;
-  font-size: 14px;
-}
-
-th {
-  color: var(--muted);
-  font-weight: 500;
-}
-
-tr:last-child td {
-  border-bottom: none;
-}
-
-.badge {
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-}
-
-.badge.admin { background: #7c3aed; }
-.badge.user { background: #334155; }
-.badge.banned { background: var(--danger); }
-
-.action {
-  border: none;
-  border-radius: 6px;
-  padding: 6px 10px;
-  cursor: pointer;
-  font-size: 13px;
-}
-
-.ban { background: var(--danger); color: #fff; }
-.unban { background: var(--accent); color: #000; }
-
-/* Sections */
-.section { display: none; }
-.section.active { display: block; }
 </style>
 </head>
 
 <body>
 
-<!-- SIDEBAR -->
-<div class="sidebar">
-  <h1>HeloxAi Admin</h1>
-<button onclick="show('invites')">✉️ Staff Invites</button>
-  <button onclick="show('users')">👤 Users</button>
-  <button onclick="show('logs')">📜 Audit Logs</button>
-  <button class="logout" onclick="logout()">🚪 Logout</button>
+<!-- ── Sidebar ── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">
+      <svg viewBox="0 0 64 64" fill="none"><path d="M32 4L8 16v16c0 14.4 10.24 27.84 24 32 13.76-4.16 24-17.6 24-32V16L32 4z" fill="rgba(0,255,136,0.08)" stroke="#00ff88" stroke-width="1.5"/><path d="M26 32l4 4 8-8" stroke="#00ff88" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <span class="brand-text">HeloxAi <span class="brand-tag">Admin</span></span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <button class="nav-btn active" data-section="overview"><i class="fa-solid fa-chart-line"></i>Overview</button>
+    <button class="nav-btn" data-section="conversations"><i class="fa-solid fa-comments"></i>Conversations</button>
+    <button class="nav-btn" data-section="users"><i class="fa-solid fa-users"></i>Users</button>
+    <button class="nav-btn" data-section="models"><i class="fa-solid fa-brain"></i>Models</button>
+    <button class="nav-btn" data-section="invites"><i class="fa-solid fa-user-plus"></i>Staff Invites</button>
+    <button class="nav-btn" data-section="logs"><i class="fa-solid fa-clipboard-list"></i>Audit Logs</button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="logout-btn" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i>Sign Out</button>
+  </div>
+</aside>
+
+<!-- ── Mobile Overlay ── -->
+<div class="mobile-overlay" id="mobileOverlay"></div>
+
+<!-- ── Main Wrapper ── -->
+<div class="main-wrapper">
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="hamburger" id="hamburger" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
+      <span class="topbar-title" id="topbarTitle">Overview</span>
+    </div>
+    <div class="topbar-right">
+      <div class="live-indicator"><span class="live-dot"></span>Live</div>
+      <span class="topbar-clock" id="topbarClock"></span>
+      <div class="admin-chip">
+        <div class="admin-avatar" id="adminAvatar">A</div>
+        <span id="adminEmail">admin</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="content">
+
+    <!-- ── Overview ── -->
+    <section id="sec-overview" class="section active">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--accent-dim);color:var(--accent)"><i class="fa-solid fa-comments"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Conversations</span>
+            <span class="stat-value" id="stat-convos">0</span>
+          </div>
+          <div class="stat-trend neutral" id="trend-convos"><i class="fa-solid fa-minus"></i> --</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--info-dim);color:var(--info)"><i class="fa-solid fa-users"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Active Users</span>
+            <span class="stat-value" id="stat-users">0</span>
+          </div>
+          <div class="stat-trend neutral" id="trend-users"><i class="fa-solid fa-minus"></i> --</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--warning-dim);color:var(--warning)"><i class="fa-solid fa-bolt"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Tokens Used</span>
+            <span class="stat-value" id="stat-tokens">0</span>
+          </div>
+          <div class="stat-trend neutral" id="trend-tokens"><i class="fa-solid fa-minus"></i> --</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(168,85,247,0.1);color:#c084fc"><i class="fa-solid fa-gauge-high"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Avg Response</span>
+            <span class="stat-value" id="stat-latency">0s</span>
+          </div>
+          <div class="stat-trend neutral" id="trend-latency"><i class="fa-solid fa-minus"></i> --</div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3><i class="fa-solid fa-chart-area"></i>Conversations — Last 7 Days</h3>
+          <div class="chart-canvas-wrap"><canvas id="chartConvos"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3><i class="fa-solid fa-chart-bar"></i>Usage by Model</h3>
+          <div class="chart-canvas-wrap"><canvas id="chartModels"></canvas></div>
+        </div>
+      </div>
+
+      <div class="recent-card">
+        <div class="recent-header">
+          <h3><i class="fa-solid fa-clock-rotate-left"></i>Recent Conversations</h3>
+        </div>
+        <div class="recent-list" id="recentList"></div>
+      </div>
+    </section>
+
+    <!-- ── Conversations ── -->
+    <section id="sec-conversations" class="section">
+      <div class="section-toolbar">
+        <div class="toolbar-search-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input class="toolbar-search" id="convosSearch" placeholder="Search by user or model...">
+        </div>
+        <select class="toolbar-select" id="convosModelFilter">
+          <option value="">All Models</option>
+        </select>
+        <select class="toolbar-select" id="convosStatusFilter">
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="archived">Archived</option>
+          <option value="flagged">Flagged</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>User</th><th>Model</th><th>Messages</th><th>Tokens</th><th>Status</th><th>Created</th><th></th></tr></thead>
+          <tbody id="convosBody"></tbody>
+        </table>
+      </div>
+      <div class="state-msg" id="convosEmpty" style="display:none"><i class="fa-solid fa-inbox"></i><p>No conversations found</p></div>
+    </section>
+
+    <!-- ── Users ── -->
+    <section id="sec-users" class="section">
+      <div class="section-toolbar">
+        <div class="toolbar-search-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input class="toolbar-search" id="usersSearch" placeholder="Search by email or username...">
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Email</th><th>Username</th><th>Role</th><th>Status</th><th>Joined</th><th></th></tr></thead>
+          <tbody id="usersBody"></tbody>
+        </table>
+      </div>
+      <div class="state-msg" id="usersEmpty" style="display:none"><i class="fa-solid fa-user-slash"></i><p>No users found</p></div>
+    </section>
+
+    <!-- ── Models ── -->
+    <section id="sec-models" class="section">
+      <div class="models-grid" id="modelsGrid"></div>
+      <div class="state-msg" id="modelsEmpty" style="display:none"><i class="fa-solid fa-brain"></i><p>No model data available yet</p></div>
+    </section>
+
+    <!-- ── Staff Invites ── -->
+    <section id="sec-invites" class="section">
+      <form class="invite-form" id="inviteForm">
+        <input type="email" id="inviteEmail" placeholder="staff@heloxai.xyz" required>
+        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i>Send Invite</button>
+      </form>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Email</th><th>Role</th><th>Status</th><th>Created</th><th></th></tr></thead>
+          <tbody id="invitesBody"></tbody>
+        </table>
+      </div>
+      <div class="state-msg" id="invitesEmpty" style="display:none"><i class="fa-solid fa-envelope-open"></i><p>No invites sent yet</p></div>
+    </section>
+
+    <!-- ── Audit Logs ── -->
+    <section id="sec-logs" class="section">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Admin</th><th>Action</th><th>Target</th><th>Time</th></tr></thead>
+          <tbody id="logsBody"></tbody>
+        </table>
+      </div>
+      <div class="state-msg" id="logsEmpty" style="display:none"><i class="fa-solid fa-clipboard"></i><p>No audit logs recorded</p></div>
+    </section>
+
+  </main>
 </div>
 
-<!-- MAIN -->
-<div class="main">
-  <div class="header" id="title">Users</div>
-  <div class="content">
-
-<!-- STAFF INVITES -->
-<div id="invites" class="section">
-  <h3 style="margin-bottom:16px">Invite Staff</h3>
-
-  <form id="invite-form" style="display:flex; gap:12px; max-width:420px;">
-    <input
-      id="invite-email"
-      type="email"
-      placeholder="support@heloxai.xyz"
-      required
-      style="flex:1; padding:12px; border-radius:8px; border:1px solid var(--border); background:#081424; color:#fff;"
-    />
-    <button
-      type="submit"
-      style="padding:12px 18px; border-radius:8px; border:none; background:var(--accent); color:#000; cursor:pointer;"
-    >
-      Invite
-    </button>
-  </form>
-
-  <table style="margin-top:24px">
-    <thead>
-      <tr>
-        <th>Email</th>
-        <th>Role</th>
-        <th>Status</th>
-        <th>Created</th>
-      </tr>
-    </thead>
-    <tbody id="invites-body"></tbody>
-  </table>
-</div>
-
-    <!-- USERS -->
-    <div id="users" class="section active">
-      <table>
-        <thead>
-          <tr>
-            <th>Email</th>
-            <th>Username</th>
-            <th>Role</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="users-body"></tbody>
-      </table>
+<!-- ── Conversation Modal ── -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Conversation</h3>
+      <button class="modal-close" id="modalClose" aria-label="Close">&times;</button>
     </div>
-
-    <!-- LOGS -->
-    <div id="logs" class="section">
-      <table>
-        <thead>
-          <tr>
-            <th>Admin</th>
-            <th>Action</th>
-            <th>Target</th>
-            <th>Time</th>
-          </tr>
-        </thead>
-        <tbody id="logs-body"></tbody>
-      </table>
-    </div>
-
+    <div class="modal-body" id="modalBody"></div>
   </div>
 </div>
+
+<!-- ── Toast Container ── -->
+<div class="toast-container" id="toastContainer"></div>
 
 <script src="env.js"></script>
 
 <script type="module">
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-  if (!window.__ENV__) {
-    throw new Error("env.js not loaded");
-  }
+if (!window.__ENV__) throw new Error('env.js not loaded');
 
-  const {
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY,
-    RECAPTCHA_SITE_KEY
-  } = window.__ENV__;
+const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.__ENV__;
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-/* 🔐 Admin Gate */
+/* ═══════════════════════════════════════════
+   Auth Gate
+   ═══════════════════════════════════════════ */
 const { data: { user } } = await supabase.auth.getUser();
-if (!user) location.href = "admin-login.html";
+if (!user) { location.href = 'admin-login.html'; throw new Error('Not authenticated'); }
 
-const { data: me } = await supabase
-  .from("users")
-  .select("role")
-  .eq("id", user.id)
-  .single();
+const { data: me } = await supabase.from('users').select('role, email, username').eq('id', user.id).single();
+if (me?.role !== 'admin') { await supabase.auth.signOut(); location.href = 'admin-login.html'; throw new Error('Not admin'); }
 
-if (me?.role !== "admin") {
-  await supabase.auth.signOut();
-  location.href = "admin-login.html";
+// Set admin info in topbar
+document.getElementById('adminEmail').textContent = me.email || 'Admin';
+document.getElementById('adminAvatar').textContent = (me.email || 'A')[0].toUpperCase();
+
+/* ═══════════════════════════════════════════
+   State
+   ═══════════════════════════════════════════ */
+let allConversations = [];
+let allUsers = [];
+let allInvites = [];
+let allLogs = [];
+const modelColors = ['#00ff88','#3b82f6','#f59e0b','#a855f7','#06b6d4','#ef4444','#ec4899','#84cc16'];
+const avatarColors = ['#00ff88','#3b82f6','#f59e0b','#a855f7','#06b6d4','#ef4444','#ec4899'];
+
+/* ═══════════════════════════════════════════
+   Utilities
+   ═══════════════════════════════════════════ */
+function formatNum(n) {
+  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+  return n.toString();
 }
 
-/* Navigation */
-window.show = (id) => {
-  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-  document.getElementById("title").textContent =
-    id === "users" ? "Users" : "Audit Logs";
-};
+function animateCounter(id, target, abbrev = false) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const dur = 900, start = performance.now();
+  (function tick(now) {
+    const p = Math.min((now - start) / dur, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    const v = Math.round(target * ease);
+    el.textContent = abbrev ? formatNum(v) : v.toLocaleString();
+    if (p < 1) requestAnimationFrame(tick);
+  })(start);
+}
 
-/* Load Users */
-async function loadUsers() {
-  const { data } = await supabase
-    .from("users")
-    .select("id,email,username,role,is_banned")
-    .order("created_at", { ascending: false });
+function timeAgo(d) {
+  const s = Math.floor((Date.now() - new Date(d)) / 1000);
+  if (s < 60) return 'Just now';
+  if (s < 3600) return Math.floor(s / 60) + 'm ago';
+  if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+  return Math.floor(s / 86400) + 'd ago';
+}
 
-  const body = document.getElementById("users-body");
-  body.innerHTML = "";
+function formatDate(d) {
+  if (!d) return '-';
+  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
 
-  data.forEach(u => {
-    body.innerHTML += `
-      <tr>
-        <td>${u.email}</td>
-        <td>${u.username || "-"}</td>
-        <td><span class="badge ${u.role}">${u.role}</span></td>
-        <td>${u.is_banned ? '<span class="badge banned">Banned</span>' : 'Active'}</td>
-        <td>
-          <button class="action ${u.is_banned ? 'unban' : 'ban'}"
-            onclick="toggleBan('${u.id}', ${u.is_banned})">
-            ${u.is_banned ? 'Unban' : 'Ban'}
-          </button>
-        </td>
-      </tr>`;
+function formatDateTime(d) {
+  if (!d) return '-';
+  return new Date(d).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+function getAvatarColor(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  return avatarColors[Math.abs(hash) % avatarColors.length];
+}
+
+function getInitials(name) {
+  if (!name) return '?';
+  return name.split(/[@\s._-]/).filter(Boolean).map(w => w[0]).join('').toUpperCase().slice(0, 2);
+}
+
+function showToast(msg, type = 'error') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  const icon = type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check';
+  t.innerHTML = `<i class="fa-solid ${icon}"></i><span>${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(() => { t.classList.add('removing'); setTimeout(() => t.remove(), 250); }, 4000);
+}
+
+function setSectionError(sectionId, msg) {
+  const sec = document.getElementById(sectionId);
+  const existing = sec.querySelector('.state-msg');
+  if (existing) { existing.querySelector('p').textContent = msg; existing.style.display = 'flex'; }
+  else {
+    const d = document.createElement('div');
+    d.className = 'state-msg';
+    d.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i><p>${msg}</p>`;
+    sec.appendChild(d);
+  }
+}
+
+/* ═══════════════════════════════════════════
+   Clock
+   ═══════════════════════════════════════════ */
+function updateClock() {
+  const now = new Date();
+  document.getElementById('topbarClock').textContent =
+    [now.getHours(), now.getMinutes(), now.getSeconds()].map(n => String(n).padStart(2, '0')).join(':');
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+/* ═══════════════════════════════════════════
+   Navigation
+   ═══════════════════════════════════════════ */
+const sectionTitles = { overview: 'Overview', conversations: 'Conversations', users: 'Users', models: 'Models', invites: 'Staff Invites', logs: 'Audit Logs' };
+let currentSection = 'overview';
+
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const id = btn.dataset.section;
+    if (id === currentSection) return;
+    currentSection = id;
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById('sec-' + id).classList.add('active');
+    document.getElementById('topbarTitle').textContent = sectionTitles[id] || id;
+    closeMobile();
   });
-}
+});
 
-inviteForm?.addEventListener("submit", async (e) => {
-  e.preventDefault();
+/* ═══════════════════════════════════════════
+   Mobile Sidebar
+   ═══════════════════════════════════════════ */
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('mobileOverlay');
+document.getElementById('hamburger').addEventListener('click', () => { sidebar.classList.add('open'); overlay.classList.add('show'); });
+function closeMobile() { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+overlay.addEventListener('click', closeMobile);
 
-  const email = inviteEmail.value.trim().toLowerCase();
-  if (!email) return;
+/* ═══════════════════════════════════════════
+   Modal
+   ═══════════════════════════════════════════ */
+const modalOverlay = document.getElementById('modalOverlay');
+document.getElementById('modalClose').addEventListener('click', () => modalOverlay.classList.remove('show'));
+modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) modalOverlay.classList.remove('show'); });
 
-  // Create invite
-  const { data, error } = await supabase
-    .from("staff_invites")
-    .insert({ email, role: "staff" })
-    .select()
-    .single();
+/* ═══════════════════════════════════════════
+   Chart Drawing
+   ═══════════════════════════════════════════ */
+function drawLineChart(canvasId, labels, values) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const w = rect.width, h = rect.height;
+  const pad = { top: 20, right: 16, bottom: 36, left: 44 };
+  const cw = w - pad.left - pad.right;
+  const ch = h - pad.top - pad.bottom;
 
-  if (error) {
-    alert(error.message);
+  ctx.clearRect(0, 0, w, h);
+
+  if (!values.length) {
+    ctx.fillStyle = '#475569';
+    ctx.font = '12px "Space Grotesk"';
+    ctx.textAlign = 'center';
+    ctx.fillText('No data', w / 2, h / 2);
     return;
   }
 
-  // Send email
-  await fetch(
-    `${SUPABASE_URL}/functions/v1/smart-processor`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`
-      },
-      body: JSON.stringify({
-        email,
-        token: data.token
-      })
+  const maxVal = Math.max(...values, 1);
+  const step = cw / Math.max(labels.length - 1, 1);
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.top + (ch / 4) * i;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(w - pad.right, y); ctx.stroke();
+    ctx.fillStyle = '#475569';
+    ctx.font = '10px "JetBrains Mono"';
+    ctx.textAlign = 'right';
+    ctx.fillText(Math.round(maxVal - (maxVal / 4) * i), pad.left - 8, y + 3);
+  }
+
+  // X labels
+  ctx.fillStyle = '#475569';
+  ctx.font = '10px "JetBrains Mono"';
+  ctx.textAlign = 'center';
+  labels.forEach((label, i) => {
+    const x = pad.left + step * i;
+    ctx.fillText(label, x, h - pad.bottom + 18);
+  });
+
+  // Build smooth path using cardinal spline
+  const pts = values.map((v, i) => ({ x: pad.left + step * i, y: pad.top + ch - (v / maxVal) * ch }));
+
+  function cardinalSpline(points, tension = 0.3) {
+    if (points.length < 2) return points;
+    const result = [];
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = points[Math.max(i - 1, 0)];
+      const p1 = points[i];
+      const p2 = points[i + 1];
+      const p3 = points[Math.min(i + 2, points.length - 1)];
+      for (let t = 0; t <= 1; t += 0.05) {
+        const t2 = t * t, t3 = t2 * t;
+        const s = (1 - tension) / 2;
+        const x = s * (-t3 + 2 * t2 - t) * p0.x + (s * (-t3 + t2) + (2 * t3 - 3 * t2 + 1)) * p1.x + (s * (t3 - 2 * t2 + t) + (-2 * t3 + 3 * t2)) * p2.x + s * (t3 - t2) * p3.x;
+        const y = s * (-t3 + 2 * t2 - t) * p0.y + (s * (-t3 + t2) + (2 * t3 - 3 * t2 + 1)) * p1.y + (s * (t3 - 2 * t2 + t) + (-2 * t3 + 3 * t2)) * p2.y + s * (t3 - t2) * p3.y;
+        result.push({ x, y });
+      }
     }
-  );
+    result.push(points[points.length - 1]);
+    return result;
+  }
 
-  inviteEmail.value = "";
-  loadInvites();
-});
+  const smooth = cardinalSpline(pts);
 
-/* Ban / Unban */
-window.toggleBan = async (id, banned) => {
-  await supabase.from("users")
-    .update({ is_banned: !banned })
-    .eq("id", id);
-  loadUsers();
-};
+  // Gradient fill
+  const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + ch);
+  grad.addColorStop(0, 'rgba(0,255,136,0.15)');
+  grad.addColorStop(1, 'rgba(0,255,136,0.0)');
+  ctx.beginPath();
+  ctx.moveTo(smooth[0].x, pad.top + ch);
+  smooth.forEach(p => ctx.lineTo(p.x, p.y));
+  ctx.lineTo(smooth[smooth.length - 1].x, pad.top + ch);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
 
-/* Load Logs */
-async function loadLogs() {
-  const { data } = await supabase
-    .from("admin_audit_logs")
-    .select("*")
-    .order("created_at", { ascending: false });
+  // Line
+  ctx.beginPath();
+  smooth.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+  ctx.strokeStyle = '#00ff88';
+  ctx.lineWidth = 2;
+  ctx.stroke();
 
-  const body = document.getElementById("logs-body");
-  body.innerHTML = "";
-
-  data.forEach(l => {
-    body.innerHTML += `
-      <tr>
-        <td>${l.admin_id}</td>
-        <td>${l.action}</td>
-        <td>${l.target_id || "-"}</td>
-        <td>${new Date(l.created_at).toLocaleString()}</td>
-      </tr>`;
+  // Dots
+  pts.forEach(p => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#00ff88';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#0a0e17';
+    ctx.fill();
   });
 }
 
-/* Logout */
-window.logout = async () => {
-  await supabase.auth.signOut();
-  location.href = "admin-login.html";
+function drawBarChart(canvasId, labels, values) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const w = rect.width, h = rect.height;
+  const pad = { top: 10, right: 60, bottom: 10, left: 10 };
+  const barH = Math.min(28, (h - pad.top - pad.bottom) / Math.max(labels.length, 1) - 8);
+  const gap = 8;
+
+  ctx.clearRect(0, 0, w, h);
+
+  if (!values.length) {
+    ctx.fillStyle = '#475569';
+    ctx.font = '12px "Space Grotesk"';
+    ctx.textAlign = 'center';
+    ctx.fillText('No data', w / 2, h / 2);
+    return;
+  }
+
+  const maxVal = Math.max(...values, 1);
+  const barArea = w - pad.left - pad.right;
+  const totalH = labels.length * (barH + gap) - gap;
+  const startY = pad.top + (h - pad.top - pad.bottom - totalH) / 2;
+
+  labels.forEach((label, i) => {
+    const y = startY + i * (barH + gap);
+    const barW = Math.max(2, (values[i] / maxVal) * barArea);
+    const color = modelColors[i % modelColors.length];
+
+    // Label
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px "JetBrains Mono"';
+    ctx.textAlign = 'left';
+    ctx.fillText(label.length > 14 ? label.slice(0, 13) + '…' : label, pad.left, y + barH / 2 + 4);
+
+    // Bar background
+    ctx.fillStyle = 'rgba(255,255,255,0.03)';
+    ctx.beginPath();
+    ctx.roundRect(pad.left, y, barArea, barH, 4);
+    ctx.fill();
+
+    // Bar fill
+    const grad = ctx.createLinearGradient(pad.left, 0, pad.left + barW, 0);
+    grad.addColorStop(0, color + '88');
+    grad.addColorStop(1, color);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(pad.left, y, barW, barH, 4);
+    ctx.fill();
+
+    // Value
+    ctx.fillStyle = '#c8d6e5';
+    ctx.font = '11px "JetBrains Mono"';
+    ctx.textAlign = 'left';
+    ctx.fillText(formatNum(values[i]), pad.left + barW + 8, y + barH / 2 + 4);
+  });
+}
+
+/* ═══════════════════════════════════════════
+   Data Loaders
+   ═══════════════════════════════════════════ */
+
+/* ── Overview ── */
+async function loadOverview() {
+  try {
+    const { data: convos, error } = await supabase
+      .from('conversations')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(2000);
+    if (error) throw error;
+
+    const total = convos.length;
+    const uniqueUsers = new Set(convos.map(c => c.user_id)).size;
+    const totalTokens = convos.reduce((s, c) => s + (c.total_tokens || 0), 0);
+    const avgLatency = total ? (convos.reduce((s, c) => s + (c.avg_latency || 0), 0) / total) : 0;
+
+    animateCounter('stat-convos', total);
+    animateCounter('stat-users', uniqueUsers);
+    animateCounter('stat-tokens', totalTokens, true);
+    const latEl = document.getElementById('stat-latency');
+    const dur = 800, st = performance.now();
+    (function tick(now) {
+      const p = Math.min((now - st) / dur, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      latEl.textContent = (avgLatency * ease).toFixed(1) + 's';
+      if (p < 1) requestAnimationFrame(tick);
+    })(st);
+
+    // Trend calculations (compare last 3 days vs previous 3)
+    const now = new Date();
+    const recent = convos.filter(c => new Date(c.created_at) > new Date(now - 3 * 86400000)).length;
+    const prev = convos.filter(c => { const d = new Date(c.created_at); return d > new Date(now - 6 * 86400000) && d <= new Date(now - 3 * 86400000); }).length;
+    setTrend('trend-convos', recent, prev);
+
+    // Last 7 days chart
+    const byDate = {};
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now - i * 86400000);
+      const key = d.toISOString().split('T')[0];
+      byDate[key] = 0;
+    }
+    convos.forEach(c => { const key = c.created_at?.split('T')[0]; if (key in byDate) byDate[key]++; });
+    const dateLabels = Object.keys(byDate).map(d => { const dt = new Date(d + 'T12:00:00'); return dt.toLocaleDateString('en-US', { weekday: 'short' }); });
+    drawLineChart('chartConvos', dateLabels, Object.values(byDate));
+
+    // Model usage chart
+    const byModel = {};
+    convos.forEach(c => { const m = c.model || 'unknown'; byModel[m] = (byModel[m] || 0) + 1; });
+    const sorted = Object.entries(byModel).sort((a, b) => b[1] - a[1]);
+    drawBarChart('chartModels', sorted.map(e => e[0]), sorted.map(e => e[1]));
+
+    // Populate model filter
+    const mf = document.getElementById('convosModelFilter');
+    mf.innerHTML = '<option value="">All Models</option>' + sorted.map(e => `<option value="${e[0]}">${e[0]}</option>`).join('');
+
+    // Recent conversations (top 8)
+    const recentList = document.getElementById('recentList');
+    const top8 = convos.slice(0, 8);
+    if (!top8.length) {
+      recentList.innerHTML = '<div class="state-msg" style="padding:40px"><i class="fa-solid fa-inbox"></i><p>No conversations yet</p></div>';
+      return;
+    }
+    recentList.innerHTML = top8.map(c => {
+      const name = c.users?.username || c.users?.email || 'Unknown';
+      const color = getAvatarColor(name);
+      const initials = getInitials(name);
+      return `<div class="recent-item" onclick="window.viewConvo('${c.id}')">
+        <div class="recent-avatar" style="background:${color}22;color:${color}">${initials}</div>
+        <div class="recent-meta">
+          <div class="recent-name">${name}</div>
+          <div class="recent-sub">${c.message_count || 0} messages &middot; ${formatNum(c.total_tokens || 0)} tokens</div>
+        </div>
+        <div class="recent-right">
+          <div class="recent-model">${c.model || 'N/A'}</div>
+          <div class="recent-time">${timeAgo(c.created_at)}</div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (err) {
+    console.error(err);
+    setSectionError('sec-overview', 'Could not load overview data');
+  }
+}
+
+function setTrend(id, current, previous) {
+  const el = document.getElementById(id);
+  if (!el || previous === 0) { el.innerHTML = '<i class="fa-solid fa-minus"></i> --'; el.className = 'stat-trend neutral'; return; }
+  const pct = ((current - previous) / previous * 100).toFixed(1);
+  const up = pct >= 0;
+  el.className = `stat-trend ${up ? 'up' : 'down'}`;
+  el.innerHTML = `<i class="fa-solid fa-arrow-${up ? 'up' : 'down'}"></i> ${Math.abs(pct)}%`;
+}
+
+/* ── Conversations ── */
+async function loadConversations() {
+  try {
+    const { data, error } = await supabase
+      .from('conversations')
+      .select('*, users(email, username)')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (error) throw error;
+    allConversations = data || [];
+    renderConversations();
+  } catch (err) {
+    console.error(err);
+    setSectionError('sec-conversations', 'Could not load conversations');
+  }
+}
+
+function renderConversations() {
+  const search = (document.getElementById('convosSearch')?.value || '').toLowerCase();
+  const modelFilter = document.getElementById('convosModelFilter')?.value || '';
+  const statusFilter = document.getElementById('convosStatusFilter')?.value || '';
+
+  let filtered = allConversations.filter(c => {
+    const name = (c.users?.email || c.users?.username || '').toLowerCase();
+    if (search && !name.includes(search) && !(c.model || '').toLowerCase().includes(search)) return false;
+    if (modelFilter && c.model !== modelFilter) return false;
+    if (statusFilter && c.status !== statusFilter) return false;
+    return true;
+  });
+
+  const body = document.getElementById('convosBody');
+  const empty = document.getElementById('convosEmpty');
+
+  if (!filtered.length) { body.innerHTML = ''; empty.style.display = 'flex'; return; }
+  empty.style.display = 'none';
+
+  body.innerHTML = filtered.map(c => {
+    const name = c.users?.username || c.users?.email || '-';
+    const statusClass = c.status === 'flagged' ? 'badge-flagged' : c.status === 'archived' ? 'badge-archived' : 'badge-active';
+    return `<tr>
+      <td>${name}</td>
+      <td><span class="mono">${c.model || '-'}</span></td>
+      <td class="mono">${c.message_count || 0}</td>
+      <td class="mono">${formatNum(c.total_tokens || 0)}</td>
+      <td><span class="badge ${statusClass}">${c.status || 'active'}</span></td>
+      <td class="mono">${formatDateTime(c.created_at)}</td>
+      <td><button class="btn btn-view" onclick="window.viewConvo('${c.id}')"><i class="fa-solid fa-eye"></i>View</button></td>
+    </tr>`;
+  }).join('');
+}
+
+document.getElementById('convosSearch')?.addEventListener('input', renderConversations);
+document.getElementById('convosModelFilter')?.addEventListener('change', renderConversations);
+document.getElementById('convosStatusFilter')?.addEventListener('change', renderConversations);
+
+/* ── View Conversation Modal ── */
+window.viewConvo = async function(id) {
+  document.getElementById('modalTitle').textContent = 'Loading...';
+  document.getElementById('modalBody').innerHTML = '<div class="state-msg"><i class="fa-solid fa-spinner fa-spin"></i><p>Loading messages...</p></div>';
+  modalOverlay.classList.add('show');
+
+  try {
+    const { data: conv } = await supabase.from('conversations').select('*, users(email, username)').eq('id', id).single();
+    const { data: msgs } = await supabase.from('messages').select('*').eq('conversation_id', id).order('created_at', { ascending: true });
+
+    document.getElementById('modalTitle').textContent = `${conv?.users?.username || conv?.users?.email || 'Conversation'} — ${conv?.model || 'Unknown'}`;
+
+    if (!msgs?.length) {
+      document.getElementById('modalBody').innerHTML = '<div class="state-msg"><i class="fa-solid fa-message-slash"></i><p>No messages in this conversation</p></div>';
+      return;
+    }
+
+    document.getElementById('modalBody').innerHTML = msgs.map(m => `
+      <div class="msg ${m.role}">
+        <div style="flex:1;min-width:0">
+          <div class="msg-role">${m.role}</div>
+          <div class="msg-bubble">${escapeHtml(m.content || '')}</div>
+          <div class="msg-time">${formatDateTime(m.created_at)}${m.tokens ? ' · ' + m.tokens + ' tokens' : ''}</div>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    document.getElementById('modalBody').innerHTML = '<div class="state-msg"><i class="fa-solid fa-triangle-exclamation"></i><p>Failed to load conversation</p></div>';
+  }
 };
 
-loadUsers();
-loadLogs();
-</script>
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML.replace(/\n/g, '<br>');
+}
 
+/* ── Users ── */
+async function loadUsers() {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    allUsers = data || [];
+    renderUsers();
+  } catch (err) {
+    console.error(err);
+    setSectionError('sec-users', 'Could not load users');
+  }
+}
+
+function renderUsers() {
+  const search = (document.getElementById('usersSearch')?.value || '').toLowerCase();
+  let filtered = allUsers.filter(u => {
+    if (search && !u.email.toLowerCase().includes(search) && !(u.username || '').toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  const body = document.getElementById('usersBody');
+  const empty = document.getElementById('usersEmpty');
+
+  if (!filtered.length) { body.innerHTML = ''; empty.style.display = 'flex'; return; }
+  empty.style.display = 'none';
+
+  body.innerHTML = filtered.map(u => {
+    const roleClass = u.role === 'admin' ? 'badge-admin' : u.role === 'staff' ? 'badge-staff' : 'badge-user';
+    return `<tr>
+      <td class="mono">${u.email}</td>
+      <td>${u.username || '-'}</td>
+      <td><span class="badge ${roleClass}">${u.role || 'user'}</span></td>
+      <td>${u.is_banned ? '<span class="badge badge-banned">Banned</span>' : '<span class="badge badge-active">Active</span>'}</td>
+      <td class="mono">${formatDate(u.created_at)}</td>
+      <td><button class="btn ${u.is_banned ? 'btn-unban' : 'btn-ban'}" onclick="window.toggleBan('${u.id}', ${!!u.is_banned})">${u.is_banned ? 'Unban' : 'Ban'}</button></td>
+    </tr>`;
+  }).join('');
+}
+
+document.getElementById('usersSearch')?.addEventListener('input', renderUsers);
+
+window.toggleBan = async function(id, banned) {
+  try {
+    const { error } = await supabase.from('users').update({ is_banned: !banned }).eq('id', id);
+    if (error) throw error;
+    const u = allUsers.find(u => u.id === id);
+    if (u) u.is_banned = !banned;
+    renderUsers();
+    showToast(banned ? 'User unbanned' : 'User banned', 'success');
+  } catch (err) {
+    showToast('Failed to update user status');
+  }
+};
+
+/* ── Models ── */
+async function loadModels() {
+  try {
+    const { data: convos, error } = await supabase
+      .from('conversations')
+      .select('model, total_tokens, message_count, avg_latency');
+    if (error) throw error;
+
+    const byModel = {};
+    (convos || []).forEach(c => {
+      const m = c.model || 'unknown';
+      if (!byModel[m]) byModel[m] = { count: 0, tokens: 0, messages: 0, totalLatency: 0 };
+      byModel[m].count++;
+      byModel[m].tokens += c.total_tokens || 0;
+      byModel[m].messages += c.message_count || 0;
+      byModel[m].totalLatency += c.avg_latency || 0;
+    });
+
+    const entries = Object.entries(byModel).sort((a, b) => b[1].count - a[1].count);
+    const grid = document.getElementById('modelsGrid');
+    const empty = document.getElementById('modelsEmpty');
+
+    if (!entries.length) { grid.innerHTML = ''; empty.style.display = 'flex'; return; }
+    empty.style.display = 'none';
+
+    const maxCount = entries[0][1].count;
+
+    grid.innerHTML = entries.map(([name, stats], i) => {
+      const avgLat = stats.count ? (stats.totalLatency / stats.count) : 0;
+      const pct = (stats.count / maxCount * 100).toFixed(0);
+      return `<div class="model-card">
+        <div class="model-card-top">
+          <div class="model-name"><i class="fa-solid fa-microchip"></i>${name}</div>
+          <div class="model-status online"><span class="dot"></span>Active</div>
+        </div>
+        <div class="model-desc">AI model processing ${formatNum(stats.count)} conversations with an average response time of ${avgLat.toFixed(1)}s.</div>
+        <div class="model-stats">
+          <div class="model-stat"><div class="model-stat-label">Conversations</div><div class="model-stat-value">${formatNum(stats.count)}</div></div>
+          <div class="model-stat"><div class="model-stat-label">Tokens</div><div class="model-stat-value">${formatNum(stats.tokens)}</div></div>
+          <div class="model-stat"><div class="model-stat-label">Messages</div><div class="model-stat-value">${formatNum(stats.messages)}</div></div>
+          <div class="model-stat"><div class="model-stat-label">Avg Latency</div><div class="model-stat-value">${avgLat.toFixed(1)}s</div></div>
+        </div>
+        <div class="model-bar"><div class="model-bar-fill" style="width:${pct}%"></div></div>
+      </div>`;
+    }).join('');
+  } catch (err) {
+    console.error(err);
+    setSectionError('sec-models', 'Could not load model data');
+  }
+}
+
+/* ── Staff Invites ── */
+async function loadInvites() {
+  try {
+    const { data, error } = await supabase
+      .from('staff_invites')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    allInvites = data || [];
+    renderInvites();
+  } catch (err) {
+    console.error(err);
+    setSectionError('sec-invites', 'Could not load invites');
+  }
+}
+
+function renderInvites() {
+  const body = document.getElementById('invitesBody');
+  const empty = document.getElementById('invitesEmpty');
+
+  if (!allInvites.length) { body.innerHTML = ''; empty.style.display = 'flex'; return; }
+  empty.style.display = 'none';
+
+  body.innerHTML = allInvites.map(inv => {
+    const statusClass = inv.status === 'accepted' ? 'badge-accepted' : inv.status === 'expired' ? 'badge-expired' : 'badge-pending';
+    return `<tr>
+      <td class="mono">${inv.email}</td>
+      <td><span class="badge badge-staff">${inv.role || 'staff'}</span></td>
+      <td><span class="badge ${statusClass}">${inv.status || 'pending'}</span></td>
+      <td class="mono">${formatDateTime(inv.created_at)}</td>
+      <td>${inv.status === 'pending' ? `<button class="btn btn-danger-outline" onclick="window.revokeInvite('${inv.id}')"><i class="fa-solid fa-xmark"></i>Revoke</button>` : ''}</td>
+    </tr>`;
+  }).join('');
+}
+
+window.revokeInvite = async function(id) {
+  try {
+    const { error } = await supabase.from('staff_invites').update({ status: 'expired' }).eq('id', id);
+    if (error) throw error;
+    const inv = allInvites.find(i => i.id === id);
+    if (inv) inv.status = 'expired';
+    renderInvites();
+    showToast('Invite revoked', 'success');
+  } catch { showToast('Failed to revoke invite'); }
+};
+
+document.getElementById('inviteForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const input = document.getElementById('inviteEmail');
+  const email = input.value.trim().toLowerCase();
+  if (!email) return;
+
+  try {
+    const { data, error } = await supabase
+      .from('staff_invites')
+      .insert({ email, role: 'staff' })
+      .select()
+      .single();
+    if (error) throw error;
+
+    // Trigger invite email via edge function
+    await fetch(`${SUPABASE_URL}/functions/v1/smart-processor`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+      body: JSON.stringify({ email, token: data.token })
+    }).catch(() => {}); // Don't block on email failure
+
+    input.value = '';
+    allInvites.unshift(data);
+    renderInvites();
+    showToast('Invite sent to ' + email, 'success');
+  } catch (err) {
+    showToast(err.message || 'Failed to send invite');
+  }
+});
+
+/* ── Audit Logs ── */
+async function loadLogs() {
+  try {
+    const { data, error } = await supabase
+      .from('admin_audit_logs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (error) throw error;
+    allLogs = data || [];
+
+    const body = document.getElementById('logsBody');
+    const empty = document.getElementById('logsEmpty');
+
+    if (!allLogs.length) { body.innerHTML = ''; empty.style.display = 'flex'; return; }
+    empty.style.display = 'none';
+
+    body.innerHTML = allLogs.map(l => `<tr>
+      <td class="mono">${l.admin_id || '-'}</td>
+      <td>${l.action || '-'}</td>
+      <td class="mono">${l.target_id || '-'}</td>
+      <td class="mono">${formatDateTime(l.created_at)}</td>
+    </tr>`).join('');
+  } catch (err) {
+    console.error(err);
+    setSectionError('sec-logs', 'Could not load audit logs');
+  }
+}
+
+/* ┐══════════════════════════════════════════
+   Logout
+   ═══════════════════════════════════════════ */
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await supabase.auth.signOut();
+  location.href = 'admin-login.html';
+});
+
+/* ═══════════════════════════════════════════
+   Initialize
+   ═══════════════════════════════════════════ */
+loadOverview();
+loadConversations();
+loadUsers();
+loadModels();
+loadInvites();
+loadLogs();
+
+// Redraw charts on resize
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    if (currentSection === 'overview') loadOverview();
+  }, 300);
+});
+</script>
 </body>
 </html>
