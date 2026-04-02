@@ -5,12 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>HeloxAi</title>
 
-<!-- Primary Meta Tags -->
 <meta name="title" content="HeloxAi - Advanced AI Companion">
 <meta name="description" content="Your advanced AI companion — think, create, code, and explore with intelligence.">
 <meta name="author" content="HeloxAi">
 
-<!-- PWA Meta Tags -->
 <meta name="application-name" content="HeloxAi">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -18,43 +16,23 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="format-detection" content="telephone=no">
 
-<!-- Theme Color (Dynamic via JS, fallback here) -->
 <meta name="theme-color" content="#08080c">
 <meta name="msapplication-navbutton-color" content="#08080c">
 <meta name="msapplication-TileColor" content="#08080c">
 
-<!-- Manifest -->
 <link rel="manifest" href="manifest.json">
-
-<!-- Favicons (Standard) -->
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
 <link rel="icon" type="image/x-icon" href="icons/favicon.ico">
 
-<!-- iOS Icons -->
 <link rel="apple-touch-icon" href="icons/icon-192x192.png">
 <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152x152.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-192x192.png">
 <link rel="apple-touch-icon" sizes="167x167" href="icons/icon-152x152.png">
 
-<!-- Windows Tiles -->
 <meta name="msapplication-TileImage" content="icons/icon-144x144.png">
 <meta name="msapplication-config" content="browserconfig.xml">
 
-<!-- iOS Splash Screens (iPhone/X/Pro/Max) -->
-<link rel="apple-touch-startup-image" href="splash/splash-640x1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)">
-<link rel="apple-touch-startup-image" href="splash/splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)">
-<link rel="apple-touch-startup-image" href="splash/splash-1242x2208.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)">
-<link rel="apple-touch-startup-image" href="splash/splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
-<link rel="apple-touch-startup-image" href="splash/splash-1536x2048.png" media="(min-device-width: 768px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 2)">
-<link rel="apple-touch-startup-image" href="splash/splash-1668x2224.png" media="(min-device-width: 834px) and (max-device-width: 834px) and (-webkit-min-device-pixel-ratio: 2)">
-<link rel="apple-touch-startup-image" href="splash/splash-2048x2732.png" media="(min-device-width: 1024px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 2)">
-<!-- iPhone 14 Pro Max / 15 Pro Max -->
-<link rel="apple-touch-startup-image" href="splash/splash-1290x2796.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)">
-<!-- iPhone 14 Pro / 15 Pro -->
-<link rel="apple-touch-startup-image" href="splash/splash-1179x2556.png" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)">
-
-<!-- Fonts & Libraries -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
@@ -129,12 +107,77 @@
   --shadow-sm:0 1px 3px rgba(0,0,0,.5);--shadow:0 4px 20px rgba(0,0,0,.6);--shadow-lg:0 8px 40px rgba(0,0,0,.7);
   --glow:0 0 60px rgba(100,210,255,.05);--glow-strong:0 0 80px rgba(100,210,255,.1);--noise:rgba(100,210,255,.005);
 }
+[data-theme="cyber"]{
+  --bg-primary:#0d0a14;--bg-secondary:#150f1e;--bg-tertiary:#1f1630;--bg-quaternary:#2a1f42;
+  --bg-user-bubble:rgba(255,0,128,.06);--bg-user-bubble-border:rgba(255,0,128,.15);
+  --bg-sidebar:#0f0b16;--bg-input:#1f1630;--bg-hover:#2a1f42;--bg-code:#080610;
+  --text-primary:#f0e6ff;--text-secondary:#b090d0;--text-muted:#6a5080;
+  --accent:#ff0080;--accent-hover:#d6006e;--accent-dim:rgba(255,0,128,.05);--accent-soft:rgba(255,0,128,.08);--accent-glow:rgba(255,0,128,.12);
+  --border:rgba(255,0,128,.1);--border-active:rgba(255,0,128,.35);
+  --danger:#ff4060;--warning:#ffcc00;--success:#00ffa3;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.5);--shadow:0 4px 20px rgba(0,0,0,.6);--shadow-lg:0 8px 40px rgba(0,0,0,.7);
+  --glow:0 0 60px rgba(255,0,128,.08);--glow-strong:0 0 80px rgba(255,0,128,.15);--noise:rgba(255,0,128,.008);
+}
+[data-theme="forest"]{
+  --bg-primary:#080c0a;--bg-secondary:#0e1510;--bg-tertiary:#141f18;--bg-quaternary:#1a2a20;
+  --bg-user-bubble:rgba(76,175,80,.06);--bg-user-bubble-border:rgba(76,175,80,.12);
+  --bg-sidebar:#0a0f0c;--bg-input:#141f18;--bg-hover:#1a2a20;--bg-code:#050806;
+  --text-primary:#e0f0e0;--text-secondary:#80a080;--text-muted:#406040;
+  --accent:#4caf50;--accent-hover:#388e3c;--accent-dim:rgba(76,175,80,.05);--accent-soft:rgba(76,175,80,.08);--accent-glow:rgba(76,175,80,.1);
+  --border:rgba(76,175,80,.1);--border-active:rgba(76,175,80,.3);
+  --danger:#c0392b;--warning:#f39c12;--success:#4caf50;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.4);--shadow:0 4px 20px rgba(0,0,0,.5);--shadow-lg:0 8px 40px rgba(0,0,0,.6);
+  --glow:0 0 60px rgba(76,175,80,.05);--glow-strong:0 0 80px rgba(76,175,80,.1);--noise:rgba(76,175,80,.005);
+}
+[data-theme="sunset"]{
+  --bg-primary:#120a08;--bg-secondary:#1a100c;--bg-tertiary:#251814;--bg-quaternary:#30201a;
+  --bg-user-bubble:rgba(255,107,53,.06);--bg-user-bubble-border:rgba(255,107,53,.12);
+  --bg-sidebar:#150c0a;--bg-input:#251814;--bg-hover:#30201a;--bg-code:#0a0604;
+  --text-primary:#fff0e6;--text-secondary:#c08060;--text-muted:#805040;
+  --accent:#ff6b35;--accent-hover:#e55a2b;--accent-dim:rgba(255,107,53,.05);--accent-soft:rgba(255,107,53,.08);--accent-glow:rgba(255,107,53,.12);
+  --border:rgba(255,107,53,.1);--border-active:rgba(255,107,53,.3);
+  --danger:#e74c3c;--warning:#f39c12;--success:#ff6b35;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.5);--shadow:0 4px 20px rgba(0,0,0,.6);--shadow-lg:0 8px 40px rgba(0,0,0,.7);
+  --glow:0 0 60px rgba(255,107,53,.06);--glow-strong:0 0 80px rgba(255,107,53,.12);--noise:rgba(255,107,53,.005);
+}
+[data-theme="arctic"]{
+  --bg-primary:#f5f8fa;--bg-secondary:#e8f0f4;--bg-tertiary:#dce6ec;--bg-quaternary:#d0dce4;
+  --bg-user-bubble:rgba(0,150,180,.06);--bg-user-bubble-border:rgba(0,150,180,.12);
+  --bg-sidebar:#f0f4f6;--bg-input:#e8f0f4;--bg-hover:#dce6ec;--bg-code:#1a2030;
+  --text-primary:#0a1520;--text-secondary:#406080;--text-muted:#8090a0;
+  --accent:#0096b4;--accent-hover:#007a94;--accent-dim:rgba(0,150,180,.05);--accent-soft:rgba(0,150,180,.08);--accent-glow:rgba(0,150,180,.1);
+  --border:rgba(0,100,130,.08);--border-active:rgba(0,150,180,.3);
+  --danger:#c0392b;--warning:#d35400;--success:#0096b4;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06);--shadow:0 4px 20px rgba(0,0,0,.08);--shadow-lg:0 8px 40px rgba(0,0,0,.1);
+  --glow:none;--glow-strong:none;--noise:rgba(0,100,130,.008);
+}
+[data-theme="lavender"]{
+  --bg-primary:#0e0a14;--bg-secondary:#15101e;--bg-tertiary:#1e1630;--bg-quaternary:#282042;
+  --bg-user-bubble:rgba(156,89,182,.06);--bg-user-bubble-border:rgba(156,89,182,.12);
+  --bg-sidebar:#110d18;--bg-input:#1e1630;--bg-hover:#282042;--bg-code:#0a0810;
+  --text-primary:#f0e6ff;--text-secondary:#a090c0;--text-muted:#605080;
+  --accent:#9b59b6;--accent-hover:#8e44ad;--accent-dim:rgba(156,89,182,.05);--accent-soft:rgba(156,89,182,.08);--accent-glow:rgba(156,89,182,.1);
+  --border:rgba(156,89,182,.1);--border-active:rgba(156,89,182,.3);
+  --danger:#e74c3c;--warning:#f39c12;--success:#9b59b6;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.5);--shadow:0 4px 20px rgba(0,0,0,.6);--shadow-lg:0 8px 40px rgba(0,0,0,.7);
+  --glow:0 0 60px rgba(156,89,182,.06);--glow-strong:0 0 80px rgba(156,89,182,.12);--noise:rgba(156,89,182,.005);
+}
+[data-theme="espresso"]{
+  --bg-primary:#0c0806;--bg-secondary:#140e0a;--bg-tertiary:#1e1510;--bg-quaternary:#281c14;
+  --bg-user-bubble:rgba(160,120,80,.06);--bg-user-bubble-border:rgba(160,120,80,.12);
+  --bg-sidebar:#100c08;--bg-input:#1e1510;--bg-hover:#281c14;--bg-code:#080604;
+  --text-primary:#f0e6d8;--text-secondary:#a08060;--text-muted:#605040;
+  --accent:#a07850;--accent-hover:#8a6842;--accent-dim:rgba(160,120,80,.05);--accent-soft:rgba(160,120,80,.08);--accent-glow:rgba(160,120,80,.1);
+  --border:rgba(160,120,80,.1);--border-active:rgba(160,120,80,.3);
+  --danger:#c0392b;--warning:#d35400;--success:#a07850;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.5);--shadow:0 4px 20px rgba(0,0,0,.6);--shadow-lg:0 8px 40px rgba(0,0,0,.7);
+  --glow:0 0 60px rgba(160,120,80,.04);--glow-strong:0 0 80px rgba(160,120,80,.08);--noise:rgba(160,120,80,.005);
+}
 html,body{height:100%;overflow:hidden}
 body{font-family:var(--font-body);background:var(--bg-primary);color:var(--text-primary);transition:background var(--speed-slow),color var(--speed-slow);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}::-webkit-scrollbar-thumb:hover{background:var(--text-muted)}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.4;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");background-repeat:repeat;background-size:200px}
 
-/* ============ SIDEBAR ============ */
 .sb-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:90;opacity:0;pointer-events:none;transition:opacity .35s var(--ease);backdrop-filter:blur(4px)}.sb-overlay.on{opacity:1;pointer-events:all}
 .sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar-w);background:var(--bg-sidebar);border-right:1px solid var(--border);z-index:100;transform:translateX(-100%);transition:transform .35s var(--ease);display:flex;flex-direction:column;overflow:hidden}
 .sidebar.open{transform:translateX(0)}
@@ -143,8 +186,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .sb-logo span{font-weight:400;opacity:.7}
 .ib{background:none;border:none;color:var(--text-muted);font-size:17px;cursor:pointer;padding:7px;border-radius:8px;transition:all var(--speed);display:inline-flex;align-items:center;justify-content:center;position:relative}
 .ib:hover{color:var(--text-primary);background:var(--bg-hover)}
-.ib::after{content:'';position:absolute;inset:0;border-radius:8px;opacity:0;transition:opacity var(--speed)}
-.ib:active::after{opacity:1;background:rgba(255,255,255,.05)}
+.ib:active{transform:scale(.95)}
+.ib:focus{outline:2px solid var(--accent);outline-offset:2px}
 
 .sb-search{padding:10px 14px;flex-shrink:0}
 .sb-search input{width:100%;padding:8px 12px 8px 34px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:var(--font-body);font-size:12px;outline:none;transition:all var(--speed)}
@@ -156,9 +199,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .nc-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);opacity:0;transition:opacity var(--speed)}
 .nc-btn:hover::before{opacity:1}.nc-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(16,185,129,.25)}
 .nc-btn:active{transform:translateY(0)}
+.nc-btn:focus{outline:2px solid var(--accent);outline-offset:2px}
 .nc-btn.locked{opacity:.45;cursor:not-allowed;transform:none!important;box-shadow:none!important;filter:grayscale(.3)}
-.nc-btn.locked:hover::before{opacity:0}
 .nc-btn.locked:hover{transform:none!important;box-shadow:none!important}
+.nc-btn.locked:hover::before{opacity:0}
 .nc-btn .nc-lock{margin-left:auto;font-size:10px;display:flex;align-items:center;gap:4px;opacity:.8}
 
 .cl{flex:1;overflow-y:auto;padding:2px 8px;min-height:0}
@@ -177,6 +221,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .s-nav{padding:4px 8px;border-top:1px solid var(--border);flex-shrink:0}
 .s-nav a,.s-nav button{display:flex;align-items:center;gap:12px;padding:9px 12px;color:var(--text-secondary);text-decoration:none;font-size:13px;border-radius:var(--radius-sm);cursor:pointer;border:none;background:none;width:100%;font-family:var(--font-body);transition:all var(--speed);text-align:left}
 .s-nav a:hover,.s-nav button:hover{background:var(--bg-hover);color:var(--text-primary)}
+.s-nav a:focus,.s-nav button:focus{outline:2px solid var(--accent);outline-offset:-2px}
 .s-nav i{width:18px;text-align:center;font-size:14px;flex-shrink:0}
 .ptag{font-size:9px;font-weight:800;text-transform:uppercase;padding:2px 7px;border-radius:5px;margin-left:auto;flex-shrink:0;letter-spacing:.3px}
 .ptag.free{background:var(--bg-tertiary);color:var(--text-muted)}.ptag.premium{background:var(--accent-soft);color:var(--accent)}.ptag.lifetime{background:rgba(245,158,11,.1);color:var(--warning)}
@@ -186,24 +231,51 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
 .t-btn{padding:7px 4px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:7px;color:var(--text-secondary);font-size:10px;font-weight:600;cursor:pointer;transition:all var(--speed);font-family:var(--font-body);text-align:center;letter-spacing:.2px}
 .t-btn:hover{border-color:var(--text-muted);color:var(--text-primary);background:var(--bg-quaternary)}
+.t-btn:focus{outline:2px solid var(--accent);outline-offset:2px}
 .t-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);box-shadow:0 0 12px var(--accent-dim)}
+
 .s-user{padding:12px 18px;border-top:1px solid var(--border);display:none;align-items:center;gap:10px;flex-shrink:0}
 .s-user.show{display:flex}
 .s-user .av{width:32px;height:32px;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
 .s-user .inf{flex:1;min-width:0}.s-user .nm{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.s-user .pl{font-size:10px;color:var(--text-muted);margin-top:1px}
 
-/* ============ HEADER ============ */
 .chat-hdr{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg-primary);z-index:10;flex-shrink:0;transition:background var(--speed-slow)}
 .hdr-title{font-family:var(--font-display);font-size:15px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.2px}
 .hdr-plan{font-size:9px;padding:3px 8px;border-radius:5px;font-weight:800;flex-shrink:0;letter-spacing:.5px}
 .htab{padding:6px 14px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;border:none;background:none;color:var(--text-muted);font-family:var(--font-body);transition:all var(--speed);display:flex;align-items:center;gap:5px;flex-shrink:0;position:relative}
 .htab:hover{color:var(--text-primary);background:var(--bg-hover)}
+.htab:focus{outline:2px solid var(--accent);outline-offset:2px}
 .htab.active{color:var(--accent);background:var(--accent-dim)}
 .htab.active::after{content:'';position:absolute;bottom:-1px;left:12px;right:12px;height:2px;background:var(--accent);border-radius:2px}
-.hdr-model{font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px;flex-shrink:0;padding:4px 8px;border-radius:6px;cursor:default}
-.hdr-model .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:pulse-dot 2s infinite}
 
-/* ============ MESSAGES ============ */
+.model-sel{display:flex;align-items:center;gap:6px;padding:5px 10px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all var(--speed);position:relative}
+.model-sel:hover{border-color:var(--border-active);background:var(--bg-quaternary)}
+.model-sel:focus{outline:2px solid var(--accent);outline-offset:2px}
+.model-sel .m-icon{width:18px;height:18px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
+.model-sel .m-name{font-size:11px;font-weight:600;color:var(--text-primary)}
+.model-sel .m-arrow{font-size:8px;color:var(--text-muted);transition:transform var(--speed)}
+.model-sel.open .m-arrow{transform:rotate(180deg)}
+.model-dd{position:absolute;top:calc(100% + 6px);left:0;min-width:220px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-lg);z-index:50;opacity:0;pointer-events:none;transform:translateY(-8px);transition:all .25s var(--ease);padding:6px}
+.model-dd.on{opacity:1;pointer-events:all;transform:translateY(0)}
+.model-cat{font-size:9px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;padding:6px 10px 4px;border-bottom:1px solid var(--border);margin-bottom:4px}
+.model-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:all var(--speed)}
+.model-item:hover{background:var(--bg-hover)}
+.model-item:focus{outline:2px solid var(--accent);outline-offset:-2px}
+.model-item.active{background:var(--accent-dim)}
+.model-item .mi-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.model-item .mi-info{flex:1}
+.model-item .mi-name{font-size:12px;font-weight:600;color:var(--text-primary)}
+.model-item .mi-desc{font-size:10px;color:var(--text-muted);margin-top:1px}
+.model-item .mi-check{font-size:12px;color:var(--accent);opacity:0}
+.model-item.active .mi-check{opacity:1}
+.model-item.locked{opacity:.5;cursor:not-allowed}
+.model-item.locked:hover{background:transparent}
+
+.gpt-icon{background:linear-gradient(135deg,#74aa9c,#10a37f);color:#fff}
+.claude-icon{background:linear-gradient(135deg,#d4a574,#c9a87c);color:#fff}
+.z-icon{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff}
+.default-icon{background:var(--bg-quaternary);color:var(--accent)}
+
 .msgs-wrap{flex:1;overflow-y:auto;scroll-behavior:smooth;position:relative}
 .msgs-inner{max-width:var(--msg-max);margin:0 auto;padding:24px 24px 8px}
 
@@ -257,6 +329,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .msg-acts{display:flex;gap:2px;margin-top:8px;opacity:0;transition:opacity .25s var(--ease)}.msg:hover .msg-acts{opacity:1}
 .ma{background:none;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;padding:5px 7px;border-radius:7px;transition:all var(--speed);display:flex;align-items:center;gap:4px;position:relative}
 .ma:hover{color:var(--text-primary);background:var(--bg-hover)}
+.ma:active{transform:scale(.95)}
+.ma:focus{outline:2px solid var(--accent);outline-offset:2px}
 .ma.liked{color:var(--accent)}.ma.disliked{color:var(--danger)}
 .ma span{font-size:11px;font-weight:500}
 .ma.locked{opacity:.4;cursor:not-allowed}.ma.locked:hover{background:none;color:var(--text-muted)}
@@ -270,6 +344,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .code-hd{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:var(--bg-tertiary);border-bottom:1px solid var(--border);font-size:11px;color:var(--text-muted);font-weight:500}
 .cp-btn{background:none;border:none;color:var(--text-muted);font-size:11px;cursor:pointer;padding:3px 8px;border-radius:5px;display:flex;align-items:center;gap:5px;font-family:var(--font-body);transition:all var(--speed);font-weight:500}
 .cp-btn:hover{color:var(--text-primary);background:var(--bg-hover)}
+.cp-btn:focus{outline:2px solid var(--accent);outline-offset:2px}
 .code-blk pre{margin:0;padding:14px;overflow-x:auto;background:var(--bg-code)!important}
 .code-blk code{font-family:'Fira Code','Cascadia Code',monospace;font-size:12.5px;background:none!important;padding:0!important;line-height:1.7}
 
@@ -284,7 +359,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .edit-btns{display:flex;gap:8px;margin-top:10px;justify-content:flex-end}
 .edit-btns button{padding:7px 16px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:var(--font-body);transition:all var(--speed)}
 .btn-sv{background:var(--accent);color:#fff}.btn-sv:hover{background:var(--accent-hover);box-shadow:0 2px 10px rgba(16,185,129,.2)}
+.btn-sv:focus{outline:2px solid var(--accent);outline-offset:2px}
 .btn-cn{background:var(--bg-tertiary);color:var(--text-secondary)}.btn-cn:hover{background:var(--bg-hover);color:var(--text-primary)}
+.btn-cn:focus{outline:2px solid var(--accent);outline-offset:2px}
 
 .typing-wrap{display:flex;align-items:center;gap:8px;padding:4px 0}
 .typing-dots{display:flex;gap:5px;align-items:center}
@@ -293,7 +370,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .typing-dots span:nth-child(3){animation-delay:.3s}
 .typing-label{font-size:12px;color:var(--text-muted);font-weight:500}
 
-/* ============ CHATBAR ============ */
 .cb-container{padding:0 20px 20px;flex-shrink:0;position:relative}.cb-wrap{max-width:var(--msg-max);margin:0 auto;position:relative}
 .chatbar{display:flex;align-items:flex-end;gap:4px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-xl);padding:8px 10px;transition:all var(--speed);position:relative}
 .chatbar:focus-within{border-color:var(--border-active);box-shadow:var(--glow);background:var(--bg-tertiary)}
@@ -301,6 +377,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .cb-input::placeholder{color:var(--text-muted)}
 .cb-btn{width:36px;height:36px;border-radius:12px;border:none;background:none;color:var(--text-muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--speed);flex-shrink:0;position:relative}
 .cb-btn:hover{color:var(--text-primary);background:var(--bg-hover)}
+.cb-btn:active{transform:scale(.95)}
+.cb-btn:focus{outline:2px solid var(--accent);outline-offset:2px}
 .cb-btn.send{background:var(--accent);color:#fff;border-radius:12px}
 .cb-btn.send:hover{background:var(--accent-hover);transform:scale(1.06);box-shadow:0 2px 12px rgba(16,185,129,.3)}
 .cb-btn.stop{background:var(--danger);color:#fff;animation:pulse-btn 2s infinite}
@@ -314,7 +392,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .cb-foot span{font-size:10px;color:var(--text-muted);display:flex;align-items:center;gap:4px}
 .cb-foot kbd{font-size:9px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-family:var(--font-body);font-weight:600}
 
-/* File upload indicator */
 .file-indicator{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--accent-dim);border:1px solid var(--border-active);border-radius:8px;margin-bottom:6px;font-size:11px;color:var(--accent);max-width:var(--msg-max);margin-left:auto;margin-right:auto;animation:fade-up .25s var(--ease-out)}
 .file-indicator .fi-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-primary);font-weight:500}
 .file-indicator .fi-size{color:var(--text-muted);font-size:10px;flex-shrink:0}
@@ -327,8 +404,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .scroll-bot{position:absolute;bottom:90px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--bg-secondary);border:1px solid var(--border);color:var(--text-secondary);width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;opacity:0;pointer-events:none;transition:all .3s var(--ease);box-shadow:var(--shadow);z-index:5}
 .scroll-bot.vis{opacity:1;pointer-events:all;transform:translateX(-50%) translateY(0)}
 .scroll-bot:hover{background:var(--bg-hover);color:var(--text-primary);border-color:var(--border-active)}
+.scroll-bot:focus{outline:2px solid var(--accent);outline-offset:2px}
 
-/* ============ ACTION SHEET ============ */
 .as-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:80;opacity:0;pointer-events:none;transition:opacity .35s var(--ease);backdrop-filter:blur(4px)}.as-ov.on{opacity:1;pointer-events:all}
 .as{position:fixed;bottom:0;left:0;right:0;background:var(--bg-secondary);border-top:1px solid var(--border);border-radius:var(--radius-xl) var(--radius-xl) 0 0;z-index:85;transform:translateY(100%);transition:transform .4s var(--ease-out);padding:20px;max-height:70vh;overflow-y:auto}
 .as.open{transform:translateY(0)}
@@ -339,6 +416,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .as-opt{display:flex;align-items:center;gap:10px;padding:14px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all var(--speed);color:var(--text-primary);font-family:var(--font-body);font-size:12.5px;font-weight:500;text-align:left;width:100%;position:relative}
 .as-opt:hover{border-color:var(--border-active);background:var(--accent-dim);transform:translateY(-2px);box-shadow:var(--glow)}
 .as-opt:active{transform:translateY(0)}
+.as-opt:focus{outline:2px solid var(--accent);outline-offset:2px}
 .as-opt.locked{cursor:not-allowed;filter:grayscale(.2);opacity:.7}
 .as-opt.locked:hover{border-color:var(--border);background:var(--bg-tertiary);transform:none;box-shadow:none}
 .as-opt i{font-size:15px;color:var(--accent);width:20px;text-align:center}
@@ -351,10 +429,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .vd-dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}.vd-dot.off{background:var(--text-muted);opacity:.3}
 .vd-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer;font-size:12px;color:var(--text-secondary);transition:all var(--speed);border:none;background:none;width:100%;text-align:left;font-family:var(--font-body)}
 .vd-item:hover{background:var(--bg-hover);color:var(--text-primary)}
+.vd-item:focus{outline:2px solid var(--accent);outline-offset:-2px}
 .vd-item.active{color:var(--accent);background:var(--accent-dim)}
 .vd-item i{font-size:11px;width:14px}
 
-/* ============ MODAL ============ */
 .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:110;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;padding:20px;backdrop-filter:blur(6px)}.modal-ov.on{opacity:1;pointer-events:all}
 .modal{background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-lg);max-width:440px;width:100%;padding:28px;transform:scale(.92) translateY(10px);transition:transform .35s var(--ease-out);box-shadow:var(--shadow-lg)}.modal-ov.on .modal{transform:scale(1) translateY(0)}
 .modal h3{font-family:var(--font-display);font-size:19px;font-weight:700;margin-bottom:8px;letter-spacing:-.3px}
@@ -363,8 +441,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .modal input:focus{border-color:var(--border-active)}
 .modal-close{margin-top:8px;padding:10px 20px;background:var(--bg-tertiary);color:var(--text-primary);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-family:var(--font-body);font-size:12px;font-weight:600;transition:all var(--speed);width:100%}
 .modal-close:hover{background:var(--bg-hover);border-color:var(--border-active)}
+.modal-close:focus{outline:2px solid var(--accent);outline-offset:2px}
 
-/* ============ GALLERY ============ */
 .gal-wrap{max-width:960px;margin:0 auto;padding:24px 20px}
 .gal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
 .gal-hd h2{font-family:var(--font-display);font-size:22px;font-weight:700;letter-spacing:-.3px;display:flex;align-items:center;gap:10px}
@@ -386,8 +464,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .lb img,.lb video{max-width:90vw;max-height:85vh;border-radius:var(--radius-lg);box-shadow:var(--shadow-lg)}
 .lb-close{position:absolute;top:20px;right:20px;background:rgba(255,255,255,.08);color:#fff;border:none;width:42px;height:42px;border-radius:12px;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;transition:all var(--speed);backdrop-filter:blur(10px)}
 .lb-close:hover{background:rgba(255,255,255,.15);transform:scale(1.06)}
+.lb-close:focus{outline:2px solid #fff;outline-offset:2px}
 .lb-dl{position:absolute;bottom:20px;right:20px;background:rgba(255,255,255,.08);color:#fff;border:none;padding:10px 18px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;display:flex;align-items:center;gap:8px;transition:all var(--speed);backdrop-filter:blur(10px);font-family:var(--font-body);text-decoration:none;font-weight:500}
 .lb-dl:hover{background:rgba(255,255,255,.15)}
+.lb-dl:focus{outline:2px solid #fff;outline-offset:2px}
 
 .toast-ct{position:fixed;top:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:8px;pointer-events:none}
 .toast{padding:12px 18px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);font-size:12.5px;color:var(--text-primary);animation:toast-in .35s var(--ease-out),toast-out .35s var(--ease-in) 2.7s forwards;display:flex;align-items:center;gap:8px;max-width:360px;pointer-events:auto;backdrop-filter:blur(12px);font-weight:500}
@@ -408,8 +488,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   .msg-acts{opacity:1}.gal-grid{grid-template-columns:repeat(2,1fr);gap:8px}
   .msg.ai-msg{padding-right:16px}.msg.user-msg{padding-left:16px}
   .msg.user-msg .msg-inner{max-width:92%}
-  .hdr-model{display:none}.cb-foot{display:none}
+  .model-sel{display:none}.cb-foot{display:none}
   .w-logo{font-size:38px}.w-sub{font-size:14px;margin-bottom:32px}
+  .theme-grid{grid-template-columns:repeat(3,1fr)}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
@@ -440,6 +521,12 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
       <button class="t-btn" data-t="gold">Gold</button>
       <button class="t-btn" data-t="ocean">Ocean</button>
       <button class="t-btn" data-t="midnight">Midnight</button>
+      <button class="t-btn" data-t="cyber">Cyber</button>
+      <button class="t-btn" data-t="forest">Forest</button>
+      <button class="t-btn" data-t="sunset">Sunset</button>
+      <button class="t-btn" data-t="arctic">Arctic</button>
+      <button class="t-btn" data-t="lavender">Lavender</button>
+      <button class="t-btn" data-t="espresso">Espresso</button>
     </div>
   </div>
   <div class="s-user" id="sUser"><div class="av" id="uAv">?</div><div class="inf"><div class="nm" id="uNm">Guest</div><div class="pl" id="uPl">Free Plan</div></div></div>
@@ -449,7 +536,45 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   <header class="chat-hdr">
     <button class="ib" id="menuBtn" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
     <div class="hdr-title" id="hdrTitle">HeloxAi</div>
-    <div class="hdr-model" id="hdrModel"><span class="dot"></span> Online</div>
+    <div class="model-sel" id="modelSel" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false">
+      <div class="m-icon default-icon" id="modelIcon">H</div>
+      <span class="m-name" id="modelName">HeloxAi</span>
+      <i class="fa-solid fa-chevron-down m-arrow"></i>
+      <div class="model-dd" id="modelDd" role="listbox">
+        <div class="model-cat">Free Models</div>
+        <div class="model-item active" data-model="helox" data-free="true" role="option" tabindex="0">
+          <div class="mi-icon default-icon">H</div>
+          <div class="mi-info"><div class="mi-name">HeloxAi</div><div class="mi-desc">Fast and intelligent assistant</div></div>
+          <i class="fa-solid fa-check mi-check"></i>
+        </div>
+        <div class="model-item" data-model="chatgpt" data-free="true" role="option" tabindex="0">
+          <div class="mi-icon gpt-icon">G</div>
+          <div class="mi-info"><div class="mi-name">ChatGPT</div><div class="mi-desc">OpenAI GPT-4o mini</div></div>
+          <i class="fa-solid fa-check mi-check"></i>
+        </div>
+        <div class="model-item" data-model="chatz" data-free="true" role="option" tabindex="0">
+          <div class="mi-icon z-icon">Z</div>
+          <div class="mi-info"><div class="mi-name">Chat.Z</div><div class="mi-desc">Advanced reasoning model</div></div>
+          <i class="fa-solid fa-check mi-check"></i>
+        </div>
+        <div class="model-cat">Premium Models</div>
+        <div class="model-item locked" data-model="gpt4" data-prem="true" role="option" tabindex="-1">
+          <div class="mi-icon gpt-icon">G4</div>
+          <div class="mi-info"><div class="mi-name">GPT-4 Turbo</div><div class="mi-desc">Most capable GPT-4 model</div></div>
+          <i class="fa-solid fa-crown mi-check" style="color:var(--warning)"></i>
+        </div>
+        <div class="model-item locked" data-model="claude" data-prem="true" role="option" tabindex="-1">
+          <div class="mi-icon claude-icon">C</div>
+          <div class="mi-info"><div class="mi-name">Claude 3.5</div><div class="mi-desc">Anthropic's advanced AI</div></div>
+          <i class="fa-solid fa-crown mi-check" style="color:var(--warning)"></i>
+        </div>
+        <div class="model-item locked" data-model="chatz-pro" data-prem="true" role="option" tabindex="-1">
+          <div class="mi-icon z-icon">Z+</div>
+          <div class="mi-info"><div class="mi-name">Chat.Z Pro</div><div class="mi-desc">Enhanced reasoning</div></div>
+          <i class="fa-solid fa-crown mi-check" style="color:var(--warning)"></i>
+        </div>
+      </div>
+    </div>
     <button class="htab active" id="chatTab"><i class="fa-solid fa-message"></i> Chat</button>
     <button class="htab" id="galleryTab"><i class="fa-solid fa-images"></i> Gallery</button>
     <span class="hdr-plan ptag free" id="hdrPlan">FREE</span>
@@ -463,20 +588,20 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
         <div class="w-grid">
           <div class="w-card locked" data-prompt="Generate a stunning image of a cyberpunk city at sunset with neon reflections" data-media="image">
             <span class="w-icon"><i class="fa-solid fa-image"></i></span>
-            <div class="w-text">Generate a stunning cyberpunk city at sunset with neon reflections</div>
+            <div class="w-text">Generate a stunning cyberpunk city at sunset</div>
             <span class="w-lock" id="wLockImg"><i class="fa-solid fa-lock"></i> Sign in</span>
           </div>
-          <div class="w-card" data-prompt="Explain quantum computing in simple terms with real-world analogies and examples">
+          <div class="w-card" data-prompt="Explain quantum computing in simple terms with real-world analogies">
             <span class="w-icon"><i class="fa-solid fa-atom"></i></span>
-            <div class="w-text">Explain quantum computing with simple analogies and examples</div>
+            <div class="w-text">Explain quantum computing with simple analogies</div>
           </div>
-          <div class="w-card" data-prompt="Write a Python script that scrapes headlines from a website and exports them to a CSV file with error handling">
+          <div class="w-card" data-prompt="Write a Python script that scrapes headlines and exports to CSV">
             <span class="w-icon"><i class="fa-solid fa-code"></i></span>
-            <div class="w-text">Write a Python web scraper with CSV export and error handling</div>
+            <div class="w-text">Write a Python web scraper with CSV export</div>
           </div>
           <div class="w-card locked" data-prompt="Generate a video of a cat playing piano in a jazz club" data-media="video">
             <span class="w-icon"><i class="fa-solid fa-video"></i></span>
-            <div class="w-text">Generate a video of a cat playing piano in a jazz club</div>
+            <div class="w-text">Generate a video of a cat playing piano</div>
             <span class="w-lock" id="wLockVid"><i class="fa-solid fa-lock"></i> Sign in</span>
           </div>
         </div>
@@ -486,15 +611,13 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
     <div class="gal-wrap" id="galleryView" style="display:none">
       <div class="gal-hd"><h2><i class="fa-solid fa-images"></i> Gallery</h2><span class="gal-count" id="galCount">0 items</span></div>
       <div class="gal-grid" id="galGrid"></div>
-      <div class="gal-empty" id="galEmpty" style="display:none"><i class="fa-solid fa-image"></i><p>No images or videos yet. Ask HeloxAi to create something amazing.</p></div>
+      <div class="gal-empty" id="galEmpty" style="display:none"><i class="fa-solid fa-image"></i><p>No images or videos yet.</p></div>
     </div>
   </div>
 
   <button class="scroll-bot" id="scrollBot" aria-label="Scroll to bottom"><i class="fa-solid fa-chevron-down"></i></button>
-
-  <!-- File upload indicator (inserted before chatbar) -->
   <div id="fileIndicator" style="display:none"></div>
-
+  
   <div class="cb-container" id="cbContainer">
     <div class="cb-wrap">
       <div class="chatbar" id="chatbar">
@@ -510,12 +633,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
       <div class="cb-foot">
         <span><kbd>Enter</kbd> to send</span>
         <span><kbd>Shift+Enter</kbd> new line</span>
-        <span><kbd>Esc</kbd> to cancel</span>
       </div>
     </div>
   </div>
-  <!-- Hidden file input -->
-  <input type="file" id="fileInput" style="display:none" accept="image/*,.pdf,.doc,.docx,.txt,.csv,.xlsx,.json,.xml,.html,.md,.py,.js,.ts,.java,.cpp,.c,.rb,.go,.rs,.php,.sql,.yaml,.yml,.toml,.zip,.rar,.7z,.mp3,.wav,.ogg,.flac,.mp4,.webm,.mov,.avi,.mkv">
+  <input type="file" id="fileInput" style="display:none" accept="image/*,.pdf,.doc,.docx,.txt,.csv,.xlsx,.json,.xml,.html,.md,.py,.js,.ts,.java,.cpp,.c,.rb,.go,.rs,.php,.sql,.yaml,.yml">
 </main>
 
 <div class="as-ov" id="asOv"></div>
@@ -526,36 +647,49 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
     <button class="as-opt locked" data-prompt="Generate an image of " data-media="image" id="asImg"><i class="fa-solid fa-image"></i> Generate Image <span class="as-lock" id="asLockImg"><i class="fa-solid fa-lock"></i> Sign in</span></button>
     <button class="as-opt locked" data-prompt="Generate a video of " data-media="video" id="asVid"><i class="fa-solid fa-video"></i> Generate Video <span class="as-lock" id="asLockVid"><i class="fa-solid fa-lock"></i> Sign in</span></button>
     <button class="as-opt" data-prompt="Search the web for "><i class="fa-solid fa-magnifying-glass"></i> Search the Web</button>
-    <button class="as-opt" data-prompt="Summarize the following text in key points:\n\n"><i class="fa-solid fa-file-lines"></i> Summarize</button>
+    <button class="as-opt" data-prompt="Summarize the following:\n\n"><i class="fa-solid fa-file-lines"></i> Summarize</button>
     <button class="as-opt" data-prompt="Write a professional email about "><i class="fa-solid fa-at"></i> Write Email</button>
-    <button class="as-opt" data-prompt="Help me write clean, well-documented code for "><i class="fa-solid fa-code"></i> Code Assistant</button>
-    <button class="as-opt" data-prompt="Translate the following to English:\n\n"><i class="fa-solid fa-language"></i> Translate</button>
-    <button class="as-opt" data-prompt="Analyze the following data and provide insights:\n\n"><i class="fa-solid fa-chart-bar"></i> Analyze Data</button>
+    <button class="as-opt" data-prompt="Help me write code for "><i class="fa-solid fa-code"></i> Code Assistant</button>
+    <button class="as-opt" data-prompt="Translate to English:\n\n"><i class="fa-solid fa-language"></i> Translate</button>
+    <button class="as-opt" data-prompt="Analyze this data:\n\n"><i class="fa-solid fa-chart-bar"></i> Analyze Data</button>
   </div>
 </div>
+
 <div class="vdd" id="voiceDd"><div id="voiceList"></div></div>
-<div class="lb" id="lightbox"><button class="lb-close" id="lbClose"><i class="fa-solid fa-xmark"></i></button><div id="lbContent"></div><a class="lb-dl" id="lbDl" download><i class="fa-solid fa-download"></i> Download</a></div>
-<div class="modal-ov" id="contactModal"><div class="modal"><h3>Contact Us</h3><p>Have questions, feedback, or need support? We'd love to hear from you.</p><p style="color:var(--accent);font-weight:600;font-size:14px">support@heloxai.com</p><button class="modal-close" data-close="contactModal">Close</button></div></div>
+<div class="lb" id="lightbox"><button class="lb-close" id="lbClose" aria-label="Close"><i class="fa-solid fa-xmark"></i></button><div id="lbContent"></div><a class="lb-dl" id="lbDl" download><i class="fa-solid fa-download"></i> Download</a></div>
+<div class="modal-ov" id="contactModal"><div class="modal"><h3>Contact Us</h3><p>Have questions or feedback? We'd love to hear from you.</p><p style="color:var(--accent);font-weight:600;font-size:14px">support@heloxai.com</p><button class="modal-close" data-close="contactModal">Close</button></div></div>
 <div class="toast-ct" id="toastCt"></div>
 
 <script>
 /* ================================================================
-   CONFIG — Replace with your real Supabase credentials
+   CONFIG
    ================================================================ */
-var SUPABASE_URL = 'https://your-project.supabase.co',
-    SUPABASE_ANON_KEY = 'your-supabase-anon-key',
-    FREE_AI_URL = 'https://billy-free-ai-production.up.railway.app',
-    PREMIUM_AI_URL = 'https://your-premium-ai-endpoint.com';
+var SUPABASE_URL = 'https://your-project.supabase.co';
+var SUPABASE_ANON_KEY = 'your-supabase-anon-key';
+var FREE_AI_URL = 'https://billy-free-ai-production.up.railway.app';
+var PREMIUM_AI_URL = 'https://your-premium-ai-endpoint.com';
+
+/* ================================================================
+   MODEL CONFIGURATION
+   ================================================================ */
+var MODELS = {
+  helox: { name: 'HeloxAi', icon: 'H', iconClass: 'default-icon', endpoint: '/ask/universal', free: true },
+  chatgpt: { name: 'ChatGPT', icon: 'G', iconClass: 'gpt-icon', endpoint: '/chatgpt', free: true },
+  chatz: { name: 'Chat.Z', icon: 'Z', iconClass: 'z-icon', endpoint: '/chatz', free: true },
+  gpt4: { name: 'GPT-4 Turbo', icon: 'G4', iconClass: 'gpt-icon', endpoint: '/gpt4', premium: true },
+  claude: { name: 'Claude 3.5', icon: 'C', iconClass: 'claude-icon', endpoint: '/claude', premium: true },
+  'chatz-pro': { name: 'Chat.Z Pro', icon: 'Z+', iconClass: 'z-icon', endpoint: '/chatz-pro', premium: true }
+};
 
 /* ================================================================
    UTILITIES
    ================================================================ */
-var $ = function(id) { try { return document.getElementById(id) } catch(e) { return null } };
-var esc = function(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML };
-var uid = function() { try { return crypto.randomUUID() } catch(e) { return Date.now().toString(36) + Math.random().toString(36).slice(2) } };
-var now = function() { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
-var ago = function(ts) { if (!ts) return ''; var s = Math.floor((Date.now() - new Date(ts)) / 1000); if (s < 60) return 'just now'; if (s < 3600) return Math.floor(s / 60) + 'm ago'; if (s < 86400) return Math.floor(s / 3600) + 'h ago'; return Math.floor(s / 86400) + 'd ago' };
-var fmtSize = function(b) { if (b < 1024) return b + ' B'; if (b < 1048576) return (b / 1024).toFixed(1) + ' KB'; return (b / 1048576).toFixed(1) + ' MB' };
+function $(id) { return document.getElementById(id); }
+function esc(s) { if (s == null) return ''; var d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+function uid() { try { return crypto.randomUUID(); } catch(e) { return Date.now().toString(36) + Math.random().toString(36).slice(2); } }
+function now() { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
+function ago(ts) { if (!ts) return ''; var s = Math.floor((Date.now() - new Date(ts)) / 1000); if (s < 60) return 'just now'; if (s < 3600) return Math.floor(s / 60) + 'm ago'; if (s < 86400) return Math.floor(s / 3600) + 'h ago'; return Math.floor(s / 86400) + 'd ago'; }
+function fmtSize(b) { if (b < 1024) return b + ' B'; if (b < 1048576) return (b / 1024).toFixed(1) + ' KB'; return (b / 1048576).toFixed(1) + ' MB'; }
 
 /* ================================================================
    STATE
@@ -575,6 +709,7 @@ var S = {
   sbOpen: false,
   asOpen: false,
   vdOpen: false,
+  mdOpen: false,
   recording: false,
   recorder: null,
   chunks: [],
@@ -584,247 +719,104 @@ var S = {
   _mdOk: false,
   _hlOk: false,
   pendingFile: null,
-  uploading: false
+  uploading: false,
+  model: 'helox'
 };
 
-/* Media detection keywords */
-var IMAGE_KW = ['generate image', 'create image', 'make image', 'draw me', 'render image', 'create a picture', 'make a picture', 'generate a picture', 'generate an image', 'create an image'];
-var VIDEO_KW = ['generate video', 'create video', 'make video', 'render video', 'generate a video', 'create a video', 'make a video'];
+var IMAGE_KW = ['generate image', 'create image', 'make image', 'draw me', 'render image'];
+var VIDEO_KW = ['generate video', 'create video', 'make video', 'render video'];
 
-function isImage(t) { var l = t.toLowerCase(); for (var i = 0; i < IMAGE_KW.length; i++) if (l.indexOf(IMAGE_KW[i]) !== -1) return true; return false }
-function isVideo(t) { var l = t.toLowerCase(); for (var i = 0; i < VIDEO_KW.length; i++) if (l.indexOf(VIDEO_KW[i]) !== -1) return true; return false }
-function isMedia(t) { return isImage(t) || isVideo(t) }
-function aiUrl() { return (S.user && (S.user.plan === 'premium' || S.user.plan === 'lifetime')) ? PREMIUM_AI_URL : FREE_AI_URL }
-function authH() { var h = { 'Content-Type': 'application/json' }; if (S.user && S.user.token) h['Authorization'] = 'Bearer ' + S.user.token; return h }
-function plan() { return (S.user && S.user.plan) || 'free' }
-function canGenMedia() { return S.user && (S.user.plan === 'premium' || S.user.plan === 'lifetime') }
+function isImage(t) { var l = t.toLowerCase(); for (var i = 0; i < IMAGE_KW.length; i++) if (l.indexOf(IMAGE_KW[i]) !== -1) return true; return false; }
+function isVideo(t) { var l = t.toLowerCase(); for (var i = 0; i < VIDEO_KW.length; i++) if (l.indexOf(VIDEO_KW[i]) !== -1) return true; return false; }
+function aiUrl() { return (S.user && (S.user.plan === 'premium' || S.user.plan === 'lifetime')) ? PREMIUM_AI_URL : FREE_AI_URL; }
+function authH() { var h = { 'Content-Type': 'application/json' }; if (S.user && S.user.token) h['Authorization'] = 'Bearer ' + S.user.token; return h; }
+function plan() { return (S.user && S.user.plan) || 'free'; }
+function canGenMedia() { return S.user && (S.user.plan === 'premium' || S.user.plan === 'lifetime'); }
+function authSilent() { return !S.user; }
 
-/* Auth gate: returns true if blocked */
 function authGate(f) {
-  if (!S.user) {
-    toast('Sign in to use ' + f, 'wrn');
-    window.location.href = 'auth.html';
-    return true;
-  }
+  if (!S.user) { toast('Sign in to use ' + f, 'wrn'); setTimeout(function() { window.location.href = 'auth.html'; }, 800); return true; }
   return false;
 }
 
-/* Media gate: returns true if blocked */
 function mediaGate(type) {
-  if (!S.user) {
-    toast('Sign in to generate ' + type + 's', 'wrn');
-    window.location.href = 'auth.html';
-    return true;
-  }
-  if (!canGenMedia()) {
-    toast(type.charAt(0).toUpperCase() + type.slice(1) + ' generation requires Premium or Lifetime plan', 'wrn');
-    return true;
-  }
+  if (!S.user) { toast('Sign in to generate ' + type + 's', 'wrn'); setTimeout(function() { window.location.href = 'auth.html'; }, 800); return true; }
+  if (!canGenMedia()) { toast(type.charAt(0).toUpperCase() + type.slice(1) + ' generation requires Premium', 'wrn'); return true; }
   return false;
 }
 
-/* Silent auth check */
-function authSilent() { return !S.user }
+function modelGate(m) {
+  var model = MODELS[m];
+  if (!model) return true;
+  if (model.free) return false;
+  if (model.premium && !canGenMedia()) { toast(model.name + ' requires Premium', 'wrn'); return true; }
+  return false;
+}
 
 /* ================================================================
-   SUPABASE AUTHENTICATION
+   SUPABASE
    ================================================================ */
 var sb = null;
 
 function initSupabase() {
   try {
-    // Check if credentials are placeholder values
-    if (SUPABASE_URL.indexOf('your-') !== -1 || SUPABASE_ANON_KEY.indexOf('your-') !== -1) {
-      console.warn('Supabase credentials not configured. Using demo mode.');
-      return;
-    }
-    
-    // Check if Supabase SDK is loaded
-    if (typeof window.supabase === 'undefined') {
-      console.warn('Supabase SDK not loaded');
-      return;
-    }
-    
-    // Initialize Supabase client
+    if (SUPABASE_URL.indexOf('your-') !== -1 || SUPABASE_ANON_KEY.indexOf('your-') !== -1) return;
+    if (typeof window.supabase === 'undefined') return;
     sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    console.log('Supabase client initialized');
-  } catch (e) {
-    console.error('Failed to initialize Supabase:', e);
-    sb = null;
-  }
+  } catch (e) { console.error('Supabase init failed:', e); }
 }
 
-/* Get current session and user data */
 async function loadUser() {
-  if (!sb) {
-    // If no Supabase, check for stored session (fallback)
-    refreshUI();
-    return;
-  }
-
+  if (!sb) { refreshUI(); return; }
   try {
-    // Get current session
-    var { data: { session }, error } = await sb.auth.getSession();
-    
-    if (error || !session || !session.user) {
-      S.user = null;
-      refreshUI();
-      return;
-    }
-
-    // Fetch user plan from 'users' table
-    var { data: userData, error: userError } = await sb
-      .from('users')
-      .select('plan')
-      .eq('id', session.user.id)
-      .single();
-
-    var userPlan = 'free';
-    if (!userError && userData && userData.plan) {
-      userPlan = userData.plan;
-    }
-
-    // Set user state
-    S.user = {
-      id: session.user.id,
-      email: session.user.email,
-      plan: userPlan,
-      token: session.access_token
-    };
-
+    var { data: { session } } = await sb.auth.getSession();
+    if (!session || !session.user) { S.user = null; refreshUI(); return; }
+    var { data: userData } = await sb.from('users').select('plan').eq('id', session.user.id).single();
+    S.user = { id: session.user.id, email: session.user.email, plan: (userData && userData.plan) || 'free', token: session.access_token };
     refreshUI();
-    
-    // Load user's chat list
     loadChatList();
-    
-  } catch (e) {
-    console.error('Error loading user:', e);
-    S.user = null;
-    refreshUI();
-  }
+  } catch (e) { S.user = null; refreshUI(); }
 }
 
-/* Set up auth state change listener */
 function setupAuthListener() {
   if (!sb) return;
-
   sb.auth.onAuthStateChange(function(event, session) {
-    console.log('Auth state changed:', event);
-    
-    if (event === 'SIGNED_IN' && session && session.user) {
-      // User signed in
-      handleSignIn(session);
-    } else if (event === 'SIGNED_OUT') {
-      // User signed out
-      handleSignOut();
-    } else if (event === 'TOKEN_REFRESHED' && session) {
-      // Token refreshed - update user token
-      if (S.user) {
-        S.user.token = session.access_token;
-      }
-    }
+    if (event === 'SIGNED_IN' && session && session.user) handleSignIn(session);
+    else if (event === 'SIGNED_OUT') handleSignOut();
   });
 }
 
-/* Handle sign in */
 async function handleSignIn(session) {
   if (!session || !session.user) return;
-
   try {
-    // Fetch user plan
-    var { data: userData, error } = await sb
-      .from('users')
-      .select('plan')
-      .eq('id', session.user.id)
-      .single();
-
-    var userPlan = 'free';
-    if (!error && userData && userData.plan) {
-      userPlan = userData.plan;
-    }
-
-    S.user = {
-      id: session.user.id,
-      email: session.user.email,
-      plan: userPlan,
-      token: session.access_token
-    };
-
-    refreshUI();
-    loadChatList();
-    toast('Signed in successfully', 'ok');
-    
-  } catch (e) {
-    console.error('Error handling sign in:', e);
-    // Still set user with default plan
-    S.user = {
-      id: session.user.id,
-      email: session.user.email,
-      plan: 'free',
-      token: session.access_token
-    };
-    refreshUI();
-  }
+    var { data: userData } = await sb.from('users').select('plan').eq('id', session.user.id).single();
+    S.user = { id: session.user.id, email: session.user.email, plan: (userData && userData.plan) || 'free', token: session.access_token };
+    refreshUI(); loadChatList(); toast('Signed in', 'ok');
+  } catch (e) { S.user = { id: session.user.id, email: session.user.email, plan: 'free', token: session.access_token }; refreshUI(); }
 }
 
-/* Handle sign out */
 function handleSignOut() {
-  S.user = null;
-  S.msgs = [];
-  S.chatId = null;
-  S.chatListData = [];
-  S.gallery = [];
-  
-  refreshUI();
-  renderAll();
-  renderChatList();
-  renderGallery();
-  
-  toast('Signed out', 'inf');
+  S.user = null; S.msgs = []; S.chatId = null; S.chatListData = []; S.gallery = [];
+  refreshUI(); renderAll(); renderChatList(); renderGallery(); toast('Signed out', 'inf');
 }
 
-/* Manual sign out */
-async function signOut() {
-  if (sb) {
-    try {
-      await sb.auth.signOut();
-    } catch (e) {
-      console.error('Sign out error:', e);
-    }
-  }
-  
-  // Clear local state regardless
-  handleSignOut();
-}
+async function signOut() { if (sb) try { await sb.auth.signOut(); } catch(e) {} handleSignOut(); }
 
 /* ================================================================
    THEME
    ================================================================ */
 function setTheme(t) {
-  try {
-    if (t === 'system') {
-      document.documentElement.setAttribute('data-theme', window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    } else {
-      document.documentElement.setAttribute('data-theme', t);
-    }
-  } catch (e) {}
+  try { if (t === 'system') document.documentElement.setAttribute('data-theme', window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); else document.documentElement.setAttribute('data-theme', t); } catch(e) {}
   S.theme = t;
-  try { localStorage.setItem('helox-theme', t) } catch (e) {}
-  var b = document.querySelectorAll('.t-btn');
-  for (var i = 0; i < b.length; i++) {
-    b[i].classList.toggle('active', b[i].getAttribute('data-t') === t);
-  }
+  try { localStorage.setItem('helox-theme', t); } catch(e) {}
+  document.querySelectorAll('.t-btn').forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-t') === t); });
 }
 
 function initTheme() {
   var s = 'dark';
-  try { s = localStorage.getItem('helox-theme') || 'dark' } catch (e) {}
+  try { s = localStorage.getItem('helox-theme') || 'dark'; } catch(e) {}
   setTheme(s);
-  try {
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function() {
-      if (S.theme === 'system') setTheme('system');
-    });
-  } catch (e) {}
+  try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function() { if (S.theme === 'system') setTheme('system'); }); } catch(e) {}
 }
 
 /* ================================================================
@@ -835,39 +827,19 @@ function initMarked() {
     if (typeof marked === 'undefined') return;
     S._mdOk = true;
     if (typeof hljs !== 'undefined') S._hlOk = true;
-    
     var r = new marked.Renderer();
     r.code = function(code, lang) {
       var l = (lang || 'plaintext').split(/\s+/)[0], hl;
-      try {
-        hl = (S._hlOk && hljs.getLanguage(l)) ? hljs.highlight(code, { language: l }).value : (S._hlOk ? hljs.highlightAuto(code).value : esc(code));
-      } catch (e) {
-        hl = esc(code);
-      }
+      try { hl = (S._hlOk && hljs.getLanguage(l)) ? hljs.highlight(code, { language: l }).value : (S._hlOk ? hljs.highlightAuto(code).value : esc(code)); } catch(e) { hl = esc(code); }
       return '<div class="code-blk"><div class="code-hd"><span>' + esc(l) + '</span><button class="cp-btn" data-copy-code><i class="fa-regular fa-copy"></i> Copy</button></div><pre><code class="hljs language-' + l + '">' + hl + '</code></pre></div>';
     };
-    r.image = function(href, title, text) {
-      var isSB = href && (href.indexOf('supabase.co') !== -1 || href.indexOf('supabase.in') !== -1);
-      var dl = isSB ? '<a href="' + href + '" download="' + (text || 'download') + '" class="img-dl"><i class="fa-solid fa-download"></i></a>' : '';
-      return '<div class="img-wrap"><img src="' + href + '" alt="' + (text || '') + '" loading="lazy" onerror="this.parentElement.style.display=\'none\'">' + dl + '</div>';
-    };
-    r.link = function(href, title, text) {
-      if (!href) return text;
-      if (href.indexOf('mailto:') === 0) return '<a href="' + href + '">' + text + '</a>';
-      return '<a href="' + href + '" target="_blank" rel="noopener noreferrer">' + text + '<i class="fa-solid fa-arrow-up-right-from-square ext-i"></i></a>';
-    };
-    r.table = function(h, b) { return '<div style="overflow-x:auto;margin:10px 0"><table><thead>' + h + '</thead><tbody>' + b + '</tbody></table></div>' };
+    r.image = function(href, title, text) { return '<div class="img-wrap"><img src="' + href + '" alt="' + (text || '') + '" loading="lazy"></div>'; };
+    r.link = function(href, title, text) { if (!href) return text; return '<a href="' + href + '" target="_blank" rel="noopener">' + text + '<i class="fa-solid fa-arrow-up-right-from-square ext-i"></i></a>'; };
     marked.setOptions({ renderer: r, breaks: true, gfm: true });
-  } catch (e) {}
+  } catch(e) {}
 }
 
-function md(text) {
-  if (!text) return '';
-  if (S._mdOk) {
-    try { return marked.parse(text) } catch (e) {}
-  }
-  return '<p>' + esc(text).replace(/\n/g, '<br>') + '</p>';
-}
+function md(text) { if (!text) return ''; if (S._mdOk) try { return marked.parse(text); } catch(e) {} return '<p>' + esc(text).replace(/\n/g, '<br>') + '</p>'; }
 
 /* ================================================================
    TOAST / MODAL
@@ -878,14 +850,11 @@ function toast(msg, type) {
   el.className = 'toast ' + (type || 'inf');
   el.innerHTML = '<i class="fa-solid ' + (icons[type || 'inf'] || icons.inf) + '"></i> ' + esc(msg);
   $('toastCt').appendChild(el);
-  setTimeout(function() { if (el.parentNode) el.remove() }, 3200);
+  setTimeout(function() { if (el.parentNode) el.remove(); }, 3200);
 }
 
-function openModal(id) { try { $(id).classList.add('on') } catch (e) {} }
-function closeModal(id) { try { $(id).classList.remove('on') } catch (e) {} }
-
 /* ================================================================
-   SIDEBAR & UI REFRESH
+   SIDEBAR & UI
    ================================================================ */
 function toggleSB(open) {
   S.sbOpen = typeof open === 'boolean' ? open : !S.sbOpen;
@@ -893,208 +862,131 @@ function toggleSB(open) {
   $('sbOv').classList.toggle('on', S.sbOpen);
 }
 
-/* Main UI refresh function - updates all UI based on auth state */
 function refreshUI() {
-  var u = $('sUser');
-  var sl = $('signInLink');
-  var hp = $('hdrPlan');
-  
+  var u = $('sUser'), sl = $('signInLink'), hp = $('hdrPlan');
   if (!u || !sl || !hp) return;
-
-  var signedIn = !!S.user;
-  var hasMedia = canGenMedia();
+  var signedIn = !!S.user, hasMedia = canGenMedia();
 
   if (S.user) {
-    /* User is signed in */
     u.classList.add('show');
     $('uAv').textContent = (S.user.email || 'U')[0].toUpperCase();
     $('uNm').textContent = S.user.email;
     $('uPl').textContent = S.user.plan.charAt(0).toUpperCase() + S.user.plan.slice(1) + ' Plan';
-    
-    /* Change Sign In to Log Out */
     sl.innerHTML = '<i class="fa-solid fa-right-from-bracket"></i> Log Out';
     sl.removeAttribute('href');
     sl.style.cursor = 'pointer';
-    
-    /* Update header plan badge */
     hp.textContent = S.user.plan.toUpperCase();
     hp.className = 'hdr-plan ptag ' + S.user.plan;
   } else {
-    /* User is not signed in */
     u.classList.remove('show');
-    
-    /* Change back to Sign In */
     sl.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Sign In';
     sl.href = 'auth.html';
-    
     hp.textContent = 'FREE';
     hp.className = 'hdr-plan ptag free';
   }
 
-  /* New chat button lock */
-  var ncb = $('newChatBtn');
-  var ncl = $('ncLock');
-  if (!signedIn) {
-    ncb.classList.add('locked');
-    if (ncl) ncl.style.display = 'flex';
-  } else {
-    ncb.classList.remove('locked');
-    if (ncl) ncl.style.display = 'none';
-  }
+  var ncb = $('newChatBtn'), ncl = $('ncLock');
+  ncb.classList.toggle('locked', !signedIn);
+  if (ncl) ncl.style.display = signedIn ? 'none' : 'flex';
 
-  /* Mic button lock */
-  var mb = $('micBtn');
-  var ml = $('micLock');
-  if (!signedIn) {
-    mb.classList.add('locked');
-    if (ml) ml.style.display = 'flex';
-  } else {
-    mb.classList.remove('locked');
-    if (ml) ml.style.display = 'none';
-  }
+  var mb = $('micBtn'), ml = $('micLock');
+  mb.classList.toggle('locked', !signedIn);
+  if (ml) ml.style.display = signedIn ? 'none' : 'flex';
 
-  /* Voice button lock */
-  var vb = $('voiceBtn');
-  var vl = $('voiceLock');
-  if (!signedIn) {
-    vb.classList.add('locked');
-    if (vl) vl.style.display = 'flex';
-  } else {
-    vb.classList.remove('locked');
-    if (vl) vl.style.display = 'none';
-  }
+  var vb = $('voiceBtn'), vl = $('voiceLock');
+  vb.classList.toggle('locked', !signedIn);
+  if (vl) vl.style.display = signedIn ? 'none' : 'flex';
 
-  /* Welcome card locks */
-  var wCardImg = document.querySelector('.w-card[data-media="image"]');
-  var wCardVid = document.querySelector('.w-card[data-media="video"]');
-  var wli = $('wLockImg');
-  var wlv = $('wLockVid');
+  var wCardImg = document.querySelector('.w-card[data-media="image"]'), wCardVid = document.querySelector('.w-card[data-media="video"]');
+  var wli = $('wLockImg'), wlv = $('wLockVid');
 
   if (wCardImg && wli) {
-    if (!signedIn) {
-      wCardImg.classList.add('locked');
-      wli.style.display = 'flex';
-      wli.className = 'w-lock';
-      wli.innerHTML = '<i class="fa-solid fa-lock"></i> Sign in';
-    } else if (!hasMedia) {
-      wCardImg.classList.add('locked');
-      wli.style.display = 'flex';
-      wli.className = 'w-lock prem-lock';
-      wli.innerHTML = '<i class="fa-solid fa-crown"></i> Premium';
-    } else {
-      wCardImg.classList.remove('locked');
-      wli.style.display = 'none';
-    }
+    wCardImg.classList.toggle('locked', !hasMedia);
+    wli.style.display = hasMedia ? 'none' : 'flex';
+    if (!signedIn) { wli.className = 'w-lock'; wli.innerHTML = '<i class="fa-solid fa-lock"></i> Sign in'; }
+    else if (!hasMedia) { wli.className = 'w-lock prem-lock'; wli.innerHTML = '<i class="fa-solid fa-crown"></i> Premium'; }
   }
-
   if (wCardVid && wlv) {
-    if (!signedIn) {
-      wCardVid.classList.add('locked');
-      wlv.style.display = 'flex';
-      wlv.className = 'w-lock';
-      wlv.innerHTML = '<i class="fa-solid fa-lock"></i> Sign in';
-    } else if (!hasMedia) {
-      wCardVid.classList.add('locked');
-      wlv.style.display = 'flex';
-      wlv.className = 'w-lock prem-lock';
-      wlv.innerHTML = '<i class="fa-solid fa-crown"></i> Premium';
-    } else {
-      wCardVid.classList.remove('locked');
-      wlv.style.display = 'none';
-    }
+    wCardVid.classList.toggle('locked', !hasMedia);
+    wlv.style.display = hasMedia ? 'none' : 'flex';
+    if (!signedIn) { wlv.className = 'w-lock'; wlv.innerHTML = '<i class="fa-solid fa-lock"></i> Sign in'; }
+    else if (!hasMedia) { wlv.className = 'w-lock prem-lock'; wlv.innerHTML = '<i class="fa-solid fa-crown"></i> Premium'; }
   }
 
-  /* Action sheet media locks */
-  var asI = $('asImg');
-  var asV = $('asVid');
-  var asLI = $('asLockImg');
-  var asLV = $('asLockVid');
+  var asI = $('asImg'), asV = $('asVid'), asLI = $('asLockImg'), asLV = $('asLockVid');
+  if (asI && asLI) { asI.classList.toggle('locked', !hasMedia); asLI.style.display = hasMedia ? 'none' : 'flex'; if (!signedIn) asLI.innerHTML = '<i class="fa-solid fa-lock"></i> Sign in'; else if (!hasMedia) asLI.innerHTML = '<i class="fa-solid fa-crown"></i> Premium'; }
+  if (asV && asLV) { asV.classList.toggle('locked', !hasMedia); asLV.style.display = hasMedia ? 'none' : 'flex'; if (!signedIn) asLV.innerHTML = '<i class="fa-solid fa-lock"></i> Sign in'; else if (!hasMedia) asLV.innerHTML = '<i class="fa-solid fa-crown"></i> Premium'; }
 
-  if (asI && asLI) {
-    if (!signedIn) {
-      asI.classList.add('locked');
-      asLI.style.display = 'flex';
-      asLI.className = 'as-lock';
-      asLI.innerHTML = '<i class="fa-solid fa-lock"></i> Sign in';
-    } else if (!hasMedia) {
-      asI.classList.add('locked');
-      asLI.style.display = 'flex';
-      asLI.className = 'as-lock prem';
-      asLI.innerHTML = '<i class="fa-solid fa-crown"></i> Premium';
-    } else {
-      asI.classList.remove('locked');
-      asLI.style.display = 'none';
-    }
-  }
+  updateModelUI();
+}
 
-  if (asV && asLV) {
-    if (!signedIn) {
-      asV.classList.add('locked');
-      asLV.style.display = 'flex';
-      asLV.className = 'as-lock';
-      asLV.innerHTML = '<i class="fa-solid fa-lock"></i> Sign in';
-    } else if (!hasMedia) {
-      asV.classList.add('locked');
-      asLV.style.display = 'flex';
-      asLV.className = 'as-lock prem';
-      asLV.innerHTML = '<i class="fa-solid fa-crown"></i> Premium';
-    } else {
-      asV.classList.remove('locked');
-      asLV.style.display = 'none';
-    }
-  }
+/* ================================================================
+   MODEL SELECTION
+   ================================================================ */
+function updateModelUI() {
+  var model = MODELS[S.model];
+  if (!model) return;
+  var icon = $('modelIcon'), name = $('modelName'), sel = $('modelSel');
+  if (icon) { icon.className = 'm-icon ' + model.iconClass; icon.textContent = model.icon; }
+  if (name) name.textContent = model.name;
+  if (sel) sel.setAttribute('aria-expanded', S.mdOpen);
+  document.querySelectorAll('.model-item').forEach(function(item) {
+    var m = item.getAttribute('data-model');
+    var isPrem = item.getAttribute('data-prem') === 'true';
+    item.classList.toggle('active', m === S.model);
+    item.classList.toggle('locked', isPrem && !canGenMedia());
+    item.tabIndex = (isPrem && !canGenMedia()) ? -1 : 0;
+  });
+}
 
-  /* Message action voice locks */
-  var vlocks = document.querySelectorAll('.ma[data-act="voice"]');
-  for (var i = 0; i < vlocks.length; i++) {
-    vlocks[i].classList.toggle('locked', !signedIn);
-    vlocks[i].setAttribute('data-tip', signedIn ? 'Read aloud' : 'Sign in required');
-  }
+function selectModel(m) {
+  if (modelGate(m)) return;
+  S.model = m;
+  try { localStorage.setItem('helox-model', m); } catch(e) {}
+  updateModelUI();
+  toggleMD(false);
+  toast('Switched to ' + (MODELS[m] ? MODELS[m].name : m), 'ok');
+}
+
+function toggleMD(open) {
+  S.mdOpen = typeof open === 'boolean' ? open : !S.mdOpen;
+  var sel = $('modelSel'), dd = $('modelDd');
+  if (sel) sel.classList.toggle('open', S.mdOpen);
+  if (dd) dd.classList.toggle('on', S.mdOpen);
+  if (sel) sel.setAttribute('aria-expanded', S.mdOpen);
+}
+
+function initModel() {
+  var saved = 'helox';
+  try { saved = localStorage.getItem('helox-model') || 'helox'; } catch(e) {}
+  if (MODELS[saved]) S.model = saved;
+  updateModelUI();
 }
 
 /* ================================================================
    CHAT LIST
    ================================================================ */
 function loadChatList() {
-  if (!S.user) {
-    S.chatListData = [];
-    renderChatList();
-    return;
-  }
-  
+  if (!S.user) { S.chatListData = []; renderChatList(); return; }
   try {
     fetch(aiUrl() + '/chats?limit=30', { headers: authH() })
-      .then(function(r) { return r.json() })
-      .then(function(d) { S.chatListData = d.chats || []; renderChatList() })
-      .catch(function() { S.chatListData = []; renderChatList() });
-  } catch (e) {
-    S.chatListData = [];
-    renderChatList();
-  }
+      .then(function(r) { return r.json(); })
+      .then(function(d) { S.chatListData = d.chats || []; renderChatList(); })
+      .catch(function() { S.chatListData = []; renderChatList(); });
+  } catch(e) { S.chatListData = []; renderChatList(); }
 }
 
 function renderChatList(filter) {
   var el = $('chatListItems');
   if (!el) return;
-  
   var data = S.chatListData;
-  
-  if (filter) {
-    var f = filter.toLowerCase();
-    data = data.filter(function(c) { return (c.title || '').toLowerCase().indexOf(f) !== -1 });
-  }
-  
-  if (!data.length) {
-    el.innerHTML = '<span style="color:var(--text-muted);font-size:12px;padding:4px 10px;display:block">' + (filter ? 'No results found' : 'No conversations yet') + '</span>';
-    return;
-  }
-  
+  if (filter) { var f = filter.toLowerCase(); data = data.filter(function(c) { return (c.title || '').toLowerCase().indexOf(f) !== -1; }); }
+  if (!data.length) { el.innerHTML = '<span style="color:var(--text-muted);font-size:12px;padding:4px 10px;display:block">' + (filter ? 'No results' : 'No conversations yet') + '</span>'; return; }
   var html = '';
-  for (var i = 0; i < data.length; i++) {
-    var c = data[i];
+  data.forEach(function(c) {
     var active = c.id === S.chatId ? ' active' : '';
     html += '<button class="cl-item' + active + '" data-cid="' + c.id + '"><i class="fa-regular fa-message"></i><span>' + esc(c.title || 'New Chat') + '</span><span class="cl-time">' + ago(c.updated_at || c.created_at) + '</span><button class="cl-del" data-del="' + c.id + '" title="Delete"><i class="fa-solid fa-trash-can"></i></button></button>';
-  }
+  });
   el.innerHTML = html;
 }
 
@@ -1106,8 +998,7 @@ function switchView(v) {
   $('chatView').style.display = v === 'chat' ? 'block' : 'none';
   $('galleryView').style.display = v === 'gallery' ? 'block' : 'none';
   $('cbContainer').style.display = v === 'chat' ? 'block' : 'none';
-  var fi = $('fileIndicator');
-  if (fi) fi.style.display = 'none';
+  var fi = $('fileIndicator'); if (fi) fi.style.display = 'none';
   $('chatTab').classList.toggle('active', v === 'chat');
   $('galleryTab').classList.toggle('active', v === 'gallery');
   if (v === 'gallery') renderGallery();
@@ -1115,72 +1006,35 @@ function switchView(v) {
 
 function extractMedia(content) {
   var found = [], m, r1 = /!\[([^\]]*)\]\(([^)]+)\)/g;
-  while ((m = r1.exec(content)) !== null) {
-    found.push({ type: /\.(mp4|webm|mov)/i.test(m[2]) ? 'video' : 'image', url: m[2], prompt: m[1] || '', id: uid() });
-  }
-  var r2 = /https:\/\/[^\s"'<>]+supabase\.(co|in)[^\s"'<>]*\.(png|jpg|jpeg|gif|webp|mp4|webm|mov)/gi;
-  while ((m = r2.exec(content)) !== null) {
-    if (!found.some(function(f) { return f.url === m[0] })) {
-      found.push({ type: /\.(mp4|webm|mov)/i.test(m[0]) ? 'video' : 'image', url: m[0], prompt: '', id: uid() });
-    }
-  }
+  while ((m = r1.exec(content)) !== null) found.push({ type: /\.(mp4|webm|mov)/i.test(m[2]) ? 'video' : 'image', url: m[2], prompt: m[1] || '', id: uid() });
   return found;
 }
 
-function addToGallery(content) {
-  var items = extractMedia(content);
-  for (var i = 0; i < items.length; i++) {
-    if (!S.gallery.some(function(g) { return g.url === items[i].url })) {
-      S.gallery.unshift(items[i]);
-    }
-  }
-}
+function addToGallery(content) { extractMedia(content).forEach(function(item) { if (!S.gallery.some(function(g) { return g.url === item.url; })) S.gallery.unshift(item); }); }
 
 function renderGallery() {
-  var grid = $('galGrid');
-  var empty = $('galEmpty');
-  var count = $('galCount');
+  var grid = $('galGrid'), empty = $('galEmpty'), count = $('galCount');
   if (!grid) return;
-  
   count.textContent = S.gallery.length + ' item' + (S.gallery.length !== 1 ? 's' : '');
-  
-  if (!S.gallery.length) {
-    grid.innerHTML = '';
-    empty.style.display = 'block';
-    return;
-  }
-  
+  if (!S.gallery.length) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
   var html = '';
-  for (var i = 0; i < S.gallery.length; i++) {
-    var g = S.gallery[i];
-    var inner = g.type === 'video'
-      ? '<video src="' + g.url + '" muted preload="metadata"></video><span class="gal-type"><i class="fa-solid fa-play" style="font-size:7px"></i> Video</span>'
-      : '<img src="' + g.url + '" alt="' + esc(g.prompt) + '" loading="lazy" onerror="this.closest(\'.gal-item\').style.display=\'none\'"><span class="gal-type">Image</span>';
+  S.gallery.forEach(function(g) {
+    var inner = g.type === 'video' ? '<video src="' + g.url + '" muted preload="metadata"></video><span class="gal-type">Video</span>' : '<img src="' + g.url + '" alt="' + esc(g.prompt) + '" loading="lazy"><span class="gal-type">Image</span>';
     html += '<div class="gal-item" data-gid="' + g.id + '">' + inner + '<div class="gal-overlay"><div class="gal-prompt">' + esc(g.prompt || 'Generated') + '</div></div></div>';
-  }
+  });
   grid.innerHTML = html;
 }
 
 function openLB(gid) {
-  var item = null;
-  for (var i = 0; i < S.gallery.length; i++) {
-    if (S.gallery[i].id === gid) { item = S.gallery[i]; break; }
-  }
+  var item = S.gallery.find(function(g) { return g.id === gid; });
   if (!item) return;
-  
-  $('lbContent').innerHTML = item.type === 'video'
-    ? '<video src="' + item.url + '" controls autoplay style="max-width:90vw;max-height:85vh;border-radius:18px">'
-    : '<img src="' + item.url + '" style="max-width:90vw;max-height:85vh;border-radius:18px">';
-  $('lbDl').href = item.url;
-  $('lbDl').download = item.prompt || 'heloxai';
+  $('lbContent').innerHTML = item.type === 'video' ? '<video src="' + item.url + '" controls autoplay style="max-width:90vw;max-height:85vh;border-radius:18px">' : '<img src="' + item.url + '" style="max-width:90vw;max-height:85vh;border-radius:18px">';
+  $('lbDl').href = item.url; $('lbDl').download = item.prompt || 'heloxai';
   $('lightbox').classList.add('on');
 }
 
-function closeLB() {
-  $('lightbox').classList.remove('on');
-  $('lbContent').innerHTML = '';
-}
+function closeLB() { $('lightbox').classList.remove('on'); $('lbContent').innerHTML = ''; }
 
 function toggleAS(open) {
   S.asOpen = typeof open === 'boolean' ? open : !S.asOpen;
@@ -1191,104 +1045,28 @@ function toggleAS(open) {
 function toggleVD(open) {
   S.vdOpen = typeof open === 'boolean' ? open : !S.vdOpen;
   $('voiceDd').classList.toggle('on', S.vdOpen);
-  if (S.vdOpen) {
-    var r = $('voiceBtn').getBoundingClientRect();
-    $('voiceDd').style.bottom = (window.innerHeight - r.top + 8) + 'px';
-    $('voiceDd').style.right = (window.innerWidth - r.right) + 'px';
-    $('voiceDd').style.left = 'auto';
-  }
-}
-
-function fetchVoices() {
-  try {
-    fetch(aiUrl() + '/tts/voices', { method: 'POST', headers: authH(), body: JSON.stringify({ plan: plan() }) })
-      .then(function(r) { return r.json() })
-      .then(function(d) { S.voicesData = d; renderVoices() })
-      .catch(function() {
-        S.voicesData = { voices: { openai: [{ id: 'alloy', name: 'Alloy' }, { id: 'echo', name: 'Echo' }, { id: 'nova', name: 'Nova' }] }, default: 'alloy', providers: { openai: true } };
-        renderVoices();
-      });
-  } catch (e) {}
-}
-
-function renderVoices() {
-  if (!S.voicesData || !S.voicesData.voices) {
-    $('voiceList').innerHTML = '';
-    return;
-  }
-  
-  var html = '';
-  var voices = S.voicesData.voices;
-  var providers = S.voicesData.providers || {};
-  var defV = S.voicesData.default || 'alloy';
-  
-  if (!S.voice) S.voice = defV;
-  
-  var pN = { openai: 'OpenAI', elevenlabs: 'ElevenLabs' };
-  var pK = Object.keys(voices);
-  
-  for (var p = 0; p < pK.length; p++) {
-    var prov = pK[p];
-    var avail = providers[prov] !== false;
-    html += '<div class="vd-prov"><span class="vd-dot' + (avail ? '' : ' off') + '"></span>' + esc(pN[prov] || prov) + '</div>';
-    var vL = voices[prov];
-    for (var v = 0; v < vL.length; v++) {
-      var vi = vL[v];
-      var isA = S.voice === vi.id && S.voiceProvider === prov;
-      html += '<button class="vd-item' + (isA ? ' active' : '') + '" data-vid="' + vi.id + '" data-vprov="' + prov + '"><i class="fa-solid ' + (isA ? 'fa-circle-check' : 'fa-circle') + '"></i> ' + esc(vi.name) + '</button>';
-    }
-  }
-  $('voiceList').innerHTML = html;
+  if (S.vdOpen) { var r = $('voiceBtn').getBoundingClientRect(); $('voiceDd').style.bottom = (window.innerHeight - r.top + 8) + 'px'; $('voiceDd').style.right = (window.innerWidth - r.right) + 'px'; $('voiceDd').style.left = 'auto'; }
 }
 
 /* ================================================================
    MESSAGES
    ================================================================ */
-function showWelcome() {
-  $('welcomeEl').style.display = 'flex';
-  $('msgsEl').style.display = 'none';
-}
-
-function showMsgs() {
-  $('welcomeEl').style.display = 'none';
-  $('msgsEl').style.display = 'block';
-}
+function showWelcome() { $('welcomeEl').style.display = 'flex'; $('msgsEl').style.display = 'none'; }
+function showMsgs() { $('welcomeEl').style.display = 'none'; $('msgsEl').style.display = 'block'; }
 
 function renderAll() {
-  if (!S.msgs.length) {
-    showWelcome();
-    return;
-  }
-  
+  if (!S.msgs.length) { showWelcome(); return; }
   showMsgs();
   var html = '';
-  
-  for (var i = 0; i < S.msgs.length; i++) {
-    var m = S.msgs[i];
-    var isU = m.role === 'user';
-    var cls = isU ? 'msg user-msg' : 'msg ai-msg';
-    var time = m.time ? m.time : '';
-    
+  S.msgs.forEach(function(m, i) {
+    var isU = m.role === 'user', modelTag = m.model ? (MODELS[m.model] ? MODELS[m.model].name : m.model) : 'AI';
     if (!isU) {
-      var cHtml = md(m.content);
-      var act = '';
-      var last = i === S.msgs.length - 1 && !S.streaming;
-      
-      act = '<div class="msg-acts">';
-      act += '<button class="ma" data-act="copy" data-i="' + i + '" data-tip="Copy"><i class="fa-regular fa-copy"></i></button>';
-      act += '<button class="ma' + (m.liked ? ' liked' : '') + '" data-act="like" data-i="' + i + '" data-tip="Good response"><i class="fa-regular fa-thumbs-up"></i></button>';
-      act += '<button class="ma' + (m.disliked ? ' disliked' : '') + '" data-act="dislike" data-i="' + i + '" data-tip="Bad response"><i class="fa-regular fa-thumbs-down"></i></button>';
-      if (last) act += '<button class="ma" data-act="regen" data-i="' + i + '" data-tip="Regenerate"><i class="fa-solid fa-arrows-rotate"></i></button>';
-      act += '<button class="ma' + (authSilent() ? ' locked' : '') + '" data-act="voice" data-i="' + i + '" data-tip="' + (S.user ? 'Read aloud' : 'Sign in required') + '"><i class="fa-solid fa-volume-high"></i></button>';
-      act += '</div>';
-      
-      html += '<div class="' + cls + '" id="msg-' + i + '"><div class="msg-inner"><div class="msg-label"><span class="ai-dot"></span> HeloxAi <span class="model-tag">AI</span></div><div class="msg-ct" id="mc-' + i + '">' + cHtml + '</div>' + act + '<div class="msg-time">' + time + '</div><div id="ea-' + i + '"></div></div></div>';
+      var act = '<div class="msg-acts"><button class="ma" data-act="copy" data-i="' + i + '" data-tip="Copy"><i class="fa-regular fa-copy"></i></button><button class="ma' + (m.liked ? ' liked' : '') + '" data-act="like" data-i="' + i + '" data-tip="Good"><i class="fa-regular fa-thumbs-up"></i></button><button class="ma' + (m.disliked ? ' disliked' : '') + '" data-act="dislike" data-i="' + i + '" data-tip="Bad"><i class="fa-regular fa-thumbs-down"></i></button>' + (i === S.msgs.length - 1 && !S.streaming ? '<button class="ma" data-act="regen" data-i="' + i + '" data-tip="Regenerate"><i class="fa-solid fa-arrows-rotate"></i></button>' : '') + '<button class="ma' + (authSilent() ? ' locked' : '') + '" data-act="voice" data-i="' + i + '" data-tip="' + (S.user ? 'Read aloud' : 'Sign in') + '"><i class="fa-solid fa-volume-high"></i></button></div>';
+      html += '<div class="msg ai-msg" id="msg-' + i + '"><div class="msg-inner"><div class="msg-label"><span class="ai-dot"></span> ' + modelTag + '</div><div class="msg-ct" id="mc-' + i + '">' + md(m.content) + '</div>' + act + '<div class="msg-time">' + (m.time || '') + '</div><div id="ea-' + i + '"></div></div></div>';
     } else {
-      var act2 = '<div class="msg-acts"><button class="ma" data-act="copy" data-i="' + i + '" data-tip="Copy"><i class="fa-regular fa-copy"></i></button><button class="ma" data-act="edit" data-i="' + i + '" data-tip="Edit"><i class="fa-regular fa-pen-to-square"></i></button></div>';
-      html += '<div class="' + cls + '" id="msg-' + i + '"><div class="msg-inner"><div class="msg-label">You</div><div class="msg-bubble"><div class="msg-ct" id="mc-' + i + '"><p>' + esc(m.content).replace(/\n/g, '<br>') + '</p></div></div>' + act2 + '<div class="msg-time">' + time + '</div><div id="ea-' + i + '"></div></div></div>';
+      html += '<div class="msg user-msg" id="msg-' + i + '"><div class="msg-inner"><div class="msg-label">You</div><div class="msg-bubble"><div class="msg-ct" id="mc-' + i + '"><p>' + esc(m.content).replace(/\n/g, '<br>') + '</p></div></div><div class="msg-acts"><button class="ma" data-act="copy" data-i="' + i + '" data-tip="Copy"><i class="fa-regular fa-copy"></i></button><button class="ma" data-act="edit" data-i="' + i + '" data-tip="Edit"><i class="fa-regular fa-pen-to-square"></i></button></div><div class="msg-time">' + (m.time || '') + '</div><div id="ea-' + i + '"></div></div></div>';
     }
-  }
-  
+  });
   $('msgsEl').innerHTML = html;
   scrollBot();
 }
@@ -1297,800 +1075,277 @@ function updateLastAI(content) {
   var i = S.msgs.length - 1;
   if (i < 0 || S.msgs[i].role !== 'assistant') return;
   S.msgs[i].content = content;
-  var el = $('mc-' + i);
-  if (el) el.innerHTML = md(content);
+  var el = $('mc-' + i); if (el) el.innerHTML = md(content);
   scrollBot();
 }
 
 function addTyping() {
   var d = document.createElement('div');
-  d.className = 'msg ai-msg';
-  d.id = 'typMsg';
-  d.innerHTML = '<div class="msg-inner"><div class="msg-label"><span class="ai-dot"></span> HeloxAi</div><div class="typing-wrap"><div class="typing-dots"><span></span><span></span><span></span></div><span class="typing-label">Thinking...</span></div></div>';
-  $('msgsEl').appendChild(d);
-  scrollBot();
+  d.className = 'msg ai-msg'; d.id = 'typMsg';
+  d.innerHTML = '<div class="msg-inner"><div class="msg-label"><span class="ai-dot"></span> ' + (MODELS[S.model] ? MODELS[S.model].name : 'AI') + '</div><div class="typing-wrap"><div class="typing-dots"><span></span><span></span><span></span></div><span class="typing-label">Thinking...</span></div></div>';
+  $('msgsEl').appendChild(d); scrollBot();
 }
 
-function rmTyping() {
-  var e = $('typMsg');
-  if (e) e.remove();
-}
-
-function scrollBot() {
-  requestAnimationFrame(function() {
-    var w = $('msgsWrap');
-    if (w) w.scrollTop = w.scrollHeight;
-  });
-}
-
-function checkScroll() {
-  var w = $('msgsWrap');
-  if (!w) return;
-  var dist = w.scrollHeight - w.scrollTop - w.clientHeight;
-  $('scrollBot').classList.toggle('vis', dist > 200);
-}
+function rmTyping() { var e = $('typMsg'); if (e) e.remove(); }
+function scrollBot() { requestAnimationFrame(function() { var w = $('msgsWrap'); if (w) w.scrollTop = w.scrollHeight; }); }
+function checkScroll() { var w = $('msgsWrap'); if (!w) return; $('scrollBot').classList.toggle('vis', w.scrollHeight - w.scrollTop - w.clientHeight > 200); }
 
 /* ================================================================
    MESSAGE ACTIONS
    ================================================================ */
-function actCopy(i) {
-  var t = S.msgs[i] && S.msgs[i].content;
-  if (!t) return;
-  navigator.clipboard.writeText(t).then(function() { toast('Copied to clipboard', 'ok') }).catch(function() { toast('Copy failed', 'err') });
-}
-
-function actLike(i, type) {
-  if (type === 'like') {
-    S.msgs[i].liked = !S.msgs[i].liked;
-    S.msgs[i].disliked = false;
-  } else {
-    S.msgs[i].disliked = !S.msgs[i].disliked;
-    S.msgs[i].liked = false;
-  }
-  renderAll();
-}
-
-function actEdit(i) {
-  var m = S.msgs[i];
-  if (!m || m.role !== 'user') return;
-  var ea = $('ea-' + i);
-  if (!ea || ea.innerHTML) return;
-  
-  ea.innerHTML = '<div class="edit-form"><textarea id="et-' + i + '">' + esc(m.content) + '</textarea><div class="edit-btns"><button class="btn-cn" data-act="edit-cancel" data-i="' + i + '">Cancel</button><button class="btn-sv" data-act="edit-save" data-i="' + i + '">Save & Resend</button></div></div>';
-  var ta = $('et-' + i);
-  if (!ta) return;
-  ta.focus();
-  ta.setSelectionRange(ta.value.length, ta.value.length);
-  autoH(ta);
-  ta.addEventListener('input', function() { autoH(ta) });
-}
-
-function actEditSave(i) {
-  var ta = $('et-' + i);
-  if (!ta) return;
-  var v = ta.value.trim();
-  if (!v) return;
-  S.msgs[i].content = v;
-  S.msgs = S.msgs.slice(0, i + 1);
-  renderAll();
-  sendToAI(v);
-}
-
-function actEditCancel(i) {
-  var ea = $('ea-' + i);
-  if (ea) ea.innerHTML = '';
-}
-
-function actRegen(i) {
-  if (S.streaming) return;
-  if (!S.chatId) { toast('No active conversation', 'err'); return; }
-  S.msgs = S.msgs.slice(0, i);
-  renderAll();
-  regenerateAI();
-}
-
-function actVoice(i) {
-  if (authGate('voice replies')) return;
-  var m = S.msgs[i];
-  if (!m || m.role !== 'assistant') return;
-  
-  if (S.audio) { S.audio.pause(); S.audio = null; }
-  
-  toast('Generating voice...', 'inf');
-  fetch(aiUrl() + '/tts', { method: 'POST', headers: authH(), body: JSON.stringify({ text: m.content, voice: S.voice, provider: S.voiceProvider, plan: plan() }) })
-    .then(function(r) { if (!r.ok) throw new Error(r.status); return r.blob(); })
-    .then(function(blob) {
-      var url = URL.createObjectURL(blob);
-      var a = new Audio(url);
-      S.audio = a;
-      a.play();
-      a.onended = function() { URL.revokeObjectURL(url); S.audio = null; };
-      toast('Playing voice', 'ok');
-    })
-    .catch(function() { toast('Voice generation failed', 'err') });
-}
+function actCopy(i) { var t = S.msgs[i] && S.msgs[i].content; if (!t) return; navigator.clipboard.writeText(t).then(function() { toast('Copied', 'ok'); }).catch(function() { toast('Copy failed', 'err'); }); }
+function actLike(i, type) { if (type === 'like') { S.msgs[i].liked = !S.msgs[i].liked; S.msgs[i].disliked = false; } else { S.msgs[i].disliked = !S.msgs[i].disliked; S.msgs[i].liked = false; } renderAll(); }
+function actEdit(i) { var m = S.msgs[i]; if (!m || m.role !== 'user') return; var ea = $('ea-' + i); if (!ea || ea.innerHTML) return; ea.innerHTML = '<div class="edit-form"><textarea id="et-' + i + '">' + esc(m.content) + '</textarea><div class="edit-btns"><button class="btn-cn" data-act="edit-cancel" data-i="' + i + '">Cancel</button><button class="btn-sv" data-act="edit-save" data-i="' + i + '">Save & Resend</button></div></div>'; var ta = $('et-' + i); if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); autoH(ta); ta.addEventListener('input', function() { autoH(ta); }); } }
+function actEditSave(i) { var ta = $('et-' + i); if (!ta) return; var v = ta.value.trim(); if (!v) return; S.msgs[i].content = v; S.msgs = S.msgs.slice(0, i + 1); renderAll(); sendToAI(v); }
+function actEditCancel(i) { var ea = $('ea-' + i); if (ea) ea.innerHTML = ''; }
+function actRegen(i) { if (S.streaming || !S.chatId) return; S.msgs = S.msgs.slice(0, i); renderAll(); regenerateAI(); }
+function actVoice(i) { if (authGate('voice')) return; var m = S.msgs[i]; if (!m || m.role !== 'assistant') return; if (S.audio) { S.audio.pause(); S.audio = null; } toast('Generating voice...', 'inf'); fetch(aiUrl() + '/tts', { method: 'POST', headers: authH(), body: JSON.stringify({ text: m.content, voice: S.voice, plan: plan() }) }).then(function(r) { return r.blob(); }).then(function(blob) { var url = URL.createObjectURL(blob); S.audio = new Audio(url); S.audio.play(); S.audio.onended = function() { URL.revokeObjectURL(url); S.audio = null; }; toast('Playing', 'ok'); }).catch(function() { toast('Voice failed', 'err'); }); }
 
 /* ================================================================
-   STOP / MIC / STT
+   MIC / STT
    ================================================================ */
-function stopGen() {
-  if (S.streamId) {
-    try {
-      fetch(aiUrl() + '/stop', { method: 'POST', headers: authH(), body: JSON.stringify({ stream_id: S.streamId }) });
-    } catch (e) {}
-  }
-  if (S.abort) S.abort.abort();
-}
-
 function toggleMic() {
   if (authGate('voice input')) return;
-  
-  if (S.recording) {
-    stopMic();
-    return;
-  }
-  
+  if (S.recording) { if (S.recorder) S.recorder.stop(); S.recording = false; $('micBtn').classList.remove('mic-on'); return; }
   navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
-    S.chunks = [];
-    S.recorder = new MediaRecorder(stream);
+    S.chunks = []; S.recorder = new MediaRecorder(stream);
     S.recorder.ondataavailable = function(e) { if (e.data.size > 0) S.chunks.push(e.data); };
-    S.recorder.onstop = function() {
-      stream.getTracks().forEach(function(t) { t.stop(); });
-      doSTT(new Blob(S.chunks, { type: 'audio/webm' }));
-    };
-    S.recorder.start();
-    S.recording = true;
-    $('micBtn').classList.add('mic-on');
-    toast('Listening...', 'inf');
-  }).catch(function() { toast('Microphone access denied', 'err') });
-}
-
-function stopMic() {
-  if (S.recorder && S.recording) S.recorder.stop();
-  S.recording = false;
-  $('micBtn').classList.remove('mic-on');
+    S.recorder.onstop = function() { stream.getTracks().forEach(function(t) { t.stop(); }); doSTT(new Blob(S.chunks, { type: 'audio/webm' })); };
+    S.recorder.start(); S.recording = true; $('micBtn').classList.add('mic-on'); toast('Listening...', 'inf');
+  }).catch(function() { toast('Mic access denied', 'err'); });
 }
 
 function doSTT(blob) {
-  toast('Processing speech...', 'inf');
-  var fd = new FormData();
-  fd.append('audio', blob, 'recording.webm');
-  fd.append('plan', plan());
-  var h = {};
-  if (S.user && S.user.token) h['Authorization'] = 'Bearer ' + S.user.token;
-  
-  fetch(aiUrl() + '/stt', { method: 'POST', headers: h, body: fd })
-    .then(function(r) { return r.json() })
-    .then(function(d) {
-      if (d.text) {
-        $('cbInput').value = d.text;
-        autoH($('cbInput'));
-        $('cbInput').focus();
-        updateCB();
-        toast('Speech recognized', 'ok');
-      } else {
-        toast('No speech detected', 'err');
-      }
-    })
-    .catch(function() { toast('Speech recognition failed', 'err') });
+  toast('Processing...', 'inf');
+  var fd = new FormData(); fd.append('audio', blob, 'recording.webm'); fd.append('plan', plan());
+  var h = {}; if (S.user && S.user.token) h['Authorization'] = 'Bearer ' + S.user.token;
+  fetch(aiUrl() + '/stt', { method: 'POST', headers: h, body: fd }).then(function(r) { return r.json(); }).then(function(d) { if (d.text) { $('cbInput').value = d.text; autoH($('cbInput')); updateCB(); toast('Recognized', 'ok'); } else toast('No speech', 'err'); }).catch(function() { toast('STT failed', 'err'); });
 }
 
 /* ================================================================
    FILE UPLOAD
    ================================================================ */
 function showFileIndicator(file, uploading) {
-  var fi = $('fileIndicator');
-  if (!fi) return;
-  
+  var fi = $('fileIndicator'); if (!fi) return;
   fi.style.display = 'block';
-  fi.innerHTML = '<div class="file-indicator' + (uploading ? ' uploading' : '') + '">' +
-    (uploading ? '<i class="fa-solid fa-spinner fi-spin"></i>' : '<i class="fa-solid fa-file"></i>') +
-    '<span class="fi-name">' + esc(file.name) + '</span>' +
-    '<span class="fi-size">' + fmtSize(file.size) + '</span>' +
-    (!uploading ? '<button class="fi-rm" id="fiRm"><i class="fa-solid fa-xmark"></i></button>' : '') +
-    '</div>';
-  
-  if (!uploading) {
-    var rmBtn = $('fiRm');
-    if (rmBtn) rmBtn.addEventListener('click', function() { clearPendingFile() });
-  }
+  fi.innerHTML = '<div class="file-indicator' + (uploading ? ' uploading' : '') + '">' + (uploading ? '<i class="fa-solid fa-spinner fi-spin"></i>' : '<i class="fa-solid fa-file"></i>') + '<span class="fi-name">' + esc(file.name) + '</span><span class="fi-size">' + fmtSize(file.size) + '</span>' + (!uploading ? '<button class="fi-rm" id="fiRm"><i class="fa-solid fa-xmark"></i></button>' : '') + '</div>';
+  if (!uploading) { var rmBtn = $('fiRm'); if (rmBtn) rmBtn.addEventListener('click', clearPendingFile); }
 }
 
-function clearPendingFile() {
-  S.pendingFile = null;
-  S.uploading = false;
-  var fi = $('fileIndicator');
-  if (fi) fi.style.display = 'none';
-  $('fileInput').value = '';
-  updateCB();
-}
+function clearPendingFile() { S.pendingFile = null; S.uploading = false; var fi = $('fileIndicator'); if (fi) fi.style.display = 'none'; $('fileInput').value = ''; updateCB(); }
 
 function uploadFile(file) {
   if (S.streaming || S.uploading) return;
-  
-  S.pendingFile = file;
-  S.uploading = true;
-  showFileIndicator(file, true);
-
-  var isImg = /^image\//i.test(file.type);
-  var endpoint = isImg ? '/vision' : '/analysis';
-  var base = aiUrl();
-
-  var fd = new FormData();
-  fd.append('file', file);
-  fd.append('plan', plan());
-  if (S.chatId) fd.append('conversation_id', S.chatId);
-
-  var h = {};
-  if (S.user && S.user.token) h['Authorization'] = 'Bearer ' + S.user.token;
-
-  var fileLabel = isImg ? 'Uploaded image: ' + file.name : 'Uploaded file: ' + file.name;
-  S.msgs.push({ id: uid(), role: 'user', content: fileLabel, time: now() });
-  renderAll();
-  addTyping();
-
-  fetch(base + endpoint, { method: 'POST', headers: h, body: fd })
-    .then(function(r) {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    })
-    .then(function(data) {
-      rmTyping();
-      var content = '';
-      if (typeof data === 'string') content = data;
-      else if (data.response) content = data.response;
-      else if (data.content) content = data.content;
-      else if (data.result) content = data.result;
-      else if (data.analysis) content = data.analysis;
-      else if (data.description) content = data.description;
-      else content = JSON.stringify(data, null, 2);
-
-      if (data.image_url) content = '![Generated Image](' + data.image_url + ')\n\n' + content;
-      if (data.url && isImg) content = '![Uploaded Image](' + data.url + ')\n\n' + content;
-
-      S.msgs.push({ id: uid(), role: 'assistant', content: content, liked: false, disliked: false, time: now() });
-      renderAll();
-      addToGallery(content);
-
-      if (data.conversation_id) S.chatId = data.conversation_id;
-      loadChatList();
-    })
-    .catch(function(e) {
-      rmTyping();
-      S.msgs.push({ id: uid(), role: 'assistant', content: '**Error:** Failed to process file — ' + e.message, liked: false, disliked: false, time: now() });
-      renderAll();
-      toast('File upload failed', 'err');
-    })
-    .finally(function() {
-      S.uploading = false;
-      S.pendingFile = null;
-      var fi = $('fileIndicator');
-      if (fi) fi.style.display = 'none';
-      $('fileInput').value = '';
-      updateCB();
-    });
+  S.pendingFile = file; S.uploading = true; showFileIndicator(file, true);
+  var isImg = /^image\//i.test(file.type), endpoint = isImg ? '/vision' : '/analysis';
+  var fd = new FormData(); fd.append('file', file); fd.append('plan', plan()); fd.append('model', S.model); if (S.chatId) fd.append('conversation_id', S.chatId);
+  var h = {}; if (S.user && S.user.token) h['Authorization'] = 'Bearer ' + S.user.token;
+  S.msgs.push({ id: uid(), role: 'user', content: (isImg ? 'Image: ' : 'File: ') + file.name, time: now() }); renderAll(); addTyping();
+  fetch(aiUrl() + endpoint, { method: 'POST', headers: h, body: fd }).then(function(r) { return r.json(); }).then(function(data) {
+    rmTyping(); var content = data.response || data.content || data.result || data.analysis || JSON.stringify(data);
+    S.msgs.push({ id: uid(), role: 'assistant', content: content, liked: false, disliked: false, time: now(), model: S.model }); renderAll(); addToGallery(content);
+    if (data.conversation_id) S.chatId = data.conversation_id; loadChatList();
+  }).catch(function(e) { rmTyping(); S.msgs.push({ id: uid(), role: 'assistant', content: '**Error:** ' + e.message, liked: false, time: now() }); renderAll(); toast('Upload failed', 'err'); })
+  .finally(function() { S.uploading = false; S.pendingFile = null; var fi = $('fileIndicator'); if (fi) fi.style.display = 'none'; updateCB(); });
 }
 
 /* ================================================================
    SSE STREAM
    ================================================================ */
 function streamRes(res, onChunk, onDone) {
-  var reader = res.body.getReader();
-  var dec = new TextDecoder();
-  var buf = '';
-  var raf = null;
-
-  function sched() {
-    if (!raf) raf = requestAnimationFrame(function() { onDone(); raf = null; });
-  }
-
-  function pump() {
-    return reader.read().then(function(result) {
-      if (result.done) {
-        if (raf) cancelAnimationFrame(raf);
-        onDone();
-        return;
-      }
-      buf += dec.decode(result.value, { stream: true });
-      var lines = buf.split('\n');
-      buf = lines.pop() || '';
-      for (var k = 0; k < lines.length; k++) {
-        var tr = lines[k].trim();
-        if (!tr || tr.indexOf('data:') !== 0) continue;
-        var d = tr.slice(5).trim();
-        if (d === '[DONE]') { sched(); continue; }
-        try {
-          var p = JSON.parse(d);
-          if (p.type === 'token') onChunk(p.text || '');
-          else if (p.type === 'done' || p.type === 'stopped') sched();
-          else if (p.type === 'error') throw new Error(p.message || 'Stream error');
-          else onChunk(p.content || p.text || '');
-        } catch (e) {
-          if (e.message === 'Stream error') throw e;
-          onChunk(d);
-        }
-        sched();
-      }
-      return pump();
+  var reader = res.body.getReader(), dec = new TextDecoder(), buf = '', raf = null;
+  function sched() { if (!raf) raf = requestAnimationFrame(function() { onDone(); raf = null; }); }
+  return function pump() { return reader.read().then(function(result) {
+    if (result.done) { if (raf) cancelAnimationFrame(raf); onDone(); return; }
+    buf += dec.decode(result.value, { stream: true }); var lines = buf.split('\n'); buf = lines.pop() || '';
+    lines.forEach(function(line) {
+      var tr = line.trim(); if (!tr || tr.indexOf('data:') !== 0) return;
+      var d = tr.slice(5).trim(); if (d === '[DONE]') { sched(); return; }
+      try { var p = JSON.parse(d); if (p.type === 'token') onChunk(p.text || ''); else if (p.type === 'done' || p.type === 'stopped') sched(); else onChunk(p.content || p.text || ''); } catch(e) { onChunk(d); sched(); }
     });
-  }
-  return pump();
+    return pump();
+  }); }();
 }
 
 /* ================================================================
    SEND / STREAM
    ================================================================ */
 function sendMsg(text) {
-  var t = text || $('cbInput').value.trim();
-  if (!t || S.streaming || S.uploading) return;
-
-  if (isImage(t)) { if (mediaGate('image')) return; }
-  if (isVideo(t)) { if (mediaGate('video')) return; }
-
+  var t = text || $('cbInput').value.trim(); if (!t || S.streaming || S.uploading) return;
+  if (isImage(t) && mediaGate('image')) return; if (isVideo(t) && mediaGate('video')) return;
   S.msgs.push({ id: uid(), role: 'user', content: t, time: now() });
-  $('cbInput').value = '';
-  autoH($('cbInput'));
-  updateCB();
-  renderAll();
-  sendToAI(t);
+  $('cbInput').value = ''; autoH($('cbInput')); updateCB(); renderAll(); sendToAI(t);
 }
 
 function sendToAI(text) {
-  if (!text) return;
-  S.streaming = true;
-  S.abort = new AbortController();
-  S.streamId = uid();
-  addTyping();
-  updateCB();
-
-  var full = '';
-  var base = aiUrl();
-
-  var p = S.chatId
-    ? Promise.resolve(S.chatId)
-    : fetch(base + '/newchat', { method: 'POST', headers: authH(), body: JSON.stringify({ plan: plan(), ai_url: base }) })
-        .then(function(r) { return r.json(); })
-        .then(function(d) { return d.conversation_id; })
-        .catch(function() { return uid(); });
-
+  if (!text) return; S.streaming = true; S.abort = new AbortController(); S.streamId = uid(); addTyping(); updateCB();
+  var full = '', base = aiUrl(), model = MODELS[S.model], endpoint = model ? model.endpoint : '/ask/universal';
+  var p = S.chatId ? Promise.resolve(S.chatId) : fetch(base + '/newchat', { method: 'POST', headers: authH(), body: JSON.stringify({ plan: plan(), ai_url: base }) }).then(function(r) { return r.json(); }).then(function(d) { return d.conversation_id; }).catch(function() { return uid(); });
   p.then(function(cid) {
-    S.chatId = cid;
-    $('hdrTitle').textContent = 'HeloxAi';
-
-    var isImgReq = isImage(text);
-    var endpoint, payload;
-
-    if (isImgReq) {
-      var imgPrompt = text;
-      for (var kw of IMAGE_KW) {
-        var idx = text.toLowerCase().indexOf(kw);
-        if (idx !== -1) {
-          imgPrompt = text.slice(idx + kw.length).trim();
-          break;
-        }
-      }
-      endpoint = '/vision';
-      payload = { prompt: imgPrompt || text, conversation_id: cid, stream_id: S.streamId, plan: plan(), ai_url: base };
-    } else {
-      endpoint = '/ask/universal';
-      payload = { message: text, conversation_id: cid, stream_id: S.streamId, plan: plan(), ai_url: base };
-    }
-
-    return fetch(base + endpoint, {
-      method: 'POST',
-      headers: authH(),
-      signal: S.abort.signal,
-      body: JSON.stringify(payload)
-    });
-  })
-  .then(function(res) {
-    if (!res.ok) throw new Error('HTTP ' + res.status);
+    S.chatId = cid; $('hdrTitle').textContent = 'HeloxAi';
+    return fetch(base + endpoint, { method: 'POST', headers: authH(), signal: S.abort.signal, body: JSON.stringify({ message: text, conversation_id: cid, stream_id: S.streamId, plan: plan(), ai_url: base, model: S.model }) });
+  }).then(function(res) {
+    if (!res.ok) throw new Error('HTTP ' + res.status); rmTyping();
+    S.msgs.push({ id: uid(), role: 'assistant', content: '', liked: false, time: now(), model: S.model }); renderAll();
+    return streamRes(res, function(chunk) { full += chunk; }, function() { updateLastAI(full); addToGallery(full); loadChatList(); });
+  }).catch(function(e) {
     rmTyping();
-    S.msgs.push({ id: uid(), role: 'assistant', content: '', liked: false, disliked: false, time: now() });
-    renderAll();
-    return streamRes(res, function(chunk) { full += chunk; }, function() {
-      updateLastAI(full);
-      addToGallery(full);
-      loadChatList();
-    });
-  })
-  .catch(function(e) {
-    rmTyping();
-    if (e.name === 'AbortError') {
-      if (full) updateLastAI(full);
-      else if (S.msgs.length && S.msgs[S.msgs.length - 1].role === 'assistant' && !S.msgs[S.msgs.length - 1].content) {
-        S.msgs.pop();
-        renderAll();
-      }
-      toast('Generation stopped', 'inf');
-    } else {
-      S.msgs.push({ id: uid(), role: 'assistant', content: '**Error:** ' + e.message, liked: false, disliked: false, time: now() });
-      renderAll();
-      toast('Request failed', 'err');
-    }
-  })
-  .finally(function() {
-    S.streaming = false;
-    S.abort = null;
-    S.streamId = null;
-    updateCB();
-  });
+    if (e.name === 'AbortError') { if (full) updateLastAI(full); else if (S.msgs.length && S.msgs[S.msgs.length - 1].role === 'assistant' && !S.msgs[S.msgs.length - 1].content) { S.msgs.pop(); renderAll(); } toast('Stopped', 'inf'); }
+    else { S.msgs.push({ id: uid(), role: 'assistant', content: '**Error:** ' + e.message, liked: false, time: now() }); renderAll(); toast('Request failed', 'err'); }
+  }).finally(function() { S.streaming = false; S.abort = null; S.streamId = null; updateCB(); });
 }
 
-/* ================================================================
-   REGENERATE
-   ================================================================ */
 function regenerateAI() {
-  S.streaming = true;
-  S.abort = new AbortController();
-  S.streamId = uid();
-  addTyping();
-  updateCB();
-  var full = '';
-  var base = aiUrl();
-
-  fetch(base + '/regenerate', { method: 'POST', headers: authH(), signal: S.abort.signal, body: JSON.stringify({ conversation_id: S.chatId, stream: true, stream_id: S.streamId, plan: plan(), ai_url: base }) })
-    .then(function(res) {
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      rmTyping();
-      S.msgs.push({ id: uid(), role: 'assistant', content: '', liked: false, disliked: false, time: now() });
-      renderAll();
-      return streamRes(res, function(c) { full += c; }, function() { updateLastAI(full); addToGallery(full); });
-    })
-    .catch(function(e) {
-      rmTyping();
-      if (e.name === 'AbortError') {
-        if (full) updateLastAI(full);
-        else if (S.msgs.length && S.msgs[S.msgs.length - 1].role === 'assistant' && !S.msgs[S.msgs.length - 1].content) {
-          S.msgs.pop();
-          renderAll();
-        }
-        toast('Stopped', 'inf');
-      } else {
-        S.msgs.push({ id: uid(), role: 'assistant', content: '**Error:** ' + e.message, liked: false, disliked: false, time: now() });
-        renderAll();
-        toast('Regeneration failed', 'err');
-      }
-    })
-    .finally(function() {
-      S.streaming = false;
-      S.abort = null;
-      S.streamId = null;
-      updateCB();
-    });
+  S.streaming = true; S.abort = new AbortController(); S.streamId = uid(); addTyping(); updateCB();
+  var full = '', base = aiUrl();
+  fetch(base + '/regenerate', { method: 'POST', headers: authH(), signal: S.abort.signal, body: JSON.stringify({ conversation_id: S.chatId, stream_id: S.streamId, plan: plan(), ai_url: base, model: S.model }) })
+    .then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status); rmTyping(); S.msgs.push({ id: uid(), role: 'assistant', content: '', liked: false, time: now(), model: S.model }); renderAll(); return streamRes(res, function(c) { full += c; }, function() { updateLastAI(full); addToGallery(full); }); })
+    .catch(function(e) { rmTyping(); if (e.name === 'AbortError') { if (full) updateLastAI(full); toast('Stopped', 'inf'); } else { S.msgs.push({ id: uid(), role: 'assistant', content: '**Error:** ' + e.message, liked: false, time: now() }); renderAll(); toast('Failed', 'err'); } })
+    .finally(function() { S.streaming = false; S.abort = null; S.streamId = null; updateCB(); });
 }
+
+function stopGen() { if (S.streamId) try { fetch(aiUrl() + '/stop', { method: 'POST', headers: authH(), body: JSON.stringify({ stream_id: S.streamId }) }); } catch(e) {} if (S.abort) S.abort.abort(); }
 
 /* ================================================================
    NEW CHAT / LOAD / DELETE
    ================================================================ */
 function newChat() {
-  if (authGate('multiple chats')) return;
-  
-  if (S.streaming) stopGen();
-  S.msgs = [];
-  S.chatId = null;
-  renderAll();
-  toggleSB(false);
-  
-  var base = aiUrl();
-  fetch(base + '/newchat', { method: 'POST', headers: authH(), body: JSON.stringify({ plan: plan(), ai_url: base }) })
-    .then(function(r) { return r.json(); })
-    .then(function(d) { S.chatId = d.conversation_id; loadChatList(); })
-    .catch(function() { S.chatId = uid(); });
-  
-  $('hdrTitle').textContent = 'New Chat';
-  toast('New conversation started', 'ok');
+  if (authGate('multiple chats')) return; if (S.streaming) stopGen(); S.msgs = []; S.chatId = null; renderAll(); toggleSB(false);
+  var base = aiUrl(); fetch(base + '/newchat', { method: 'POST', headers: authH(), body: JSON.stringify({ plan: plan(), ai_url: base }) }).then(function(r) { return r.json(); }).then(function(d) { S.chatId = d.conversation_id; loadChatList(); }).catch(function() { S.chatId = uid(); });
+  $('hdrTitle').textContent = 'New Chat'; toast('New conversation', 'ok');
 }
 
 function loadChat(cid) {
-  if (S.streaming) stopGen();
-  S.chatId = cid;
-  S.msgs = [];
-  var base = aiUrl();
-  
-  $('hdrTitle').textContent = 'Loading...';
-  toggleSB(false);
-  
-  fetch(base + '/chat/' + cid + '?limit=100', { headers: authH() })
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
-      var msgs = d.messages || [];
-      S.msgs = [];
-      for (var i = 0; i < msgs.length; i++) {
-        S.msgs.push({
-          id: msgs[i].id,
-          role: msgs[i].role,
-          content: msgs[i].content,
-          liked: false,
-          disliked: false,
-          time: msgs[i].created_at ? new Date(msgs[i].created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''
-        });
-      }
-      var conv = d.conversation || {};
-      $('hdrTitle').textContent = conv.title || 'HeloxAi';
-      for (var j = 0; j < S.msgs.length; j++) {
-        if (S.msgs[j].role === 'assistant') addToGallery(S.msgs[j].content);
-      }
-      renderAll();
-      renderChatList();
-    })
-    .catch(function() {
-      $('hdrTitle').textContent = 'HeloxAi';
-      toast('Failed to load conversation', 'err');
-      renderAll();
-    });
+  if (S.streaming) stopGen(); S.chatId = cid; S.msgs = []; $('hdrTitle').textContent = 'Loading...'; toggleSB(false);
+  fetch(aiUrl() + '/chat/' + cid + '?limit=100', { headers: authH() }).then(function(r) { return r.json(); }).then(function(d) {
+    var msgs = d.messages || []; S.msgs = []; msgs.forEach(function(m) { S.msgs.push({ id: m.id, role: m.role, content: m.content, liked: false, time: m.created_at ? new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '', model: m.model || 'helox' }); });
+    var conv = d.conversation || {}; $('hdrTitle').textContent = conv.title || 'HeloxAi';
+    S.msgs.forEach(function(m) { if (m.role === 'assistant') addToGallery(m.content); }); renderAll(); renderChatList();
+  }).catch(function() { $('hdrTitle').textContent = 'HeloxAi'; toast('Failed to load', 'err'); renderAll(); });
 }
 
 function deleteChat(cid) {
-  var base = aiUrl();
-  fetch(base + '/chat/' + cid, { method: 'DELETE', headers: authH() }).catch(function() {});
-  
-  if (S.chatId === cid) {
-    S.msgs = [];
-    S.chatId = null;
-    $('hdrTitle').textContent = 'HeloxAi';
-    renderAll();
-  }
-  
-  S.chatListData = S.chatListData.filter(function(c) { return c.id !== cid; });
-  renderChatList();
-  toast('Conversation deleted', 'ok');
+  fetch(aiUrl() + '/chat/' + cid, { method: 'DELETE', headers: authH() }).catch(function() {});
+  if (S.chatId === cid) { S.msgs = []; S.chatId = null; $('hdrTitle').textContent = 'HeloxAi'; renderAll(); }
+  S.chatListData = S.chatListData.filter(function(c) { return c.id !== cid; }); renderChatList(); toast('Deleted', 'ok');
 }
 
 /* ================================================================
    CHATBAR
    ================================================================ */
-function autoH(el) {
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 200) + 'px';
-}
+function autoH(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 200) + 'px'; }
 
 function updateCB() {
-  var hasText = $('cbInput').value.trim().length > 0;
-  var hasFile = !!S.pendingFile;
-  var mic = $('micBtn');
-  var voice = $('voiceBtn');
-  var ss = $('sendStopBtn');
-  
-  if (S.streaming || S.uploading) {
-    mic.classList.add('hide');
-    voice.classList.add('hide');
-    ss.classList.remove('hide');
-    ss.classList.remove('send');
-    ss.classList.add('stop');
-    ss.innerHTML = '<i class="fa-solid fa-stop"></i>';
-    ss.title = S.uploading ? 'Uploading...' : 'Stop generation';
-  } else if (hasText || hasFile) {
-    mic.classList.add('hide');
-    voice.classList.add('hide');
-    ss.classList.remove('hide');
-    ss.classList.add('send');
-    ss.classList.remove('stop');
-    ss.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
-    ss.title = hasFile ? 'Send file' : 'Send message';
-  } else {
-    mic.classList.remove('hide');
-    voice.classList.remove('hide');
-    ss.classList.add('hide');
-    ss.classList.remove('send', 'stop');
-  }
+  var hasText = $('cbInput').value.trim().length > 0, hasFile = !!S.pendingFile;
+  var mic = $('micBtn'), voice = $('voiceBtn'), ss = $('sendStopBtn');
+  if (S.streaming || S.uploading) { mic.classList.add('hide'); voice.classList.add('hide'); ss.classList.remove('hide'); ss.classList.remove('send'); ss.classList.add('stop'); ss.innerHTML = '<i class="fa-solid fa-stop"></i>'; }
+  else if (hasText || hasFile) { mic.classList.add('hide'); voice.classList.add('hide'); ss.classList.remove('hide'); ss.classList.add('send'); ss.classList.remove('stop'); ss.innerHTML = '<i class="fa-solid fa-arrow-up"></i>'; }
+  else { mic.classList.remove('hide'); voice.classList.remove('hide'); ss.classList.add('hide'); ss.classList.remove('send', 'stop'); }
 }
 
 /* ================================================================
-   ALL EVENT LISTENERS
+   EVENTS
    ================================================================ */
 function initEvents() {
   /* Sidebar */
   $('menuBtn').addEventListener('click', function() { toggleSB(); });
   $('sbClose').addEventListener('click', function() { toggleSB(false); });
   $('sbOv').addEventListener('click', function() { toggleSB(false); });
-  
-  $('newChatBtn').addEventListener('click', function() {
-    if (!S.user) {
-      toast('Sign in to start new chats', 'wrn');
-      window.location.href = 'auth.html';
-      return;
-    }
-    newChat();
-  });
-  
-  /* Sign in/out link */
-  $('signInLink').addEventListener('click', function(e) {
-    if (S.user) {
-      e.preventDefault();
-      signOut();
-    }
-    /* If not signed in, the <a href="auth.html"> handles navigation naturally */
-  });
-  
-  $('contactLink').addEventListener('click', function() { toggleSB(false); openModal('contactModal'); });
+  $('newChatBtn').addEventListener('click', newChat);
+  $('signInLink').addEventListener('click', function(e) { if (S.user) { e.preventDefault(); signOut(); } });
+  $('contactLink').addEventListener('click', function() { toggleSB(false); $('contactModal').classList.add('on'); });
 
   /* Search */
   $('sbSearch').addEventListener('input', function() { renderChatList(this.value); });
 
   /* Theme */
-  $('themeGrid').addEventListener('click', function(e) {
-    var b = e.target.closest('.t-btn');
-    if (b) setTheme(b.getAttribute('data-t'));
-  });
+  $('themeGrid').addEventListener('click', function(e) { var b = e.target.closest('.t-btn'); if (b) setTheme(b.getAttribute('data-t')); });
+
+  /* Model Selection */
+  $('modelSel').addEventListener('click', function(e) { e.stopPropagation(); toggleMD(); });
+  $('modelSel').addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleMD(); } });
+  $('modelDd').addEventListener('click', function(e) { e.stopPropagation(); var item = e.target.closest('.model-item'); if (item && !item.classList.contains('locked')) selectModel(item.getAttribute('data-model')); });
+  $('modelDd').addEventListener('keydown', function(e) { var item = e.target.closest('.model-item'); if (item && (e.key === 'Enter' || e.key === ' ') && !item.classList.contains('locked')) { e.preventDefault(); selectModel(item.getAttribute('data-model')); } });
 
   /* Views */
   $('chatTab').addEventListener('click', function() { switchView('chat'); });
   $('galleryTab').addEventListener('click', function() { switchView('gallery'); });
 
-  /* Action sheet */
+  /* Action Sheet */
   $('asBtn').addEventListener('click', function() { toggleAS(); });
   $('asClose').addEventListener('click', function() { toggleAS(false); });
   $('asOv').addEventListener('click', function() { toggleAS(false); });
-  
   $('asSheet').addEventListener('click', function(e) {
-    var o = e.target.closest('.as-opt');
-    if (!o) return;
-    var mediaType = o.getAttribute('data-media');
-    if (mediaType === 'image') { if (mediaGate('image')) return; }
-    if (mediaType === 'video') { if (mediaGate('video')) return; }
-    $('cbInput').value = o.getAttribute('data-prompt');
-    $('cbInput').focus();
-    autoH($('cbInput'));
-    updateCB();
-    toggleAS(false);
+    var o = e.target.closest('.as-opt'); if (!o) return;
+    var mediaType = o.getAttribute('data-media'); if (mediaType === 'image' && mediaGate('image')) return; if (mediaType === 'video' && mediaGate('video')) return;
+    $('cbInput').value = o.getAttribute('data-prompt'); $('cbInput').focus(); autoH($('cbInput')); updateCB(); toggleAS(false);
   });
 
-  /* Voice dropdown */
-  $('voiceBtn').addEventListener('click', function(e) {
-    e.stopPropagation();
-    if (!S.user) {
-      toast('Sign in to select voice', 'wrn');
-      window.location.href = 'auth.html';
-      return;
-    }
-    toggleVD();
-  });
-  
-  $('voiceDd').addEventListener('click', function(e) {
-    var item = e.target.closest('.vd-item');
-    if (item) {
-      S.voice = item.getAttribute('data-vid');
-      S.voiceProvider = item.getAttribute('data-vprov');
-      renderVoices();
-      toggleVD(false);
-      toast('Voice updated: ' + S.voice, 'ok');
-    }
-  });
+  /* Voice Dropdown */
+  $('voiceBtn').addEventListener('click', function(e) { e.stopPropagation(); if (authGate('voice')) return; toggleVD(); });
+  $('voiceDd').addEventListener('click', function(e) { var item = e.target.closest('.vd-item'); if (item) { S.voice = item.getAttribute('data-vid'); S.voiceProvider = item.getAttribute('data-vprov'); toggleVD(false); toast('Voice updated', 'ok'); } });
 
-  /* File upload */
+  /* File Upload */
   $('fileBtn').addEventListener('click', function() { $('fileInput').click(); });
-  $('fileInput').addEventListener('change', function() {
-    var files = this.files;
-    if (!files || !files.length) return;
-    var file = files[0];
-    S.pendingFile = file;
-    S.uploading = false;
-    showFileIndicator(file, false);
-    updateCB();
-  });
+  $('fileInput').addEventListener('change', function() { var files = this.files; if (!files || !files.length) return; var file = files[0]; S.pendingFile = file; showFileIndicator(file, false); updateCB(); });
 
   /* Chatbar */
   var inp = $('cbInput');
   inp.addEventListener('input', function() { autoH(inp); updateCB(); });
-  inp.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      if (S.pendingFile && !S.uploading) {
-        uploadFile(S.pendingFile);
-        return;
-      }
-      sendMsg();
-    }
-  });
-  
-  $('micBtn').addEventListener('click', function() {
-    if (!S.user) {
-      toast('Sign in to use voice input', 'wrn');
-      window.location.href = 'auth.html';
-      return;
-    }
-    toggleMic();
-  });
-  
-  $('sendStopBtn').addEventListener('click', function() {
-    if (S.streaming) stopGen();
-    else if (S.uploading) { /* Can't cancel upload easily */ }
-    else if (S.pendingFile) uploadFile(S.pendingFile);
-    else sendMsg();
-  });
+  inp.addEventListener('keydown', function(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (S.pendingFile && !S.uploading) uploadFile(S.pendingFile); else sendMsg(); } });
+  $('micBtn').addEventListener('click', function() { if (!this.classList.contains('locked')) toggleMic(); });
+  $('sendStopBtn').addEventListener('click', function() { if (S.streaming) stopGen(); else if (S.pendingFile) uploadFile(S.pendingFile); else sendMsg(); });
 
-  /* Scroll to bottom */
+  /* Scroll */
   $('msgsWrap').addEventListener('scroll', checkScroll);
   $('scrollBot').addEventListener('click', scrollBot);
 
-  /* Welcome cards */
+  /* Welcome Cards */
   $('welcomeEl').addEventListener('click', function(e) {
-    var c = e.target.closest('.w-card');
-    if (!c) return;
-    var prompt = c.getAttribute('data-prompt');
-    var mediaType = c.getAttribute('data-media');
-    if (mediaType === 'image') { if (mediaGate('image')) return; }
-    if (mediaType === 'video') { if (mediaGate('video')) return; }
+    var c = e.target.closest('.w-card'); if (!c) return;
+    var prompt = c.getAttribute('data-prompt'), mediaType = c.getAttribute('data-media');
+    if (mediaType === 'image' && mediaGate('image')) return; if (mediaType === 'video' && mediaGate('video')) return;
     sendMsg(prompt);
   });
 
-  /* Chat list */
+  /* Chat List */
   $('chatListItems').addEventListener('click', function(e) {
-    var del = e.target.closest('[data-del]');
-    if (del) { e.stopPropagation(); deleteChat(del.getAttribute('data-del')); return; }
-    var item = e.target.closest('[data-cid]');
-    if (item) loadChat(item.getAttribute('data-cid'));
+    var del = e.target.closest('[data-del]'); if (del) { e.stopPropagation(); deleteChat(del.getAttribute('data-del')); return; }
+    var item = e.target.closest('[data-cid]'); if (item) loadChat(item.getAttribute('data-cid'));
   });
 
   /* Gallery */
-  $('galGrid').addEventListener('click', function(e) {
-    var item = e.target.closest('.gal-item');
-    if (item) openLB(item.getAttribute('data-gid'));
-  });
+  $('galGrid').addEventListener('click', function(e) { var item = e.target.closest('.gal-item'); if (item) openLB(item.getAttribute('data-gid')); });
   $('lbClose').addEventListener('click', closeLB);
   $('lightbox').addEventListener('click', function(e) { if (e.target === $('lightbox')) closeLB(); });
 
-  /* Message actions */
+  /* Message Actions */
   $('msgsEl').addEventListener('click', function(e) {
-    var cpBtn = e.target.closest('[data-copy-code]');
-    if (cpBtn) {
-      var codeEl = cpBtn.closest('.code-blk');
-      if (!codeEl) return;
-      codeEl = codeEl.querySelector('code');
-      if (codeEl) {
-        navigator.clipboard.writeText(codeEl.textContent).then(function() {
-          cpBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied';
-          setTimeout(function() { cpBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy'; }, 1800);
-        });
-      }
-      return;
-    }
-    
-    var ab = e.target.closest('.ma');
-    if (!ab) return;
-    if (ab.classList.contains('locked')) {
-      authGate(ab.getAttribute('data-tip') || 'this feature');
-      return;
-    }
-    
-    var act = ab.getAttribute('data-act');
-    var i = parseInt(ab.getAttribute('data-i'), 10);
-    if (isNaN(i) || i < 0 || i >= S.msgs.length) return;
-    
-    if (act === 'copy') actCopy(i);
-    else if (act === 'like') actLike(i, 'like');
-    else if (act === 'dislike') actLike(i, 'dislike');
-    else if (act === 'edit') actEdit(i);
-    else if (act === 'edit-save') actEditSave(i);
-    else if (act === 'edit-cancel') actEditCancel(i);
-    else if (act === 'regen') actRegen(i);
-    else if (act === 'voice') actVoice(i);
+    var cpBtn = e.target.closest('[data-copy-code]'); if (cpBtn) { var codeEl = cpBtn.closest('.code-blk'); if (codeEl) codeEl = codeEl.querySelector('code'); if (codeEl) navigator.clipboard.writeText(codeEl.textContent).then(function() { cpBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied'; setTimeout(function() { cpBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy'; }, 1800); }); return; }
+    var ab = e.target.closest('.ma'); if (!ab) return; if (ab.classList.contains('locked')) return;
+    var act = ab.getAttribute('data-act'), i = parseInt(ab.getAttribute('data-i'), 10); if (isNaN(i) || i < 0 || i >= S.msgs.length) return;
+    if (act === 'copy') actCopy(i); else if (act === 'like') actLike(i, 'like'); else if (act === 'dislike') actLike(i, 'dislike'); else if (act === 'edit') actEdit(i); else if (act === 'edit-save') actEditSave(i); else if (act === 'edit-cancel') actEditCancel(i); else if (act === 'regen') actRegen(i); else if (act === 'voice') actVoice(i);
   });
 
-  /* Modal close */
+  /* Modal Close */
   document.addEventListener('click', function(e) {
-    var btn = e.target.closest('[data-close]');
-    if (btn) closeModal(btn.getAttribute('data-close'));
-    var ov = e.target.closest('.modal-ov');
-    if (ov && e.target === ov) ov.classList.remove('on');
+    var btn = e.target.closest('[data-close]'); if (btn) { $(btn.getAttribute('data-close')).classList.remove('on'); return; }
+    var ov = e.target.closest('.modal-ov'); if (ov && e.target === ov) ov.classList.remove('on');
   });
 
-  /* Outside clicks */
+  /* Outside Clicks */
   document.addEventListener('click', function(e) {
     if (S.vdOpen && !e.target.closest('#voiceDd') && !e.target.closest('#voiceBtn')) toggleVD(false);
+    if (S.mdOpen && !e.target.closest('#modelSel') && !e.target.closest('#modelDd')) toggleMD(false);
   });
 
   /* Keyboard */
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
       if ($('lightbox').classList.contains('on')) { closeLB(); return; }
-      if (S.asOpen) toggleAS(false);
-      if (S.vdOpen) toggleVD(false);
-      if (S.sbOpen) toggleSB(false);
+      if (S.asOpen) toggleAS(false); if (S.vdOpen) toggleVD(false); if (S.sbOpen) toggleSB(false); if (S.mdOpen) toggleMD(false);
       if (S.pendingFile && !S.uploading) clearPendingFile();
-      var ms = document.querySelectorAll('.modal-ov.on');
-      for (var i = 0; i < ms.length; i++) ms[i].classList.remove('on');
+      document.querySelectorAll('.modal-ov.on').forEach(function(m) { m.classList.remove('on'); });
     }
   });
 }
@@ -2099,27 +1354,19 @@ function initEvents() {
    INIT
    ================================================================ */
 function init() {
-  try { initTheme() } catch (e) {}
-  try { initMarked() } catch (e) {}
-  try { initSupabase() } catch (e) {}
-  try { initEvents() } catch (e) { console.error('FATAL:', e) }
-  try { renderAll() } catch (e) {}
-  try { updateCB() } catch (e) {}
-  try { $('msgsWrap').addEventListener('scroll', checkScroll) } catch (e) {}
-  
-  // Load user and set up auth listener
-  loadUser().finally(function() {
-    try { setupAuthListener() } catch (e) {}
-    try { fetchVoices() } catch (e) {}
-    try { loadChatList() } catch (e) {}
-  });
+  initTheme();
+  initMarked();
+  initSupabase();
+  initModel();
+  initEvents();
+  renderAll();
+  updateCB();
+  $('msgsWrap').addEventListener('scroll', checkScroll);
+  loadUser().finally(function() { setupAuthListener(); loadChatList(); });
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
-} else {
-  init();
-}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
 </script>
 </body>
 </html>
