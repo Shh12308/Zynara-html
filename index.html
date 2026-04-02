@@ -2,12 +2,62 @@
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>HeloxAi</title>
+
+<!-- Primary Meta Tags -->
+<meta name="title" content="HeloxAi - Advanced AI Companion">
+<meta name="description" content="Your advanced AI companion — think, create, code, and explore with intelligence.">
+<meta name="author" content="HeloxAi">
+
+<!-- PWA Meta Tags -->
+<meta name="application-name" content="HeloxAi">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HeloxAi">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
+
+<!-- Theme Color (Dynamic via JS, fallback here) -->
+<meta name="theme-color" content="#08080c">
+<meta name="msapplication-navbutton-color" content="#08080c">
+<meta name="msapplication-TileColor" content="#08080c">
+
+<!-- Manifest -->
+<link rel="manifest" href="manifest.json">
+
+<!-- Favicons (Standard) -->
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+<link rel="icon" type="image/x-icon" href="icons/favicon.ico">
+
+<!-- iOS Icons -->
+<link rel="apple-touch-icon" href="icons/icon-192x192.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/icon-192x192.png">
+<link rel="apple-touch-icon" sizes="167x167" href="icons/icon-152x152.png">
+
+<!-- Windows Tiles -->
+<meta name="msapplication-TileImage" content="icons/icon-144x144.png">
+<meta name="msapplication-config" content="browserconfig.xml">
+
+<!-- iOS Splash Screens (iPhone/X/Pro/Max) -->
+<link rel="apple-touch-startup-image" href="splash/splash-640x1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)">
+<link rel="apple-touch-startup-image" href="splash/splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)">
+<link rel="apple-touch-startup-image" href="splash/splash-1242x2208.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="splash/splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="splash/splash-1536x2048.png" media="(min-device-width: 768px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 2)">
+<link rel="apple-touch-startup-image" href="splash/splash-1668x2224.png" media="(min-device-width: 834px) and (max-device-width: 834px) and (-webkit-min-device-pixel-ratio: 2)">
+<link rel="apple-touch-startup-image" href="splash/splash-2048x2732.png" media="(min-device-width: 1024px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 2)">
+<!-- iPhone 14 Pro Max / 15 Pro Max -->
+<link rel="apple-touch-startup-image" href="splash/splash-1290x2796.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)">
+<!-- iPhone 14 Pro / 15 Pro -->
+<link rel="apple-touch-startup-image" href="splash/splash-1179x2556.png" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)">
+
+<!-- Fonts & Libraries -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
-<!-- Supabase JS SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
