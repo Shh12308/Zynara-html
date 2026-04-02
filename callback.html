@@ -12,118 +12,72 @@
       --accent: #6ee7b7;
       --muted: #9aa4b2;
       --danger: #ff6b6b;
-      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
     }
 
-    *, *::before, *::after { box-sizing: border-box; }
+    * { box-sizing: border-box; }
 
-    html, body {
-      height: 100%;
+    body {
       margin: 0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       background: linear-gradient(180deg, #071028 0%, #0f1724 100%);
       color: #e6eef6;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
     }
 
-    .callback-card {
+    .card {
       text-align: center;
+      padding: 40px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.05);
       max-width: 380px;
       width: 100%;
-      padding: 48px 32px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border-radius: 12px;
-      box-shadow: 0 8px 40px rgba(2,6,23,0.75);
-      border: 1px solid rgba(255,255,255,0.03);
     }
 
-    .callback-card h1 {
-      margin: 0 0 8px 0;
-      font-size: 22px;
-      letter-spacing: -0.3px;
-    }
-
-    .callback-card p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    .spinner-ring {
-      width: 44px;
-      height: 44px;
-      margin: 0 auto 24px auto;
-      border: 3px solid rgba(110, 231, 183, 0.12);
-      border-top-color: var(--accent);
+    .spinner {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 20px;
+      border: 3px solid rgba(110,231,183,0.2);
+      border-top-color: #6ee7b7;
       border-radius: 50%;
-      animation: spin 0.7s linear infinite;
+      animation: spin .8s linear infinite;
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .callback-card.error .spinner-ring { display: none; }
-
-    .error-icon {
-      display: none;
-      width: 44px;
-      height: 44px;
-      margin: 0 auto 24px auto;
-      border-radius: 50%;
-      background: rgba(255, 107, 107, 0.1);
-      color: var(--danger);
-      font-size: 22px;
-      line-height: 44px;
-    }
-
-    .callback-card.error .error-icon { display: block; }
-    .callback-card.error h1 { color: var(--danger); }
-
-    .retry-btn {
-      display: none;
+    .error { color: var(--danger); }
+    .btn {
       margin-top: 20px;
-      padding: 12px 28px;
+      padding: 10px 20px;
       border: none;
-      border-radius: 10px;
-      background: linear-gradient(90deg, #0ea5a5, #4ade80);
-      color: #062022;
-      font-weight: 600;
-      font-size: 14px;
-      cursor: pointer;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
-
-    .callback-card.error .retry-btn { display: inline-block; }
-    .retry-btn:hover { transform: scale(1.03); box-shadow: 0 4px 20px rgba(78, 222, 128, 0.2); }
-
-    .error-detail {
-      display: none;
-      margin-top: 12px;
-      padding: 10px 14px;
       border-radius: 8px;
-      background: rgba(255, 107, 107, 0.06);
-      border: 1px solid rgba(255, 107, 107, 0.1);
-      color: var(--muted);
-      font-size: 12px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      word-break: break-word;
-      text-align: left;
+      cursor: pointer;
+      background: linear-gradient(90deg,#0ea5a5,#4ade80);
     }
 
-    .callback-card.error .error-detail { display: block; }
+    pre {
+      margin-top: 10px;
+      font-size: 12px;
+      text-align: left;
+      background: rgba(255,0,0,0.05);
+      padding: 10px;
+      border-radius: 6px;
+      overflow-x: auto;
+    }
   </style>
 </head>
-<body>
 
-  <div class="callback-card" id="callback-card">
-    <div class="spinner-ring" aria-hidden="true"></div>
-    <div class="error-icon" aria-hidden="true">&#10007;</div>
-    <h1 id="status-title">Logging you in&hellip;</h1>
-    <p id="status-text">Please wait while we complete your authentication.</p>
-    <div class="error-detail" id="error-detail"></div>
-    <button class="retry-btn" id="retry-btn">Back to Login</button>
+<body>
+  <div class="card">
+    <div class="spinner" id="spinner"></div>
+    <h2 id="title">Logging you in…</h2>
+    <p id="text">Completing authentication…</p>
+    <pre id="debug"></pre>
+    <button id="btn" class="btn" style="display:none;">Back to Login</button>
   </div>
 
   <script src="env.js"></script>
@@ -131,59 +85,85 @@
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-    const card     = document.getElementById("callback-card");
-    const title    = document.getElementById("status-title");
-    const text     = document.getElementById("status-text");
-    const detail   = document.getElementById("error-detail");
-    const retryBtn = document.getElementById("retry-btn");
+    const title = document.getElementById("title");
+    const text = document.getElementById("text");
+    const debug = document.getElementById("debug");
+    const btn = document.getElementById("btn");
+    const spinner = document.getElementById("spinner");
 
-    function showError(message, raw) {
-      card.classList.add("error");
+    function showError(msg, detail = "") {
+      spinner.style.display = "none";
       title.textContent = "Login failed";
-      text.textContent  = message;
-      detail.textContent = raw || "";
-      retryBtn.onclick = () => window.location.replace("auth.html");
+      title.classList.add("error");
+      text.textContent = msg;
+      debug.textContent = detail;
+
+      btn.style.display = "inline-block";
+      btn.onclick = () => window.location.href = "/auth.html";
     }
 
     if (!window.__ENV__) {
-      showError("Configuration error", "env.js not loaded");
+      showError("Missing env config", "env.js not loaded");
       throw new Error("env.js missing");
     }
 
-    const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.__ENV__;
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabase = createClient(
+      window.__ENV__.SUPABASE_URL,
+      window.__ENV__.SUPABASE_ANON_KEY
+    );
 
-    async function handleAuthCallback() {
+    async function handleCallback() {
       try {
         const url = new URL(window.location.href);
-        const code  = url.searchParams.get("code");
+        console.log("FULL URL:", url.href);
+        debug.textContent = url.href;
+
+        const code = url.searchParams.get("code");
         const error = url.searchParams.get("error");
 
-        console.log("OAuth URL:", window.location.href);
+        if (error) {
+          showError("OAuth provider error", error);
+          return;
+        }
 
-        if (error) { showError("OAuth provider returned an error.", error); return; }
-        if (!code) { showError("Missing authentication code.", "No ?code= found in URL"); return; }
+        // 🚨 FIX: if no code, redirect instead of hard failing
+        if (!code) {
+          console.warn("No code found, redirecting...");
+          window.location.replace("/auth.html");
+          return;
+        }
 
-        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-        if (exchangeError) { showError("Authentication failed.", exchangeError.message); return; }
+        const { error: exchangeError } =
+          await supabase.auth.exchangeCodeForSession(code);
 
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) { showError("No session created after login."); return; }
+        if (exchangeError) {
+          showError("Session exchange failed", exchangeError.message);
+          return;
+        }
+
+        const { data: { session } } =
+          await supabase.auth.getSession();
+
+        if (!session) {
+          showError("No session created");
+          return;
+        }
+
+        console.log("Session OK:", session);
 
         // Clean URL
-        window.history.replaceState({}, document.title, "/callback");
+        window.history.replaceState({}, "", "/callback");
 
-        // Redirect to dashboard
+        // Success redirect
         window.location.replace("/index.html");
 
       } catch (err) {
         console.error(err);
-        showError("Unexpected error.", err.message || String(err));
+        showError("Unexpected error", err.message || String(err));
       }
     }
 
-    handleAuthCallback();
+    handleCallback();
   </script>
-
 </body>
 </html>
