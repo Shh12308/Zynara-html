@@ -12,10 +12,8 @@ const ASSETS_TO_CACHE = [
   '/styles.css',
   '/main.js',
   '/manifest.json',
-  '/images/icon-192x192.png',
-  '/images/icon-512x512.png',
-  '/images/avatars/',
-  '/images/emojis/',
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png'
 ];
 
 // ================================
@@ -43,55 +41,60 @@ self.addEventListener('activate', (event) => {
 });
 
 // ================================
-// FETCH HANDLER (Stale-While-Revalidate + Offline)
+// FETCH HANDLER (Unified Strategy)
 // ================================
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
 
-  // Never cache Google Ads / Supabase auth
-  if (url.hostname.includes('googlesyndication.com') || url.hostname.includes('googleadservices.com') || url.hostname.includes('supabase.co')) {
+  // 1. Network Only: API Calls & Auth (Supabase)
+  // We don't cache these because chat data changes constantly.
+  if (url.pathname.startsWith('/api/') || url.hostname.includes('supabase.co')) {
     return event.respondWith(fetch(event.request));
   }
 
-  // Handle images/media & emojis
-  if (
-    url.pathname.match(/\.(png|jpg|jpeg|gif|webp|svg)$/) ||
-    url.pathname.startsWith('/avatars/') ||
-    url.pathname.startsWith('/emojis/')
-  ) {
-    event.respondWith(caches.open(CACHE_NAME).then(async (cache) => {
-      const cached = await cache.match(event.request);
-      const network = fetch(event.request)
-        .then((res) => { cache.put(event.request, res.clone()); return res; })
-        .catch(() => cached);
-      return cached || network;
-    }));
+  // 2. Cache First: Images & Media
+  if (url.pathname.match(/\.(png|jpg|jpeg|gif|webp|svg|ico)$/)) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then(async (cache) => {
+        const cached = await cache.match(event.request);
+        if (cached) return cached;
+        
+        try {
+          const network = await fetch(event.request);
+          cache.put(event.request, network.clone());
+          return network;
+        } catch (e) {
+          // Return placeholder or ignore if offline
+          return new Response(); 
+        }
+      })
+    );
     return;
   }
 
-  // Default: HTML/JS/CSS (stale-while-revalidate)
+  // 3. Stale-While-Revalidate: HTML, CSS, JS
   event.respondWith(
     caches.open(CACHE_NAME).then(async (cache) => {
       const cached = await cache.match(event.request);
-      const network = fetch(event.request)
-        .then((res) => { cache.put(event.request, res.clone()); return res; })
-        .catch(() => cached || caches.match(OFFLINE_URL));
-      return cached || network;
-    })
-  );
-});
+      
+      const networkPromise = fetch(event.request)
+        .then((res) => {
+          // Update cache with fresh version
+          cache.put(event.request, res.clone());
+          return res;
+        })
+        .catch(() => {
+          // If network fails, return cached version
+          return cached;
+        });
 
-// ================================
-// OFFLINE FALLBACK
-// ================================
-self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
-
-  event.respondWith(
-    fetch(event.request).catch(() => {
-      if (event.request.headers.get('accept')?.includes('text/html')) {
+      // Return cached immediately, or wait for network if not cached
+      return cached || networkPromise;
+    }).catch(() => {
+      // Ultimate fallback for Navigation requests
+      if (event.request.mode === 'navigate') {
         return caches.match(OFFLINE_URL);
       }
     })
@@ -124,13 +127,6 @@ function openDB() {
   });
 }
 
-async function saveMessageOffline(msg) {
-  const db = await openDB();
-  const tx = db.transaction(MESSAGE_STORE, 'readwrite');
-  tx.objectStore(MESSAGE_STORE).put(msg);
-  return tx.complete;
-}
-
 async function getPendingMessages() {
   const db = await openDB();
   return new Promise((resolve) => {
@@ -148,46 +144,20 @@ async function deleteMessage(id) {
   return tx.complete;
 }
 
-// ================================
-// SEND PENDING MESSAGES
-// ================================
 async function sendPendingMessages() {
   const messages = await getPendingMessages();
   for (const msg of messages) {
     try {
-      const res = await fetch('/api/sendMessage', {
+      const res = await fetch('/api/sendMessage', { // Replace with your actual endpoint
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(msg),
       });
       if (res.ok) await deleteMessage(msg.id);
     } catch (err) {
-      console.warn('[SW] Failed to send:', msg, err);
+      console.warn('[SW] Failed to sync:', msg, err);
     }
   }
-}
-
-// ================================
-// SAVE CHAT HISTORY OFFLINE
-// ================================
-async function saveChatHistory(messages) {
-  const db = await openDB();
-  const tx = db.transaction(MESSAGE_HISTORY_STORE, 'readwrite');
-  messages.forEach(msg => tx.objectStore(MESSAGE_HISTORY_STORE).put(msg));
-  return tx.complete;
-}
-
-async function getChatHistory(chatId) {
-  const db = await openDB();
-  return new Promise((resolve) => {
-    const tx = db.transaction(MESSAGE_HISTORY_STORE, 'readonly');
-    const store = tx.objectStore(MESSAGE_HISTORY_STORE);
-    const req = store.getAll();
-    req.onsuccess = () => {
-      const chatMessages = req.result.filter(m => m.chatId === chatId);
-      resolve(chatMessages);
-    };
-  });
 }
 
 // ================================
@@ -195,11 +165,11 @@ async function getChatHistory(chatId) {
 // ================================
 self.addEventListener('push', (event) => {
   const data = event.data?.json() || {};
-  const title = data.title || '💬 New Message';
+  const title = data.title || 'HeloxAi';
   const options = {
-    body: data.body || 'You received a new chat message!',
-    icon: '/images/icon-192x192.png',
-    badge: '/images/icon-192x192.png',
+    body: data.body || 'You have a new update.',
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/icon-192x192.png',
     data: data.url || '/',
     vibrate: [200, 100, 200],
   };
