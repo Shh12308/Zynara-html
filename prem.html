@@ -660,5 +660,28 @@ preorderBtn.addEventListener("click", async () => {
   // Initial call
   updateCountdown();
 </script>
+  <script>
+  const faqQuestions = document.querySelectorAll(".faq-question");
+
+  faqQuestions.forEach((question) => {
+    question.addEventListener("click", () => {
+      const answer = question.nextElementSibling;
+
+      // Toggle active state on question
+      question.classList.toggle("active");
+
+      // Toggle answer visibility
+      answer.classList.toggle("show");
+
+      // Optional: close others (accordion style)
+      faqQuestions.forEach((q) => {
+        if (q !== question) {
+          q.classList.remove("active");
+          q.nextElementSibling.classList.remove("show");
+        }
+      });
+    });
+  });
+</script>
 </body>
 </html>
