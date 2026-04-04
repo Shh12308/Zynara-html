@@ -47,13 +47,24 @@
         :root{--font-display:'Space Grotesk',sans-serif;--font-body:'DM Sans',sans-serif;--radius:14px;--radius-sm:10px;--radius-lg:18px;--radius-xl:24px;--speed:0.25s;--speed-slow:0.4s;--ease:cubic-bezier(.4,0,.2,1);--ease-out:cubic-bezier(0,0,.2,1);--ease-in:cubic-bezier(.4,0,1,1);--ease-bounce:cubic-bezier(.34,1.56,.64,1);--msg-max:680px;--sidebar-w:290px}
         [data-theme="dark"]{--bg-primary:#08080c;--bg-secondary:#111116;--bg-tertiary:#1a1a22;--bg-quaternary:#22222c;--bg-user-bubble:rgba(16,185,129,.08);--bg-user-bubble-border:rgba(16,185,129,.15);--bg-sidebar:#0c0c10;--bg-input:#14141a;--bg-hover:#1e1e28;--bg-code:#0a0a10;--text-primary:#eeeef2;--text-secondary:#9494a6;--text-muted:#55556a;--accent:#10b981;--accent-hover:#059669;--accent-dim:rgba(16,185,129,.06);--accent-soft:rgba(16,185,129,.1);--accent-glow:rgba(16,185,129,.15);--border:rgba(255,255,255,.06);--border-active:rgba(16,185,129,.3);--danger:#ef4444;--warning:#f59e0b;--success:#10b981;--shadow-sm:0 1px 3px rgba(0,0,0,.3);--shadow:0 4px 20px rgba(0,0,0,.4);--shadow-lg:0 8px 40px rgba(0,0,0,.5);--glow:0 0 60px rgba(16,185,129,.06);--glow-strong:0 0 80px rgba(16,185,129,.12);--noise:rgba(255,255,255,.008)}
         [data-theme="light"]{--bg-primary:#fafafa;--bg-secondary:#f0f0f2;--bg-tertiary:#e6e6ea;--bg-quaternary:#dddde2;--bg-user-bubble:rgba(5,150,105,.06);--bg-user-bubble-border:rgba(5,150,105,.15);--bg-sidebar:#f4f4f6;--bg-input:#f0f0f2;--bg-hover:#e4e4e8;--bg-code:#1e1e2e;--text-primary:#111114;--text-secondary:#555566;--text-muted:#999aaa;--accent:#059669;--accent-hover:#047857;--accent-dim:rgba(5,150,105,.04);--accent-soft:rgba(5,150,105,.08);--accent-glow:rgba(5,150,105,.1);--border:rgba(0,0,0,.07);--border-active:rgba(5,150,105,.3);--danger:#dc2626;--warning:#d97706;--success:#059669;--shadow-sm:0 1px 3px rgba(0,0,0,.04);--shadow:0 4px 20px rgba(0,0,0,.06);--shadow-lg:0 8px 40px rgba(0,0,0,.08);--glow:none;--glow-strong:none;--noise:rgba(0,0,0,.008)}
-        html,body{height:100%;overflow:hidden}
+        
+        /* --- LAYOUT FIXES: Ensure whole page fits without scrollbars --- */
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden; 
+            /* Use dynamic viewport height to handle mobile address bars correctly */
+            height: 100dvh; 
+            width: 100dvw;
+            -webkit-overflow-scrolling: touch;
+        }
+        
         body{font-family:var(--font-body);background:var(--bg-primary);color:var(--text-primary);transition:background var(--speed-slow),color var(--speed-slow);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
         ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}::-webkit-scrollbar-thumb:hover{background:var(--text-muted)}
         body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.4;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");background-repeat:repeat;background-size:200px}
 
         .sb-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:90;opacity:0;pointer-events:none;transition:opacity .35s var(--ease);backdrop-filter:blur(4px)}.sb-overlay.on{opacity:1;pointer-events:all}
-        .sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar-w);background:var(--bg-sidebar);border-right:1px solid var(--border);z-index:100;transform:translateX(-100%);transition:transform .35s var(--ease);display:flex;flex-direction:column;overflow:hidden}
+        .sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar-w);background:var(--bg-sidebar);border-right:1px solid var(--border);z-index:100;transform:translateX(-100%);transition:transform .35s var(--ease);display:flex;flex-direction:column;overflow:hidden; height: 100dvh;}
         .sidebar.open{transform:translateX(0)}
         .sb-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
         .sb-logo{font-family:var(--font-display);font-size:22px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--text-primary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-.6px}
@@ -150,8 +161,8 @@
         .z-icon{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff}
         .default-icon{background:var(--bg-quaternary);color:var(--accent)}
 
-        .msgs-wrap{flex:1;overflow-y:auto;scroll-behavior:smooth;position:relative;display:flex;flex-direction:column;}
-        .msgs-inner{max-width:var(--msg-max);margin:0 auto;padding:24px 24px 8px; width: 100%; flex: 1;}
+        .msgs-wrap{flex:1;overflow-y:auto;scroll-behavior:smooth;position:relative;display:flex;flex-direction:column;overscroll-behavior:contain; -webkit-overflow-scrolling: touch;}
+        .msgs-inner{max-width:var(--msg-max);margin:0 auto;padding:24px 24px 8px; width: 100%; flex: 1; min-height: 0;}
 
         .welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:40px 24px;position:relative;overflow:hidden}
         .welcome::before{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,var(--accent-dim),transparent 70%);top:50%;left:50%;transform:translate(-50%,-60%);pointer-events:none;animation:welcome-glow 6s ease-in-out infinite alternate}
@@ -440,7 +451,8 @@
   <div class="s-user" id="sUser"><div class="av" id="uAv">?</div><div class="inf"><div class="nm" id="uNm">Guest</div><div class="pl" id="uPl">Free Plan</div></div></div>
 </aside>
 
-<main style="display:flex;flex-direction:column;height:100vh;position:relative">
+<!-- Added height: 100dvh to main to ensure it fits exactly in viewport -->
+<main style="display:flex;flex-direction:column;height:100dvh;position:relative">
   <header class="chat-hdr">
     <button class="ib menu-btn" id="menuBtn" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
     <div class="hdr-title" id="hdrTitle">HeloxAi</div>
@@ -614,7 +626,9 @@ var S = {
   _hlOk: false,
   pendingFile: null,
   uploading: false,
-  model: 'helox'
+  model: 'helox',
+  isAutoScrolling: true, // Track if user wants to auto-scroll
+  scrollThreshold: 100   // Distance from bottom to consider "at bottom"
 };
 
 var IMAGE_KW = ['generate image', 'create image', 'make image', 'draw me', 'render image'];
@@ -842,13 +856,55 @@ function renderAll() {
     }
   });
   $('msgsEl').innerHTML = html;
-  scrollBot();
+  // Only scroll to bottom if we were already auto-scrolling
+  if (S.isAutoScrolling) scrollBot();
 }
 
-function updateLastAI(content) { var i = S.msgs.length - 1; if (i < 0 || S.msgs[i].role !== 'assistant') return; S.msgs[i].content = content; var el = $('mc-' + i); if (el) el.innerHTML = md(content); scrollBot(); }
-function addTyping() { var d = document.createElement('div'); d.className = 'msg ai-msg'; d.id = 'typMsg'; d.innerHTML = '<div class="msg-inner"><div class="msg-label"><span class="ai-dot"></span> AI</div><div class="typing-wrap"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>'; $('msgsEl').appendChild(d); scrollBot(); }
+function updateLastAI(content) { 
+  var i = S.msgs.length - 1; 
+  if (i < 0 || S.msgs[i].role !== 'assistant') return; 
+  S.msgs[i].content = content; 
+  var el = $('mc-' + i); 
+  if (el) el.innerHTML = md(content); 
+  
+  // SMART SCROLL: Only scroll if user is at the bottom
+  if (S.isAutoScrolling) {
+    scrollBot();
+  } else {
+    // If user scrolled up, ensure the "Scroll to Bottom" button is visible
+    checkScrollButton();
+  }
+}
+function addTyping() { var d = document.createElement('div'); d.className = 'msg ai-msg'; d.id = 'typMsg'; d.innerHTML = '<div class="msg-inner"><div class="msg-label"><span class="ai-dot"></span> AI</div><div class="typing-wrap"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>'; $('msgsEl').appendChild(d); if(S.isAutoScrolling) scrollBot(); }
 function rmTyping() { var e = $('typMsg'); if (e) e.remove(); }
-function scrollBot() { requestAnimationFrame(function() { var w = $('msgsWrap'); if (w) w.scrollTop = w.scrollHeight; }); }
+
+/* --- SMART SCROLL LOGIC --- */
+function checkScrollButton() {
+  var w = $('msgsWrap');
+  if (!w) return;
+  var dist = w.scrollHeight - w.scrollTop - w.clientHeight;
+  if (dist > S.scrollThreshold) {
+    $('scrollBot').classList.add('vis');
+    S.isAutoScrolling = false;
+  } else {
+    $('scrollBot').classList.remove('vis');
+    S.isAutoScrolling = true;
+  }
+}
+
+function scrollBot(force) {
+  // If forced (e.g. button click), we ignore the auto-scroll flag and snap to bottom
+  if (force || S.isAutoScrolling) {
+    requestAnimationFrame(function() { 
+      var w = $('msgsWrap'); 
+      if (w) { 
+        w.scrollTop = w.scrollHeight; 
+        S.isAutoScrolling = true;
+        $('scrollBot').classList.remove('vis');
+      } 
+    });
+  }
+}
 
 /* ================================================================
    MESSAGE ACTIONS
@@ -1035,9 +1091,16 @@ function initEvents() {
   $('micBtn').addEventListener('click', function() { if (!this.classList.contains('locked')) toggleMic(); });
   $('sendStopBtn').addEventListener('click', function() { if (S.streaming) stopGen(); else if (S.pendingFile) uploadFile(S.pendingFile); else sendMsg(); });
 
-  /* Scroll */
-  $('msgsWrap').addEventListener('scroll', function() { $('scrollBot').classList.toggle('vis', $('msgsWrap').scrollHeight - $('msgsWrap').scrollTop - $('msgsWrap').clientHeight > 200); });
-  $('scrollBot').addEventListener('click', scrollBot);
+  /* Scroll - SMART SCROLL LOGIC */
+  var msgsWrap = $('msgsWrap');
+  msgsWrap.addEventListener('scroll', function() {
+    checkScrollButton();
+  });
+  
+  /* Scroll Button Click - Force Scroll */
+  $('scrollBot').addEventListener('click', function() {
+    scrollBot(true); // true = force scroll down and resume auto-scrolling
+  });
 
   /* Welcome Cards */
   $('welcomeEl').addEventListener('click', function(e) {
@@ -1051,26 +1114,15 @@ function initEvents() {
   $('lbClose').addEventListener('click', closeLB);
   $('lightbox').addEventListener('click', function(e) { if (e.target === $('lightbox')) closeLB(); });
 
-  /* Message Actions - FIXED LISTENER */
+  /* Message Actions */
   $('msgsEl').addEventListener('click', function(e) {
-    // 1. Handle Code Copy
     var cpBtn = e.target.closest('[data-copy-code]'); 
-    if (cpBtn) { 
-      var codeEl = cpBtn.closest('.code-blk'); 
-      if (codeEl) codeEl = codeEl.querySelector('code'); 
-      if (codeEl) navigator.clipboard.writeText(codeEl.textContent).then(function() { 
-        cpBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied'; 
-        setTimeout(function() { cpBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy'; }, 1800); 
-      }); 
-      return; 
-    }
-
-    // 2. Handle Edit Form Buttons (Save/Cancel) - FIX START
+    if (cpBtn) { var codeEl = cpBtn.closest('.code-blk'); if (codeEl) codeEl = codeEl.querySelector('code'); if (codeEl) navigator.clipboard.writeText(codeEl.textContent).then(function() { cpBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied'; setTimeout(function() { cpBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy'; }, 1800); }); return; }
+    
     var btnSave = e.target.closest('.btn-sv');
     var btnCancel = e.target.closest('.btn-cn');
 
     if (btnSave || btnCancel) {
-        // Find the index. It's on the button itself or a parent.
         var targetBtn = btnSave || btnCancel;
         var iStr = targetBtn.getAttribute('data-i');
         if (iStr) {
@@ -1080,16 +1132,11 @@ function initEvents() {
                 if (btnCancel) actEditCancel(i);
             }
         }
-        return; // Stop propagation to prevent triggering other clicks
+        return; 
     }
-    // FIX END
 
-    // 3. Handle Message Action Buttons (Like, Dislike, Edit Toggle, etc.)
-    var ab = e.target.closest('.ma'); 
-    if (!ab) return; 
-    
-    var act = ab.getAttribute('data-act'), i = parseInt(ab.getAttribute('data-i'), 10); 
-    if (isNaN(i) || i < 0 || i >= S.msgs.length) return;
+    var ab = e.target.closest('.ma'); if (!ab) return; if (ab.classList.contains('locked')) return;
+    var act = ab.getAttribute('data-act'), i = parseInt(ab.getAttribute('data-i'), 10); if (isNaN(i) || i < 0 || i >= S.msgs.length) return;
     
     if (act === 'copy') actCopy(i); 
     else if (act === 'like') actLike(i, 'like'); 
