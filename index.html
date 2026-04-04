@@ -442,7 +442,7 @@
 
 <main style="display:flex;flex-direction:column;height:100vh;position:relative">
   <header class="chat-hdr">
-    <button class="ib" id="menuBtn" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
+    <button class="ib menu-btn" id="menuBtn" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
     <div class="hdr-title" id="hdrTitle">HeloxAi</div>
     <div class="model-sel" id="modelSel" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false">
       <div class="m-icon default-icon" id="modelIcon">H</div>
@@ -937,10 +937,6 @@ function sendToAI(text) {
 function regenerateAI() {
   S.streaming = true; S.abort = new AbortController(); addTyping(); updateCB();
   var full = '';
-  // Just send prompt for regeneration logic or empty if backend handles history
-  // Ideally backend needs context. Assuming backend uses auth token to fetch history or we send history.
-  // Since requirement is SIMPLE JSON {prompt: ...}, regeneration might be tricky without context.
-  // We will send the last user prompt again.
   var lastUserMsg = '';
   for(var i = S.msgs.length - 1; i >= 0; i--) { if(S.msgs[i].role === 'user') { lastUserMsg = S.msgs[i].content; break; } }
   
@@ -1055,20 +1051,50 @@ function initEvents() {
   $('lbClose').addEventListener('click', closeLB);
   $('lightbox').addEventListener('click', function(e) { if (e.target === $('lightbox')) closeLB(); });
 
-  /* Message Actions */
+  /* Message Actions - FIXED LISTENER */
   $('msgsEl').addEventListener('click', function(e) {
+    // 1. Handle Code Copy
     var cpBtn = e.target.closest('[data-copy-code]'); 
-    if (cpBtn) { var codeEl = cpBtn.closest('.code-blk'); if (codeEl) codeEl = codeEl.querySelector('code'); if (codeEl) navigator.clipboard.writeText(codeEl.textContent).then(function() { cpBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied'; setTimeout(function() { cpBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy'; }, 1800); }); return; }
+    if (cpBtn) { 
+      var codeEl = cpBtn.closest('.code-blk'); 
+      if (codeEl) codeEl = codeEl.querySelector('code'); 
+      if (codeEl) navigator.clipboard.writeText(codeEl.textContent).then(function() { 
+        cpBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied'; 
+        setTimeout(function() { cpBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy'; }, 1800); 
+      }); 
+      return; 
+    }
+
+    // 2. Handle Edit Form Buttons (Save/Cancel) - FIX START
+    var btnSave = e.target.closest('.btn-sv');
+    var btnCancel = e.target.closest('.btn-cn');
+
+    if (btnSave || btnCancel) {
+        // Find the index. It's on the button itself or a parent.
+        var targetBtn = btnSave || btnCancel;
+        var iStr = targetBtn.getAttribute('data-i');
+        if (iStr) {
+            var i = parseInt(iStr, 10);
+            if (!isNaN(i)) {
+                if (btnSave) actEditSave(i);
+                if (btnCancel) actEditCancel(i);
+            }
+        }
+        return; // Stop propagation to prevent triggering other clicks
+    }
+    // FIX END
+
+    // 3. Handle Message Action Buttons (Like, Dislike, Edit Toggle, etc.)
+    var ab = e.target.closest('.ma'); 
+    if (!ab) return; 
     
-    var ab = e.target.closest('.ma'); if (!ab) return; if (ab.classList.contains('locked')) return;
-    var act = ab.getAttribute('data-act'), i = parseInt(ab.getAttribute('data-i'), 10); if (isNaN(i) || i < 0 || i >= S.msgs.length) return;
+    var act = ab.getAttribute('data-act'), i = parseInt(ab.getAttribute('data-i'), 10); 
+    if (isNaN(i) || i < 0 || i >= S.msgs.length) return;
     
     if (act === 'copy') actCopy(i); 
     else if (act === 'like') actLike(i, 'like'); 
     else if (act === 'dislike') actLike(i, 'dislike'); 
     else if (act === 'edit') actEdit(i); 
-    else if (act === 'edit-save') actEditSave(i); 
-    else if (act === 'edit-cancel') actEditCancel(i); 
     else if (act === 'regen') actRegen(i); 
     else if (act === 'voice') actVoice(i);
   });
