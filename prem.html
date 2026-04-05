@@ -611,17 +611,25 @@ preorderBtn.addEventListener("click", async () => {
       return;
     }
 
+    // Call your Supabase Edge Function to create a checkout session
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/create_checkout_session`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${await getAccessToken()}`,
+      },
+      body: JSON.stringify({
+        userId: user.id,
+        email: user.email,
+        plan: "lifetime", // or any other plan metadata
+      }),
+    });
+
+    const data = await response.json();
+    if (!data.url) throw new Error("No checkout URL returned from server");
+
     // Redirect to Stripe checkout
-    if (!STRIPE_PAYMENT_LINK) throw new Error("Stripe payment link is missing. Check your env.js");
-
-    // Add client_reference_id so webhook knows which user to update
-    const separator = STRIPE_PAYMENT_LINK.includes("?") ? "&" : "?";
-    const checkoutUrl = `${STRIPE_PAYMENT_LINK}${separator}` +
-                        `prefilled_email=${encodeURIComponent(user.email)}` +
-                        `&client_reference_id=${user.id}`; // ✅ critical for webhook
-
-    console.log("Redirecting to Stripe checkout:", checkoutUrl);
-    window.location.href = checkoutUrl;
+    window.location.href = data.url;
 
   } catch (err) {
     console.error("❌ Preorder failed:", err);
