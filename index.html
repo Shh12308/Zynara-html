@@ -123,6 +123,7 @@
         .s-user.show{display:flex}
         .s-user .av{width:32px;height:32px;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
         .s-user .inf{flex:1;min-width:0}.s-user .nm{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.s-user .pl{font-size:10px;color:var(--text-muted);margin-top:1px}
+        .s-user .ll{font-size:9px;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0.7}
 
         .chat-hdr{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg-primary);z-index:10;flex-shrink:0;transition:background var(--speed-slow)}
         .hdr-title{font-family:var(--font-display);font-size:15px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.2px}
@@ -448,7 +449,7 @@
       <button class="t-btn" data-t="espresso">Espresso</button>
     </div>
   </div>
-  <div class="s-user" id="sUser"><div class="av" id="uAv">?</div><div class="inf"><div class="nm" id="uNm">Guest</div><div class="pl" id="uPl">Free Plan</div></div></div>
+  <div class="s-user" id="sUser"><div class="av" id="uAv">?</div><div class="inf"><div class="nm" id="uNm">Guest</div><div class="pl" id="uPl">Free Plan</div><div class="ll" id="uLl">Last login: Never</div></div></div>
 </aside>
 
 <!-- Added height: 100dvh to main to ensure it fits exactly in viewport -->
@@ -695,6 +696,14 @@ function setupAuthListener() {
 
 async function handleSignIn(session) {
   if (!session || !session.user) return;
+  
+  // --- TRACK LOGIN TIME ---
+  try {
+    var now = Date.now();
+    localStorage.setItem('helox-last-login', now);
+  } catch(e) { console.error('LocalStorage error', e); }
+  // --------------------------
+
   try {
     var { data: userData } = await sb.from('users').select('plan').eq('id', session.user.id).single();
     S.user = { id: session.user.id, email: session.user.email, plan: (userData && userData.plan) || 'free', token: session.access_token };
@@ -708,6 +717,35 @@ function handleSignOut() {
 }
 
 async function signOut() { if (sb) try { await sb.auth.signOut(); } catch(e) {} handleSignOut(); }
+
+/* ================================================================
+   LOGIN DISPLAY LOGIC
+   ================================================================ */
+function updateLoginDisplay() {
+  var el = $('uLl');
+  if (!el) return;
+  
+  if (!S.user) {
+    el.style.display = 'none';
+    return;
+  }
+
+  try {
+    var ts = localStorage.getItem('helox-last-login');
+    if (ts) {
+      var d = new Date(parseInt(ts));
+      // Format: e.g., "Oct 24, 2:30 PM"
+      var dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      var timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      el.textContent = 'Last login: ' + dateStr + ', ' + timeStr;
+      el.style.display = 'block';
+    } else {
+      el.style.display = 'none';
+    }
+  } catch(e) {
+    el.style.display = 'none';
+  }
+}
 
 /* ================================================================
    THEME & MARKDOWN
@@ -738,6 +776,9 @@ function refreshUI() {
     sl.style.cursor = 'pointer';
     hp.textContent = S.user.plan.toUpperCase();
     hp.className = 'hdr-plan ptag ' + S.user.plan;
+    
+    // Update Login Time Display
+    updateLoginDisplay();
   } else {
     u.classList.remove('show');
     sl.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Sign In';
