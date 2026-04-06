@@ -597,26 +597,34 @@ supabase.auth.onAuthStateChange(() => {
   updateAuthUI();
 });
 
-// ----------------------------
-// PREORDER FLOW
-// ----------------------------
-// ----------------------------
-// PREORDER FLOW (Stripe Payment Link)
-// ----------------------------
-preorderBtn.addEventListener("click", async () => {
-  const user = await getCurrentUser();
-  if (!user) {
-    alert("You must be logged in to preorder.");
-    return;
-  }
+<script type="module">
+  const preorderBtn = document.getElementById("preorderBtn");
+  const spinner = document.getElementById("loadingSpinner");
 
-  // Show loading spinner
-  spinner.style.display = "flex";
+  // Read the payment link from env.js
+  const { STRIPE_PAYMENT_LINK } = window.__ENV__;
 
-  // Redirect to Stripe Payment Link
-  const paymentLink = STRIPE_PAYMENT_LINK; // from env.js
-  window.location.href = paymentLink;
-});
+  preorderBtn.addEventListener("click", async () => {
+    spinner.style.display = "flex"; // show spinner
+
+    try {
+      // Optional: check if user is logged in (Supabase)
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) {
+        spinner.style.display = "none";
+        alert("You must be logged in to preorder.");
+        return;
+      }
+
+      // Directly redirect to Stripe Payment Link
+      window.location.href = STRIPE_PAYMENT_LINK;
+
+    } catch (err) {
+      console.error("❌ Preorder failed:", err);
+      spinner.style.display = "none";
+      alert(`Something went wrong: ${err.message}`);
+    }
+  });
 </script>
   <script>
   // Set the target date (April 10, 2026)
