@@ -551,7 +551,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 // ----------------------------
 if (!window.__ENV__) throw new Error("env.js not loaded");
 
-const { SUPABASE_URL, SUPABASE_ANON_KEY, STRIPE_PAYMENT_LINK } = window.__ENV__;
+const { SUPABASE_URL, SUPABASE_ANON_KEY, BACKEND_URL } = window.__ENV__;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -574,7 +574,6 @@ async function getCurrentUser() {
 // ----------------------------
 async function updateAuthUI() {
   const user = await getCurrentUser();
-
   if (!user) {
     preorderBtn.disabled = true;
     preorderBtn.textContent = "Login to Preorder";
@@ -584,13 +583,8 @@ async function updateAuthUI() {
   }
 }
 
-// Initial UI update
 updateAuthUI();
-
-// Listen for auth changes
-supabase.auth.onAuthStateChange(() => {
-  updateAuthUI();
-});
+supabase.auth.onAuthStateChange(() => updateAuthUI());
 
 // ----------------------------
 // CLICK HANDLER
@@ -606,12 +600,24 @@ preorderBtn.addEventListener("click", async () => {
       return;
     }
 
-    if (!STRIPE_PAYMENT_LINK) {
-      throw new Error("Stripe payment link is missing in env.js");
-    }
+    // ----------------------------
+    // CREATE CHECKOUT SESSION
+    // ----------------------------
+    const res = await fetch(`${BACKEND_URL}/create-checkout-session`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: user.id,
+        email: user.email
+      })
+    });
 
-    // Redirect directly
-    window.location.href = STRIPE_PAYMENT_LINK;
+    if (!res.ok) throw new Error("Failed to create Stripe session");
+
+    const { url } = await res.json();
+
+    // Redirect user to Stripe Checkout
+    window.location.href = url;
 
   } catch (err) {
     console.error("❌ Preorder failed:", err);
