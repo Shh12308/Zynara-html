@@ -42,30 +42,66 @@
 <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
 <style>
-/* --- USER PROVIDED CSS START --- */
+/* --- UPDATED CSS: FULL HEIGHT APP LAYOUT --- */
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
         :root{--font-display:'Space Grotesk',sans-serif;--font-body:'DM Sans',sans-serif;--radius:14px;--radius-sm:10px;--radius-lg:18px;--radius-xl:24px;--speed:0.25s;--speed-slow:0.4s;--ease:cubic-bezier(.4,0,.2,1);--ease-out:cubic-bezier(0,0,.2,1);--ease-in:cubic-bezier(.4,0,1,1);--ease-bounce:cubic-bezier(.34,1.56,.64,1);--msg-max:680px;--sidebar-w:290px}
         [data-theme="dark"]{--bg-primary:#08080c;--bg-secondary:#111116;--bg-tertiary:#1a1a22;--bg-quaternary:#22222c;--bg-user-bubble:rgba(16,185,129,.08);--bg-user-bubble-border:rgba(16,185,129,.15);--bg-sidebar:#0c0c10;--bg-input:#14141a;--bg-hover:#1e1e28;--bg-code:#0a0a10;--text-primary:#eeeef2;--text-secondary:#9494a6;--text-muted:#55556a;--accent:#10b981;--accent-hover:#059669;--accent-dim:rgba(16,185,129,.06);--accent-soft:rgba(16,185,129,.1);--accent-glow:rgba(16,185,129,.15);--border:rgba(255,255,255,.06);--border-active:rgba(16,185,129,.3);--danger:#ef4444;--warning:#f59e0b;--success:#10b981;--shadow-sm:0 1px 3px rgba(0,0,0,.3);--shadow:0 4px 20px rgba(0,0,0,.4);--shadow-lg:0 8px 40px rgba(0,0,0,.5);--glow:0 0 60px rgba(16,185,129,.06);--glow-strong:0 0 80px rgba(16,185,129,.12);--noise:rgba(255,255,255,.008)}
         [data-theme="light"]{--bg-primary:#fafafa;--bg-secondary:#f0f0f2;--bg-tertiary:#e6e6ea;--bg-quaternary:#dddde2;--bg-user-bubble:rgba(5,150,105,.06);--bg-user-bubble-border:rgba(5,150,105,.15);--bg-sidebar:#f4f4f6;--bg-input:#f0f0f2;--bg-hover:#e4e4e8;--bg-code:#1e1e2e;--text-primary:#111114;--text-secondary:#555566;--text-muted:#999aaa;--accent:#059669;--accent-hover:#047857;--accent-dim:rgba(5,150,105,.04);--accent-soft:rgba(5,150,105,.08);--accent-glow:rgba(5,150,105,.1);--border:rgba(0,0,0,.07);--border-active:rgba(5,150,105,.3);--danger:#dc2626;--warning:#d97706;--success:#059669;--shadow-sm:0 1px 3px rgba(0,0,0,.04);--shadow:0 4px 20px rgba(0,0,0,.06);--shadow-lg:0 8px 40px rgba(0,0,0,.08);--glow:none;--glow-strong:none;--noise:rgba(0,0,0,.008)}
         
-        /* --- LAYOUT FIXES: Ensure whole page fits without scrollbars --- */
+        /* --- 1. ROOT RESET: Ensure strict viewport adherence --- */
         html, body {
-            height: 100%;
             width: 100%;
-            overflow: hidden; 
-            /* Use dynamic viewport height to handle mobile address bars correctly */
-            height: 100dvh; 
-            width: 100dvw;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevents body scrollbars */
             -webkit-overflow-scrolling: touch;
+            /* Use dvh for mobile browsers with dynamic bars, fallback to 100% */
+            height: 100dvh; 
+            height: 100%;
         }
-        
-        body{font-family:var(--font-body);background:var(--bg-primary);color:var(--text-primary);transition:background var(--speed-slow),color var(--speed-slow);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-        ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}::-webkit-scrollbar-thumb:hover{background:var(--text-muted)}
-        body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.4;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");background-repeat:repeat;background-size:200px}
 
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background var(--speed-slow), color var(--speed-slow);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            
+            /* LAYOUT STRATEGY: Flexbox container */
+            display: flex;
+            flex-direction: row; /* Sidebar and Main side-by-side on desktop */
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}::-webkit-scrollbar-thumb:hover{background:var(--text-muted)}
+        
+        body::before{
+            content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.4;
+            background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+            background-repeat:repeat;background-size:200px
+        }
+
+        /* --- SIDEBAR --- */
         .sb-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:90;opacity:0;pointer-events:none;transition:opacity .35s var(--ease);backdrop-filter:blur(4px)}.sb-overlay.on{opacity:1;pointer-events:all}
-        .sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar-w);background:var(--bg-sidebar);border-right:1px solid var(--border);z-index:100;transform:translateX(-100%);transition:transform .35s var(--ease);display:flex;flex-direction:column;overflow:hidden; height: 100dvh;}
-        .sidebar.open{transform:translateX(0)}
+        
+        /* Sidebar acts as a flex item on desktop, fixed on mobile */
+        .sidebar{
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            width: var(--sidebar-w);
+            height: 100vh; /* Always full height */
+            flex-shrink: 0;
+            transition: transform .35s var(--ease), width .35s var(--ease);
+        }
+
         .sb-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
         .sb-logo{font-family:var(--font-display);font-size:22px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--text-primary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-.6px}
         .sb-logo span{font-weight:400;opacity:.7}
@@ -125,7 +161,19 @@
         .s-user .inf{flex:1;min-width:0}.s-user .nm{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.s-user .pl{font-size:10px;color:var(--text-muted);margin-top:1px}
         .s-user .ll{font-size:9px;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0.7}
 
-        .chat-hdr{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg-primary);z-index:10;flex-shrink:0;transition:background var(--speed-slow)}
+        /* --- MAIN CONTENT AREA --- */
+        main {
+            flex: 1; /* Take remaining width */
+            display: flex;
+            flex-direction: column;
+            height: 100vh; /* Full height of body */
+            width: 100%;
+            position: relative;
+            background: var(--bg-primary);
+            overflow: hidden; /* Prevents main from scrolling, only children scroll */
+        }
+
+        .chat-hdr{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg-primary);z-index:10;flex-shrink:0;transition:background var(--speed-slow); height: 60px;}
         .hdr-title{font-family:var(--font-display);font-size:15px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.2px}
         .hdr-plan{font-size:9px;padding:3px 8px;border-radius:5px;font-weight:800;flex-shrink:0;letter-spacing:.5px}
         .htab{padding:6px 14px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;border:none;background:none;color:var(--text-muted);font-family:var(--font-body);transition:all var(--speed);display:flex;align-items:center;gap:5px;flex-shrink:0;position:relative}
@@ -162,10 +210,23 @@
         .z-icon{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff}
         .default-icon{background:var(--bg-quaternary);color:var(--accent)}
 
-        .msgs-wrap{flex:1;overflow-y:auto;scroll-behavior:smooth;position:relative;display:flex;flex-direction:column;overscroll-behavior:contain; -webkit-overflow-scrolling: touch;}
+        /* --- SCROLLABLE MESSAGE AREA --- */
+        .msgs-wrap{
+            flex: 1; /* Grow to fill available space */
+            overflow-y: auto; /* Scroll only here */
+            overflow-x: hidden;
+            scroll-behavior:smooth;
+            position:relative;
+            display:flex;
+            flex-direction:column;
+            overscroll-behavior:contain; /* Prevent browser refresh pull on mobile */
+            -webkit-overflow-scrolling: touch;
+            min-height: 0; /* Critical: allows flex item to shrink below content size */
+        }
+        
         .msgs-inner{max-width:var(--msg-max);margin:0 auto;padding:24px 24px 8px; width: 100%; flex: 1; min-height: 0;}
 
-        .welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:40px 24px;position:relative;overflow:hidden}
+        .welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:40px 24px;position:relative;overflow:hidden; width: 100%; box-sizing: border-box;}
         .welcome::before{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,var(--accent-dim),transparent 70%);top:50%;left:50%;transform:translate(-50%,-60%);pointer-events:none;animation:welcome-glow 6s ease-in-out infinite alternate}
         @keyframes welcome-glow{0%{opacity:.3;transform:translate(-50%,-60%) scale(1)}100%{opacity:.6;transform:translate(-50%,-55%) scale(1.15)}}
         .w-logo{font-family:var(--font-display);font-size:52px;font-weight:700;letter-spacing:-1.5px;position:relative;z-index:1;background:linear-gradient(135deg,var(--text-primary) 0%,var(--accent) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:logo-in .8s var(--ease-out) both}
@@ -256,7 +317,15 @@
         .typing-dots span:nth-child(3){animation-delay:.3s}
         .typing-label{font-size:12px;color:var(--text-muted);font-weight:500}
 
-        .cb-container{padding:0 20px 20px;flex-shrink:0;position:relative}.cb-wrap{max-width:var(--msg-max);margin:0 auto;position:relative}
+        /* --- INPUT AREA --- */
+        .cb-container{
+            padding: 10px 20px 20px;
+            flex-shrink: 0; /* Never shrink */
+            position: relative;
+            background: var(--bg-primary);
+            z-index: 20;
+        }
+        .cb-wrap{max-width:var(--msg-max);margin:0 auto;position:relative}
         .chatbar{display:flex;align-items:flex-end;gap:4px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-xl);padding:8px 10px;transition:all var(--speed);position:relative}
         .chatbar:focus-within{border-color:var(--border-active);box-shadow:var(--glow);background:var(--bg-tertiary)}
         .cb-input{flex:1;background:none;border:none;outline:none;color:var(--text-primary);font-family:var(--font-body);font-size:14.5px;line-height:1.5;resize:none;max-height:200px;padding:5px 6px;min-height:24px}
@@ -329,7 +398,7 @@
         .modal-close:hover{background:var(--bg-hover);border-color:var(--border-active)}
         .modal-close:focus{outline:2px solid var(--accent);outline-offset:2px}
 
-        .gal-wrap{max-width:960px;margin:0 auto;padding:24px 20px}
+        .gal-wrap{max-width:960px;margin:0 auto;padding:24px 20px; height: 100%; overflow-y: auto; }
         .gal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
         .gal-hd h2{font-family:var(--font-display);font-size:22px;font-weight:700;letter-spacing:-.3px;display:flex;align-items:center;gap:10px}
         .gal-hd h2 i{color:var(--accent)}
@@ -368,56 +437,56 @@
         @keyframes toast-out{to{opacity:0;transform:translateX(40px) scale(.95)}}
         @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
 
-        /* --- LAYOUT ADJUSTMENTS FOR RESPONSIVENESS --- */
-        .main-layout {
-            display: flex;
-            width: 100%;
-            height: 100%;
-        }
-
-        .chat-view {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            width: 100%;
-            background: var(--bg-primary);
-        }
-
-        /* Desktop Sidebar Default State */
+        /* --- RESPONSIVE LAYOUT BREAKPOINTS --- */
+        
+        /* Desktop: Sidebar is visible as flex item */
         @media (min-width: 1025px) {
             .sidebar {
-                transform: translateX(0);
-                position: relative; /* Or sticky if desired, but relative fits standard flex row */
-                box-shadow: none;
+                position: relative; /* Put it in flow */
+                transform: translateX(0) !important;
             }
             .sb-overlay { display: none !important; }
-            .menu-btn { display: none; }
+            .menu-btn { display: none !important; }
         }
 
-        @media(max-width:1024px){
-            .sidebar{width:280px; position: fixed;}
+        /* Tablet/Mobile: Sidebar is hidden/fixed, Main takes full width */
+        @media (max-width: 1024px) {
+            .sidebar {
+                position: fixed;
+                left: 0; top: 0; bottom: 0;
+                transform: translateX(-100%);
+                width: 280px;
+                box-shadow: var(--shadow-lg);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
             .menu-btn { display: inline-flex !important; }
         }
 
-        @media(max-width:640px){
-          .sidebar{width:100%; --sidebar-w: 100%;} /* Full width sidebar on mobile */
-          .w-grid{grid-template-columns:1fr}.as-grid{grid-template-columns:1fr}
-          .msgs-inner{padding:16px 14px 6px}.cb-container{padding:0 12px 14px}
-          .msg-acts{opacity:1}.gal-grid{grid-template-columns:repeat(2,1fr);gap:8px}
-          .msg.ai-msg{padding-right:16px}.msg.user-msg{padding-left:16px}
-          .msg.user-msg .msg-inner{max-width:92%}
-          .model-sel{display:none}.cb-foot{display:none}
-          .w-logo{font-size:38px}.w-sub{font-size:14px;margin-bottom:32px}
-          .theme-grid{grid-template-columns:repeat(3,1fr)}
-          .sidebar { border-right: none; }
+        @media (max-width: 640px) {
+            .sidebar { width: 100%; --sidebar-w: 100%; }
+            .w-grid{grid-template-columns:1fr}.as-grid{grid-template-columns:1fr}
+            .msgs-inner{padding:16px 14px 6px}
+            .cb-container{padding:0 12px 14px}
+            .msg-acts{opacity:1}.gal-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+            .msg.ai-msg{padding-right:16px}.msg.user-msg{padding-left:16px}
+            .msg.user-msg .msg-inner{max-width:92%}
+            .model-sel{display:none}.cb-foot{display:none}
+            .w-logo{font-size:38px}.w-sub{font-size:14px;margin-bottom:32px}
+            .theme-grid{grid-template-columns:repeat(3,1fr)}
+            .sidebar { border-right: none; }
         }
-        @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+        
+        @media (prefers-reduced-motion: reduce){
+            *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+        }
 </style>
 </head>
 <body>
 
 <div class="sb-overlay" id="sbOv"></div>
+<!-- Sidebar -->
 <aside class="sidebar" id="sidebar">
   <div class="sb-head">
     <div class="sb-logo">Helox<span>Ai</span></div>
@@ -452,8 +521,8 @@
   <div class="s-user" id="sUser"><div class="av" id="uAv">?</div><div class="inf"><div class="nm" id="uNm">Guest</div><div class="pl" id="uPl">Free Plan</div><div class="ll" id="uLl">Last login: Never</div></div></div>
 </aside>
 
-<!-- Added height: 100dvh to main to ensure it fits exactly in viewport -->
-<main style="display:flex;flex-direction:column;height:100dvh;position:relative">
+<!-- Main Content Area: Flex column to fit screen -->
+<main>
   <header class="chat-hdr">
     <button class="ib menu-btn" id="menuBtn" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
     <div class="hdr-title" id="hdrTitle">HeloxAi</div>
@@ -501,6 +570,7 @@
     <span class="hdr-plan ptag free" id="hdrPlan">FREE</span>
   </header>
 
+  <!-- Scrollable Message Area -->
   <div class="msgs-wrap" id="msgsWrap">
     <div id="chatView">
       <div class="welcome" id="welcomeEl">
@@ -539,6 +609,7 @@
   <button class="scroll-bot" id="scrollBot" aria-label="Scroll to bottom"><i class="fa-solid fa-chevron-down"></i></button>
   <div id="fileIndicator" style="display:none"></div>
   
+  <!-- Input Area -->
   <div class="cb-container" id="cbContainer">
     <div class="cb-wrap">
       <div class="chatbar" id="chatbar">
