@@ -600,42 +600,22 @@ supabase.auth.onAuthStateChange(() => {
 // ----------------------------
 // PREORDER FLOW
 // ----------------------------
+// ----------------------------
+// PREORDER FLOW (Stripe Payment Link)
+// ----------------------------
 preorderBtn.addEventListener("click", async () => {
-  spinner.style.display = "flex"; // show spinner
-
-  try {
-    const user = await getCurrentUser();
-    if (!user) {
-      spinner.style.display = "none";
-      alert("You must be logged in to preorder.");
-      return;
-    }
-
-    // Call your Supabase Edge Function to create a checkout session
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/stripe-webhook`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${await getAccessToken()}`,
-      },
-      body: JSON.stringify({
-        userId: user.id,
-        email: user.email,
-        plan: "lifetime", // or any other plan metadata
-      }),
-    });
-
-    const data = await response.json();
-    if (!data.url) throw new Error("No checkout URL returned from server");
-
-    // Redirect to Stripe checkout
-    window.location.href = data.url;
-
-  } catch (err) {
-    console.error("❌ Preorder failed:", err);
-    spinner.style.display = "none";
-    alert(`Something went wrong: ${err.message}`);
+  const user = await getCurrentUser();
+  if (!user) {
+    alert("You must be logged in to preorder.");
+    return;
   }
+
+  // Show loading spinner
+  spinner.style.display = "flex";
+
+  // Redirect to Stripe Payment Link
+  const paymentLink = STRIPE_PAYMENT_LINK; // from env.js
+  window.location.href = paymentLink;
 });
 </script>
   <script>
