@@ -35,7 +35,6 @@
 
     /* ================= RESET & BASE ================= */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    
     body {
       font-family: var(--font-main);
       background: var(--bg-deep);
@@ -49,676 +48,137 @@
     }
 
     /* ================= DYNAMIC BACKGROUND ================= */
-    #bg-canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-      opacity: 0.6;
-    }
-
-    .gradient-orb {
-      position: fixed;
-      border-radius: 50%;
-      filter: blur(80px);
-      z-index: 1;
-      animation: float 20s infinite alternate;
-      pointer-events: none;
-    }
-    
-    .orb-1 { width: 600px; height: 600px; background: radial-gradient(circle, rgba(16,185,129,0.15), transparent 70%); top: -200px; left: -100px; }
-    .orb-2 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(59,130,246,0.1), transparent 70%); bottom: -150px; right: -100px; animation-delay: -10s; }
-
-    @keyframes float {
-      0% { transform: translate(0, 0) scale(1); }
-      100% { transform: translate(50px, 30px) scale(1.1); }
-    }
+    #bg-canvas { position: fixed; top:0; left:0; width:100%; height:100%; z-index:0; opacity:0.6; }
+    .gradient-orb { position: fixed; border-radius: 50%; filter: blur(80px); z-index:1; animation: float 20s infinite alternate; pointer-events: none; }
+    .orb-1 { width: 600px; height: 600px; background: radial-gradient(circle, rgba(16,185,129,0.15), transparent 70%); top:-200px; left:-100px; }
+    .orb-2 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(59,130,246,0.1), transparent 70%); bottom:-150px; right:-100px; animation-delay:-10s; }
+    @keyframes float { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(50px,30px) scale(1.1); } }
 
     /* ================= LAYOUT ================= */
-    .container {
-      position: relative;
-      z-index: 10;
-      width: 100%;
-      max-width: 440px;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    /* ================= GLASS CARD ================= */
-    .card {
-      width: 100%;
-      background: var(--bg-card);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--bg-card-border);
-      border-radius: 24px;
-      padding: 40px;
-      box-shadow: 
-        0 20px 40px rgba(0,0,0,0.4),
-        inset 0 1px 0 rgba(255,255,255,0.05);
-      transition: all 0.5s var(--ease-smooth);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-    }
+    .container { position: relative; z-index: 10; width:100%; max-width:440px; padding:20px; display:flex; flex-direction: column; align-items:center; }
+    .card { width:100%; background: var(--bg-card); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border:1px solid var(--bg-card-border); border-radius:24px; padding:40px; box-shadow:0 20px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05); transition: all 0.5s var(--ease-smooth); position: relative; overflow: hidden; }
+    .card::before { content: ''; position:absolute; top:0; left:0; right:0; height:1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); }
 
     /* ================= CONTENT STYLING ================= */
-    .logo-area {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 32px;
-    }
+    .logo-area { display:flex; justify-content:center; margin-bottom:32px; }
+    .logo-icon { width:48px; height:48px; background: linear-gradient(135deg, var(--accent), #059669); border-radius:14px; display:flex; align-items:center; justify-content:center; box-shadow:0 8px 20px var(--accent-glow); color:white; font-weight:700; font-size:20px; }
+    .status-icon { width:80px; height:80px; margin:0 auto 24px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:rgba(255,255,255,0.03); position:relative; }
 
-    .logo-icon {
-      width: 48px;
-      height: 48px;
-      background: linear-gradient(135deg, var(--accent), #059669);
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 8px 20px var(--accent-glow);
-      color: white;
-      font-weight: 700;
-      font-size: 20px;
-    }
-
-    .status-icon {
-      width: 80px;
-      height: 80px;
-      margin: 0 auto 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.03);
-      position: relative;
-    }
-
-    .status-icon svg {
-      width: 40px;
-      height: 40px;
-      stroke: var(--text-secondary);
-      stroke-width: 1.5;
-      fill: none;
-    }
-
-    /* ================= SPINNER ANIMATION ================= */
-    .spinner-ring {
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      border: 2px solid transparent;
-      border-top-color: var(--accent);
-      animation: spin 1s linear infinite;
-    }
-
-    .spinner-ring:nth-child(2) {
-      inset: 4px;
-      border-top-color: transparent;
-      border-right-color: rgba(16, 185, 129, 0.3);
-      animation-duration: 1.5s;
-      animation-direction: reverse;
-    }
-
+    .spinner-ring { position:absolute; inset:0; border-radius:50%; border:2px solid transparent; border-top-color: var(--accent); animation: spin 1s linear infinite; }
+    .spinner-ring:nth-child(2) { inset:4px; border-top-color:transparent; border-right-color: rgba(16,185,129,0.3); animation-duration:1.5s; animation-direction:reverse; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ================= SUCCESS ANIMATION ================= */
-    .checkmark-circle {
-      stroke-dasharray: 166;
-      stroke-dashoffset: 166;
-      stroke-width: 2;
-      stroke-miterlimit: 10;
-      stroke: var(--accent);
-      fill: none;
-      animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
-    }
+    /* ================= TEXT & BUTTONS ================= */
+    h2 { font-size:20px; font-weight:600; margin-bottom:8px; text-align:center; color: var(--text-primary); letter-spacing:-0.02em; }
+    p { font-size:14px; color: var(--text-secondary); text-align:center; line-height:1.5; margin-bottom:0; }
 
-    .checkmark-check {
-      transform-origin: 50% 50%;
-      stroke-dasharray: 48;
-      stroke-dashoffset: 48;
-      animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.4s forwards;
-    }
-
-    @keyframes stroke {
-      100% { stroke-dashoffset: 0; }
-    }
-
-    /* ================= ERROR ANIMATION ================= */
-    .error-icon-group { animation: shake 0.5s ease-in-out; }
-    
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      20%, 60% { transform: translateX(-5px); }
-      40%, 80% { transform: translateX(5px); }
-    }
-
-    /* ================= TEXT HIERARCHY ================= */
-    h2 {
-      font-size: 20px;
-      font-weight: 600;
-      margin-bottom: 8px;
-      text-align: center;
-      color: var(--text-primary);
-      letter-spacing: -0.02em;
-    }
-
-    p {
-      font-size: 14px;
-      color: var(--text-secondary);
-      text-align: center;
-      line-height: 1.5;
-      margin-bottom: 0;
-    }
-
-    /* ================= PROGRESS BAR ================= */
-    .progress-track {
-      width: 100%;
-      height: 4px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 4px;
-      margin-top: 24px;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent), #34d399);
-      border-radius: 4px;
-      width: 0%;
-      transition: width 0.3s ease;
-    }
-
-    /* ================= STEPS LIST ================= */
-    .steps-list {
-      list-style: none;
-      margin-top: 24px;
-      text-align: left;
-    }
-
-    .step-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 0;
-      font-size: 13px;
-      color: var(--text-muted);
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      transition: color 0.3s;
-    }
-
-    .step-item:last-child { border-bottom: none; }
-    
-    .step-item.active { color: var(--text-primary); }
-    .step-item.completed { color: var(--accent); }
-    
-    .step-indicator {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.05);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-    }
-    
-    .step-item.active .step-indicator {
-      background: rgba(16, 185, 129, 0.1);
-      color: var(--accent);
-      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-    }
-
-    .step-item.completed .step-indicator {
-      background: var(--accent);
-      color: white;
-    }
+    .btn { width:100%; padding:12px; border-radius:12px; border:none; font-size:14px; font-weight:600; cursor:pointer; margin-top:24px; transition: all 0.2s var(--ease-smooth); display:none; background: rgba(255,255,255,0.05); color: var(--text-primary); outline:none; }
+    .btn:hover { background: rgba(255,255,255,0.1); transform:translateY(-1px); }
+    .btn-primary { background: var(--accent); color:white; box-shadow:0 4px 12px var(--accent-glow); }
+    .btn-primary:hover { background:#059669; }
 
     /* ================= DEBUG CONSOLE ================= */
-    .debug-console {
-      margin-top: 24px;
-      background: rgba(0,0,0,0.3);
-      border-radius: 12px;
-      padding: 12px;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--text-muted);
-      text-align: left;
-      max-height: 100px;
-      overflow-y: auto;
-      border: 1px solid rgba(255,255,255,0.05);
-      display: none; /* Hidden by default */
-    }
-
-    .debug-console.visible { display: block; animation: fadeIn 0.3s ease; }
-
+    .debug-console { margin-top:24px; background: rgba(0,0,0,0.3); border-radius:12px; padding:12px; font-family: var(--font-mono); font-size:11px; color: var(--text-muted); text-align:left; max-height:100px; overflow-y:auto; border:1px solid rgba(255,255,255,0.05); display:none; }
+    .debug-console.visible { display:block; animation: fadeIn 0.3s ease; }
     .log-error { color: var(--danger); }
     .log-success { color: var(--accent); }
-    .log-info { color: #3b82f6; }
+    .log-info { color:#3b82f6; }
 
-    /* ================= BUTTONS ================= */
-    .btn {
-      width: 100%;
-      padding: 12px;
-      border-radius: 12px;
-      border: none;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 24px;
-      transition: all 0.2s var(--ease-smooth);
-      display: none;
-      background: rgba(255,255,255,0.05);
-      color: var(--text-primary);
-      outline: none;
-    }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
 
-    .btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-1px); }
-    .btn:active { transform: translateY(0); }
-    .btn:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
-    
-    .btn-primary {
-      background: var(--accent);
-      color: white;
-      box-shadow: 0 4px 12px var(--accent-glow);
-    }
-    .btn-primary:hover { background: #059669; }
-
-    /* ================= UTILITIES ================= */
-    .hidden { display: none !important; }
-    .fade-in { animation: fadeIn 0.5s ease forwards; }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ================= RESPONSIVE ================= */
-    @media (max-width: 480px) {
-      .card { padding: 24px; border-radius: 20px; }
-      h2 { font-size: 18px; }
-      .orb-1, .orb-2 { display: none; }
-    }
+    @media (max-width:480px) { .card{padding:24px;border-radius:20px;} h2{font-size:18px;} .orb-1,.orb-2{display:none;} }
   </style>
 </head>
 
 <body>
-  <!-- Animated Background Elements -->
   <canvas id="bg-canvas"></canvas>
   <div class="gradient-orb orb-1"></div>
   <div class="gradient-orb orb-2"></div>
 
   <div class="container">
     <div class="card">
-      <div class="logo-area">
-        <div class="logo-icon">H</div>
-      </div>
-
-      <!-- Dynamic Status Icon Area -->
+      <div class="logo-area"><div class="logo-icon">H</div></div>
       <div class="status-icon" id="status-container">
-        <!-- Default Loading State -->
         <div class="spinner-ring"></div>
         <div class="spinner-ring"></div>
-        <svg viewBox="0 0 24 24">
-          <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z" fill="none"></path>
-        </svg>
       </div>
-
       <h2 id="status-title">Secure Authentication</h2>
       <p id="status-text">Initializing secure handshake...</p>
-
-      <!-- Progress Steps -->
-      <ul class="steps-list" id="steps-list">
-        <li class="step-item active" data-step="1">
-          <div class="step-indicator"><i class="fas fa-lock"></i></div>
-          <span>Validating Request Token</span>
-        </li>
-        <li class="step-item" data-step="2">
-          <div class="step-indicator"><i class="fas fa-exchange-alt"></i></div>
-          <span>Exchanging Session Keys</span>
-        </li>
-        <li class="step-item" data-step="3">
-          <div class="step-indicator"><i class="fas fa-user-check"></i></div>
-          <span>Establishing Session</span>
-        </li>
-      </ul>
-
-      <div class="progress-track">
-        <div class="progress-fill" id="progress-fill"></div>
-      </div>
-
-      <!-- Debug Console (Advanced) -->
       <div class="debug-console" id="debug-console"></div>
-
       <button id="action-btn" class="btn btn-primary">Continue to Dashboard</button>
     </div>
   </div>
 
-  <!-- Environment Config -->
+  <!-- Environment -->
   <script src="env.js"></script>
-
-  <!-- Font Awesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-    /* ==========================================================
-       UI CONTROLLER
-       Handles all visual updates, animations, and state changes.
-    ========================================================== */
     const UI = {
       title: document.getElementById("status-title"),
       text: document.getElementById("status-text"),
       debug: document.getElementById("debug-console"),
-      progress: document.getElementById("progress-fill"),
-      steps: document.querySelectorAll(".step-item"),
       container: document.getElementById("status-container"),
       btn: document.getElementById("action-btn"),
-
-      log(msg, type = 'info') {
-        const time = new Date().toLocaleTimeString();
-        const line = document.createElement('div');
-        line.className = `log-${type}`;
-        line.textContent = `[${time}] ${msg}`;
-        this.debug.appendChild(line);
-        this.debug.scrollTop = this.debug.scrollHeight;
-        this.debug.classList.add('visible');
-        console.log(`[${type.toUpperCase()}]`, msg);
+      log(msg, type='info') { const line = document.createElement('div'); line.className=`log-${type}`; line.textContent=msg; this.debug.appendChild(line); this.debug.scrollTop=this.debug.scrollHeight; this.debug.classList.add('visible'); console.log(msg); },
+      showError(msg, detail="") {
+        this.title.textContent="Authentication Failed"; this.text.textContent=msg; this.title.style.color='var(--danger)';
+        if(detail) this.log(detail,'error');
+        this.btn.style.display='block'; this.btn.textContent="Try Again"; this.btn.classList.remove('btn-primary'); this.btn.onclick=()=>window.location.href="/auth.html";
       },
-
-      setProgress(pct) {
-        this.progress.style.width = `${pct}%`;
-      },
-
-      setStep(stepNum) {
-        this.steps.forEach(step => {
-          const num = parseInt(step.getAttribute('data-step'));
-          if (num < stepNum) {
-            step.classList.remove('active');
-            step.classList.add('completed');
-            step.querySelector('.step-indicator').innerHTML = '<i class="fas fa-check"></i>';
-          } else if (num === stepNum) {
-            step.classList.add('active');
-            step.classList.remove('completed');
-            // Simple pulse animation for active icon
-            const icon = step.querySelector('.step-indicator');
-            icon.style.transform = "scale(1.2)";
-            setTimeout(() => icon.style.transform = "scale(1)", 200);
-          } else {
-            step.classList.remove('active', 'completed');
-          }
-        });
-        this.setProgress((stepNum / 3) * 100);
-      },
-
-      renderState(state) {
-        const states = {
-          loading: { 
-            title: "Verifying Identity", 
-            text: "Please wait while we securely verify your credentials...",
-            icon: `<div class="spinner-ring"></div><div class="spinner-ring"></div><svg viewBox="0 0 24 24" style="opacity:0.2"><circle cx="12" cy="12" r="10"></circle></svg>`
-          },
-          success: { 
-            title: "Welcome Back", 
-            text: "Authentication successful. Redirecting to dashboard...",
-            icon: `<svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                     <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
-                     <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
-                   </svg>`
-          },
-          error: { 
-            title: "Authentication Failed", 
-            text: "We couldn't verify your session. The link may have expired.",
-            icon: `<div class="error-icon-group">
-                     <svg viewBox="0 0 24 24" width="40" height="40" stroke="var(--danger)" stroke-width="2" fill="none">
-                       <circle cx="12" cy="12" r="10"></circle>
-                       <line x1="15" y1="9" x2="9" y2="15"></line>
-                       <line x1="9" y1="9" x2="15" y2="15"></line>
-                     </svg>
-                   </div>`
-          }
-        };
-
-        const s = states[state];
-        this.title.textContent = s.title;
-        this.text.textContent = s.text;
-        
-        // Icon transition
-        this.container.style.opacity = '0';
-        this.container.style.transform = 'scale(0.8)';
-        
-        setTimeout(() => {
-          this.container.innerHTML = s.icon;
-          this.container.style.opacity = '1';
-          this.container.style.transform = 'scale(1)';
-        }, 200);
-
-        // Title color change
-        this.title.style.color = state === 'error' ? 'var(--danger)' : 'var(--text-primary)';
-      },
-
-      showError(msg, detail = "") {
-        this.renderState('error');
-        this.log(`ERROR: ${msg}`, 'error');
-        if(detail) this.log(detail, 'error');
-        this.steps.forEach(s => s.classList.remove('active')); // Stop steps animation
-        
-        this.btn.style.display = 'block';
-        this.btn.textContent = "Try Again";
-        this.btn.classList.remove('btn-primary');
-        this.btn.onclick = () => window.location.href = "/auth.html";
-      },
-
       showSuccess() {
-        this.renderState('success');
-        this.setStep(4); // Complete all steps
-        this.log('Redirecting to dashboard...', 'success');
-        
-        this.btn.style.display = 'block';
-        this.btn.textContent = "Continue to Dashboard";
-        this.btn.classList.add('btn-primary');
-        this.btn.onclick = () => window.location.replace("/index.html");
-        
-        // Auto-redirect after 3 seconds
-        setTimeout(() => {
-           window.location.replace("/index.html");
-        }, 3000);
+        this.title.textContent="Welcome Back"; this.text.textContent="Authentication successful. Redirecting to dashboard...";
+        this.btn.style.display='block'; this.btn.textContent="Continue to Dashboard"; this.btn.classList.add('btn-primary'); this.btn.onclick=()=>window.location.replace("/index.html");
+        setTimeout(()=>window.location.replace("/index.html"),3000);
       }
     };
 
-    /* ==========================================================
-       BACKGROUND ANIMATION (Particle Net)
-       Creates a subtle tech-grid background effect.
-    ========================================================== */
-    const CanvasBG = {
-      canvas: document.getElementById('bg-canvas'),
-      ctx: null,
-      particles: [],
-      particleCount: 40,
+    async function sleep(ms){return new Promise(res=>setTimeout(res,ms));}
 
-      init() {
-        this.ctx = this.canvas.getContext('2d');
-        this.resize();
-        window.addEventListener('resize', () => this.resize());
-        this.createParticles();
-        this.animate();
-      },
-
-      resize() {
-        this.canvas.width = window.innerWidth;
-        this.canvas.height = window.innerHeight;
-      },
-
-      createParticles() {
-        this.particles = [];
-        for(let i=0; i<this.particleCount; i++) {
-          this.particles.push({
-            x: Math.random() * this.canvas.width,
-            y: Math.random() * this.canvas.height,
-            vx: (Math.random() - 0.5) * 0.5,
-            vy: (Math.random() - 0.5) * 0.5,
-            size: Math.random() * 2 + 1
-          });
-        }
-      },
-
-      animate() {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        
-        // Update and draw particles
-        this.particles.forEach(p => {
-          p.x += p.vx;
-          p.y += p.vy;
-
-          // Wrap around screen
-          if(p.x < 0) p.x = this.canvas.width;
-          if(p.x > this.canvas.width) p.x = 0;
-          if(p.y < 0) p.y = this.canvas.height;
-          if(p.y > this.canvas.height) p.y = 0;
-
-          this.ctx.beginPath();
-          this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-          this.ctx.fillStyle = 'rgba(16, 185, 129, 0.3)';
-          this.ctx.fill();
-        });
-
-        // Draw connections
-        this.connectParticles();
-        requestAnimationFrame(() => this.animate());
-      },
-
-      connectParticles() {
-        let maxDist = 150;
-        for(let i=0; i<this.particles.length; i++) {
-          for(let j=i+1; j<this.particles.length; j++) {
-            let dx = this.particles[i].x - this.particles[j].x;
-            let dy = this.particles[i].y - this.particles[j].y;
-            let dist = Math.sqrt(dx*dx + dy*dy);
-
-            if(dist < maxDist) {
-              this.ctx.beginPath();
-              this.ctx.strokeStyle = `rgba(16, 185, 129, ${0.1 - dist/maxDist * 0.1})`;
-              this.ctx.lineWidth = 0.5;
-              this.ctx.moveTo(this.particles[i].x, this.particles[i].y);
-              this.ctx.lineTo(this.particles[j].x, this.particles[j].y);
-              this.ctx.stroke();
-            }
-          }
-        }
-      }
+    // Background
+    const CanvasBG={canvas:document.getElementById('bg-canvas'),ctx:null,particles:[],particleCount:40,
+      init(){this.ctx=this.canvas.getContext('2d');this.resize();window.addEventListener('resize',()=>this.resize());this.createParticles();this.animate();},
+      resize(){this.canvas.width=window.innerWidth; this.canvas.height=window.innerHeight;},
+      createParticles(){this.particles=[]; for(let i=0;i<this.particleCount;i++){this.particles.push({x:Math.random()*this.canvas.width,y:Math.random()*this.canvas.height,vx:(Math.random()-0.5)*0.5,vy:(Math.random()-0.5)*0.5,size:Math.random()*2+1});}},
+      animate(){this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height); this.particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy; if(p.x<0)p.x=this.canvas.width; if(p.x>this.canvas.width)p.x=0; if(p.y<0)p.y=this.canvas.height; if(p.y>this.canvas.height)p.y=0; this.ctx.beginPath(); this.ctx.arc(p.x,p.y,p.size,0,Math.PI*2); this.ctx.fillStyle='rgba(16,185,129,0.3)'; this.ctx.fill(); }); requestAnimationFrame(()=>this.animate()); }
     };
 
-    /* ==========================================================
-       AUTHENTICATION LOGIC
-       Handles the Supabase OAuth flow.
-    ========================================================== */
-    async function handleCallback() {
-      // 1. Validate Environment
-      if (!window.__ENV__) {
-        UI.showError("Configuration Error", "env.js is missing or invalid.");
-        return;
-      }
+    async function handleCallback(){
+      if(!window.__ENV__) return UI.showError("Configuration Error","env.js missing.");
 
-      const supabase = createClient(
-        window.__ENV__.SUPABASE_URL,
-        window.__ENV__.SUPABASE_ANON_KEY
-      );
+      const supabase = createClient(window.__ENV__.SUPABASE_URL, window.__ENV__.SUPABASE_ANON_KEY);
 
-      try {
-        const url = new URL(window.location.href);
-        const code = url.searchParams.get("code");
-        const errorParam = url.searchParams.get("error");
+      // Parse hash fragment
+      const hash = window.location.hash.substring(1);
+      const params = new URLSearchParams(hash);
+      const access_token = params.get("access_token");
+      const refresh_token = params.get("refresh_token");
+      const errorParam = params.get("error");
 
-        UI.log('Starting authentication sequence...', 'info');
+      UI.log('Starting authentication sequence...');
 
-        // 2. Check for OAuth errors in URL
-        if (errorParam) {
-          const errorDesc = url.searchParams.get("error_description");
-          UI.showError(`OAuth Error: ${errorParam}`, errorDesc || "Provider rejected the request.");
-          return;
-        }
+      if(errorParam) return UI.showError(`OAuth Error: ${errorParam}`, params.get("error_description")||"Provider rejected the request.");
 
-        // 3. Validate presence of code
-        if (!code) {
-          UI.log('No auth code found. Redirecting to login...', 'info');
-          // Soft redirect: If someone just visits /callback directly
-          window.location.replace("/auth.html");
-          return;
-        }
+      if(!access_token) { UI.log('No access token found, redirecting to login...'); window.location.replace("/auth.html"); return; }
 
-        UI.setStep(1);
-        UI.log('Code parameter found', 'success');
-        await sleep(600); // Visual pause for user feedback
+      UI.log('Access token detected. Setting session...');
+      const { error: sessionError } = await supabase.auth.setSession({ access_token, refresh_token });
+      if(sessionError) return UI.showError("Session Error", sessionError.message);
 
-        // 4. Exchange code for session
-        UI.setStep(2);
-        UI.log('Exchanging code for session...', 'info');
-        
-        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+      const { data: { session } } = await supabase.auth.getSession();
+      if(!session) return UI.showError("Session Verification Failed");
 
-        if (exchangeError) {
-          UI.showError("Exchange Failed", exchangeError.message);
-          return;
-        }
+      UI.log(`User verified: ${session.user.email}`);
+      UI.showSuccess();
 
-        UI.log('Session exchange successful', 'success');
-        await sleep(500);
-
-        // 5. Verify session
-        UI.setStep(3);
-        UI.log('Verifying session integrity...', 'info');
-        
-        const { data: { session } } = await supabase.auth.getSession();
-
-        if (!session) {
-          UI.showError("Session Creation Failed", "No session detected after exchange.");
-          return;
-        }
-
-        UI.log(`User identified: ${session.user.email}`, 'success');
-
-        // 6. Clean URL & Finalize
-        window.history.replaceState({}, "", "/callback");
-        
-        // Clean up local storage flags if any
-        localStorage.removeItem('oauth_state');
-        
-        UI.showSuccess();
-
-      } catch (err) {
-        console.error(err);
-        UI.showError("Unexpected System Error", err.message || String(err));
-      }
+      // Clean URL
+      window.history.replaceState({}, "", "/callback");
+      localStorage.removeItem('oauth_state');
     }
 
-    // Helper for visual pauses
-    function sleep(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    /* ==========================================================
-       INITIALIZATION
-    ========================================================== */
-    document.addEventListener('DOMContentLoaded', () => {
-      CanvasBG.init();
-      handleCallback();
-    });
-
+    document.addEventListener('DOMContentLoaded',()=>{ CanvasBG.init(); handleCallback(); });
   </script>
 </body>
 </html>
