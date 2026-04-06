@@ -21,6 +21,8 @@
       --text-secondary: #94a3b8;
       --text-muted: #64748b;
       --accent-gradient: linear-gradient(to right, #00e0ff, #38bdf8);
+      --success: #10b981;
+      --error: #ef4444;
     }
 
     body {
@@ -67,6 +69,25 @@
       font-size: 0.9rem;
       font-weight: 600;
       margin-top: 20px;
+    }
+
+    .back-btn {
+      display: inline-block;
+      background: var(--secondary-bg);
+      color: var(--text-secondary);
+      border: 1px solid var(--card-bg);
+      padding: 10px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.9rem;
+      margin: 20px 0;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .back-btn:hover {
+      color: var(--primary-cyan);
+      border-color: var(--primary-cyan);
     }
 
     /* Why Preorder Section */
@@ -253,6 +274,7 @@
       transition: all 0.3s ease;
       width: 100%;
       margin-top: 20px;
+      font-family: 'Poppins', sans-serif;
     }
     .preorder-button:hover {
       transform: scale(1.02);
@@ -269,6 +291,79 @@
       color: var(--text-muted);
       margin-top: 15px;
     }
+
+    /* ===== SUCCESS / ERROR RESULT BANNERS ===== */
+    .result-banner {
+      display: none;
+      padding: 24px 30px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      text-align: center;
+      animation: fadeSlideIn 0.5s ease both;
+    }
+    .result-banner.success {
+      display: block;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .result-banner.success h3 {
+      color: var(--success);
+      font-size: 1.5rem;
+      margin: 0 0 8px;
+    }
+    .result-banner.success p {
+      color: var(--text-secondary);
+      margin: 0;
+    }
+    .result-banner.error {
+      display: block;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    .result-banner.error h3 {
+      color: var(--error);
+      font-size: 1.5rem;
+      margin: 0 0 8px;
+    }
+    .result-banner.error p {
+      color: var(--text-secondary);
+      margin: 0 0 12px;
+    }
+    .result-banner .retry-btn {
+      background: var(--accent-gradient);
+      color: var(--primary-bg);
+      padding: 10px 24px;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .result-banner .retry-btn:hover {
+      transform: scale(1.03);
+      box-shadow: 0 4px 15px rgba(0, 224, 255, 0.3);
+    }
+    .result-banner .go-home-btn {
+      display: inline-block;
+      margin-top: 16px;
+      color: var(--primary-cyan);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: opacity 0.3s;
+    }
+    .result-banner .go-home-btn:hover {
+      opacity: 0.8;
+    }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Hide preorder sections when showing result */
+    body.show-result .preorder-details { display: none; }
 
     /* FAQ Section */
     .faq-section {
@@ -328,6 +423,13 @@
       background: var(--primary-bg);
       border-top: 1px solid var(--card-bg);
     }
+    footer a {
+      color: var(--text-secondary);
+      text-decoration: none;
+    }
+    footer a:hover {
+      color: var(--primary-cyan);
+    }
 
     /* Loading Spinner */
     #loadingSpinner {
@@ -380,227 +482,226 @@
   </div>
 </header>
 
-  <button onclick="history.back()">Back</button>
+<div class="container">
+  <a href="index.html" class="back-btn">&larr; Back to HeloxAi</a>
+</div>
 
 <main>
-  <section class="why-preorder">
-    <div class="container">
-      <h2 class="section-title">Why Become a Founder?</h2>
-      <p class="section-subtitle">This isn't just early access. It's a partnership to build the future of AI.</p>
-      <div class="benefits-grid">
-        <div class="benefit-card">
-          <h3>Shape the Future</h3>
-          <p>Your feedback will directly influence our roadmap. Help us prioritize the features you need most.</p>
-        </div>
-        <div class="benefit-card">
-          <h3>Unbeatable Value</h3>
-          <p>A one-time payment for lifetime access. Lock in your premium status now before we move to a monthly subscription model.</p>
-        </div>
-        <div class="benefit-card">
-          <h3>Fuel the Infrastructure</h3>
-          <p>Your preorder directly funds the deployment of our high-performance GPU cluster, ensuring a fast, private, and scalable service.</p>
-        </div>
-      </div>
+  <!-- ===== RESULT BANNER (shown after payment redirect) ===== -->
+  <div class="container">
+    <div class="preorder-container" id="resultContainer" style="display:none;">
+      <div id="resultBanner" class="result-banner"></div>
     </div>
-  </section>
+  </div>
 
-  <section class="features-section">
-    <div class="container">
-      <h2 class="section-title">What You Can Achieve with HeloxAi</h2>
-      <p class="section-subtitle">One AI, limitless possibilities. We handle the complexity so you can focus on the outcome.</p>
-
-      <div class="feature">
-        <div class="feature-icon">🧠</div>
-        <div class="feature-content">
-          <h3>Talk to an Expert on Anything</h3>
-          <p>From solving complex multi-step problems to writing code and generating creative stories, HeloxAi's <span class="highlight">intelligent reasoning engine</span> delivers expert-level answers.</p>
+  <!-- ===== NORMAL PREORDER CONTENT ===== -->
+  <div class="preorder-details" id="preorderContent">
+    <section class="why-preorder">
+      <div class="container">
+        <h2 class="section-title">Why Become a Founder?</h2>
+        <p class="section-subtitle">This isn't just early access. It's a partnership to build the future of AI.</p>
+        <div class="benefits-grid">
+          <div class="benefit-card">
+            <h3>Shape the Future</h3>
+            <p>Your feedback will directly influence our roadmap. Help us prioritize the features you need most.</p>
+          </div>
+          <div class="benefit-card">
+            <h3>Unbeatable Value</h3>
+            <p>A one-time payment for lifetime access. Lock in your premium status now before we move to a monthly subscription model.</p>
+          </div>
+          <div class="benefit-card">
+            <h3>Fuel the Infrastructure</h3>
+            <p>Your preorder directly funds the deployment of our high-performance GPU cluster, ensuring a fast, private, and scalable service.</p>
+          </div>
         </div>
       </div>
+    </section>
 
-      <div class="feature">
-        <div class="feature-icon">📚</div>
-        <div class="feature-content">
-          <h3>Turn Your Documents into an Expert</h3>
-          <p>Instantly chat with your PDFs, reports, and notes. Our <span class="highlight">Retrieval-Augmented Generation (RAG)</span> provides precise, sourced answers from your own data, making it the perfect research and analysis assistant.</p>
+    <section class="features-section">
+      <div class="container">
+        <h2 class="section-title">What You Can Achieve with HeloxAi</h2>
+        <p class="section-subtitle">One AI, limitless possibilities. We handle the complexity so you can focus on the outcome.</p>
+
+        <div class="feature">
+          <div class="feature-icon">🧠</div>
+          <div class="feature-content">
+            <h3>Talk to an Expert on Anything</h3>
+            <p>From solving complex multi-step problems to writing code and generating creative stories, HeloxAi's <span class="highlight">intelligent reasoning engine</span> delivers expert-level answers.</p>
+          </div>
+        </div>
+
+        <div class="feature">
+          <div class="feature-icon">📚</div>
+          <div class="feature-content">
+            <h3>Turn Your Documents into an Expert</h3>
+            <p>Instantly chat with your PDFs, reports, and notes. Our <span class="highlight">Retrieval-Augmented Generation (RAG)</span> provides precise, sourced answers from your own data, making it the perfect research and analysis assistant.</p>
+          </div>
+        </div>
+
+        <div class="feature">
+          <div class="feature-icon">🖼️</div>
+          <div class="feature-content">
+            <h3>Analyze Media Like a Pro</h3>
+            <p>Upload images, audio, or video. HeloxAi can <span class="highlight">see, hear, and understand</span> your media. Ask it to transcribe a meeting, summarize a lecture, identify objects in a photo, or describe a video scene.</p>
+          </div>
+        </div>
+
+        <div class="feature">
+          <div class="feature-icon">⚙️</div>
+          <div class="feature-content">
+            <h3>Automate Your Workflows</h3>
+            <p>Let the AI take action. It can connect to real-time data APIs to create a daily briefing, monitor social media trends, check stock prices, and more, all through <span class="highlight">dynamic function calling</span>.</p>
+          </div>
         </div>
       </div>
+    </section>
 
-      <div class="feature">
-        <div class="feature-icon">🖼️</div>
-        <div class="feature-content">
-          <h3>Analyze Media Like a Pro</h3>
-          <p>Upload images, audio, or video. HeloxAi can <span class="highlight">see, hear, and understand</span> your media. Ask it to transcribe a meeting, summarize a lecture, identify objects in a photo, or describe a video scene.</p>
+    <section class="audience-section">
+      <div class="container">
+        <h2 class="section-title">Who is HeloxAi For?</h2>
+        <p class="section-subtitle">Whether you're a creator, a developer, or a strategist, HeloxAi is built for you.</p>
+        <div class="audience-grid">
+          <div class="audience-card">
+            <div class="icon">👨‍💻</div>
+            <h4>Developers</h4>
+            <p>Build powerful AI applications with our unified API, real-time streaming, and cost-optimized routing.</p>
+          </div>
+          <div class="audience-card">
+            <div class="icon">🔬</div>
+            <h4>Researchers</h4>
+            <p>Analyze vast amounts of data, synthesize information from papers, and accelerate your discoveries.</p>
+          </div>
+          <div class="audience-card">
+            <div class="icon">✍️</div>
+            <h4>Content Creators</h4>
+            <p>Generate ideas, draft content, analyze media, and automate your creative process.</p>
+          </div>
+          <div class="audience-card">
+            <div class="icon">💼</div>
+            <h4>Businesses</h4>
+            <p>Gain insights from internal documents, automate reports, and build intelligent customer support tools.</p>
+          </div>
         </div>
       </div>
+    </section>
 
-      <div class="feature">
-        <div class="feature-icon">⚙️</div>
-        <div class="feature-content">
-          <h3>Automate Your Workflows</h3>
-          <p>Let the AI take action. It can connect to real-time data APIs to create a daily briefing, monitor social media trends, check stock prices, and more, all through <span class="highlight">dynamic function calling</span>.</p>
+    <section class="preorder-container" id="preorderCTA">
+      <h2>Secure Your Founder Access</h2>
+      <p class="price"><span class="currency">£</span>499 <span style="font-size:1rem; color: var(--text-secondary);">one-time</span></p>
+      <p class="subnote">This is a one-time payment for a lifetime premium subscription. The price will increase significantly for future members. Also the main reason for the PreOrder is because I am only using an iPhone and would need a MacBook or something to work more easily. Plus I have many projects ready with little bit of quirks here and there so the support I get from this project will also be used to support others I have planned.</p>
+
+      <div id="countdownContainer">
+        <p style="font-size:1rem; color: var(--text-secondary);">Preorder offer ends in:</p>
+        <div id="countdown">Loading...</div>
+      </div>
+
+      <div class="whats-included">
+        <h4 style="color: var(--text-primary); margin-bottom: 15px;">What's Included:</h4>
+        <ul>
+          <li>Lifetime access to HeloxAi Premium.</li>
+          <li>Access to all current and future core AI models & features.</li>
+          <li>Unlimited document uploads for RAG knowledge bases.</li>
+          <li>Priority support and direct line to the founding team.</li>
+          <li>Exclusive "Founder" badge on your account.</li>
+        </ul>
+      </div>
+
+      <button id="preorderBtn" class="preorder-button">Login to Preorder</button>
+      <p class="trust-text">
+        Secure checkout powered by Stripe. 7-day money-back guarantee.
+      </p>
+    </section>
+
+    <section class="faq-section">
+      <div class="container">
+        <h2 class="section-title">Frequently Asked Questions</h2>
+        <div class="faq-item">
+          <button class="faq-question">What happens after I preorder?</button>
+          <div class="faq-answer">
+            You'll receive an immediate confirmation from Stripe. Your account is upgraded instantly to Lifetime Premium. If for any reason the automatic upgrade doesn't trigger, our system will verify and apply it within minutes.
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question">How is this different from ChatGPT or Claude?</button>
+          <div class="faq-answer">
+            HeloxAi is a universal gateway. Instead of just one model, you get access to a curated selection of the best models for each task, plus unique features like RAG on your own data, multi-modal analysis, and workflow automation—all through a single, optimized interface.
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question">Is my payment secure?</button>
+          <div class="faq-answer">
+            Absolutely. We use Stripe, the industry-leading payment processor trusted by millions of businesses worldwide. Your card details are encrypted and never handled or stored by us.
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question">What does "lifetime access" mean?</button>
+          <div class="faq-answer">
+            It means you will never pay a monthly or annual fee for the HeloxAi Premium plan you are preordering. You will receive all future core feature updates for the Premium tier as long as the service exists.
+          </div>
         </div>
       </div>
-    </div>
-  </section>
-
-  <section class="audience-section">
-    <div class="container">
-      <h2 class="section-title">Who is HeloxAi For?</h2>
-      <p class="section-subtitle">Whether you're a creator, a developer, or a strategist, HeloxAi is built for you.</p>
-      <div class="audience-grid">
-        <div class="audience-card">
-          <div class="icon">👨‍💻</div>
-          <h4>Developers</h4>
-          <p>Build powerful AI applications with our unified API, real-time streaming, and cost-optimized routing.</p>
-        </div>
-        <div class="audience-card">
-          <div class="icon">🔬</div>
-          <h4>Researchers</h4>
-          <p>Analyze vast amounts of data, synthesize information from papers, and accelerate your discoveries.</p>
-        </div>
-        <div class="audience-card">
-          <div class="icon">✍️</div>
-          <h4>Content Creators</h4>
-          <p>Generate ideas, draft content, analyze media, and automate your creative process.</p>
-        </div>
-        <div class="audience-card">
-          <div class="icon">💼</div>
-          <h4>Businesses</h4>
-          <p>Gain insights from internal documents, automate reports, and build intelligent customer support tools.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="preorder-container">
-    <h2>Secure Your Founder Access</h2>
-    <p class="price"><span class="currency">£</span>499 <span style="font-size:1rem; color: var(--text-secondary);">one-time</span></p>
-    <p class="subnote">This is a one-time payment for a lifetime premium subscription. The price will increase significantly for future members. Also the main reason for the PreOrder is because I am only using an iPhone and would need a MacBook or something to work more easily. Plus I have many projects ready with little bit of quirks here and there so the support I get from this project will also be used to support others I have planned.</p>
-
-    <div id="countdownContainer">
-      <p style="font-size:1rem; color: var(--text-secondary);">Preorder offer ends in:</p>
-      <div id="countdown">Loading...</div>
-    </div>
-
-    <div class="whats-included">
-      <h4 style="color: var(--text-primary); margin-bottom: 15px;">What's Included:</h4>
-      <ul>
-        <li>Lifetime access to HeloxAi Premium.</li>
-        <li>Access to all current and future core AI models & features.</li>
-        <li>Unlimited document uploads for RAG knowledge bases.</li>
-        <li>Priority support and direct line to the founding team.</li>
-        <li>Exclusive "Founder" badge on your account.</li>
-      </ul>
-    </div>
-
-    <div id="loadingSpinner">
-      <div class="spinner"></div>
-      <p>Redirecting to secure checkout...</p>
-    </div>
-
-   <button id="preorderBtn">Pre-Order for £499</button>
-<script type="module">
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const preorderBtn = document.getElementById("preorderBtn");
-
-preorderBtn.addEventListener("click", async () => {
-  spinner.style.display = "flex"; // show spinner
-
-  try {
-    const user = await getCurrentUser();
-    if (!user) throw new Error("You must be logged in to preorder.");
-
-    const res = await fetch(`${BACKEND_URL}/create-checkout-session`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: user.id, email: user.email })
-    });
-
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(errText || "Failed to create Stripe session");
-    }
-
-    const { url } = await res.json();
-    window.location.href = url;
-
-  } catch (err) {
-    console.error("❌ Preorder failed:", err);
-    spinner.style.display = "none"; // hide spinner on error
-    alert(`Something went wrong: ${err.message}`);
-  }
-});
-</script>
-    <p class="trust-text">
-      Secure checkout powered by Stripe. 7-day money-back guarantee.
-    </p>
-  </section>
-
-  <section class="faq-section">
-    <div class="container">
-      <h2 class="section-title">Frequently Asked Questions</h2>
-      <div class="faq-item">
-        <button class="faq-question">What happens after I preorder?</button>
-        <div class="faq-answer">
-          You'll receive an immediate confirmation from Stripe. We will then email you within 48 hours with your unique founder access token and instructions on how to join the private founder community.
-        </div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-question">How is this different from ChatGPT or Claude?</button>
-        <div class="faq-answer">
-          HeloxAi is a universal gateway. Instead of just one model, you get access to a curated selection of the best models for each task, plus unique features like RAG on your own data, multi-modal analysis, and workflow automation—all through a single, optimized interface.
-        </div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-question">Is my payment secure?</button>
-        <div class="faq-answer">
-          Absolutely. We use Stripe, the industry-leading payment processor trusted by millions of businesses worldwide. Your card details are encrypted and never handled or stored by us.
-        </div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-question">What does "lifetime access" mean?</button>
-        <div class="faq-answer">
-          It means you will never pay a monthly or annual fee for the HeloxAi Premium plan you are preordering. You will receive all future core feature updates for the Premium tier as long as the service exists.
-        </div>
-      </div>
-    </div>
-  </section>
+    </section>
+  </div>
 </main>
 
 <footer>
   <div class="container">
-    &copy; 2025 HeloxAI — All rights reserved. | <a href="#" style="color: var(--text-secondary);">Privacy Policy</a> | <a href="#" style="color: var(--text-secondary);">Terms of Service</a>
+    &copy; 2025 HeloxAI — All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a>
   </div>
 </footer>
 
+<div id="loadingSpinner">
+  <div class="spinner"></div>
+  <p>Redirecting to secure checkout...</p>
+</div>
+
+<!-- Load environment variables BEFORE the module script -->
 <script src="env.js"></script>
 
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
 // ----------------------------
-// ENV
+// ENV — must be loaded by env.js above
 // ----------------------------
-if (!window.__ENV__) throw new Error("env.js not loaded");
+if (!window.__ENV__) {
+  document.body.innerHTML = '<div style="padding:40px;text-align:center;color:#ef4444;font-family:sans-serif"><h2>Configuration Error</h2><p>env.js is missing or did not load. Please ensure env.js defines window.__ENV__ with SUPABASE_URL, SUPABASE_ANON_KEY, and BACKEND_URL.</p></div>';
+  throw new Error("env.js not loaded or missing window.__ENV__");
+}
 
 const { SUPABASE_URL, SUPABASE_ANON_KEY, BACKEND_URL } = window.__ENV__;
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  global: {
+    fetch: (input, init) => {
+      init = init || {};
+      init.credentials = 'include';
+      return window.fetch(input, init);
+    }
+  }
+});
 
 // ----------------------------
 // ELEMENTS
 // ----------------------------
 const preorderBtn = document.getElementById("preorderBtn");
 const spinner = document.getElementById("loadingSpinner");
+const preorderContent = document.getElementById("preorderContent");
+const resultContainer = document.getElementById("resultContainer");
+const resultBanner = document.getElementById("resultBanner");
 
 // ----------------------------
 // AUTH HELPERS
 // ----------------------------
 async function getCurrentUser() {
-  const { data } = await supabase.auth.getUser();
-  return data.user;
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    if (error) throw error;
+    return data.user;
+  } catch (e) {
+    console.error("getUser error:", e);
+    return null;
+  }
 }
 
 // ----------------------------
@@ -611,32 +712,110 @@ async function updateAuthUI() {
   if (!user) {
     preorderBtn.disabled = true;
     preorderBtn.textContent = "Login to Preorder";
+    preorderBtn.onclick = () => { window.location.href = 'auth.html'; };
   } else {
     preorderBtn.disabled = false;
     preorderBtn.textContent = "Pre-Order for £499";
+    preorderBtn.onclick = handlePreorder;
   }
 }
 
-updateAuthUI();
-supabase.auth.onAuthStateChange(() => updateAuthUI());
+// ----------------------------
+// SUCCESS PAGE HANDLER
+// ----------------------------
+async function handleSuccessPage() {
+  const params = new URLSearchParams(window.location.search);
+  const sessionId = params.get('session_id');
+
+  if (!sessionId) return false; // Not a success redirect
+
+  // Show only the result container
+  preorderContent.style.display = 'none';
+  resultContainer.style.display = 'block';
+  document.querySelector('header').style.display = 'none';
+  document.querySelector('.container .back-btn')?.parentElement && (document.querySelector('.container .back-btn').parentElement.style.display = 'none');
+
+  // Show loading state inside result
+  resultBanner.className = 'result-banner success';
+  resultBanner.innerHTML = `
+    <div class="spinner" style="margin:0 auto 15px;border-top-color:var(--success)"></div>
+    <h3>Verifying your payment...</h3>
+    <p>Please wait while we confirm and activate your lifetime access.</p>
+  `;
+
+  try {
+    // Call backend to verify and confirm the upgrade
+    const res = await fetch(`${BACKEND_URL}/verify-session?session_id=${encodeURIComponent(sessionId)}`);
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || `Verification failed (HTTP ${res.status})`);
+    }
+
+    const data = await res.json();
+
+    if (data.upgraded) {
+      // Payment verified and user upgraded
+      resultBanner.className = 'result-banner success';
+      resultBanner.innerHTML = `
+        <h3 style="font-size:2.5rem;margin-bottom:12px">🎉 Welcome, Founder!</h3>
+        <p style="font-size:1.1rem;color:var(--text-primary);margin-bottom:8px">Your lifetime premium access is now active.</p>
+        <p>You now have unlimited access to all current and future HeloxAi Premium features. Your "Founder" badge has been applied to your account.</p>
+        <a href="index.html" class="go-home-btn">Start using HeloxAi Premium →</a>
+      `;
+      document.body.classList.add('show-result');
+      return true;
+    } else if (data.already_upgraded) {
+      resultBanner.className = 'result-banner success';
+      resultBanner.innerHTML = `
+        <h3>Already Upgraded</h3>
+        <p>Your account already has lifetime premium access. No additional charge was made.</p>
+        <a href="index.html" class="go-home-btn">Go to HeloxAi →</a>
+      `;
+      document.body.classList.add('show-result');
+      return true;
+    } else if (data.pending) {
+      resultBanner.className = 'result-banner success';
+      resultBanner.innerHTML = `
+        <h3>Payment Received</h3>
+        <p>Your payment is being processed. Your account will be upgraded within a few minutes. If it doesn't activate shortly, please contact support.</p>
+        <a href="index.html" class="go-home-btn">Go to HeloxAi →</a>
+      `;
+      document.body.classList.add('show-result');
+      return true;
+    }
+
+    throw new Error("Unexpected response from server");
+
+  } catch (err) {
+    console.error("Success page verification error:", err);
+    resultBanner.className = 'result-banner error';
+    resultBanner.innerHTML = `
+      <h3>Verification Issue</h3>
+      <p>${err.message}</p>
+      <p style="font-size:0.85rem;margin-top:4px;">Your payment may have succeeded — the webhook will activate your account automatically within a few minutes. If not, please contact support with your session ID: <code style="background:var(--card-bg);padding:2px 6px;border-radius:4px;font-size:0.8rem">${sessionId}</code></p>
+      <a href="index.html" class="go-home-btn">Go to HeloxAi →</a>
+    `;
+    document.body.classList.add('show-result');
+    return true;
+  }
+}
 
 // ----------------------------
-// CLICK HANDLER
+// PREORDER CLICK HANDLER
 // ----------------------------
-preorderBtn.addEventListener("click", async () => {
-  spinner.style.display = "flex"; // show spinner
+async function handlePreorder() {
+  spinner.style.display = "flex";
 
   try {
     const user = await getCurrentUser();
     if (!user) {
       spinner.style.display = "none";
-      alert("You must be logged in to preorder.");
+      window.location.href = 'auth.html';
       return;
     }
 
-    // ----------------------------
-    // CREATE CHECKOUT SESSION
-    // ----------------------------
+    // Create Stripe checkout session
     const res = await fetch(`${BACKEND_URL}/create-checkout-session`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -646,25 +825,49 @@ preorderBtn.addEventListener("click", async () => {
       })
     });
 
-    if (!res.ok) throw new Error("Failed to create Stripe session");
+    if (!res.ok) {
+      let errMsg = "Failed to create checkout session";
+      try {
+        const errData = await res.json();
+        errMsg = errData.error || errMsg;
+      } catch (e) {}
+      throw new Error(errMsg);
+    }
 
     const { url } = await res.json();
+    if (!url) throw new Error("No checkout URL returned");
 
-    // Redirect user to Stripe Checkout
+    // Redirect to Stripe Checkout
     window.location.href = url;
 
   } catch (err) {
-    console.error("❌ Preorder failed:", err);
+    console.error("Preorder failed:", err);
     spinner.style.display = "none";
-    alert(`Something went wrong: ${err.message}`);
+    alert("Something went wrong: " + err.message);
   }
-});
-</script>
-  <script>
-  // Set the target date (April 10, 2026)
-  const targetDate = new Date("2026-04-10T00:00:00").getTime();
+}
 
+// ----------------------------
+// INIT
+// ----------------------------
+(async function init() {
+  // Check if this is a success redirect FIRST
+  const isSuccessPage = await handleSuccessPage();
+
+  if (!isSuccessPage) {
+    // Normal page — set up auth UI
+    await updateAuthUI();
+    supabase.auth.onAuthStateChange(() => updateAuthUI());
+  }
+})();
+</script>
+
+<script>
+// Countdown timer
+(function() {
+  const targetDate = new Date("2026-04-10T00:00:00").getTime();
   const countdownEl = document.getElementById("countdown");
+  if (!countdownEl) return;
 
   function updateCountdown() {
     const now = new Date().getTime();
@@ -672,7 +875,6 @@ preorderBtn.addEventListener("click", async () => {
 
     if (distance <= 0) {
       countdownEl.textContent = "Preorder offer ended!";
-      clearInterval(timerInterval);
       return;
     }
 
@@ -684,34 +886,24 @@ preorderBtn.addEventListener("click", async () => {
     countdownEl.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
   }
 
-  // Update every second
-  const timerInterval = setInterval(updateCountdown, 1000);
-
-  // Initial call
   updateCountdown();
-</script>
-  <script>
-  const faqQuestions = document.querySelectorAll(".faq-question");
+  setInterval(updateCountdown, 1000);
+})();
 
-  faqQuestions.forEach((question) => {
-    question.addEventListener("click", () => {
-      const answer = question.nextElementSibling;
-
-      // Toggle active state on question
-      question.classList.toggle("active");
-
-      // Toggle answer visibility
-      answer.classList.toggle("show");
-
-      // Optional: close others (accordion style)
-      faqQuestions.forEach((q) => {
-        if (q !== question) {
-          q.classList.remove("active");
-          q.nextElementSibling.classList.remove("show");
-        }
-      });
+// FAQ accordion
+document.querySelectorAll(".faq-question").forEach(function(question) {
+  question.addEventListener("click", function() {
+    var answer = question.nextElementSibling;
+    question.classList.toggle("active");
+    answer.classList.toggle("show");
+    document.querySelectorAll(".faq-question").forEach(function(q) {
+      if (q !== question) {
+        q.classList.remove("active");
+        q.nextElementSibling.classList.remove("show");
+      }
     });
   });
+});
 </script>
 </body>
 </html>
