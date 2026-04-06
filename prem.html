@@ -23,6 +23,7 @@
       --accent-gradient: linear-gradient(to right, #00e0ff, #38bdf8);
       --success: #10b981;
       --error: #ef4444;
+      --warning: #f59e0b;
     }
 
     body {
@@ -100,7 +101,7 @@
     .whats-included { text-align: left; background: var(--card-bg); padding: 25px; border-radius: 8px; margin: 30px 0; }
     .whats-included ul { list-style: none; padding: 0; }
     .whats-included li { padding: 8px 0; color: var(--text-secondary); }
-    .whats-included li::before { content: '✓ '; color: var(--primary-cyan); font-weight: bold; font-size: 1.2rem; }
+    .whats-included li::before { content: '\2713 '; color: var(--primary-cyan); font-weight: bold; font-size: 1.2rem; }
     .preorder-button {
       background: var(--accent-gradient); color: var(--primary-bg); padding: 18px 40px;
       border: none; font-size: 1.2rem; font-weight: 600; border-radius: 8px; cursor: pointer;
@@ -110,16 +111,25 @@
     .preorder-button:disabled { background: var(--text-muted); cursor: not-allowed; transform: none; box-shadow: none; }
     .trust-text { font-size: 0.85rem; color: var(--text-muted); margin-top: 15px; }
 
-    .result-banner { display: none; padding: 24px 30px; border-radius: 12px; margin-bottom: 30px; text-align: center; animation: fadeSlideIn 0.5s ease both; }
-    .result-banner.success { display: block; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .result-banner {
+      padding: 24px 30px; border-radius: 12px; margin-bottom: 30px;
+      text-align: center; animation: fadeSlideIn 0.5s ease both;
+    }
+    .result-banner.success { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); }
     .result-banner.success h3 { color: var(--success); font-size: 1.5rem; margin: 0 0 8px; }
     .result-banner.success p { color: var(--text-secondary); margin: 0; }
-    .result-banner.error { display: block; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); }
+    .result-banner.error { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); }
     .result-banner.error h3 { color: var(--error); font-size: 1.5rem; margin: 0 0 8px; }
     .result-banner.error p { color: var(--text-secondary); margin: 0 0 12px; }
-    .result-banner .go-home-btn { display: inline-block; margin-top: 16px; color: var(--primary-cyan); text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: opacity 0.3s; }
+    .result-banner .go-home-btn {
+      display: inline-block; margin-top: 16px; color: var(--primary-cyan);
+      text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: opacity 0.3s;
+    }
     .result-banner .go-home-btn:hover { opacity: 0.8; }
-    @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
     body.show-result .preorder-details { display: none; }
 
@@ -132,11 +142,17 @@
     }
     .faq-question:hover { background: rgba(0, 224, 255, 0.05); }
     .faq-question::after { content: '+'; font-size: 1.5rem; color: var(--primary-cyan); }
-    .faq-question.active::after { content: '−'; }
-    .faq-answer { padding: 0 20px; max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease; color: var(--text-secondary); }
+    .faq-question.active::after { content: '\2212'; }
+    .faq-answer {
+      padding: 0 20px; max-height: 0; overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease; color: var(--text-secondary);
+    }
     .faq-answer.show { padding: 0 20px 20px; max-height: 500px; }
 
-    footer { margin-top: 0; padding: 40px 20px; font-size: 0.9rem; color: var(--text-muted); background: var(--primary-bg); border-top: 1px solid var(--card-bg); }
+    footer {
+      margin-top: 0; padding: 40px 20px; font-size: 0.9rem; color: var(--text-muted);
+      background: var(--primary-bg); border-top: 1px solid var(--card-bg);
+    }
     footer a { color: var(--text-secondary); text-decoration: none; }
     footer a:hover { color: var(--primary-cyan); }
 
@@ -146,8 +162,29 @@
       align-items: center; justify-content: center; color: var(--primary-cyan);
       font-size: 1.2rem; z-index: 9999;
     }
-    .spinner { border: 6px solid var(--card-bg); border-top: 6px solid var(--primary-cyan); border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; margin-bottom: 15px; }
+    .spinner {
+      border: 6px solid var(--card-bg); border-top: 6px solid var(--primary-cyan);
+      border-radius: 50%; width: 60px; height: 60px;
+      animation: spin 1s linear infinite; margin-bottom: 15px;
+    }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Debug banner — shows what env.js actually loaded */
+    #debugBanner {
+      display: none;
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin: 12px auto;
+      max-width: 700px;
+      font-family: monospace;
+      font-size: 12px;
+      color: var(--warning);
+      line-height: 1.8;
+      word-break: break-all;
+    }
+    #debugBanner strong { color: var(--error); font-size: 13px; display: block; margin-bottom: 6px; }
 
     @media (max-width: 768px) {
       header h1 { font-size: 2.5rem; }
@@ -173,6 +210,9 @@
   <a href="index.html" class="back-btn">&larr; Back to HeloxAi</a>
 </div>
 
+<!-- Debug banner — will show if env.js has issues -->
+<div id="debugBanner"></div>
+
 <main>
   <div class="container">
     <div class="preorder-container" id="resultContainer" style="display:none;">
@@ -197,10 +237,10 @@
       <div class="container">
         <h2 class="section-title">What You Can Achieve with HeloxAi</h2>
         <p class="section-subtitle">One AI, limitless possibilities. We handle the complexity so you can focus on the outcome.</p>
-        <div class="feature"><div class="feature-icon">🧠</div><div class="feature-content"><h3>Talk to an Expert on Anything</h3><p>From solving complex multi-step problems to writing code and generating creative stories, HeloxAi's <span class="highlight">intelligent reasoning engine</span> delivers expert-level answers.</p></div></div>
-        <div class="feature"><div class="feature-icon">📚</div><div class="feature-content"><h3>Turn Your Documents into an Expert</h3><p>Instantly chat with your PDFs, reports, and notes. Our <span class="highlight">Retrieval-Augmented Generation (RAG)</span> provides precise, sourced answers from your own data.</p></div></div>
-        <div class="feature"><div class="feature-icon">🖼️</div><div class="feature-content"><h3>Analyze Media Like a Pro</h3><p>Upload images, audio, or video. HeloxAi can <span class="highlight">see, hear, and understand</span> your media — transcribe meetings, summarize lectures, identify objects, describe scenes.</p></div></div>
-        <div class="feature"><div class="feature-icon">⚙️</div><div class="feature-content"><h3>Automate Your Workflows</h3><p>Let the AI take action. Connect to real-time data APIs for daily briefings, monitor social media trends, check stock prices — all through <span class="highlight">dynamic function calling</span>.</p></div></div>
+        <div class="feature"><div class="feature-icon">&#129504;</div><div class="feature-content"><h3>Talk to an Expert on Anything</h3><p>From solving complex multi-step problems to writing code and generating creative stories, HeloxAi's <span class="highlight">intelligent reasoning engine</span> delivers expert-level answers.</p></div></div>
+        <div class="feature"><div class="feature-icon">&#128218;</div><div class="feature-content"><h3>Turn Your Documents into an Expert</h3><p>Instantly chat with your PDFs, reports, and notes. Our <span class="highlight">Retrieval-Augmented Generation (RAG)</span> provides precise, sourced answers from your own data.</p></div></div>
+        <div class="feature"><div class="feature-icon">&#128444;&#65039;</div><div class="feature-content"><h3>Analyze Media Like a Pro</h3><p>Upload images, audio, or video. HeloxAi can <span class="highlight">see, hear, and understand</span> your media.</p></div></div>
+        <div class="feature"><div class="feature-icon">&#9881;&#65039;</div><div class="feature-content"><h3>Automate Your Workflows</h3><p>Let the AI take action. Connect to real-time data APIs for daily briefings, monitor social media trends, check stock prices.</p></div></div>
       </div>
     </section>
 
@@ -209,18 +249,18 @@
         <h2 class="section-title">Who is HeloxAi For?</h2>
         <p class="section-subtitle">Whether you're a creator, a developer, or a strategist, HeloxAi is built for you.</p>
         <div class="audience-grid">
-          <div class="audience-card"><div class="icon">👨‍💻</div><h4>Developers</h4><p>Build powerful AI applications with our unified API, real-time streaming, and cost-optimized routing.</p></div>
-          <div class="audience-card"><div class="icon">🔬</div><h4>Researchers</h4><p>Analyze vast amounts of data, synthesize information from papers, and accelerate your discoveries.</p></div>
-          <div class="audience-card"><div class="icon">✍️</div><h4>Content Creators</h4><p>Generate ideas, draft content, analyze media, and automate your creative process.</p></div>
-          <div class="audience-card"><div class="icon">💼</div><h4>Businesses</h4><p>Gain insights from internal documents, automate reports, and build intelligent customer support tools.</p></div>
+          <div class="audience-card"><div class="icon">&#128104;&#8205;&#128187;</div><h4>Developers</h4><p>Build powerful AI applications with our unified API, real-time streaming, and cost-optimized routing.</p></div>
+          <div class="audience-card"><div class="icon">&#128300;</div><h4>Researchers</h4><p>Analyze vast amounts of data, synthesize information from papers, and accelerate your discoveries.</p></div>
+          <div class="audience-card"><div class="icon">&#9997;&#65039;</div><h4>Content Creators</h4><p>Generate ideas, draft content, analyze media, and automate your creative process.</p></div>
+          <div class="audience-card"><div class="icon">&#128188;</div><h4>Businesses</h4><p>Gain insights from internal documents, automate reports, and build intelligent customer support tools.</p></div>
         </div>
       </div>
     </section>
 
     <section class="preorder-container" id="preorderCTA">
       <h2>Secure Your Founder Access</h2>
-      <p class="price"><span class="currency">£</span>499 <span style="font-size:1rem; color: var(--text-secondary);">one-time</span></p>
-      <p class="subnote">This is a one-time payment for a lifetime premium subscription. The price will increase significantly for future members. Also the main reason for the PreOrder is because I am only using an iPhone and would need a MacBook or something to work more easily. Plus I have many projects ready with little bit of quirks here and there so the support I get from this project will also be used to support others I have planned.</p>
+      <p class="price"><span class="currency">&#163;</span>499 <span style="font-size:1rem; color: var(--text-secondary);">one-time</span></p>
+      <p class="subnote">This is a one-time payment for a lifetime premium subscription. The price will increase significantly for future members.</p>
 
       <div id="countdownContainer">
         <p style="font-size:1rem; color: var(--text-secondary);">Preorder offer ends in:</p>
@@ -231,7 +271,7 @@
         <h4 style="color: var(--text-primary); margin-bottom: 15px;">What's Included:</h4>
         <ul>
           <li>Lifetime access to HeloxAi Premium.</li>
-          <li>Access to all current and future core AI models & features.</li>
+          <li>Access to all current and future core AI models &amp; features.</li>
           <li>Unlimited document uploads for RAG knowledge bases.</li>
           <li>Priority support and direct line to the founding team.</li>
           <li>Exclusive "Founder" badge on your account.</li>
@@ -245,17 +285,17 @@
     <section class="faq-section">
       <div class="container">
         <h2 class="section-title">Frequently Asked Questions</h2>
-        <div class="faq-item"><button class="faq-question">What happens after I preorder?</button><div class="faq-answer">You'll receive an immediate confirmation from Stripe. Your account is upgraded instantly to Lifetime Premium. If for any reason the automatic upgrade doesn't trigger, our system will verify and apply it within minutes.</div></div>
-        <div class="faq-item"><button class="faq-question">How is this different from ChatGPT or Claude?</button><div class="faq-answer">HeloxAi is a universal gateway. Instead of just one model, you get access to a curated selection of the best models for each task, plus unique features like RAG on your own data, multi-modal analysis, and workflow automation—all through a single, optimized interface.</div></div>
-        <div class="faq-item"><button class="faq-question">Is my payment secure?</button><div class="faq-answer">Absolutely. We use Stripe, the industry-leading payment processor trusted by millions of businesses worldwide. Your card details are encrypted and never handled or stored by us.</div></div>
-        <div class="faq-item"><button class="faq-question">What does "lifetime access" mean?</button><div class="faq-answer">It means you will never pay a monthly or annual fee for the HeloxAi Premium plan you are preordering. You will receive all future core feature updates for the Premium tier as long as the service exists.</div></div>
+        <div class="faq-item"><button class="faq-question">What happens after I preorder?</button><div class="faq-answer">You'll receive an immediate confirmation from Stripe. Your account is upgraded instantly to Lifetime Premium.</div></div>
+        <div class="faq-item"><button class="faq-question">How is this different from ChatGPT or Claude?</button><div class="faq-answer">HeloxAi is a universal gateway with access to multiple models, RAG on your data, multi-modal analysis, and workflow automation.</div></div>
+        <div class="faq-item"><button class="faq-question">Is my payment secure?</button><div class="faq-answer">Absolutely. We use Stripe, the industry-leading payment processor. Your card details are encrypted and never stored by us.</div></div>
+        <div class="faq-item"><button class="faq-question">What does "lifetime access" mean?</button><div class="faq-answer">You will never pay a monthly or annual fee. You receive all future core feature updates for the Premium tier as long as the service exists.</div></div>
       </div>
     </section>
   </div>
 </main>
 
 <footer>
-  <div class="container">&copy; 2025 HeloxAI — All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></div>
+  <div class="container">&copy; 2025 HeloxAI &#8212; All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></div>
 </footer>
 
 <div id="loadingSpinner">
@@ -263,73 +303,171 @@
   <p>Redirecting to secure checkout...</p>
 </div>
 
-<!-- Load env vars FIRST -->
-<script src="env.js"></script>
+<!-- ============================================================ -->
+<!-- 1. Load env.js FIRST — with onerror so we know if it fails    -->
+<!-- ============================================================ -->
+<script src="env.js" onerror="window.__envLoadFailed=true"></script>
 
-<!-- Load Supabase as regular script (same as your working chat app) -->
+<!-- ============================================================ -->
+<!-- 2. Load Supabase (same as your working chat app)             -->
+<!-- ============================================================ -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-// =============================
-// ENV CHECK
-// =============================
-if (!window.__ENV__) {
-  document.getElementById('preorderBtn').textContent = 'Configuration Error';
-  document.getElementById('preorderBtn').disabled = true;
-  throw new Error('env.js not loaded or missing window.__ENV__');
-}
-
-var SUPABASE_URL = window.__ENV__.SUPABASE_URL;
-var SUPABASE_ANON_KEY = window.__ENV__.SUPABASE_ANON_KEY;
-var BACKEND_URL = window.__ENV__.BACKEND_URL;
-
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !BACKEND_URL) {
-  document.getElementById('preorderBtn').textContent = 'Configuration Error';
-  document.getElementById('preorderBtn').disabled = true;
-  throw new Error('Missing SUPABASE_URL, SUPABASE_ANON_KEY, or BACKEND_URL in env.js');
-}
-
-// =============================
-// INIT SUPABASE — NO credentials override
-// =============================
-var sb = null;
-try {
-  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-} catch (e) {
-  console.error('Supabase init failed:', e);
-  document.getElementById('preorderBtn').textContent = 'Init Error';
-  document.getElementById('preorderBtn').disabled = true;
-}
-
-// =============================
-// ELEMENTS
-// =============================
-var preorderBtn = document.getElementById('preorderBtn');
-var spinner = document.getElementById('loadingSpinner');
+// ================================================================
+// ENV RESOLUTION — tries multiple patterns your env.js might use
+// ================================================================
+var preorderBtn     = document.getElementById('preorderBtn');
+var spinner         = document.getElementById('loadingSpinner');
 var preorderContent = document.getElementById('preorderContent');
 var resultContainer = document.getElementById('resultContainer');
-var resultBanner = document.getElementById('resultBanner');
+var resultBanner    = document.getElementById('resultBanner');
+var debugBanner     = document.getElementById('debugBanner');
+var sb              = null;
 
-// =============================
-// AUTH
-// =============================
-async function getCurrentUser() {
-  if (!sb) return null;
-  try {
-    var result = await sb.auth.getUser();
-    if (result.error) throw result.error;
-    return result.data.user;
-  } catch (e) {
-    console.error('getUser error:', e);
-    return null;
+var SUPABASE_URL     = null;
+var SUPABASE_ANON_KEY = null;
+var BACKEND_URL      = null;
+
+// Try to find config from wherever env.js put it
+function resolveEnv() {
+  var errors = [];
+  var found = false;
+
+  // Pattern 1: window.__ENV__ (what previous code expected)
+  if (window.__ENV__) {
+    SUPABASE_URL      = window.__ENV__.SUPABASE_URL;
+    SUPABASE_ANON_KEY = window.__ENV__.SUPABASE_ANON_KEY;
+    BACKEND_URL       = window.__ENV__.BACKEND_URL;
+    found = true;
   }
+
+  // Pattern 2: window.ENV (no underscores)
+  if (!found && window.ENV) {
+    SUPABASE_URL      = window.ENV.SUPABASE_URL;
+    SUPABASE_ANON_KEY = window.ENV.SUPABASE_ANON_KEY;
+    BACKEND_URL       = window.ENV.BACKEND_URL;
+    found = true;
+  }
+
+  // Pattern 3: window.config
+  if (!found && window.config) {
+    SUPABASE_URL      = window.config.SUPABASE_URL;
+    SUPABASE_ANON_KEY = window.config.SUPABASE_ANON_KEY;
+    BACKEND_URL       = window.config.BACKEND_URL;
+    found = true;
+  }
+
+  // Pattern 4: window.supabaseUrl etc (flat variables)
+  if (!found && (window.supabaseUrl || window.SUPABASE_URL)) {
+    SUPABASE_URL      = window.supabaseUrl || window.SUPABASE_URL;
+    SUPABASE_ANON_KEY = window.supabaseAnonKey || window.SUPABASE_ANON_KEY;
+    BACKEND_URL       = window.backendUrl || window.BACKEND_URL;
+    found = true;
+  }
+
+  // Pattern 5: Direct globals (SUPABASE_URL defined directly)
+  if (!found && typeof SUPABASE_URL !== 'undefined' && SUPABASE_URL !== null) {
+    // Already set by global scope above
+    found = true;
+  }
+
+  if (!found) {
+    errors.push('env.js loaded but no recognized config object found.');
+    errors.push('Checked: window.__ENV__, window.ENV, window.config, window.supabaseUrl, window.SUPABASE_URL');
+  }
+
+  // Check if env.js failed to load at all
+  if (window.__envLoadFailed) {
+    errors.push('env.js failed to load (404 or syntax error).');
+  }
+
+  // Check for placeholder values
+  if (found) {
+    if (!SUPABASE_URL || SUPABASE_URL.indexOf('your-') !== -1)
+      errors.push('SUPABASE_URL is missing or still a placeholder: ' + SUPABASE_URL);
+    if (!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.indexOf('your-') !== -1)
+      errors.push('SUPABASE_ANON_KEY is missing or still a placeholder: ' + (SUPABASE_ANON_KEY || '').substring(0, 20) + '...');
+    if (!BACKEND_URL || BACKEND_URL.indexOf('your-') !== -1)
+      errors.push('BACKEND_URL is missing or still a placeholder: ' + BACKEND_URL);
+  }
+
+  return errors;
 }
 
-function updateAuthUI() {
-  // Use getSession for fast synchronous-like check
+function showDebug(errors) {
+  if (!errors || !errors.length) {
+    debugBanner.style.display = 'none';
+    return;
+  }
+  debugBanner.style.display = 'block';
+  var html = '<strong>Config Debug Info</strong>';
+  errors.forEach(function(e) { html += '<div>' + e + '</div>'; });
+
+  // Show what keys actually exist on window that might be relevant
+  var possibleKeys = Object.keys(window).filter(function(k) {
+    var kl = k.toLowerCase();
+    return (kl.indexOf('env') !== -1 || kl.indexOf('config') !== -1 || kl.indexOf('supabase') !== -1 || kl.indexOf('backend') !== -1 || kl.indexOf('stripe') !== -1)
+      && k !== '__envLoadFailed' && typeof window[k] !== 'function';
+  });
+  if (possibleKeys.length) {
+    html += '<div style="margin-top:8px;color:var(--text-secondary)">Found on window: ' + possibleKeys.join(', ') + '</div>';
+    possibleKeys.forEach(function(k) {
+      var val = window[k];
+      if (typeof val === 'object' && val !== null) {
+        html += '<div style="color:var(--text-secondary)">window.' + k + ' = { ' + Object.keys(val).join(', ') + ' }</div>';
+      } else {
+        var display = String(val);
+        if (display.length > 80) display = display.substring(0, 80) + '...';
+        html += '<div style="color:var(--text-secondary)">window.' + k + ' = ' + display + '</div>';
+      }
+    });
+  } else {
+    html += '<div style="margin-top:8px;color:var(--text-secondary)">No env/config/supabase keys found on window at all.</div>';
+  }
+
+  debugBanner.innerHTML = html;
+}
+
+// ---- Init ----
+function initApp() {
+  var errors = resolveEnv();
+
+  if (errors.length) {
+    showDebug(errors);
+    preorderBtn.textContent = 'Configuration Error';
+    preorderBtn.disabled = true;
+    // Still run countdown + FAQ — don't kill the whole page
+    return;
+  }
+
+  // Config is good — hide debug, init Supabase
+  debugBanner.style.display = 'none';
+
+  try {
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  } catch (e) {
+    console.error('Supabase init failed:', e);
+    preorderBtn.textContent = 'Init Error';
+    preorderBtn.disabled = true;
+    return;
+  }
+
+  startPage();
+}
+
+function getCurrentUser() {
+  if (!sb) return Promise.resolve(null);
+  return sb.auth.getUser().then(function(r) {
+    if (r.error) return null;
+    return r.data.user;
+  }).catch(function() { return null; });
+}
+
+function refreshButton() {
   if (!sb) return;
-  sb.auth.getSession().then(function(result) {
-    var user = result.data && result.data.session && result.data.session.user;
+  sb.auth.getSession().then(function(r) {
+    var user = r.data && r.data.session && r.data.session.user;
     if (user) {
       preorderBtn.disabled = false;
       preorderBtn.textContent = 'Pre-Order for \u00A3499';
@@ -343,166 +481,136 @@ function updateAuthUI() {
   });
 }
 
-// =============================
-// SUCCESS PAGE HANDLER
-// =============================
-async function handleSuccessPage() {
+function handleSuccessPage() {
   var params = new URLSearchParams(window.location.search);
   var sessionId = params.get('session_id');
-  if (!sessionId) return false;
+  if (!sessionId) return Promise.resolve(false);
 
-  // Hide normal content, show result area
   preorderContent.style.display = 'none';
-  var headerEl = document.querySelector('header');
-  if (headerEl) headerEl.style.display = 'none';
-  var backEl = document.querySelector('.back-btn');
-  if (backEl && backEl.parentElement) backEl.parentElement.style.display = 'none';
+  var hdr = document.querySelector('header');
+  if (hdr) hdr.style.display = 'none';
+  var back = document.querySelector('.back-btn');
+  if (back && back.parentElement) back.parentElement.style.display = 'none';
+  debugBanner.style.display = 'none';
   resultContainer.style.display = 'block';
 
-  // Loading state
   resultBanner.className = 'result-banner success';
   resultBanner.innerHTML = '<div class="spinner" style="margin:0 auto 15px;border-top-color:var(--success)"></div><h3>Verifying your payment...</h3><p>Please wait while we confirm and activate your lifetime access.</p>';
 
-  try {
-    var res = await fetch(BACKEND_URL + '/verify-session?session_id=' + encodeURIComponent(sessionId));
-
-    if (!res.ok) {
-      var errData = {};
-      try { errData = await res.json(); } catch (e) {}
-      throw new Error(errData.error || 'Verification failed (HTTP ' + res.status + ')');
-    }
-
-    var data = await res.json();
-
-    if (data.upgraded) {
-      resultBanner.className = 'result-banner success';
-      resultBanner.innerHTML = '<h3 style="font-size:2.5rem;margin-bottom:12px">\uD83C\uDF89 Welcome, Founder!</h3><p style="font-size:1.1rem;color:var(--text-primary);margin-bottom:8px">Your lifetime premium access is now active.</p><p>You now have unlimited access to all current and future HeloxAi Premium features. Your "Founder" badge has been applied to your account.</p><a href="index.html" class="go-home-btn">Start using HeloxAi Premium \u2192</a>';
+  return fetch(BACKEND_URL + '/verify-session?session_id=' + encodeURIComponent(sessionId))
+    .then(function(res) {
+      if (!res.ok) {
+        return res.json().catch(function() { return {}; }).then(function(e) {
+          throw new Error(e.error || 'HTTP ' + res.status);
+        });
+      }
+      return res.json();
+    })
+    .then(function(data) {
+      if (data.upgraded) {
+        resultBanner.className = 'result-banner success';
+        resultBanner.innerHTML = '<h3 style="font-size:2.5rem;margin-bottom:12px">\uD83C\uDF89 Welcome, Founder!</h3><p style="font-size:1.1rem;color:var(--text-primary);margin-bottom:8px">Your lifetime premium access is now active.</p><p>You now have unlimited access to all current and future HeloxAi Premium features.</p><a href="index.html" class="go-home-btn">Start using HeloxAi Premium \u2192</a>';
+        document.body.classList.add('show-result');
+        return true;
+      }
+      if (data.already_upgraded) {
+        resultBanner.className = 'result-banner success';
+        resultBanner.innerHTML = '<h3>Already Upgraded</h3><p>Your account already has lifetime premium access.</p><a href="index.html" class="go-home-btn">Go to HeloxAi \u2192</a>';
+        document.body.classList.add('show-result');
+        return true;
+      }
+      if (data.pending) {
+        resultBanner.className = 'result-banner success';
+        resultBanner.innerHTML = '<h3>Payment Received</h3><p>Processing... your account will upgrade within a few minutes.</p><a href="index.html" class="go-home-btn">Go to HeloxAi \u2192</a>';
+        document.body.classList.add('show-result');
+        return true;
+      }
+      throw new Error('Unexpected response');
+    })
+    .catch(function(err) {
+      console.error('Verify error:', err);
+      resultBanner.className = 'result-banner error';
+      resultBanner.innerHTML = '<h3>Verification Issue</h3><p>' + err.message + '</p><p style="font-size:0.85rem;margin-top:4px">Your payment may have succeeded &#8212; the webhook will activate your account within minutes.</p><a href="index.html" class="go-home-btn">Go to HeloxAi \u2192</a>';
       document.body.classList.add('show-result');
       return true;
-    }
-
-    if (data.already_upgraded) {
-      resultBanner.className = 'result-banner success';
-      resultBanner.innerHTML = '<h3>Already Upgraded</h3><p>Your account already has lifetime premium access. No additional charge was made.</p><a href="index.html" class="go-home-btn">Go to HeloxAi \u2192</a>';
-      document.body.classList.add('show-result');
-      return true;
-    }
-
-    if (data.pending) {
-      resultBanner.className = 'result-banner success';
-      resultBanner.innerHTML = '<h3>Payment Received</h3><p>Your payment is being processed. Your account will be upgraded within a few minutes. If it doesn\'t activate shortly, please contact support.</p><a href="index.html" class="go-home-btn">Go to HeloxAi \u2192</a>';
-      document.body.classList.add('show-result');
-      return true;
-    }
-
-    throw new Error('Unexpected response from server');
-
-  } catch (err) {
-    console.error('Success page error:', err);
-    resultBanner.className = 'result-banner error';
-    resultBanner.innerHTML = '<h3>Verification Issue</h3><p>' + err.message + '</p><p style="font-size:0.85rem;margin-top:4px;">Your payment may have succeeded \u2014 the webhook will activate your account automatically within a few minutes. If not, contact support with session ID: <code style="background:var(--card-bg);padding:2px 6px;border-radius:4px;font-size:0.8rem">' + sessionId + '</code></p><a href="index.html" class="go-home-btn">Go to HeloxAi \u2192</a>';
-    document.body.classList.add('show-result');
-    return true;
-  }
+    });
 }
 
-// =============================
-// PREORDER CLICK HANDLER
-// =============================
-async function handlePreorder() {
+function handlePreorder() {
   spinner.style.display = 'flex';
-
-  try {
-    var user = await getCurrentUser();
-    if (!user) {
-      spinner.style.display = 'none';
-      window.location.href = 'auth.html';
-      return;
-    }
-
-    var res = await fetch(BACKEND_URL + '/create-checkout-session', {
+  getCurrentUser().then(function(user) {
+    if (!user) { spinner.style.display = 'none'; window.location.href = 'auth.html'; return; }
+    return fetch(BACKEND_URL + '/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_id: user.id, email: user.email })
     });
-
+  })
+  .then(function(res) {
+    if (!res) return;
     if (!res.ok) {
-      var errMsg = 'Failed to create checkout session';
-      try { var errData = await res.json(); errMsg = errData.error || errMsg; } catch (e) {}
-      throw new Error(errMsg);
+      return res.json().catch(function() { return {}; }).then(function(e) {
+        throw new Error(e.error || 'Failed to create session');
+      });
     }
-
-    var result = await res.json();
-    if (!result.url) throw new Error('No checkout URL returned');
-
-    window.location.href = result.url;
-
-  } catch (err) {
+    return res.json();
+  })
+  .then(function(data) {
+    if (!data) return;
+    if (!data.url) throw new Error('No checkout URL returned');
+    window.location.href = data.url;
+  })
+  .catch(function(err) {
     console.error('Preorder failed:', err);
     spinner.style.display = 'none';
     alert('Something went wrong: ' + err.message);
-  }
+  });
 }
 
-// =============================
-// BUTTON CLICK
-// =============================
 preorderBtn.addEventListener('click', function() {
-  // If disabled and says "Login to Preorder", go to auth
   if (preorderBtn.disabled && preorderBtn.textContent.indexOf('Login') !== -1) {
     window.location.href = 'auth.html';
     return;
   }
-  if (!preorderBtn.disabled) {
-    handlePreorder();
-  }
+  if (!preorderBtn.disabled) handlePreorder();
 });
 
-// =============================
-// INIT
-// =============================
-(async function init() {
-  var isSuccessPage = await handleSuccessPage();
-  if (!isSuccessPage) {
-    updateAuthUI();
-    // Listen for auth changes (e.g. user logs in via popup or redirect)
-    if (sb) {
-      sb.auth.onAuthStateChange(function() { updateAuthUI(); });
+function startPage() {
+  handleSuccessPage().then(function(isSuccess) {
+    if (!isSuccess) {
+      refreshButton();
+      sb.auth.onAuthStateChange(function() { refreshButton(); });
     }
-  }
-})();
+  });
+}
+
+// Go
+initApp();
 </script>
 
 <script>
-// Countdown timer
+// Countdown
 (function() {
-  var targetDate = new Date('2026-04-10T00:00:00').getTime();
-  var countdownEl = document.getElementById('countdown');
-  if (!countdownEl) return;
-
-  function updateCountdown() {
-    var now = Date.now();
-    var distance = targetDate - now;
-    if (distance <= 0) { countdownEl.textContent = 'Preorder offer ended!'; return; }
-    var d = Math.floor(distance / 86400000);
-    var h = Math.floor((distance % 86400000) / 3600000);
-    var m = Math.floor((distance % 3600000) / 60000);
-    var s = Math.floor((distance % 60000) / 1000);
-    countdownEl.textContent = d + 'd ' + h + 'h ' + m + 'm ' + s + 's';
+  var target = new Date('2026-04-10T00:00:00').getTime();
+  var el = document.getElementById('countdown');
+  if (!el) return;
+  function tick() {
+    var d = target - Date.now();
+    if (d <= 0) { el.textContent = 'Preorder offer ended!'; return; }
+    el.textContent = Math.floor(d/86400000) + 'd ' + Math.floor((d%86400000)/3600000) + 'h ' + Math.floor((d%3600000)/60000) + 'm ' + Math.floor((d%60000)/1000) + 's';
   }
-
-  updateCountdown();
-  setInterval(updateCountdown, 1000);
+  tick();
+  setInterval(tick, 1000);
 })();
 
-// FAQ accordion
+// FAQ
 document.querySelectorAll('.faq-question').forEach(function(q) {
   q.addEventListener('click', function() {
-    var answer = q.nextElementSibling;
+    var a = q.nextElementSibling;
     q.classList.toggle('active');
-    answer.classList.toggle('show');
-    document.querySelectorAll('.faq-question').forEach(function(other) {
-      if (other !== q) { other.classList.remove('active'); other.nextElementSibling.classList.remove('show'); }
+    a.classList.toggle('show');
+    document.querySelectorAll('.faq-question').forEach(function(o) {
+      if (o !== q) { o.classList.remove('active'); o.nextElementSibling.classList.remove('show'); }
     });
   });
 });
