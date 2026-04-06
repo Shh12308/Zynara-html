@@ -506,16 +506,31 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const preorderBtn = document.getElementById("preorderBtn");
 
 preorderBtn.addEventListener("click", async () => {
-  const user = (await supabase.auth.getUser()).data.user;
-  if (!user) return alert("Login first!");
+  spinner.style.display = "flex"; // show spinner
 
-  const res = await fetch("/create-checkout-session", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user_id: user.id, email: user.email })
-  });
-  const data = await res.json();
-  window.location.href = data.url; // redirect to Stripe checkout
+  try {
+    const user = await getCurrentUser();
+    if (!user) throw new Error("You must be logged in to preorder.");
+
+    const res = await fetch(`${BACKEND_URL}/create-checkout-session`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: user.id, email: user.email })
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(errText || "Failed to create Stripe session");
+    }
+
+    const { url } = await res.json();
+    window.location.href = url;
+
+  } catch (err) {
+    console.error("❌ Preorder failed:", err);
+    spinner.style.display = "none"; // hide spinner on error
+    alert(`Something went wrong: ${err.message}`);
+  }
 });
 </script>
     <p class="trust-text">
