@@ -326,6 +326,158 @@
     }
     .cookie-decline:hover { border-color: rgba(255,255,255,0.2); color: var(--fg); background: rgba(255,255,255,0.03); }
 
+    /* ── Turnstile verification overlay ── */
+    .ts-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(7, 16, 40, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+    .ts-overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .ts-overlay-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 22px;
+      opacity: 0;
+      transform: translateY(14px) scale(0.96);
+    }
+    .ts-overlay.visible .ts-overlay-inner {
+      animation: tsOverlayIn 0.45s 0.05s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes tsOverlayIn {
+      from { opacity: 0; transform: translateY(14px) scale(0.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Shield icon container with pulse rings */
+    .ts-shield-wrap {
+      position: relative;
+      width: 76px;
+      height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ts-shield-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 1.5px solid rgba(110, 231, 183, 0.25);
+      animation: tsRingPulse 2.4s ease-out infinite;
+    }
+    .ts-shield-ring:nth-child(2) {
+      animation-delay: 0.8s;
+    }
+    @keyframes tsRingPulse {
+      0% { transform: scale(0.85); opacity: 0.7; }
+      100% { transform: scale(1.7); opacity: 0; }
+    }
+    .ts-shield-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, rgba(14, 165, 165, 0.18), rgba(110, 231, 183, 0.06));
+      border: 1px solid rgba(110, 231, 183, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      color: var(--accent);
+      position: relative;
+      z-index: 1;
+      animation: tsIconGlow 3s ease-in-out infinite;
+    }
+    @keyframes tsIconGlow {
+      0%, 100% { box-shadow: 0 0 20px rgba(110, 231, 183, 0.08), inset 0 0 12px rgba(14, 165, 165, 0.05); }
+      50% { box-shadow: 0 0 32px rgba(110, 231, 183, 0.18), inset 0 0 16px rgba(14, 165, 165, 0.1); }
+    }
+
+    /* Spinning ring around shield */
+    .ts-spinner-ring {
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      border-top-color: var(--accent);
+      border-right-color: rgba(110, 231, 183, 0.3);
+      animation: tsSpinRing 1.2s linear infinite;
+      z-index: 2;
+    }
+    @keyframes tsSpinRing {
+      to { transform: rotate(360deg); }
+    }
+
+    .ts-overlay-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--fg);
+      letter-spacing: -0.2px;
+    }
+    .ts-overlay-sub {
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+      max-width: 260px;
+      line-height: 1.55;
+    }
+
+    /* Animated dots */
+    .ts-dots {
+      display: flex;
+      gap: 6px;
+      margin-top: -6px;
+    }
+    .ts-dots span {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: 0.3;
+      animation: tsDotBounce 1.4s ease-in-out infinite;
+    }
+    .ts-dots span:nth-child(2) { animation-delay: 0.16s; }
+    .ts-dots span:nth-child(3) { animation-delay: 0.32s; }
+    @keyframes tsDotBounce {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.25; }
+      40% { transform: scale(1.1); opacity: 1; }
+    }
+
+    /* Subtle corner accents on overlay */
+    .ts-overlay::before,
+    .ts-overlay::after {
+      content: '';
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      pointer-events: none;
+      filter: blur(60px);
+      opacity: 0.5;
+    }
+    .ts-overlay::before {
+      top: -40px;
+      left: -40px;
+      background: rgba(14, 165, 165, 0.08);
+    }
+    .ts-overlay::after {
+      bottom: -40px;
+      right: -40px;
+      background: rgba(110, 231, 183, 0.06);
+    }
+
     :focus-visible { outline: 2px solid var(--accent2); outline-offset: 2px; }
 
     @media (prefers-reduced-motion: reduce) {
@@ -344,6 +496,7 @@
       .social-btn .btn-label { text-align: center; }
       .social-btn .disabled-badge { display: none; }
       .cookie-banner { left: 12px; right: 12px; bottom: 12px; }
+      .ts-overlay-sub { max-width: 220px; }
     }
     @media (min-height: 750px) { body { align-items: center; } }
     @media (max-height: 749px) { body { align-items: flex-start; } }
@@ -354,6 +507,27 @@
   <div class="orb orb-1" aria-hidden="true"></div>
   <div class="orb orb-2" aria-hidden="true"></div>
   <div class="orb orb-3" aria-hidden="true"></div>
+
+  <!-- Turnstile verification overlay -->
+  <div class="ts-overlay" id="ts-overlay" role="alert" aria-live="assertive" aria-label="Security verification in progress">
+    <div class="ts-overlay-inner">
+      <div class="ts-shield-wrap">
+        <div class="ts-shield-ring" aria-hidden="true"></div>
+        <div class="ts-shield-ring" aria-hidden="true"></div>
+        <div class="ts-shield-icon">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div class="ts-spinner-ring" aria-hidden="true"></div>
+      </div>
+      <div class="ts-overlay-title">Verifying you are human</div>
+      <div class="ts-overlay-sub">Running a security check to protect your account. This will only take a moment.</div>
+      <div class="ts-dots" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </div>
 
   <div class="auth-container" role="main">
     <div class="brand">
@@ -564,6 +738,26 @@
     if (saved) {
       document.getElementById('login-email').value = saved;
       document.getElementById('remember-me').checked = true;
+    }
+
+    /* ═══════════════════════════════════
+       Turnstile overlay helpers
+       ═══════════════════════════════════ */
+    const tsOverlay = document.getElementById('ts-overlay');
+    let tsOverlayTimer = null;
+
+    function showTSOverlay() {
+      // Reset inner animation by forcing reflow
+      const inner = tsOverlay.querySelector('.ts-overlay-inner');
+      inner.style.animation = 'none';
+      inner.offsetHeight; // trigger reflow
+      inner.style.animation = '';
+      tsOverlay.classList.add('visible');
+    }
+
+    function hideTSOverlay() {
+      tsOverlay.classList.remove('visible');
+      if (tsOverlayTimer) { clearTimeout(tsOverlayTimer); tsOverlayTimer = null; }
     }
 
     /* ═══════════════════════════════════
@@ -798,13 +992,19 @@
       }
 
       try {
+        // Show overlay while turnstile loads or checks
+        showTSOverlay();
+
         if (!tsLoaded) await ensureTS();
+
         if (!loginTok) {
+          hideTSOverlay();
           resetTS(loginWid);
           loginTok = null;
           throw new Error('Please complete the security check.');
         }
 
+        // Overlay stays visible during server-side token verification
         const vRes = await fetch('/verify-turnstile', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -813,6 +1013,7 @@
         if (vRes.ok) {
           const vData = await vRes.json();
           if (!vData.success) {
+            hideTSOverlay();
             resetTS(loginWid);
             loginTok = null;
             throw new Error('Security verification failed.');
@@ -836,10 +1037,12 @@
           }
         }
 
+        hideTSOverlay();
         showMsg('success', 'login', 'Login successful!');
         setTimeout(() => { location.href = 'index.html'; }, 800);
 
       } catch (err) {
+        hideTSOverlay();
         showMsg('error', 'login', err.message || 'An unexpected error occurred.');
       } finally {
         setSubmitLoading(loginBtn, loginSp, false);
@@ -849,18 +1052,12 @@
     });
 
     /* ═══════════════════════════════════
-       Email Signup — FIXED
+       Email Signup
        ═══════════════════════════════════ */
     const signupForm = document.getElementById('signup-form');
     const signupBtn = document.getElementById('signup-btn');
     const signupSp = document.getElementById('signup-spinner');
 
-    /**
-     * Create or update a user profile row.
-     * Uses upsert so that if the row already exists (race condition,
-     * duplicate submit, or triggered from confirm callback), it won't
-     * throw a unique-constraint error — it just updates.
-     */
     async function createOrUpdateProfile(uid, uname, fullName) {
       const { error } = await sb.from('users').upsert(
         {
@@ -876,15 +1073,10 @@
         { onConflict: 'id' }
       );
       if (error) {
-        // Log but don't throw — profile creation shouldn't block the signup flow.
-        // The confirm callback or a database trigger can handle it later.
         console.error('Profile upsert failed:', error.message);
       }
     }
 
-    /**
-     * Username validation: alphanumeric + underscores, 3-20 chars, no leading underscore.
-     */
     function validUsername(u) {
       return /^[a-zA-Z0-9][a-zA-Z0-9_]{2,19}$/.test(u);
     }
@@ -899,7 +1091,6 @@
       const email = document.getElementById('signup-email').value.trim().toLowerCase();
       const pw = document.getElementById('signup-password').value;
 
-      // ── Client-side validation ──
       if (!name || !uname || !email || !pw) {
         showMsg('error', 'signup', 'Please fill out all fields.');
         setSubmitLoading(signupBtn, signupSp, false);
@@ -932,17 +1123,23 @@
       }
 
       try {
-        // ── Turnstile verification ──
+        // Show overlay while turnstile loads or checks
+        showTSOverlay();
+
         if (!tsLoaded) await ensureTS();
+
         if (!window.turnstile || signupWid === null) {
+          hideTSOverlay();
           throw new Error('Security check is loading. Please wait.');
         }
         if (!signupTok) {
+          hideTSOverlay();
           resetTS(signupWid);
           signupTok = null;
           throw new Error('Please complete the security check.');
         }
 
+        // Overlay stays visible during server-side token verification
         const vRes = await fetch('/verify-turnstile', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -951,14 +1148,13 @@
         if (vRes.ok) {
           const vData = await vRes.json();
           if (!vData.success) {
+            hideTSOverlay();
             resetTS(signupWid);
             signupTok = null;
             throw new Error('Security verification failed.');
           }
         }
 
-        // ── Check username availability before calling signUp ──
-        // This prevents creating an auth user whose profile can't be written.
         const { data: existingUname, error: unameErr } = await sb
           .from('users')
           .select('id')
@@ -967,12 +1163,11 @@
 
         if (unameErr) {
           console.warn('Username check failed:', unameErr.message);
-          // Don't block on a DB error — let the upsert handle it gracefully.
         } else if (existingUname) {
+          hideTSOverlay();
           throw new Error('This username is already taken. Please choose another.');
         }
 
-        // ── Supabase auth signup ──
         const { data, error } = await sb.auth.signUp({
           email: email,
           password: pw,
@@ -983,33 +1178,19 @@
         });
         if (error) throw error;
 
-        /*
-         * CRITICAL FIX:
-         * When email confirmation is enabled, Supabase returns the EXISTING
-         * unconfirmed user (with data.user populated) instead of throwing an
-         * error when the same email signs up again. The telltale sign is
-         * data.user.identities being an EMPTY array — meaning no NEW identity
-         * was created. Without this check, the code would proceed to create
-         * a duplicate profile and show a false "success" message.
-         */
         if (data.user && data.user.identities && data.user.identities.length === 0) {
+          hideTSOverlay();
           throw new Error(
             'An account with this email already exists. ' +
             'Please check your inbox for a confirmation email, or try logging in.'
           );
         }
 
-        /*
-         * Only create the profile if we actually got a new user back.
-         * We use upsert (not insert) as a safety net against edge cases:
-         *   - Race conditions from double-clicks
-         *   - Profile already created by a database trigger
-         *   - Confirm callback creating the profile before this runs
-         */
         if (data && data.user) {
           await createOrUpdateProfile(data.user.id, uname, name);
         }
 
+        hideTSOverlay();
         showMsg('success', 'signup', 'Success! Check your email to confirm your account.');
         signupForm.reset();
         sFill.style.width = '0%';
@@ -1017,6 +1198,7 @@
         resetTS(signupWid);
 
       } catch (err) {
+        hideTSOverlay();
         showMsg('error', 'signup', err.message || 'Signup failed.');
       } finally {
         setSubmitLoading(signupBtn, signupSp, false);
