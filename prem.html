@@ -569,11 +569,6 @@ async function getCurrentUser() {
   return data.user;
 }
 
-async function getAccessToken() {
-  const { data } = await supabase.auth.getSession();
-  return data.session?.access_token;
-}
-
 // ----------------------------
 // UI STATE
 // ----------------------------
@@ -597,34 +592,33 @@ supabase.auth.onAuthStateChange(() => {
   updateAuthUI();
 });
 
-<script type="module">
-  const preorderBtn = document.getElementById("preorderBtn");
-  const spinner = document.getElementById("loadingSpinner");
+// ----------------------------
+// CLICK HANDLER
+// ----------------------------
+preorderBtn.addEventListener("click", async () => {
+  spinner.style.display = "flex"; // show spinner
 
-  // Read the payment link from env.js
-  const { STRIPE_PAYMENT_LINK } = window.__ENV__;
-
-  preorderBtn.addEventListener("click", async () => {
-    spinner.style.display = "flex"; // show spinner
-
-    try {
-      // Optional: check if user is logged in (Supabase)
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) {
-        spinner.style.display = "none";
-        alert("You must be logged in to preorder.");
-        return;
-      }
-
-      // Directly redirect to Stripe Payment Link
-      window.location.href = STRIPE_PAYMENT_LINK;
-
-    } catch (err) {
-      console.error("❌ Preorder failed:", err);
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
       spinner.style.display = "none";
-      alert(`Something went wrong: ${err.message}`);
+      alert("You must be logged in to preorder.");
+      return;
     }
-  });
+
+    if (!STRIPE_PAYMENT_LINK) {
+      throw new Error("Stripe payment link is missing in env.js");
+    }
+
+    // Redirect directly
+    window.location.href = STRIPE_PAYMENT_LINK;
+
+  } catch (err) {
+    console.error("❌ Preorder failed:", err);
+    spinner.style.display = "none";
+    alert(`Something went wrong: ${err.message}`);
+  }
+});
 </script>
   <script>
   // Set the target date (April 10, 2026)
