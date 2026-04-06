@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>payment success</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      text-align: center;
+      padding: 60px 20px;
+      background: #0f172a;
+      color: #f1f5f9;
+    }
+
+    .card {
+      max-width: 500px;
+      margin: auto;
+      background: #1e293b;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 224, 255, 0.15);
+    }
+
+    h1 {
+      color: #00e0ff;
+      margin-bottom: 20px;
+    }
+
+    p {
+      color: #94a3b8;
+      margin-bottom: 20px;
+    }
+
+    .spinner {
+      border: 5px solid #334155;
+      border-top: 5px solid #00e0ff;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      margin: 20px auto;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 12px 24px;
+      background: linear-gradient(to right, #00e0ff, #38bdf8);
+      color: #0f172a;
+      text-decoration: none;
+      font-weight: 600;
+      border-radius: 8px;
+    }
+
+    .error {
+      color: #f87171;
+    }
+  </style>
+
+</head>
+<body>
+  <div class="card">
+    <h1 id="title">Processing your upgrade...</h1>
+    <div id="spinner" class="spinner"></div>
+    <p id="message">Please wait while we confirm your payment.</p>
+  </div>
+<script src="env.js"></script>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+    if (!window.__ENV__) {
+      document.body.innerHTML = "❌ env.js not loaded";
+      throw new Error("Missing env");
+    }
+
+    const { SUPABASE_URL, SUPABASE_ANON_KEY, BACKEND_URL } = window.__ENV__;
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function confirmUpgrade() {
+      const params = new URLSearchParams(window.location.search);
+      const sessionId = params.get("session_id");
+
+      const title = document.getElementById("title");
+      const message = document.getElementById("message");
+      const spinner = document.getElementById("spinner");
+
+      if (!sessionId) {
+        title.textContent = "❌ Missing Session";
+        message.textContent = "We couldn't verify your payment.";
+        spinner.style.display = "none";
+        return;
+      }
+
+      try {
+        // OPTIONAL: get user (for debugging / UX)
+        const { data } = await supabase.auth.getUser();
+        const user = data.user;
+
+        console.log("User:", user);
+
+        const res = await fetch(`${BACKEND_URL}/confirm-upgrade`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ session_id: sessionId })
+        });
+
+        const text = await res.text();
+
+        if (!res.ok) {
+          throw new Error(text);
+        }
+
+        title.textContent = "🎉 You're Premium!";
+        message.innerHTML = `
+          Your lifetime access is now unlocked.<br><br>
+          ${text}
+        `;
+
+        spinner.style.display = "none";
+
+        const btn = document.createElement("a");
+        btn.href = "/dashboard";
+        btn.className = "btn";
+        btn.textContent = "Go to Dashboard";
+
+        document.querySelector(".card").appendChild(btn);
+
+      } catch (err) {
+        console.error(err);
+
+        title.textContent = "⚠️ Something went wrong";
+        message.innerHTML = `
+          <span class="error">
+            We couldn't confirm your upgrade automatically.<br><br>
+            Don't worry — your payment is safe.<br><br>
+            Try refreshing or contact support.
+          </span>
+        `;
+
+        spinner.style.display = "none";
+
+        const retryBtn = document.createElement("a");
+        retryBtn.href = window.location.href;
+        retryBtn.className = "btn";
+        retryBtn.textContent = "Retry";
+
+        document.querySelector(".card").appendChild(retryBtn);
+      }
+    }
+
+    confirmUpgrade();
+  </script>
+
+</body>
+</html>
