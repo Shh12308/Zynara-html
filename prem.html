@@ -498,57 +498,24 @@
       <p>Redirecting to secure checkout...</p>
     </div>
 
-    <button id="preorderBtn">Pre-Order for £499</button>
-<div id="loadingSpinner" style="display:none;">Loading...</div>
-
+   <button id="preorderBtn">Pre-Order for £499</button>
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-if (!window.__ENV__) throw new Error("env.js not loaded");
-
-const { SUPABASE_URL, SUPABASE_ANON_KEY, STRIPE_PAYMENT_LINK } = window.__ENV__;
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 const preorderBtn = document.getElementById("preorderBtn");
-const spinner = document.getElementById("loadingSpinner");
-
-async function getCurrentUser() {
-  const { data } = await supabase.auth.getUser();
-  return data.user;
-}
-
-async function updateAuthUI() {
-  const user = await getCurrentUser();
-  if (!user) {
-    preorderBtn.disabled = true;
-    preorderBtn.textContent = "Login to Preorder";
-  } else {
-    preorderBtn.disabled = false;
-    preorderBtn.textContent = "Pre-Order for £499";
-  }
-}
-
-updateAuthUI();
-supabase.auth.onAuthStateChange(updateAuthUI);
 
 preorderBtn.addEventListener("click", async () => {
-  spinner.style.display = "flex";
+  const user = (await supabase.auth.getUser()).data.user;
+  if (!user) return alert("Login first!");
 
-  const user = await getCurrentUser();
-  if (!user) {
-    spinner.style.display = "none";
-    alert("Login required");
-    return;
-  }
-
-  if (!STRIPE_PAYMENT_LINK) {
-    spinner.style.display = "none";
-    alert("Payment link not configured");
-    return;
-  }
-
-  // Redirect instantly to Stripe Payment Link
-  window.location.href = STRIPE_PAYMENT_LINK;
+  const res = await fetch("/create-checkout-session", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id: user.id, email: user.email })
+  });
+  const data = await res.json();
+  window.location.href = data.url; // redirect to Stripe checkout
 });
 </script>
     <p class="trust-text">
