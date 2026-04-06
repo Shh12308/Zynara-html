@@ -612,7 +612,7 @@ preorderBtn.addEventListener("click", async () => {
     }
 
     // Call your Supabase Edge Function to create a checkout session
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/create_checkout_session`, {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/stripe-webhook`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
