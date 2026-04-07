@@ -302,14 +302,6 @@
 </div>
 
 <script src="env.js" onerror="window.__envLoadFailed=true"></script>
-
-<!-- ================================================================= -->
-/* PINNED to v2.44.0 — v2.45+ introduced postgres-ews (Event Watch     */
-/* System) which uses IndexedDB internally. That module's insertSync()   */
-/* throws a silent TypeError in some environments (private browsing,     */
-/* iframes, certain mobile browsers), crashing ALL Supabase operations. */
-/* v2.44.0 is the last stable release before that regression.           */
-<!-- ================================================================= -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.44.0"></script>
 
 <script>
@@ -325,9 +317,6 @@ var SUPABASE_URL      = null;
 var SUPABASE_ANON_KEY = null;
 var BACKEND_URL       = null;
 
-/* ------------------------------------------------------------------ */
-/* ENV RESOLUTION — tries multiple patterns your env.js might use      */
-/* ------------------------------------------------------------------ */
 function resolveEnv() {
   var errors = [];
   var found  = false;
@@ -406,32 +395,12 @@ function showDebug(errors) {
   debugBanner.innerHTML = html;
 }
 
-/* ------------------------------------------------------------------ */
-/* SAFE auth helpers — catch IndexedDB / internal errors from Supabase */
-/* ------------------------------------------------------------------ */
-function safeGetUser() {
-  /* Try getUser first; if it crashes (IndexedDB / EWS), fall back to getSession */
-  if (!sb) return Promise.resolve(null);
-
-  return sb.auth.getUser()
-    .then(function(r) {
-      if (r.error) return null;
-      return r.data.user || null;
-    })
-    .catch(function() {
-      /* getUser failed (likely IndexedDB/EWS internal error) — try getSession instead */
-      return sb.auth.getSession()
-        .then(function(r) {
-          if (r.error || !r.data || !r.data.session || !r.data.session.user) return null;
-          return r.data.session.user;
-        })
-        .catch(function() {
-          return null;
-        });
-    });
-}
-
-function safeGetSession() {
+/* -------------------------------------------------------------- */
+/* Single reliable auth check — uses getSession (localStorage,    */
+/* no network call). This is what enables the button AND what     */
+/* the click handler uses. No mismatch possible.                  */
+/* -------------------------------------------------------------- */
+function getLoggedInUser() {
   if (!sb) return Promise.resolve(null);
   return sb.auth.getSession()
     .then(function(r) {
@@ -443,9 +412,6 @@ function safeGetSession() {
     });
 }
 
-/* ------------------------------------------------------------------ */
-/* INIT                                                                */
-/* ------------------------------------------------------------------ */
 function initApp() {
   var errors = resolveEnv();
 
@@ -478,11 +444,11 @@ function initApp() {
   startPage();
 }
 
-/* ------------------------------------------------------------------ */
-/* BUTTON STATE                                                        */
-/* ------------------------------------------------------------------ */
+/* -------------------------------------------------------------- */
+/* Same function for button state AND click handler — no split    */
+/* -------------------------------------------------------------- */
 function refreshButton() {
-  safeGetSession().then(function(user) {
+  getLoggedInUser().then(function(user) {
     if (user) {
       preorderBtn.disabled = false;
       preorderBtn.textContent = 'Pre-Order for \u00A3499';
@@ -493,9 +459,9 @@ function refreshButton() {
   });
 }
 
-/* ------------------------------------------------------------------ */
-/* STRIPE SUCCESS PAGE                                                 */
-/* ------------------------------------------------------------------ */
+/* -------------------------------------------------------------- */
+/* Stripe success page                                             */
+/* -------------------------------------------------------------- */
 function handleSuccessPage() {
   var params = new URLSearchParams(window.location.search);
   var sessionId = params.get('session_id');
@@ -551,18 +517,19 @@ function handleSuccessPage() {
     });
 }
 
-/* ------------------------------------------------------------------ */
-/* PREORDER CLICK                                                      */
-/* ------------------------------------------------------------------ */
+/* -------------------------------------------------------------- */
+/* Preorder — uses the SAME getLoggedInUser() as the button check */
+/* -------------------------------------------------------------- */
 function handlePreorder() {
   spinner.style.display = 'flex';
 
-  safeGetUser().then(function(user) {
+  getLoggedInUser().then(function(user) {
     if (!user) {
       spinner.style.display = 'none';
       window.location.href = 'auth.html';
       return;
     }
+
     return fetch(BACKEND_URL + '/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -598,19 +565,14 @@ preorderBtn.addEventListener('click', function() {
   if (!preorderBtn.disabled) handlePreorder();
 });
 
-/* ------------------------------------------------------------------ */
-/* PAGE START                                                          */
-/* ------------------------------------------------------------------ */
 function startPage() {
   handleSuccessPage().then(function(isSuccess) {
     if (!isSuccess) {
       refreshButton();
 
-      /* Listen for auth changes — wrapped to survive any internal Supabase errors */
       try {
         sb.auth.onAuthStateChange(function() { refreshButton(); });
       } catch (e) {
-        /* If onAuthStateChange itself throws, just poll instead */
         console.warn('onAuthStateChange failed, using fallback polling:', e);
         setInterval(refreshButton, 5000);
       }
@@ -618,12 +580,10 @@ function startPage() {
   });
 }
 
-/* Go */
 initApp();
 </script>
 
 <script>
-/* Countdown */
 (function() {
   var target = new Date('2026-04-10T00:00:00').getTime();
   var el = document.getElementById('countdown');
@@ -637,7 +597,6 @@ initApp();
   setInterval(tick, 1000);
 })();
 
-/* FAQ */
 document.querySelectorAll('.faq-question').forEach(function(q) {
   q.addEventListener('click', function() {
     var a = q.nextElementSibling;
