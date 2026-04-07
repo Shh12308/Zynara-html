@@ -21,16 +21,24 @@
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
 <link rel="icon" type="image/x-icon" href="icons/favicon.ico">
 <link rel="apple-touch-icon" href="icons/icon-192x192.png">
-<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152x152.png">
-<link rel="apple-touch-icon" sizes="180x180" href="icons/icon-192x192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
-<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
+
+<!-- Advanced Markdown Dependencies -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/atom-one-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/core.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/javascript.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/css.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
+
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--font-display:'Space Grotesk',sans-serif;--font-body:'DM Sans',sans-serif;--radius:14px;--radius-sm:10px;--radius-lg:18px;--radius-xl:24px;--speed:.25s;--speed-slow:.4s;--ease:cubic-bezier(.4,0,.2,1);--ease-out:cubic-bezier(0,0,.2,1);--ease-in:cubic-bezier(.4,0,1,1);--msg-max:680px;--sidebar-w:290px}
@@ -176,18 +184,27 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 .msg.user-msg .msg-label{font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:6px;text-align:right}
 .msg.user-msg .msg-bubble{background:var(--bg-user-bubble);border:1px solid var(--bg-user-bubble-border);padding:12px 16px;border-radius:var(--radius-lg) var(--radius-sm) var(--radius-lg) var(--radius-lg);word-break:break-word;width:100%}
 .msg.user-msg .msg-acts{justify-content:flex-end}
-.msg-ct{font-size:14.5px;line-height:1.8;color:var(--text-primary);word-break:break-word}
+.msg-ct{font-size:14.5px;line-height:1.8;color:var(--text-primary);word-break:break-word;overflow-wrap:break-word}
 .msg-ct p{margin-bottom:10px}.msg-ct p:last-child{margin-bottom:0}
 .msg-ct ul,.msg-ct ol{margin:8px 0;padding-left:24px}.msg-ct li{margin-bottom:4px}.msg-ct li::marker{color:var(--accent)}
 .msg-ct strong{font-weight:700}.msg-ct em{font-style:italic}
 .msg-ct blockquote{border-left:3px solid var(--accent);padding:8px 16px;margin:10px 0;color:var(--text-secondary);background:var(--accent-dim);border-radius:0 var(--radius-sm) var(--radius-sm) 0;font-style:italic}
 .msg-ct a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent;transition:border-color var(--speed)}.msg-ct a:hover{border-bottom-color:var(--accent)}
 .msg-ct .ext-i{font-size:8px;margin-left:3px;opacity:.5;vertical-align:super}
-.msg-ct table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}
-.msg-ct th,.msg-ct td{border:1px solid var(--border);padding:8px 12px;text-align:left}.msg-ct th{background:var(--bg-tertiary);font-weight:700;font-size:12px}
+
+/* Advanced Markdown Tables */
+.msg-ct table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.msg-ct th,.msg-ct td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+.msg-ct th{background:var(--bg-tertiary);font-weight:700;font-size:12px;color:var(--text-primary)}
+.msg-ct tr:nth-child(even){background:var(--bg-secondary)}
+
 .msg-ct hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 .msg-ct h1,.msg-ct h2,.msg-ct h3,.msg-ct h4{font-family:var(--font-display);font-weight:700;margin:16px 0 8px;letter-spacing:-.3px}
 .msg-ct h1{font-size:22px}.msg-ct h2{font-size:18px}.msg-ct h3{font-size:15px}.msg-ct h4{font-size:14px}
+
+/* KaTeX Styling override */
+.katex-display{margin:10px 0;overflow-x:auto;padding:4px 0}.katex{font-size:1.1em}
+
 .msg-acts{display:flex;gap:2px;margin-top:8px;opacity:0;transition:opacity .25s var(--ease)}.msg:hover .msg-acts{opacity:1}
 .ma{background:none;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;padding:5px 7px;border-radius:7px;transition:all var(--speed);display:flex;align-items:center;gap:4px;position:relative}
 .ma:hover{color:var(--text-primary);background:var(--bg-hover)}.ma:active{transform:scale(.95)}
@@ -327,7 +344,7 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
   <div class="sb-head"><div class="sb-logo">Helox<span>Ai</span></div><button class="ib" id="sbClose" aria-label="Close sidebar"><i class="fa-solid fa-xmark"></i></button></div>
   <div class="sb-search"><div class="sb-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" id="sbSearch" placeholder="Search conversations..."></div></div>
   <button class="nc-btn" id="newChatBtn"><i class="fa-solid fa-plus"></i> New Chat <span class="nc-lock" id="ncLock" style="display:none"><i class="fa-solid fa-lock"></i></span></button>
-  <div class="cl" id="chatList"><div class="cl-label">Recent</div><div id="chatListItems"><span style="color:var(--text-muted);font-size:12px;padding:4px 10px;display:block">No conversations yet</span></div></div>
+  <div class="cl" id="chatList"><div class="cl-label">Recent</div><div id="chatListItems"><span style="color:var(--text-muted);font-size:12px;padding:4px 10px;display:block">Loading chats...</span></div></div>
   <nav class="s-nav">
     <a href="auth.html" id="signInLink"><i class="fa-solid fa-right-to-bracket"></i> Sign In</a>
     <a href="settings.html"><i class="fa-solid fa-sliders"></i> Settings</a>
@@ -416,10 +433,13 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 <div class="modal-ov" id="contactModal"><div class="modal"><h3>Contact Us</h3><p>Have questions or feedback? We'd love to hear from you.</p><p style="color:var(--accent);font-weight:600;font-size:14px">support@heloxai.com</p><button class="modal-close" data-close="contactModal">Close</button></div></div>
 <div class="toast-ct" id="toastCt"></div>
 <script>
+// ================= CONFIGURATION =================
+// These should be injected via your build process or defined in a config file
+// For this HTML file, we use variables that mimic .env access
 var SUPABASE_URL='https://acbnqeeukfxewiqswgbw.supabase.co';
 var SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjYm5xZWV1a2Z4ZXdpcXN3Z2J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMDY5MzIsImV4cCI6MjA4OTg4MjkzMn0.bwkZs0yqNAooAh6cV16dcwZwNz_5H5xvAu7eiQtR4wE';
-var FREE_AI_URL='https://billy-free-ai-production.up.railway.app';
-var PREMIUM_AI_URL='https://your-premium-ai-url.up.railway.app';
+var BACKEND_URL='https://billy-free-ai-production.up.railway.app'; // This is your main API Base URL
+// =================================================
 
 function $(id){return document.getElementById(id)}
 function esc(s){if(s==null)return'';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
@@ -438,7 +458,7 @@ var VIDEO_KW=['generate video','create video','make video','render video'];
 function isImage(t){var l=t.toLowerCase();for(var i=0;i<IMAGE_KW.length;i++)if(l.indexOf(IMAGE_KW[i])!==-1)return true;return false}
 function isVideo(t){var l=t.toLowerCase();for(var i=0;i<VIDEO_KW.length;i++)if(l.indexOf(VIDEO_KW[i])!==-1)return true;return false}
 
-function aiUrl(){if(S.user&&(S.user.plan==='premium'||S.user.plan==='ultimate_monthly'||S.user.plan==='ultimate_yearly'||S.user.plan==='lifetime'||S.user.is_premium||S.user.is_lifetime))return PREMIUM_AI_URL;return FREE_AI_URL}
+function aiUrl(){return BACKEND_URL}
 function authH(){var h={'Content-Type':'application/json'};if(S.user&&S.user.token)h['Authorization']='Bearer '+S.user.token;return h}
 function plan(){return(S.user&&S.user.plan)||'free'}
 function canGenMedia(){return S.user&&(S.user.plan==='premium'||S.user.plan==='ultimate_monthly'||S.user.plan==='ultimate_yearly'||S.user.plan==='lifetime'||S.user.is_premium||S.user.is_lifetime)}
@@ -455,30 +475,185 @@ async function handleSignIn(session){if(!session||!session.user)return;try{local
 function handleSignOut(){S.user=null;S.msgs=[];S.chatId=null;S.chatListData=[];S.gallery=[];refreshUI();renderAll();renderChatList();renderGallery();toast('Signed out','inf')}
 async function signOut(){if(sb)try{await sb.auth.signOut()}catch(e){}handleSignOut()}
 
+// ================= BACKEND CONNECTIONS (FIXED) =================
+
+// 1. Connect 'chats' to /chats
+async function loadChatList(){
+  if(!S.user){
+    S.chatListData=[];
+    renderChatList();
+    return;
+  }
+  
+  try {
+    // Fetching from /chats endpoint
+    var res = await fetch(BACKEND_URL + '/chats', {
+      method: 'GET',
+      headers: authH(),
+      credentials: 'include'
+    });
+
+    if (!res.ok) throw new Error('Failed to load chats');
+    
+    var data = await res.json();
+    // Assuming backend returns { chats: [...] } or [...]
+    S.chatListData = Array.isArray(data) ? data : (data.chats || []);
+  } catch (e) {
+    console.warn('Backend /chats failed, falling back or empty:', e);
+    // Fallback or empty state if backend fails
+    S.chatListData = [];
+  }
+  renderChatList();
+}
+
+// 2. Connect 'newchat' to /newchat
+async function startNewChat() {
+  if(!S.user) return;
+  
+  try {
+    var res = await fetch(BACKEND_URL + '/newchat', {
+      method: 'POST',
+      headers: authH(),
+      credentials: 'include',
+      body: JSON.stringify({ model: S.model }) // Optional: send model preference
+    });
+
+    if (!res.ok) throw new Error('Failed to create new chat');
+    
+    var data = await res.json();
+    // Assuming backend returns { id: '...', title: '...' }
+    if (data && data.id) {
+      S.chatId = data.id;
+      $('hdrTitle').textContent = data.title || 'New Chat';
+      // Reload list to show new chat at top
+      loadChatList();
+    }
+  } catch (e) {
+    console.warn('Backend /newchat failed, using local fallback:', e);
+    // Fallback: Generate local ID if backend fails
+    S.chatId = uid();
+    $('hdrTitle').textContent = 'New Chat';
+  }
+  
+  S.msgs = [];
+  renderAll();
+  if(S.sbOpen) toggleSB(false);
+}
+
+// Existing helper functions for Supabase (kept for fallback or message history if needed)
 async function saveMessage(msg){if(!sb||!S.user||!S.chatId)return;try{await sb.from('messages').insert({conversation_id:S.chatId,role:msg.role,content:msg.content,content_type:msg.content_type||'text',media_url:msg.media_url||null,metadata:msg.metadata||{}})}catch(e){}}
 async function createConversation(title){if(!sb||!S.user)return null;try{var res=await sb.from('conversations').insert({user_id:S.user.id,title:title||'New Chat'}).select().single();if(res.error)throw res.error;return res.data}catch(e){console.warn('createConversation:',e);return null}}
 async function updateConversationTimestamp(cid){if(!sb||!cid)return;try{await sb.from('conversations').update({updated_at:new Date().toISOString()}).eq('id',cid)}catch(e){}}
 async function loadMessages(cid){if(!sb||!cid)return[];try{var res=await sb.from('messages').select('*').eq('conversation_id',cid).order('created_at',{ascending:true});if(res.error)throw res.error;return res.data||[]}catch(e){console.warn('loadMessages:',e);return[]}}
 
-async function loadChatList(){
-  if(!sb||!S.user){S.chatListData=[];renderChatList();return}
-  try{
-    var res=await sb.from('conversations').select('*').eq('user_id',S.user.id).order('updated_at',{ascending:false}).limit(50);
-    if(res.error)throw res.error;
-    S.chatListData=res.data||[];
-  }catch(e){console.warn('loadChatList:',e);S.chatListData=[]}
-  renderChatList();
+async function deleteConversation(cid){
+  try {
+    // Try backend delete first
+    await fetch(BACKEND_URL + '/chats/' + cid, {
+      method: 'DELETE',
+      headers: authH(),
+      credentials: 'include'
+    });
+  } catch(e) {}
+  
+  // Fallback to Supabase direct
+  if(!sb||!cid)return;
+  try{await sb.from('messages').delete().eq('conversation_id',cid);await sb.from('conversations').delete().eq('id',cid)}catch(e){}
 }
-
-async function deleteConversation(cid){if(!sb||!cid)return;try{await sb.from('messages').delete().eq('conversation_id',cid);await sb.from('conversations').delete().eq('id',cid)}catch(e){}}
 async function loadConversation(cid){S.msgs=[];showWelcome();if(!sb||!cid)return;try{var messages=await loadMessages(cid);if(messages&&messages.length){S.msgs=messages.map(function(m){return{id:m.id,role:m.role,content:m.content,content_type:m.content_type||'text',media_url:m.media_url||null,images:[],time:new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),liked:false,disliked:false}});S.msgs.forEach(function(m){if(m.role==='assistant')addToGallery(m.content)});renderAll()}}catch(e){console.warn('loadConversation:',e)}}
 
 function updateLoginDisplay(){var el=$('uLl');if(!el)return;if(!S.user){el.style.display='none';return}try{var ts=localStorage.getItem('helox-last-login');if(ts){var d=new Date(parseInt(ts));el.textContent='Last login: '+d.toLocaleDateString([],{month:'short',day:'numeric'})+', '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});el.style.display='block'}else el.style.display='none'}catch(e){el.style.display='none'}}
 
 function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('data-theme',window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');else document.documentElement.setAttribute('data-theme',t)}catch(e){}S.theme=t;try{localStorage.setItem('helox-theme',t)}catch(e){}document.querySelectorAll('.t-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-t')===t)})}
 function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'dark'}catch(e){}setTheme(s);try{window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(S.theme==='system')setTheme('system')})}catch(e){}}
-function initMarked(){try{if(typeof marked==='undefined')return;S._mdOk=true;if(typeof hljs!=='undefined')S._hlOk=true;var r=new marked.Renderer();r.code=function(code,lang){var l=(lang||'plaintext').split(/\s+/)[0],hl;try{hl=(S._hlOk&&hljs.getLanguage(l))?hljs.highlight(code,{language:l}).value:(S._hlOk?hljs.highlightAuto(code).value:esc(code))}catch(e){hl=esc(code)}return'<div class="code-blk"><div class="code-hd"><span>'+esc(l)+'</span><button class="cp-btn" data-copy-code><i class="fa-regular fa-copy"></i> Copy</button></div><pre><code class="hljs language-'+l+'">'+hl+'</code></pre></div>'};r.image=function(href,title,text){return'<div class="img-wrap"><img src="'+href+'" alt="'+(text||'')+'" loading="lazy"></div>'};r.link=function(href,title,text){if(!href)return text;return'<a href="'+href+'" target="_blank" rel="noopener">'+text+'<i class="fa-solid fa-arrow-up-right-from-square ext-i"></i></a>'};marked.setOptions({renderer:r,breaks:true,gfm:true})}catch(e){}}
-function md(text){if(!text)return'';if(S._mdOk)try{return marked.parse(text)}catch(e){}return'<p>'+esc(text).replace(/\n/g,'<br>')+'</p>'}
+
+// ================= ADVANCED MARKDOWN =================
+function initMarked(){
+  try {
+    if (typeof marked === 'undefined' || typeof hljs === 'undefined' || typeof katex === 'undefined') return;
+    
+    // Configure Marked
+    marked.setOptions({
+      breaks: true,
+      gfm: true,
+      highlight: function(code, lang) {
+        var language = hljs.getLanguage(lang) ? lang : 'plaintext';
+        return hljs.highlight(code, { language: language }).value;
+      }
+    });
+    
+    // Custom Renderer for better control
+    var renderer = new marked.Renderer();
+    
+    // Code Blocks with Copy Button
+    renderer.code = function(code, language) {
+      var validLang = language && hljs.getLanguage(language) ? language : 'plaintext';
+      var highlighted = hljs.highlight(code, { language: validLang, ignoreIllegals: true }).value;
+      
+      return '<div class="code-blk">' +
+             '<div class="code-hd"><span>' + esc(validLang) + '</span>' +
+             '<button class="cp-btn" data-copy-code><i class="fa-regular fa-copy"></i> Copy</button></div>' +
+             '<pre><code class="hljs language-' + validLang + '">' + highlighted + '</code></pre></div>';
+    };
+    
+    // Images
+    renderer.image = function(href, title, text) {
+      return '<div class="img-wrap"><img src="' + href + '" alt="' + (text || '') + '" loading="lazy"></div>';
+    };
+    
+    // Links
+    renderer.link = function(href, title, text) {
+      if (!href) return text;
+      return '<a href="' + href + '" target="_blank" rel="noopener noreferrer">' + text + 
+             '<i class="fa-solid fa-arrow-up-right-from-square ext-i"></i></a>';
+    };
+
+    marked.setOptions({ renderer: renderer });
+    S._mdOk = true;
+    S._hlOk = true;
+  } catch(e) {
+    console.warn("Markdown init failed", e);
+  }
+}
+
+function md(text){
+  if(!text) return '';
+  var rawHtml = '';
+  
+  if(S._mdOk) {
+    try {
+      rawHtml = marked.parse(text);
+      // Sanitize HTML to prevent XSS
+      rawHtml = DOMPurify.sanitize(rawHtml, {
+        ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'strong', 'em', 'a', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr', 'img', 'div', 'span', 'button', 'i', 'sup', 'sub'],
+        ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'id', 'style', 'src', 'alt', 'title', 'data-copy-code', 'loading'],
+        ALLOW_DATA_ATTR: false
+      });
+    } catch(e) {
+      rawHtml = '<p>' + esc(text).replace(/\n/g, '<br>') + '</p>';
+    }
+  } else {
+    rawHtml = '<p>' + esc(text).replace(/\n/g, '<br>') + '</p>';
+  }
+  
+  return rawHtml;
+}
+
+// Apply KaTeX rendering after markdown is inserted into DOM
+function applyMath(element) {
+  if (typeof renderMathInElement !== 'undefined') {
+    renderMathInElement(element, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false},
+        {left: '\\(', right: '\\)', display: false},
+        {left: '\\[', right: '\\]', display: true}
+      ],
+      throwOnError : false
+    });
+  }
+}
+
 function toast(msg,type){var icons={ok:'fa-circle-check',err:'fa-circle-xmark',inf:'fa-circle-info',wrn:'fa-triangle-exclamation'};var el=document.createElement('div');el.className='toast '+(type||'inf');el.innerHTML='<i class="fa-solid '+(icons[type||'inf']||icons.inf)+'"></i> '+esc(msg);$('toastCt').appendChild(el);setTimeout(function(){if(el.parentNode)el.remove()},3200)}
 
 function toggleSB(open){S.sbOpen=typeof open==='boolean'?open:!S.sbOpen;$('sidebar').classList.toggle('open',S.sbOpen);$('sbOv').classList.toggle('on',S.sbOpen)}
@@ -527,17 +702,30 @@ function renderAll(){
   S.msgs.forEach(function(m,i){
     if(m.role==='assistant'){
       var act='<div class="msg-acts"><button class="ma" data-act="copy" data-i="'+i+'" data-tip="Copy"><i class="fa-regular fa-copy"></i></button><button class="ma'+(m.liked?' liked':'')+'" data-act="like" data-i="'+i+'" data-tip="Good"><i class="fa-regular fa-thumbs-up"></i></button><button class="ma'+(m.disliked?' disliked':'')+'" data-act="dislike" data-i="'+i+'" data-tip="Bad"><i class="fa-regular fa-thumbs-down"></i></button>'+(i===S.msgs.length-1&&!S.streaming?'<button class="ma" data-act="regen" data-i="'+i+'" data-tip="Regenerate"><i class="fa-solid fa-arrows-rotate"></i></button>':'')+'<button class="ma'+(authSilent()?' locked':'')+'" data-act="voice" data-i="'+i+'" data-tip="'+(S.user?'Read aloud':'Sign in')+'"><i class="fa-solid fa-volume-high"></i></button></div>';
-      html+='<div class="msg ai-msg" id="msg-'+i+'"><div class="msg-inner"><div class="msg-label"><span class="ai-dot"></span> AI</div><div class="msg-ct" id="mc-'+i+'">'+md(m.content)+'</div>'+act+'<div class="msg-time">'+(m.time||'')+'</div><div id="ea-'+i+'"></div></div></div>';
+      html+='<div class="msg ai-msg" id="msg-'+i+'"><div class="msg-inner"><div class="msg-label"><span class="ai-dot"></span> AI</div><div class="msg-ct" id="mc-'+i+'"></div>'+act+'<div class="msg-time">'+(m.time||'')+'</div><div id="ea-'+i+'"></div></div></div>';
     }else{
       var imgHtml=buildMsgImagesHtml(m.images);var textHtml=m.content?'<p>'+esc(m.content).replace(/\n/g,'<br>')+'</p>':'';
       var bubbleContent=(imgHtml||textHtml)?(imgHtml+textHtml):'<p style="color:var(--text-muted);font-style:italic">Empty message</p>';
       html+='<div class="msg user-msg" id="msg-'+i+'"><div class="msg-inner"><div class="msg-label">You</div><div class="msg-bubble"><div class="msg-ct" id="mc-'+i+'">'+bubbleContent+'</div></div><div class="msg-acts"><button class="ma" data-act="copy" data-i="'+i+'" data-tip="Copy"><i class="fa-regular fa-copy"></i></button><button class="ma" data-act="edit" data-i="'+i+'" data-tip="Edit"><i class="fa-regular fa-pen-to-square"></i></button></div><div class="msg-time">'+(m.time||'')+'</div><div id="ea-'+i+'"></div></div></div>';
     }
   });
-  $('msgsEl').innerHTML=html;if(S.isAutoScrolling)scrollBot(false);
+  $('msgsEl').innerHTML=html;
+  
+  // Post-render: Apply Markdown and Math to AI messages
+  S.msgs.forEach(function(m, i){
+    if(m.role === 'assistant') {
+      var el = $('mc-'+i);
+      if(el) {
+        el.innerHTML = md(m.content);
+        applyMath(el);
+      }
+    }
+  });
+
+  if(S.isAutoScrolling)scrollBot(false);
 }
 
-function updateLastAI(content){var i=S.msgs.length-1;if(i<0||S.msgs[i].role!=='assistant')return;S.msgs[i].content=content;var el=$('mc-'+i);if(el)el.innerHTML=md(content);if(S.isAutoScrolling)scrollBot(false);else checkScrollButton()}
+function updateLastAI(content){var i=S.msgs.length-1;if(i<0||S.msgs[i].role!=='assistant')return;S.msgs[i].content=content;var el=$('mc-'+i);if(el){el.innerHTML=md(content);applyMath(el);}if(S.isAutoScrolling)scrollBot(false);else checkScrollButton()}
 function addTyping(){var d=document.createElement('div');d.className='msg ai-msg';d.id='typMsg';d.innerHTML='<div class="msg-inner"><div class="msg-label"><span class="ai-dot"></span> AI</div><div class="typing-wrap"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>';$('msgsEl').appendChild(d);if(S.isAutoScrolling)scrollBot(false)}
 function rmTyping(){var e=$('typMsg');if(e)e.remove()}
 function checkScrollButton(){var w=$('msgsWrap');if(!w)return;var dist=w.scrollHeight-w.scrollTop-w.clientHeight;if(dist>S.scrollThreshold){$('scrollBot').classList.add('vis');S.isAutoScrolling=false}else{$('scrollBot').classList.remove('vis');S.isAutoScrolling=true}}
@@ -567,7 +755,10 @@ async function sendMsg(text){
   var hasFiles=S.pendingFiles.some(function(f){return f.type!=='image'});
   if((!t&&!S.pendingFiles.length)||S.streaming)return;
   if(isImage(t)&&mediaGate('image'))return;if(isVideo(t)&&mediaGate('video'))return;
-  if(!S.chatId&&S.user){var title=t.length>60?t.slice(0,57)+'...':t;if(!t&&hasImages)title='Image: '+S.pendingFiles.find(function(f){return f.type==='image'}).name;else if(!t&&hasFiles)title='File: '+S.pendingFiles.find(function(f){return f.type!=='image'}).name;var conv=await createConversation(title);if(conv){S.chatId=conv.id;$('hdrTitle').textContent=conv.title;loadChatList()}}
+  
+  // Use newchat endpoint if no chat exists
+  if(!S.chatId&&S.user){await startNewChat()}
+  
   var images=S.pendingFiles.filter(function(f){return f.type==='image'}).map(function(f){return{dataUrl:f.dataUrl,name:f.name}});
   var files=S.pendingFiles.filter(function(f){return f.type!=='image'});
   var msg={id:uid(),role:'user',content:t,images:images,time:now()};S.msgs.push(msg);saveMessage({role:'user',content:t||'[Image/File attached]',metadata:{has_images:images.length>0,image_count:images.length}});clearPendingFiles();$('cbInput').value='';autoH($('cbInput'));updateCB();renderAll();
@@ -590,7 +781,13 @@ function initEvents(){
   $('menuBtn').addEventListener('click',function(){toggleSB()});
   $('sbClose').addEventListener('click',function(){toggleSB(false)});
   $('sbOv').addEventListener('click',function(){toggleSB(false)});
-  $('newChatBtn').addEventListener('click',function(){S.msgs=[];S.chatId=null;renderAll();toggleSB(false);$('hdrTitle').textContent='HeloxAi'});
+  
+  // New Chat Button Logic: Uses startNewChat() which calls /newchat
+  $('newChatBtn').addEventListener('click',function(){
+    if(!S.user) { toast('Please sign in', 'wrn'); return; }
+    startNewChat();
+  });
+  
   $('signInLink').addEventListener('click',function(e){if(S.user){e.preventDefault();signOut()}});
   $('contactLink').addEventListener('click',function(){toggleSB(false);$('contactModal').classList.add('on')});
   $('sbSearch').addEventListener('input',function(){var q=this.value.toLowerCase();document.querySelectorAll('#chatListItems .cl-item').forEach(function(el){var text=el.querySelector('.cl-title');if(text)text=text.textContent.toLowerCase();el.style.display=(!q||text.indexOf(q)!==-1)?'flex':'none'})});
