@@ -169,7 +169,6 @@
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    /* Debug banner — shows what env.js actually loaded */
     #debugBanner {
       display: none;
       background: rgba(245, 158, 11, 0.1);
@@ -210,7 +209,6 @@
   <a href="index.html" class="back-btn">&larr; Back to HeloxAi</a>
 </div>
 
-<!-- Debug banner — will show if env.js has issues -->
 <div id="debugBanner"></div>
 
 <main>
@@ -303,20 +301,18 @@
   <p>Redirecting to secure checkout...</p>
 </div>
 
-<!-- ============================================================ -->
-<!-- 1. Load env.js FIRST — with onerror so we know if it fails    -->
-<!-- ============================================================ -->
 <script src="env.js" onerror="window.__envLoadFailed=true"></script>
 
-<!-- ============================================================ -->
-<!-- 2. Load Supabase (same as your working chat app)             -->
-<!-- ============================================================ -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- ================================================================= -->
+/* PINNED to v2.44.0 — v2.45+ introduced postgres-ews (Event Watch     */
+/* System) which uses IndexedDB internally. That module's insertSync()   */
+/* throws a silent TypeError in some environments (private browsing,     */
+/* iframes, certain mobile browsers), crashing ALL Supabase operations. */
+/* v2.44.0 is the last stable release before that regression.           */
+<!-- ================================================================= -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.44.0"></script>
 
 <script>
-// ================================================================
-// ENV RESOLUTION — tries multiple patterns your env.js might use
-// ================================================================
 var preorderBtn     = document.getElementById('preorderBtn');
 var spinner         = document.getElementById('loadingSpinner');
 var preorderContent = document.getElementById('preorderContent');
@@ -325,50 +321,42 @@ var resultBanner    = document.getElementById('resultBanner');
 var debugBanner     = document.getElementById('debugBanner');
 var sb              = null;
 
-var SUPABASE_URL     = null;
+var SUPABASE_URL      = null;
 var SUPABASE_ANON_KEY = null;
-var BACKEND_URL      = null;
+var BACKEND_URL       = null;
 
-// Try to find config from wherever env.js put it
+/* ------------------------------------------------------------------ */
+/* ENV RESOLUTION — tries multiple patterns your env.js might use      */
+/* ------------------------------------------------------------------ */
 function resolveEnv() {
   var errors = [];
-  var found = false;
+  var found  = false;
 
-  // Pattern 1: window.__ENV__ (what previous code expected)
   if (window.__ENV__) {
     SUPABASE_URL      = window.__ENV__.SUPABASE_URL;
     SUPABASE_ANON_KEY = window.__ENV__.SUPABASE_ANON_KEY;
     BACKEND_URL       = window.__ENV__.BACKEND_URL;
     found = true;
   }
-
-  // Pattern 2: window.ENV (no underscores)
   if (!found && window.ENV) {
     SUPABASE_URL      = window.ENV.SUPABASE_URL;
     SUPABASE_ANON_KEY = window.ENV.SUPABASE_ANON_KEY;
     BACKEND_URL       = window.ENV.BACKEND_URL;
     found = true;
   }
-
-  // Pattern 3: window.config
   if (!found && window.config) {
     SUPABASE_URL      = window.config.SUPABASE_URL;
     SUPABASE_ANON_KEY = window.config.SUPABASE_ANON_KEY;
     BACKEND_URL       = window.config.BACKEND_URL;
     found = true;
   }
-
-  // Pattern 4: window.supabaseUrl etc (flat variables)
   if (!found && (window.supabaseUrl || window.SUPABASE_URL)) {
     SUPABASE_URL      = window.supabaseUrl || window.SUPABASE_URL;
     SUPABASE_ANON_KEY = window.supabaseAnonKey || window.SUPABASE_ANON_KEY;
     BACKEND_URL       = window.backendUrl || window.BACKEND_URL;
     found = true;
   }
-
-  // Pattern 5: Direct globals (SUPABASE_URL defined directly)
   if (!found && typeof SUPABASE_URL !== 'undefined' && SUPABASE_URL !== null) {
-    // Already set by global scope above
     found = true;
   }
 
@@ -376,13 +364,9 @@ function resolveEnv() {
     errors.push('env.js loaded but no recognized config object found.');
     errors.push('Checked: window.__ENV__, window.ENV, window.config, window.supabaseUrl, window.SUPABASE_URL');
   }
-
-  // Check if env.js failed to load at all
   if (window.__envLoadFailed) {
     errors.push('env.js failed to load (404 or syntax error).');
   }
-
-  // Check for placeholder values
   if (found) {
     if (!SUPABASE_URL || SUPABASE_URL.indexOf('your-') !== -1)
       errors.push('SUPABASE_URL is missing or still a placeholder: ' + SUPABASE_URL);
@@ -391,20 +375,14 @@ function resolveEnv() {
     if (!BACKEND_URL || BACKEND_URL.indexOf('your-') !== -1)
       errors.push('BACKEND_URL is missing or still a placeholder: ' + BACKEND_URL);
   }
-
   return errors;
 }
 
 function showDebug(errors) {
-  if (!errors || !errors.length) {
-    debugBanner.style.display = 'none';
-    return;
-  }
+  if (!errors || !errors.length) { debugBanner.style.display = 'none'; return; }
   debugBanner.style.display = 'block';
   var html = '<strong>Config Debug Info</strong>';
   errors.forEach(function(e) { html += '<div>' + e + '</div>'; });
-
-  // Show what keys actually exist on window that might be relevant
   var possibleKeys = Object.keys(window).filter(function(k) {
     var kl = k.toLowerCase();
     return (kl.indexOf('env') !== -1 || kl.indexOf('config') !== -1 || kl.indexOf('supabase') !== -1 || kl.indexOf('backend') !== -1 || kl.indexOf('stripe') !== -1)
@@ -425,11 +403,49 @@ function showDebug(errors) {
   } else {
     html += '<div style="margin-top:8px;color:var(--text-secondary)">No env/config/supabase keys found on window at all.</div>';
   }
-
   debugBanner.innerHTML = html;
 }
 
-// ---- Init ----
+/* ------------------------------------------------------------------ */
+/* SAFE auth helpers — catch IndexedDB / internal errors from Supabase */
+/* ------------------------------------------------------------------ */
+function safeGetUser() {
+  /* Try getUser first; if it crashes (IndexedDB / EWS), fall back to getSession */
+  if (!sb) return Promise.resolve(null);
+
+  return sb.auth.getUser()
+    .then(function(r) {
+      if (r.error) return null;
+      return r.data.user || null;
+    })
+    .catch(function() {
+      /* getUser failed (likely IndexedDB/EWS internal error) — try getSession instead */
+      return sb.auth.getSession()
+        .then(function(r) {
+          if (r.error || !r.data || !r.data.session || !r.data.session.user) return null;
+          return r.data.session.user;
+        })
+        .catch(function() {
+          return null;
+        });
+    });
+}
+
+function safeGetSession() {
+  if (!sb) return Promise.resolve(null);
+  return sb.auth.getSession()
+    .then(function(r) {
+      if (r.error || !r.data || !r.data.session || !r.data.session.user) return null;
+      return r.data.session.user;
+    })
+    .catch(function() {
+      return null;
+    });
+}
+
+/* ------------------------------------------------------------------ */
+/* INIT                                                                */
+/* ------------------------------------------------------------------ */
 function initApp() {
   var errors = resolveEnv();
 
@@ -437,15 +453,21 @@ function initApp() {
     showDebug(errors);
     preorderBtn.textContent = 'Configuration Error';
     preorderBtn.disabled = true;
-    // Still run countdown + FAQ — don't kill the whole page
     return;
   }
 
-  // Config is good — hide debug, init Supabase
   debugBanner.style.display = 'none';
 
   try {
-    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      global: {
+        fetch: function(input, init) {
+          init = init || {};
+          init.credentials = 'include';
+          return window.fetch(input, init);
+        }
+      }
+    });
   } catch (e) {
     console.error('Supabase init failed:', e);
     preorderBtn.textContent = 'Init Error';
@@ -456,18 +478,11 @@ function initApp() {
   startPage();
 }
 
-function getCurrentUser() {
-  if (!sb) return Promise.resolve(null);
-  return sb.auth.getUser().then(function(r) {
-    if (r.error) return null;
-    return r.data.user;
-  }).catch(function() { return null; });
-}
-
+/* ------------------------------------------------------------------ */
+/* BUTTON STATE                                                        */
+/* ------------------------------------------------------------------ */
 function refreshButton() {
-  if (!sb) return;
-  sb.auth.getSession().then(function(r) {
-    var user = r.data && r.data.session && r.data.session.user;
+  safeGetSession().then(function(user) {
     if (user) {
       preorderBtn.disabled = false;
       preorderBtn.textContent = 'Pre-Order for \u00A3499';
@@ -475,12 +490,12 @@ function refreshButton() {
       preorderBtn.disabled = true;
       preorderBtn.textContent = 'Login to Preorder';
     }
-  }).catch(function() {
-    preorderBtn.disabled = true;
-    preorderBtn.textContent = 'Login to Preorder';
   });
 }
 
+/* ------------------------------------------------------------------ */
+/* STRIPE SUCCESS PAGE                                                 */
+/* ------------------------------------------------------------------ */
 function handleSuccessPage() {
   var params = new URLSearchParams(window.location.search);
   var sessionId = params.get('session_id');
@@ -536,10 +551,18 @@ function handleSuccessPage() {
     });
 }
 
+/* ------------------------------------------------------------------ */
+/* PREORDER CLICK                                                      */
+/* ------------------------------------------------------------------ */
 function handlePreorder() {
   spinner.style.display = 'flex';
-  getCurrentUser().then(function(user) {
-    if (!user) { spinner.style.display = 'none'; window.location.href = 'auth.html'; return; }
+
+  safeGetUser().then(function(user) {
+    if (!user) {
+      spinner.style.display = 'none';
+      window.location.href = 'auth.html';
+      return;
+    }
     return fetch(BACKEND_URL + '/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -575,21 +598,32 @@ preorderBtn.addEventListener('click', function() {
   if (!preorderBtn.disabled) handlePreorder();
 });
 
+/* ------------------------------------------------------------------ */
+/* PAGE START                                                          */
+/* ------------------------------------------------------------------ */
 function startPage() {
   handleSuccessPage().then(function(isSuccess) {
     if (!isSuccess) {
       refreshButton();
-      sb.auth.onAuthStateChange(function() { refreshButton(); });
+
+      /* Listen for auth changes — wrapped to survive any internal Supabase errors */
+      try {
+        sb.auth.onAuthStateChange(function() { refreshButton(); });
+      } catch (e) {
+        /* If onAuthStateChange itself throws, just poll instead */
+        console.warn('onAuthStateChange failed, using fallback polling:', e);
+        setInterval(refreshButton, 5000);
+      }
     }
   });
 }
 
-// Go
+/* Go */
 initApp();
 </script>
 
 <script>
-// Countdown
+/* Countdown */
 (function() {
   var target = new Date('2026-04-10T00:00:00').getTime();
   var el = document.getElementById('countdown');
@@ -603,7 +637,7 @@ initApp();
   setInterval(tick, 1000);
 })();
 
-// FAQ
+/* FAQ */
 document.querySelectorAll('.faq-question').forEach(function(q) {
   q.addEventListener('click', function() {
     var a = q.nextElementSibling;
