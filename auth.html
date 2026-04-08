@@ -238,7 +238,11 @@
     }
     .forgot-link:hover { color: var(--accent3); }
 
-    .turnstile-wrap { display: flex; justify-content: center; min-height: 0; }
+    /* Container for Turnstile - fixed height to prevent layout shift */
+    .turnstile-wrap {
+      display: flex; justify-content: center; min-height: 65px;
+      margin-top: 8px; overflow: hidden;
+    }
 
     .submit-btn {
       display: flex; align-items: center; justify-content: center; gap: 10px;
@@ -330,22 +334,25 @@
     .ts-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(7, 16, 40, 0.88);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
+      background: rgba(7, 16, 40, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       z-index: 9999;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.35s ease;
+      pointer-events: none; /* Default: allow clicks through */
+      transition: opacity 0.3s ease;
     }
+    
+    /* When visible, block all interaction */
     .ts-overlay.visible {
       opacity: 1;
       pointer-events: auto;
     }
+
     .ts-overlay-inner {
       display: flex;
       flex-direction: column;
@@ -650,6 +657,7 @@
     </div>
   </div>
 
+  <!-- This script is required for the app to work. In a real scenario, ensure this file exists. -->
   <script src="env.js"></script>
 
   <script type="module">
@@ -746,13 +754,26 @@
     const tsOverlay = document.getElementById('ts-overlay');
     let tsOverlayTimer = null;
 
+    // IMPORTANT: Returns a Promise that resolves after the UI has visually updated.
+    // This prevents the page from feeling "frozen" while async tasks queue up.
     function showTSOverlay() {
-      // Reset inner animation by forcing reflow
-      const inner = tsOverlay.querySelector('.ts-overlay-inner');
-      inner.style.animation = 'none';
-      inner.offsetHeight; // trigger reflow
-      inner.style.animation = '';
-      tsOverlay.classList.add('visible');
+      return new Promise((resolve) => {
+        // Reset inner animation by forcing reflow
+        const inner = tsOverlay.querySelector('.ts-overlay-inner');
+        inner.style.animation = 'none';
+        inner.offsetHeight; // trigger reflow
+        inner.style.animation = '';
+        
+        tsOverlay.classList.add('visible');
+
+        // Force a browser paint tick. This ensures the overlay is fully visible
+        // before the JavaScript thread continues to heavy async operations.
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            resolve();
+          });
+        });
+      });
     }
 
     function hideTSOverlay() {
@@ -992,9 +1013,12 @@
       }
 
       try {
-        // Show overlay while turnstile loads or checks
-        showTSOverlay();
+        // 1. Show Overlay & Force Render Tick
+        // This is the primary fix: we wait for the overlay to be visible
+        // before starting the heavy async work.
+        await showTSOverlay();
 
+        // 2. Load Turnstile if needed
         if (!tsLoaded) await ensureTS();
 
         if (!loginTok) {
@@ -1004,7 +1028,7 @@
           throw new Error('Please complete the security check.');
         }
 
-        // Overlay stays visible during server-side token verification
+        // 3. Server Verification (Overlay stays visible)
         const vRes = await fetch('/verify-turnstile', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1123,9 +1147,10 @@
       }
 
       try {
-        // Show overlay while turnstile loads or checks
-        showTSOverlay();
+        // 1. Show Overlay & Force Render Tick
+        await showTSOverlay();
 
+        // 2. Load Turnstile if needed
         if (!tsLoaded) await ensureTS();
 
         if (!window.turnstile || signupWid === null) {
@@ -1139,7 +1164,7 @@
           throw new Error('Please complete the security check.');
         }
 
-        // Overlay stays visible during server-side token verification
+        // 3. Server Verification (Overlay stays visible)
         const vRes = await fetch('/verify-turnstile', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
