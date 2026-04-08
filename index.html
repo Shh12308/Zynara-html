@@ -433,10 +433,16 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 <div class="modal-ov" id="contactModal"><div class="modal"><h3>Contact Us</h3><p>Have questions or feedback? We'd love to hear from you.</p><p style="color:var(--accent);font-weight:600;font-size:14px">support@heloxai.com</p><button class="modal-close" data-close="contactModal">Close</button></div></div>
 <div class="toast-ct" id="toastCt"></div>
 <script>
-// ================= CONFIGURATION =================
-var SUPABASE_URL='https://acbnqeeukfxewiqswgbw.supabase.co';
-var SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjYm5xZWV1a2Z4ZXdpcXN3Z2J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMDY5MzIsImV4cCI6MjA4OTg4MjkzMn0.bwkZs0yqNAooAh6cV16dcwZwNz_5H5xvAu7eiQtR4wE';
-var BACKEND_URL='https://billy-free-ai-production.up.railway.app';
+// ================= CONFIGURATION (.env) =================
+// Replace these values with your actual environment variables
+var SUPABASE_URL = 'https://acbnqeeukfxewiqswgbw.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjYm5xZWV1a2Z4ZXdpcXN3Z2J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMDY5MzIsImV4cCI6MjA4OTg4MjkzMn0.bwkZs0yqNAooAh6cV16dcwZwNz_5H5xvAu7eiQtR4wE';
+
+// Free Tier Backend URL
+var FREE_AI_URL = 'https://billy-free-ai-production.up.railway.app';
+
+// Premium/Lifetime Tier Backend URL
+var PREMIUM_AI_URL = 'https://your-premium-backend-url.com'; // REPLACE THIS
 // =================================================
 
 function $(id){return document.getElementById(id)}
@@ -456,7 +462,27 @@ var VIDEO_KW=['generate video','create video','make video','render video'];
 function isImage(t){var l=t.toLowerCase();for(var i=0;i<IMAGE_KW.length;i++)if(l.indexOf(IMAGE_KW[i])!==-1)return true;return false}
 function isVideo(t){var l=t.toLowerCase();for(var i=0;i<VIDEO_KW.length;i++)if(l.indexOf(VIDEO_KW[i])!==-1)return true;return false}
 
-function aiUrl(){return BACKEND_URL}
+// Returns the correct Backend URL based on User Plan
+function getApiUrl(){
+  // Default to Free URL
+  var baseUrl = FREE_AI_URL;
+  
+  // Check if user is logged in and has Premium/Lifetime status
+  if(S.user) {
+    var plan = (S.user.plan || 'free').toLowerCase();
+    var isPremium = S.user.is_premium || S.user.is_lifetime;
+    
+    if (isPremium || 
+        plan === 'premium' || 
+        plan === 'lifetime' || 
+        plan === 'ultimate_monthly' || 
+        plan === 'ultimate_yearly') {
+      baseUrl = PREMIUM_AI_URL;
+    }
+  }
+  return baseUrl;
+}
+
 function authH(){var h={'Content-Type':'application/json'};if(S.user&&S.user.token)h['Authorization']='Bearer '+S.user.token;return h}
 function isAuth(){return !!S.user}
 function authSilent(){return !isAuth()}
@@ -471,9 +497,9 @@ function initSupabase(){
     if(typeof window.supabase==='undefined')return;
     sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: {
-        persistSession: true,       // Keeps user logged in via LocalStorage
-        autoRefreshToken: true,     // Refreshes token automatically
-        detectSessionInUrl: true,   // Handles OAuth redirects
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
         storage: window.localStorage
       },
       global: {
@@ -493,20 +519,14 @@ async function loadUser(){
     return;
   }
   try{
-    // getSession automatically checks LocalStorage if persistSession is true
     var result = await sb.auth.getSession();
     var session = result.data && result.data.session;
-
     if(result.error || !session || !session.user){
       S.user = null;
       refreshUI();
       return;
     }
-    
-    // Fetch user details from DB
     var ud = await sb.from('users').select('plan,is_premium,is_lifetime').eq('id', session.user.id).single();
-    
-    // Update State
     S.user = {
       id: session.user.id,
       email: session.user.email,
@@ -515,13 +535,10 @@ async function loadUser(){
       is_lifetime: (ud.data && ud.data.is_lifetime) || false,
       token: session.access_token
     };
-    
     refreshUI();
     loadChatList();
-    
   } catch(e){
     console.warn('loadUser error:', e);
-    // If DB fetch fails, keep session with defaults
     if(S.user){
       refreshUI();
       loadChatList();
@@ -540,10 +557,8 @@ function setupAuthListener(){
     } else if (ev === 'SIGNED_OUT'){
       handleSignOut();
     } else if (ev === 'TOKEN_REFRESHED' && session && S.user){
-      // Update the local token if refreshed
       S.user.token = session.access_token;
     } else if (ev === 'INITIAL_SESSION'){
-      // Fires immediately on load if session exists in storage
       if(session && session.user){
         handleSignIn(session);
       }
@@ -553,31 +568,27 @@ function setupAuthListener(){
 
 async function handleSignIn(session){
   if(!session || !session.user) return;
-  
-  // Store last login timestamp in LocalStorage manually (for UI display)
   try{ localStorage.setItem('helox-last-login', Date.now()); } catch(e){}
-  
   try{
     var ud = await sb.from('users').select('plan,is_premium,is_lifetime').eq('id', session.user.id).single();
     S.user = {
       id: session.user.id,
       email: session.user.email,
-      plan: (ud.data && ud.data.plan) || 'lifetime',
+      plan: (ud.data && ud.data.plan) || 'free',
       is_premium: (ud.data && ud.data.is_premium) || false,
       is_lifetime: (ud.data && ud.data.is_lifetime) || false,
       token: session.access_token
     };
     refreshUI();
     loadChatList();
-    // Only show toast if this appears to be a fresh login action (not just page load)
     if(document.visibilityState === 'visible') toast('Signed in', 'ok');
   } catch(e){
     S.user = {
       id: session.user.id,
       email: session.user.email,
-      plan: 'lifetime',
+      plan: 'free',
       is_premium: false,
-      is_lifetime: true,
+      is_lifetime: false,
       token: session.access_token
     };
     refreshUI();
@@ -610,7 +621,7 @@ async function loadChatList(){
     return;
   }
   try {
-    var res = await fetch(BACKEND_URL + '/chats', {
+    var res = await fetch(getApiUrl() + '/chats', {
       method: 'GET',
       headers: authH(),
       credentials: 'include'
@@ -628,7 +639,7 @@ async function loadChatList(){
 async function startNewChat() {
   if(!S.user) return;
   try {
-    var res = await fetch(BACKEND_URL + '/newchat', {
+    var res = await fetch(getApiUrl() + '/newchat', {
       method: 'POST',
       headers: authH(),
       credentials: 'include',
@@ -651,7 +662,6 @@ async function startNewChat() {
   if(S.sbOpen) toggleSB(false);
 }
 
-// Existing DB helpers
 async function saveMessage(msg){if(!sb||!S.user||!S.chatId)return;try{await sb.from('messages').insert({conversation_id:S.chatId,role:msg.role,content:msg.content,content_type:msg.content_type||'text',media_url:msg.media_url||null,metadata:msg.metadata||{}})}catch(e){}}
 async function createConversation(title){if(!sb||!S.user)return null;try{var res=await sb.from('conversations').insert({user_id:S.user.id,title:title||'New Chat'}).select().single();if(res.error)throw res.error;return res.data}catch(e){console.warn('createConversation:',e);return null}}
 async function updateConversationTimestamp(cid){if(!sb||!cid)return;try{await sb.from('conversations').update({updated_at:new Date().toISOString()}).eq('id',cid)}catch(e){}}
@@ -659,7 +669,7 @@ async function loadMessages(cid){if(!sb||!cid)return[];try{var res=await sb.from
 
 async function deleteConversation(cid){
   try {
-    await fetch(BACKEND_URL + '/chats/' + cid, {
+    await fetch(getApiUrl() + '/chats/' + cid, {
       method: 'DELETE',
       headers: authH(),
       credentials: 'include'
@@ -876,10 +886,10 @@ function actEdit(i){var m=S.msgs[i];if(!m||m.role!=='user')return;var ea=$('ea-'
 function actEditSave(i){var ta=$('et-'+i);if(!ta)return;var v=ta.value.trim();var origMsg=S.msgs[i];var images=origMsg.images||[];S.msgs[i].content=v;S.msgs=S.msgs.slice(0,i+1);renderAll();if(images.length){var imgFiles=images.map(function(img){var f=dataUrlToFile(img.dataUrl,img.name);return f?{type:'image',dataUrl:img.dataUrl,name:img.name,file:f}:null}).filter(Boolean);sendToAIWithFiles(v,imgFiles,[])}else{sendToAI(v)}}
 function actEditCancel(i){var ea=$('ea-'+i);if(ea)ea.innerHTML=''}
 function actRegen(i){if(S.streaming)return;S.msgs=S.msgs.slice(0,i);renderAll();regenerateAI()}
-function actVoice(i){if(authGate('voice'))return;var m=S.msgs[i];if(!m||m.role!=='assistant')return;if(S.audio){S.audio.pause();S.audio=null}toast('Generating voice...','inf');fetch(aiUrl()+'/tts',{method:'POST',headers:authH(),credentials:'include',body:JSON.stringify({prompt:m.content})}).then(function(r){return r.blob()}).then(function(blob){var url=URL.createObjectURL(blob);S.audio=new Audio(url);S.audio.play();S.audio.onended=function(){URL.revokeObjectURL(url);S.audio=null};toast('Playing','ok')}).catch(function(){toast('Voice failed','err')})}
+function actVoice(i){if(authGate('voice'))return;var m=S.msgs[i];if(!m||m.role!=='assistant')return;if(S.audio){S.audio.pause();S.audio=null}toast('Generating voice...','inf');fetch(getApiUrl()+'/tts',{method:'POST',headers:authH(),credentials:'include',body:JSON.stringify({prompt:m.content})}).then(function(r){return r.blob()}).then(function(blob){var url=URL.createObjectURL(blob);S.audio=new Audio(url);S.audio.play();S.audio.onended=function(){URL.revokeObjectURL(url);S.audio=null};toast('Playing','ok')}).catch(function(){toast('Voice failed','err')})}
 
 function toggleMic(){if(authGate('voice input'))return;if(S.recording){if(S.recorder)S.recorder.stop();S.recording=false;$('micBtn').classList.remove('mic-on');return}navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){S.chunks=[];S.recorder=new MediaRecorder(stream);S.recorder.ondataavailable=function(e){if(e.data.size>0)S.chunks.push(e.data)};S.recorder.onstop=function(){stream.getTracks().forEach(function(t){t.stop()});doSTT(new Blob(S.chunks,{type:'audio/webm'}))};S.recorder.start();S.recording=true;$('micBtn').classList.add('mic-on');toast('Listening...','inf')}).catch(function(){toast('Mic access denied','err')})}
-function doSTT(blob){toast('Processing...','inf');var fd=new FormData();fd.append('file',blob,'recording.webm');var h={};if(S.user&&S.user.token)h['Authorization']='Bearer '+S.user.token;fetch(aiUrl()+'/stt',{method:'POST',headers:h,credentials:'include',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.text){$('cbInput').value=d.text;autoH($('cbInput'));updateCB();toast('Recognized','ok')}else toast('No speech','err')}).catch(function(){toast('STT failed','err')})}
+function doSTT(blob){toast('Processing...','inf');var fd=new FormData();fd.append('file',blob,'recording.webm');var h={};if(S.user&&S.user.token)h['Authorization']='Bearer '+S.user.token;fetch(getApiUrl()+'/stt',{method:'POST',headers:h,credentials:'include',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.text){$('cbInput').value=d.text;autoH($('cbInput'));updateCB();toast('Recognized','ok')}else toast('No speech','err')}).catch(function(){toast('STT failed','err')})}
 
 function streamRes(res,onChunk,onDone){var reader,dec,buf,finished;if(res.body&&typeof res.body.getReader==='function'){reader=res.body.getReader();dec=new TextDecoder();buf='';finished=false;function finish(){if(finished)return;finished=true;onDone()}function pump(){return reader.read().then(function(result){if(result.done){finish();return}buf+=dec.decode(result.value,{stream:true});var lines=buf.split('\n');buf=lines.pop()||'';for(var i=0;i<lines.length;i++){var line=lines[i].trim();if(!line||line.indexOf('data:')!==0)continue;var d=line.slice(5).trim();if(d==='[DONE]'){finish();return}try{var p=JSON.parse(d);var text='';if(p.type==='token')text=p.text||'';else text=p.content||p.text||'';if(text)onChunk(text)}catch(e){if(d)onChunk(d)}}if(!finished)return pump()}).catch(function(){finish()})}return pump()}return res.text().then(function(text){onChunk(text);onDone()})}
 
@@ -896,11 +906,11 @@ async function sendMsg(text){
   if(images.length||files.length){sendToAIWithFiles(t,images.map(function(img){var f=dataUrlToFile(img.dataUrl,img.name);return f?{type:'image',dataUrl:img.dataUrl,name:img.name,file:f}:null}).filter(Boolean),files)}else{sendToAI(t)}
 }
 
-function sendToAIWithFiles(text,images,files){S.streaming=true;S.abort=new AbortController();addTyping();updateCB();var fd=new FormData();fd.append('prompt',text||'What is in this image?');images.forEach(function(img){fd.append('image',img.file,img.name)});files.forEach(function(f){fd.append('file',f.file,f.name)});var h={};if(S.user&&S.user.token)h['Authorization']='Bearer '+S.user.token;var full='';fetch(aiUrl()+'/ask/universal',{method:'POST',headers:h,credentials:'include',signal:S.abort.signal,body:fd}).then(function(res){if(!res.ok)throw new Error('HTTP '+res.status);rmTyping();var ct=(res.headers.get('content-type')||'').toLowerCase();if(ct.indexOf('application/json')!==-1){return res.json().then(function(data){var content=data.response||data.content||data.result||data.message||JSON.stringify(data);var aiMsg={id:uid(),role:'assistant',content:content,liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();addToGallery(content);saveMessage(aiMsg);if(S.chatId)updateConversationTimestamp(S.chatId)})}var aiMsg={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();return streamRes(res,function(chunk){full+=chunk;updateLastAI(full)},function(){S.msgs[S.msgs.length-1].content=full;addToGallery(full);saveMessage(S.msgs[S.msgs.length-1]);if(S.chatId)updateConversationTimestamp(S.chatId)})}).catch(function(e){rmTyping();if(e.name==='AbortError'){if(full){S.msgs[S.msgs.length-1].content=full;saveMessage(S.msgs[S.msgs.length-1]).catch(function(){});updateLastAI(full)}else{S.msgs.pop();renderAll()}toast('Stopped','inf')}else{S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});renderAll();toast('Request failed','err')}}).finally(function(){S.streaming=false;S.abort=null;updateCB()})}
+function sendToAIWithFiles(text,images,files){S.streaming=true;S.abort=new AbortController();addTyping();updateCB();var fd=new FormData();fd.append('prompt',text||'What is in this image?');images.forEach(function(img){fd.append('image',img.file,img.name)});files.forEach(function(f){fd.append('file',f.file,f.name)});var h={};if(S.user&&S.user.token)h['Authorization']='Bearer '+S.user.token;var full='';fetch(getApiUrl()+'/ask/universal',{method:'POST',headers:h,credentials:'include',signal:S.abort.signal,body:fd}).then(function(res){if(!res.ok)throw new Error('HTTP '+res.status);rmTyping();var ct=(res.headers.get('content-type')||'').toLowerCase();if(ct.indexOf('application/json')!==-1){return res.json().then(function(data){var content=data.response||data.content||data.result||data.message||JSON.stringify(data);var aiMsg={id:uid(),role:'assistant',content:content,liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();addToGallery(content);saveMessage(aiMsg);if(S.chatId)updateConversationTimestamp(S.chatId)})}var aiMsg={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();return streamRes(res,function(chunk){full+=chunk;updateLastAI(full)},function(){S.msgs[S.msgs.length-1].content=full;addToGallery(full);saveMessage(S.msgs[S.msgs.length-1]);if(S.chatId)updateConversationTimestamp(S.chatId)})}).catch(function(e){rmTyping();if(e.name==='AbortError'){if(full){S.msgs[S.msgs.length-1].content=full;saveMessage(S.msgs[S.msgs.length-1]).catch(function(){});updateLastAI(full)}else{S.msgs.pop();renderAll()}toast('Stopped','inf')}else{S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});renderAll();toast('Request failed','err')}}).finally(function(){S.streaming=false;S.abort=null;updateCB()})}
 
-function sendToAI(text){if(!text)return;S.streaming=true;S.abort=new AbortController();addTyping();updateCB();var full='';fetch(aiUrl()+'/ask/universal',{method:'POST',headers:authH(),credentials:'include',signal:S.abort.signal,body:JSON.stringify({prompt:text})}).then(function(res){if(!res.ok)throw new Error('HTTP '+res.status);rmTyping();var ct=(res.headers.get('content-type')||'').toLowerCase();if(ct.indexOf('application/json')!==-1){return res.json().then(function(data){var content=data.response||data.content||data.result||data.message||JSON.stringify(data);var aiMsg={id:uid(),role:'assistant',content:content,liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();addToGallery(content);saveMessage(aiMsg);if(S.chatId)updateConversationTimestamp(S.chatId)})}var aiMsg={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();return streamRes(res,function(chunk){full+=chunk;updateLastAI(full)},function(){S.msgs[S.msgs.length-1].content=full;addToGallery(full);saveMessage(S.msgs[S.msgs.length-1]);if(S.chatId)updateConversationTimestamp(S.chatId)})}).catch(function(e){rmTyping();if(e.name==='AbortError'){if(full){S.msgs[S.msgs.length-1].content=full;saveMessage(S.msgs[S.msgs.length-1]).catch(function(){});updateLastAI(full)}else{S.msgs.pop();renderAll()}toast('Stopped','inf')}else{S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});renderAll();toast('Request failed','err')}}).finally(function(){S.streaming=false;S.abort=null;updateCB()})}
+function sendToAI(text){if(!text)return;S.streaming=true;S.abort=new AbortController();addTyping();updateCB();var full='';fetch(getApiUrl()+'/ask/universal',{method:'POST',headers:authH(),credentials:'include',signal:S.abort.signal,body:JSON.stringify({prompt:text})}).then(function(res){if(!res.ok)throw new Error('HTTP '+res.status);rmTyping();var ct=(res.headers.get('content-type')||'').toLowerCase();if(ct.indexOf('application/json')!==-1){return res.json().then(function(data){var content=data.response||data.content||data.result||data.message||JSON.stringify(data);var aiMsg={id:uid(),role:'assistant',content:content,liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();addToGallery(content);saveMessage(aiMsg);if(S.chatId)updateConversationTimestamp(S.chatId)})}var aiMsg={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();return streamRes(res,function(chunk){full+=chunk;updateLastAI(full)},function(){S.msgs[S.msgs.length-1].content=full;addToGallery(full);saveMessage(S.msgs[S.msgs.length-1]);if(S.chatId)updateConversationTimestamp(S.chatId)})}).catch(function(e){rmTyping();if(e.name==='AbortError'){if(full){S.msgs[S.msgs.length-1].content=full;saveMessage(S.msgs[S.msgs.length-1]).catch(function(){});updateLastAI(full)}else{S.msgs.pop();renderAll()}toast('Stopped','inf')}else{S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});renderAll();toast('Request failed','err')}}).finally(function(){S.streaming=false;S.abort=null;updateCB()})}
 
-function regenerateAI(){S.streaming=true;S.abort=new AbortController();addTyping();updateCB();var full='';var lastUserMsg='';for(var i=S.msgs.length-1;i>=0;i--){if(S.msgs[i].role==='user'){lastUserMsg=S.msgs[i].content;break}}fetch(aiUrl()+'/ask/universal',{method:'POST',headers:authH(),credentials:'include',signal:S.abort.signal,body:JSON.stringify({prompt:lastUserMsg})}).then(function(res){if(!res.ok)throw new Error('HTTP '+res.status);rmTyping();var ct=(res.headers.get('content-type')||'').toLowerCase();if(ct.indexOf('application/json')!==-1){return res.json().then(function(data){var content=data.response||data.content||data.result||data.message||JSON.stringify(data);var aiMsg={id:uid(),role:'assistant',content:content,liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();addToGallery(content);saveMessage(aiMsg)})}var aiMsg={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();return streamRes(res,function(chunk){full+=chunk;updateLastAI(full)},function(){S.msgs[S.msgs.length-1].content=full;addToGallery(full);saveMessage(S.msgs[S.msgs.length-1])})}).catch(function(e){rmTyping();if(e.name==='AbortError'){if(full){S.msgs[S.msgs.length-1].content=full;saveMessage(S.msgs[S.msgs.length-1]).catch(function(){});updateLastAI(full)}toast('Stopped','inf')}else{S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});renderAll();toast('Failed','err')}}).finally(function(){S.streaming=false;S.abort=null;updateCB()})}
+function regenerateAI(){S.streaming=true;S.abort=new AbortController();addTyping();updateCB();var full='';var lastUserMsg='';for(var i=S.msgs.length-1;i>=0;i--){if(S.msgs[i].role==='user'){lastUserMsg=S.msgs[i].content;break}}fetch(getApiUrl()+'/ask/universal',{method:'POST',headers:authH(),credentials:'include',signal:S.abort.signal,body:JSON.stringify({prompt:lastUserMsg})}).then(function(res){if(!res.ok)throw new Error('HTTP '+res.status);rmTyping();var ct=(res.headers.get('content-type')||'').toLowerCase();if(ct.indexOf('application/json')!==-1){return res.json().then(function(data){var content=data.response||data.content||data.result||data.message||JSON.stringify(data);var aiMsg={id:uid(),role:'assistant',content:content,liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();addToGallery(content);saveMessage(aiMsg)})}var aiMsg={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();return streamRes(res,function(chunk){full+=chunk;updateLastAI(full)},function(){S.msgs[S.msgs.length-1].content=full;addToGallery(full);saveMessage(S.msgs[S.msgs.length-1])})}).catch(function(e){rmTyping();if(e.name==='AbortError'){if(full){S.msgs[S.msgs.length-1].content=full;saveMessage(S.msgs[S.msgs.length-1]).catch(function(){});updateLastAI(full)}toast('Stopped','inf')}else{S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});renderAll();toast('Failed','err')}}).finally(function(){S.streaming=false;S.abort=null;updateCB()})}
 function stopGen(){if(S.abort)S.abort.abort()}
 
 function autoH(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,200)+'px'}
@@ -958,14 +968,9 @@ function init(){
   initSupabase();
   initModel();
   initEvents();
-  
-  // Setup Auth Listener BEFORE loading user to catch initial session
   setupAuthListener();
-  
   renderAll();
   updateCB();
-  
-  // Explicitly load user session from LocalStorage
   loadUser();
 }
 
