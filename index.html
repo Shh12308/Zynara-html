@@ -725,7 +725,17 @@ function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'da
 function initMarked(){
   try {
     if (typeof marked === 'undefined' || typeof hljs === 'undefined' || typeof katex === 'undefined') return;
-    marked.setOptions({ breaks: true, gfm: true, highlight: function(code, lang) { var language = hljs.getLanguage(lang) ? lang : 'plaintext'; return hljs.highlight(code, { language: language }).value; } });
+    
+    // Configure marked for robust rendering (Tables, GFM, breaks)
+    marked.setOptions({ 
+      breaks: true, 
+      gfm: true,
+      highlight: function(code, lang) { 
+        var language = hljs.getLanguage(lang) ? lang : 'plaintext'; 
+        return hljs.highlight(code, { language: language }).value; 
+      } 
+    });
+    
     var renderer = new marked.Renderer();
     renderer.code = function(code, language) {
       var validLang = language && hljs.getLanguage(language) ? language : 'plaintext';
@@ -907,10 +917,77 @@ function actEdit(i){var m=S.msgs[i];if(!m||m.role!=='user')return;var ea=$('ea-'
 function actEditSave(i){var ta=$('et-'+i);if(!ta)return;var v=ta.value.trim();var origMsg=S.msgs[i];var images=origMsg.images||[];S.msgs[i].content=v;S.msgs=S.msgs.slice(0,i+1);renderAll();if(images.length){var imgFiles=images.map(function(img){var f=dataUrlToFile(img.dataUrl,img.name);return f?{type:'image',dataUrl:img.dataUrl,name:img.name,file:f}:null}).filter(Boolean);sendToAIWithFiles(v,imgFiles,[])}else{sendToAI(v)}}
 function actEditCancel(i){var ea=$('ea-'+i);if(ea)ea.innerHTML=''}
 function actRegen(i){if(S.streaming)return;S.msgs=S.msgs.slice(0,i);renderAll();regenerateAI()}
-function actVoice(i){if(authGate('voice'))return;var m=S.msgs[i];if(!m||m.role!=='assistant')return;if(S.audio){S.audio.pause();S.audio=null}toast('Generating voice...','inf');fetch(getApiUrl()+'/tts',{method:'POST',headers:authH(),credentials:'include',body:JSON.stringify({prompt:m.content})}).then(function(r){return r.blob()}).then(function(blob){var url=URL.createObjectURL(blob);S.audio=new Audio(url);S.audio.play();S.audio.onended=function(){URL.revokeObjectURL(url);S.audio=null};toast('Playing','ok')}).catch(function(){toast('Voice failed','err')})}
 
+// ================= TTS / VOICE REPLY FIX =================
+function actVoice(i){
+  if(authGate('voice'))return;
+  var m=S.msgs[i];
+  if(!m||m.role!=='assistant')return;
+  
+  // Stop any existing audio
+  if(S.audio){ 
+    S.audio.pause(); 
+    S.audio = null; 
+  }
+
+  // Visual feedback
+  var btn = document.querySelector('.ma[data-act="voice"][data-i="'+i+'"]');
+  if(btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+  toast('Generating voice...','inf');
+
+  fetch(getApiUrl()+'/tts',{
+    method:'POST',
+    headers:authH(),
+    credentials:'include',
+    body:JSON.stringify({ text: m.content }) // Using 'text' key standard for TTS
+  }).then(function(r){
+    if(!r.ok) throw new Error('TTS generation failed');
+    return r.blob();
+  }).then(function(blob){
+    var url=URL.createObjectURL(blob);
+    S.audio=new Audio(url);
+    S.audio.play();
+    S.audio.onended=function(){
+      URL.revokeObjectURL(url);
+      S.audio=null;
+      // Reset icon
+      if(btn) btn.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
+    };
+    toast('Playing audio','ok');
+    if(btn) btn.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
+  }).catch(function(e){
+    console.error(e);
+    toast('Voice generation failed','err');
+    if(btn) btn.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
+  });
+}
+
+// ================= STT / MIC INPUT FIX =================
 function toggleMic(){if(authGate('voice input'))return;if(S.recording){if(S.recorder)S.recorder.stop();S.recording=false;$('micBtn').classList.remove('mic-on');return}navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){S.chunks=[];S.recorder=new MediaRecorder(stream);S.recorder.ondataavailable=function(e){if(e.data.size>0)S.chunks.push(e.data)};S.recorder.onstop=function(){stream.getTracks().forEach(function(t){t.stop()});doSTT(new Blob(S.chunks,{type:'audio/webm'}))};S.recorder.start();S.recording=true;$('micBtn').classList.add('mic-on');toast('Listening...','inf')}).catch(function(){toast('Mic access denied','err')})}
-function doSTT(blob){toast('Processing...','inf');var fd=new FormData();fd.append('file',blob,'recording.webm');var h={};if(S.user&&S.user.token)h['Authorization']='Bearer '+S.user.token;fetch(getApiUrl()+'/stt',{method:'POST',headers:h,credentials:'include',body:fd}).then(function(r){return r.json()}).then(function(d){if(d.text){$('cbInput').value=d.text;autoH($('cbInput'));updateCB();toast('Recognized','ok')}else toast('No speech','err')}).catch(function(){toast('STT failed','err')})}
+
+function doSTT(blob){
+  toast('Processing voice...','inf');
+  var fd=new FormData();
+  fd.append('file',blob,'recording.webm');
+  var h={};
+  if(S.user&&S.user.token)h['Authorization']='Bearer '+S.user.token;
+  fetch(getApiUrl()+'/stt',{
+    method:'POST',
+    headers:h,
+    credentials:'include',
+    body:fd
+  }).then(function(r){return r.json()}).then(function(d){
+    if(d.text){
+      $('cbInput').value=d.text;
+      autoH($('cbInput'));
+      updateCB();
+      toast('Recognized','ok');
+      // FIX: Auto-send the recognized text to the AI
+      setTimeout(function(){
+        sendMsg();
+      }, 600);
+    } else toast('No speech detected','err')
+  }).catch(function(){toast('STT failed','err')})}
 
 function streamRes(res,onChunk,onDone){var reader,dec,buf,finished;if(res.body&&typeof res.body.getReader==='function'){reader=res.body.getReader();dec=new TextDecoder();buf='';finished=false;function finish(){if(finished)return;finished=true;onDone()}function pump(){return reader.read().then(function(result){if(result.done){finish();return}buf+=dec.decode(result.value,{stream:true});var lines=buf.split('\n');buf=lines.pop()||'';for(var i=0;i<lines.length;i++){var line=lines[i].trim();if(!line||line.indexOf('data:')!==0)continue;var d=line.slice(5).trim();if(d==='[DONE]'){finish();return}try{var p=JSON.parse(d);var text='';if(p.type==='token')text=p.text||'';else text=p.content||p.text||'';if(text)onChunk(text)}catch(e){if(d)onChunk(d)}}if(!finished)return pump()}).catch(function(){finish()})}return pump()}return res.text().then(function(text){onChunk(text);onDone()})}
 
