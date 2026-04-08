@@ -434,11 +434,9 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 <div class="toast-ct" id="toastCt"></div>
 <script>
 // ================= CONFIGURATION =================
-// These should be injected via your build process or defined in a config file
-// For this HTML file, we use variables that mimic .env access
 var SUPABASE_URL='https://acbnqeeukfxewiqswgbw.supabase.co';
 var SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjYm5xZWV1a2Z4ZXdpcXN3Z2J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMDY5MzIsImV4cCI6MjA4OTg4MjkzMn0.bwkZs0yqNAooAh6cV16dcwZwNz_5H5xvAu7eiQtR4wE';
-var BACKEND_URL='https://billy-free-ai-production.up.railway.app'; // This is your main API Base URL
+var BACKEND_URL='https://billy-free-ai-production.up.railway.app';
 // =================================================
 
 function $(id){return document.getElementById(id)}
@@ -460,87 +458,200 @@ function isVideo(t){var l=t.toLowerCase();for(var i=0;i<VIDEO_KW.length;i++)if(l
 
 function aiUrl(){return BACKEND_URL}
 function authH(){var h={'Content-Type':'application/json'};if(S.user&&S.user.token)h['Authorization']='Bearer '+S.user.token;return h}
-function plan(){return(S.user&&S.user.plan)||'free'}
-function canGenMedia(){return S.user&&(S.user.plan==='premium'||S.user.plan==='ultimate_monthly'||S.user.plan==='ultimate_yearly'||S.user.plan==='lifetime'||S.user.is_premium||S.user.is_lifetime)}
-function authSilent(){return!S.user}
-function authGate(f){if(!S.user){toast('Sign in to use '+f,'wrn');setTimeout(function(){window.location.href='auth.html'},800);return true}return false}
-function mediaGate(type){if(!S.user){toast('Sign in to generate '+type+'s','wrn');setTimeout(function(){window.location.href='auth.html'},800);return true}if(!canGenMedia()){toast(type.charAt(0).toUpperCase()+type.slice(1)+' generation requires Premium','wrn');return true}return false}
+function isAuth(){return !!S.user}
+function authSilent(){return !isAuth()}
+function isAuthed(){return isAuth()}
+function isPremium(){return isAuth()&&(S.user.is_premium||S.user.is_lifetime||S.user.plan!=='free')}
+function canGenMedia(){return isAuthed()&&isPremium()}
 
 var sb=null;
-function initSupabase(){try{if(SUPABASE_URL.indexOf('your-')!==-1||SUPABASE_ANON_KEY.indexOf('your-')!==-1)return;if(typeof window.supabase==='undefined')return;sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{global:{fetch:function(input,init){init=init||{};init.credentials='include';return window.fetch(input,init)}}})}catch(e){console.warn('Supabase init skipped:',e)}}
+function initSupabase(){
+  try{
+    if(SUPABASE_URL.indexOf('your-')!==-1||SUPABASE_ANON_KEY.indexOf('your-')!==-1)return;
+    if(typeof window.supabase==='undefined')return;
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: true,       // Keeps user logged in via LocalStorage
+        autoRefreshToken: true,     // Refreshes token automatically
+        detectSessionInUrl: true,   // Handles OAuth redirects
+        storage: window.localStorage
+      },
+      global: {
+        fetch: function(input, init){
+          init = init || {};
+          init.credentials = 'include';
+          return window.fetch(input, init);
+        }
+      }
+    });
+  } catch(e){ console.warn('Supabase init skipped:', e); }
+}
 
-async function loadUser(){if(!sb){refreshUI();return}try{var result=await sb.auth.getSession();var session=result.data&&result.data.session;if(result.error||!session||!session.user){S.user=null;refreshUI();return}var ud=await sb.from('users').select('plan,is_premium,is_lifetime').eq('id',session.user.id).single();S.user={id:session.user.id,email:session.user.email,plan:(ud.data&&ud.data.plan)||'free',is_premium:(ud.data&&ud.data.is_premium)||false,is_lifetime:(ud.data&&ud.data.is_lifetime)||false,token:session.access_token};refreshUI();loadChatList()}catch(e){console.warn('loadUser:',e);S.user=null;refreshUI()}}
-function setupAuthListener(){if(!sb)return;sb.auth.onAuthStateChange(function(ev,session){if(ev==='SIGNED_IN'&&session&&session.user)handleSignIn(session);else if(ev==='SIGNED_OUT')handleSignOut();else if(ev==='TOKEN_REFRESHED'&&session&&S.user)S.user.token=session.access_token})}
-async function handleSignIn(session){if(!session||!session.user)return;try{localStorage.setItem('helox-last-login',Date.now())}catch(e){}try{var ud=await sb.from('users').select('plan,is_premium,is_lifetime').eq('id',session.user.id).single();S.user={id:session.user.id,email:session.user.email,plan:(ud.data&&ud.data.plan)||'free',is_premium:(ud.data&&ud.data.is_premium)||false,is_lifetime:(ud.data&&ud.data.is_lifetime)||false,token:session.access_token};refreshUI();loadChatList();toast('Signed in','ok')}catch(e){S.user={id:session.user.id,email:session.user.email,plan:'free',is_premium:false,is_lifetime:false,token:session.access_token};refreshUI()}}
-function handleSignOut(){S.user=null;S.msgs=[];S.chatId=null;S.chatListData=[];S.gallery=[];refreshUI();renderAll();renderChatList();renderGallery();toast('Signed out','inf')}
-async function signOut(){if(sb)try{await sb.auth.signOut()}catch(e){}handleSignOut()}
+async function loadUser(){
+  if(!sb){
+    refreshUI();
+    return;
+  }
+  try{
+    // getSession automatically checks LocalStorage if persistSession is true
+    var result = await sb.auth.getSession();
+    var session = result.data && result.data.session;
 
-// ================= BACKEND CONNECTIONS (FIXED) =================
+    if(result.error || !session || !session.user){
+      S.user = null;
+      refreshUI();
+      return;
+    }
+    
+    // Fetch user details from DB
+    var ud = await sb.from('users').select('plan,is_premium,is_lifetime').eq('id', session.user.id).single();
+    
+    // Update State
+    S.user = {
+      id: session.user.id,
+      email: session.user.email,
+      plan: (ud.data && ud.data.plan) || 'free',
+      is_premium: (ud.data && ud.data.is_premium) || false,
+      is_lifetime: (ud.data && ud.data.is_lifetime) || false,
+      token: session.access_token
+    };
+    
+    refreshUI();
+    loadChatList();
+    
+  } catch(e){
+    console.warn('loadUser error:', e);
+    // If DB fetch fails, keep session with defaults
+    if(S.user){
+      refreshUI();
+      loadChatList();
+    } else {
+      S.user = null;
+      refreshUI();
+    }
+  }
+}
 
-// 1. Connect 'chats' to /chats
+function setupAuthListener(){
+  if(!sb) return;
+  sb.auth.onAuthStateChange(function(ev, session){
+    if(ev === 'SIGNED_IN' && session && session.user){
+      handleSignIn(session);
+    } else if (ev === 'SIGNED_OUT'){
+      handleSignOut();
+    } else if (ev === 'TOKEN_REFRESHED' && session && S.user){
+      // Update the local token if refreshed
+      S.user.token = session.access_token;
+    } else if (ev === 'INITIAL_SESSION'){
+      // Fires immediately on load if session exists in storage
+      if(session && session.user){
+        handleSignIn(session);
+      }
+    }
+  });
+}
+
+async function handleSignIn(session){
+  if(!session || !session.user) return;
+  
+  // Store last login timestamp in LocalStorage manually (for UI display)
+  try{ localStorage.setItem('helox-last-login', Date.now()); } catch(e){}
+  
+  try{
+    var ud = await sb.from('users').select('plan,is_premium,is_lifetime').eq('id', session.user.id).single();
+    S.user = {
+      id: session.user.id,
+      email: session.user.email,
+      plan: (ud.data && ud.data.plan) || 'lifetime',
+      is_premium: (ud.data && ud.data.is_premium) || false,
+      is_lifetime: (ud.data && ud.data.is_lifetime) || false,
+      token: session.access_token
+    };
+    refreshUI();
+    loadChatList();
+    // Only show toast if this appears to be a fresh login action (not just page load)
+    if(document.visibilityState === 'visible') toast('Signed in', 'ok');
+  } catch(e){
+    S.user = {
+      id: session.user.id,
+      email: session.user.email,
+      plan: 'lifetime',
+      is_premium: false,
+      is_lifetime: true,
+      token: session.access_token
+    };
+    refreshUI();
+  }
+}
+
+function handleSignOut(){
+  S.user = null;
+  S.msgs = [];
+  S.chatId = null;
+  S.chatListData = [];
+  S.gallery = [];
+  refreshUI();
+  renderAll();
+  renderChatList();
+  renderGallery();
+  toast('Signed out', 'inf');
+}
+
+async function signOut(){
+  if(sb) try{ await sb.auth.signOut(); } catch(e){}
+  handleSignOut();
+}
+
+// ================= BACKEND CONNECTIONS =================
 async function loadChatList(){
   if(!S.user){
-    S.chatListData=[];
+    S.chatListData = [];
     renderChatList();
     return;
   }
-  
   try {
-    // Fetching from /chats endpoint
     var res = await fetch(BACKEND_URL + '/chats', {
       method: 'GET',
       headers: authH(),
       credentials: 'include'
     });
-
     if (!res.ok) throw new Error('Failed to load chats');
-    
     var data = await res.json();
-    // Assuming backend returns { chats: [...] } or [...]
     S.chatListData = Array.isArray(data) ? data : (data.chats || []);
   } catch (e) {
-    console.warn('Backend /chats failed, falling back or empty:', e);
-    // Fallback or empty state if backend fails
+    console.warn('Backend /chats failed:', e);
     S.chatListData = [];
   }
   renderChatList();
 }
 
-// 2. Connect 'newchat' to /newchat
 async function startNewChat() {
   if(!S.user) return;
-  
   try {
     var res = await fetch(BACKEND_URL + '/newchat', {
       method: 'POST',
       headers: authH(),
       credentials: 'include',
-      body: JSON.stringify({ model: S.model }) // Optional: send model preference
+      body: JSON.stringify({ model: S.model })
     });
-
     if (!res.ok) throw new Error('Failed to create new chat');
-    
     var data = await res.json();
-    // Assuming backend returns { id: '...', title: '...' }
     if (data && data.id) {
       S.chatId = data.id;
       $('hdrTitle').textContent = data.title || 'New Chat';
-      // Reload list to show new chat at top
       loadChatList();
     }
   } catch (e) {
-    console.warn('Backend /newchat failed, using local fallback:', e);
-    // Fallback: Generate local ID if backend fails
+    console.warn('Backend /newchat failed:', e);
     S.chatId = uid();
     $('hdrTitle').textContent = 'New Chat';
   }
-  
   S.msgs = [];
   renderAll();
   if(S.sbOpen) toggleSB(false);
 }
 
-// Existing helper functions for Supabase (kept for fallback or message history if needed)
+// Existing DB helpers
 async function saveMessage(msg){if(!sb||!S.user||!S.chatId)return;try{await sb.from('messages').insert({conversation_id:S.chatId,role:msg.role,content:msg.content,content_type:msg.content_type||'text',media_url:msg.media_url||null,metadata:msg.metadata||{}})}catch(e){}}
 async function createConversation(title){if(!sb||!S.user)return null;try{var res=await sb.from('conversations').insert({user_id:S.user.id,title:title||'New Chat'}).select().single();if(res.error)throw res.error;return res.data}catch(e){console.warn('createConversation:',e);return null}}
 async function updateConversationTimestamp(cid){if(!sb||!cid)return;try{await sb.from('conversations').update({updated_at:new Date().toISOString()}).eq('id',cid)}catch(e){}}
@@ -548,21 +659,55 @@ async function loadMessages(cid){if(!sb||!cid)return[];try{var res=await sb.from
 
 async function deleteConversation(cid){
   try {
-    // Try backend delete first
     await fetch(BACKEND_URL + '/chats/' + cid, {
       method: 'DELETE',
       headers: authH(),
       credentials: 'include'
     });
   } catch(e) {}
-  
-  // Fallback to Supabase direct
   if(!sb||!cid)return;
   try{await sb.from('messages').delete().eq('conversation_id',cid);await sb.from('conversations').delete().eq('id',cid)}catch(e){}
 }
-async function loadConversation(cid){S.msgs=[];showWelcome();if(!sb||!cid)return;try{var messages=await loadMessages(cid);if(messages&&messages.length){S.msgs=messages.map(function(m){return{id:m.id,role:m.role,content:m.content,content_type:m.content_type||'text',media_url:m.media_url||null,images:[],time:new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),liked:false,disliked:false}});S.msgs.forEach(function(m){if(m.role==='assistant')addToGallery(m.content)});renderAll()}}catch(e){console.warn('loadConversation:',e)}}
 
-function updateLoginDisplay(){var el=$('uLl');if(!el)return;if(!S.user){el.style.display='none';return}try{var ts=localStorage.getItem('helox-last-login');if(ts){var d=new Date(parseInt(ts));el.textContent='Last login: '+d.toLocaleDateString([],{month:'short',day:'numeric'})+', '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});el.style.display='block'}else el.style.display='none'}catch(e){el.style.display='none'}}
+async function loadConversation(cid){
+  S.msgs = []; 
+  showWelcome(); 
+  if(!sb||!cid)return;
+  try{
+    var messages = await loadMessages(cid);
+    if(messages&&messages.length){
+      S.msgs = messages.map(function(m){
+        return {
+          id:m.id, 
+          role:m.role, 
+          content:m.content, 
+          content_type:m.content_type||'text', 
+          media_url:m.media_url||null, 
+          images:[], 
+          time:new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}), 
+          liked:false, 
+          disliked:false
+        };
+      });
+      S.msgs.forEach(function(m){ if(m.role==='assistant') addToGallery(m.content); });
+      renderAll();
+    }
+  } catch(e){ console.warn('loadConversation:',e); }
+}
+
+function updateLoginDisplay(){
+  var el=$('uLl'); 
+  if(!el) return; 
+  if(!S.user){ el.style.display='none'; return; }
+  try{ 
+    var ts=localStorage.getItem('helox-last-login'); 
+    if(ts){ 
+      var d=new Date(parseInt(ts)); 
+      el.textContent='Last login: '+d.toLocaleDateString([],{month:'short',day:'numeric'})+', '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); 
+      el.style.display='block'; 
+    } else el.style.display='none'; 
+  } catch(e){ el.style.display='none'; }
+}
 
 function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('data-theme',window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');else document.documentElement.setAttribute('data-theme',t)}catch(e){}S.theme=t;try{localStorage.setItem('helox-theme',t)}catch(e){}document.querySelectorAll('.t-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-t')===t)})}
 function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'dark'}catch(e){}setTheme(s);try{window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(S.theme==='system')setTheme('system')})}catch(e){}}
@@ -571,84 +716,41 @@ function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'da
 function initMarked(){
   try {
     if (typeof marked === 'undefined' || typeof hljs === 'undefined' || typeof katex === 'undefined') return;
-    
-    // Configure Marked
-    marked.setOptions({
-      breaks: true,
-      gfm: true,
-      highlight: function(code, lang) {
-        var language = hljs.getLanguage(lang) ? lang : 'plaintext';
-        return hljs.highlight(code, { language: language }).value;
-      }
-    });
-    
-    // Custom Renderer for better control
+    marked.setOptions({ breaks: true, gfm: true, highlight: function(code, lang) { var language = hljs.getLanguage(lang) ? lang : 'plaintext'; return hljs.highlight(code, { language: language }).value; } });
     var renderer = new marked.Renderer();
-    
-    // Code Blocks with Copy Button
     renderer.code = function(code, language) {
       var validLang = language && hljs.getLanguage(language) ? language : 'plaintext';
       var highlighted = hljs.highlight(code, { language: validLang, ignoreIllegals: true }).value;
-      
-      return '<div class="code-blk">' +
-             '<div class="code-hd"><span>' + esc(validLang) + '</span>' +
-             '<button class="cp-btn" data-copy-code><i class="fa-regular fa-copy"></i> Copy</button></div>' +
-             '<pre><code class="hljs language-' + validLang + '">' + highlighted + '</code></pre></div>';
+      return '<div class="code-blk">' + '<div class="code-hd"><span>' + esc(validLang) + '</span>' + '<button class="cp-btn" data-copy-code><i class="fa-regular fa-copy"></i> Copy</button></div>' + '<pre><code class="hljs language-' + validLang + '">' + highlighted + '</code></pre></div>';
     };
-    
-    // Images
-    renderer.image = function(href, title, text) {
-      return '<div class="img-wrap"><img src="' + href + '" alt="' + (text || '') + '" loading="lazy"></div>';
-    };
-    
-    // Links
-    renderer.link = function(href, title, text) {
-      if (!href) return text;
-      return '<a href="' + href + '" target="_blank" rel="noopener noreferrer">' + text + 
-             '<i class="fa-solid fa-arrow-up-right-from-square ext-i"></i></a>';
-    };
-
+    renderer.image = function(href, title, text) { return '<div class="img-wrap"><img src="' + href + '" alt="' + (text || '') + '" loading="lazy"></div>'; };
+    renderer.link = function(href, title, text) { if (!href) return text; return '<a href="' + href + '" target="_blank" rel="noopener noreferrer">' + text + '<i class="fa-solid fa-arrow-up-right-from-square ext-i"></i></a>'; };
     marked.setOptions({ renderer: renderer });
     S._mdOk = true;
     S._hlOk = true;
-  } catch(e) {
-    console.warn("Markdown init failed", e);
-  }
+  } catch(e) { console.warn("Markdown init failed", e); }
 }
 
 function md(text){
   if(!text) return '';
   var rawHtml = '';
-  
   if(S._mdOk) {
     try {
       rawHtml = marked.parse(text);
-      // Sanitize HTML to prevent XSS
       rawHtml = DOMPurify.sanitize(rawHtml, {
         ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'strong', 'em', 'a', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr', 'img', 'div', 'span', 'button', 'i', 'sup', 'sub'],
         ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'id', 'style', 'src', 'alt', 'title', 'data-copy-code', 'loading'],
         ALLOW_DATA_ATTR: false
       });
-    } catch(e) {
-      rawHtml = '<p>' + esc(text).replace(/\n/g, '<br>') + '</p>';
-    }
-  } else {
-    rawHtml = '<p>' + esc(text).replace(/\n/g, '<br>') + '</p>';
-  }
-  
+    } catch(e) { rawHtml = '<p>' + esc(text).replace(/\n/g, '<br>') + '</p>'; }
+  } else { rawHtml = '<p>' + esc(text).replace(/\n/g, '<br>') + '</p>'; }
   return rawHtml;
 }
 
-// Apply KaTeX rendering after markdown is inserted into DOM
 function applyMath(element) {
   if (typeof renderMathInElement !== 'undefined') {
     renderMathInElement(element, {
-      delimiters: [
-        {left: '$$', right: '$$', display: true},
-        {left: '$', right: '$', display: false},
-        {left: '\\(', right: '\\)', display: false},
-        {left: '\\[', right: '\\]', display: true}
-      ],
+      delimiters: [ {left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}, {left: '\\[', right: '\\]', display: true} ],
       throwOnError : false
     });
   }
@@ -661,21 +763,56 @@ function toggleSB(open){S.sbOpen=typeof open==='boolean'?open:!S.sbOpen;$('sideb
 function refreshUI(){
   var u=$('sUser'),sl=$('signInLink'),hp=$('hdrPlan');if(!u||!sl||!hp)return;
   var signedIn=!!S.user,hasMedia=canGenMedia();
-  if(S.user){u.classList.add('show');$('uAv').textContent=(S.user.email||'U')[0].toUpperCase();$('uNm').textContent=S.user.email;$('uPl').textContent=S.user.plan.charAt(0).toUpperCase()+S.user.plan.slice(1)+' Plan';sl.innerHTML='<i class="fa-solid fa-right-from-bracket"></i> Log Out';sl.removeAttribute('href');sl.style.cursor='pointer';hp.textContent=S.user.plan.toUpperCase();hp.className='hdr-plan ptag '+(S.user.plan==='lifetime'?'lifetime':(canGenMedia()?'premium':'free'));updateLoginDisplay()}
-  else{u.classList.remove('show');sl.innerHTML='<i class="fa-solid fa-right-to-bracket"></i> Sign In';sl.href='auth.html';sl.style.cursor='';hp.textContent='FREE';hp.className='hdr-plan ptag free'}
-  var ncb=$('newChatBtn'),ncl=$('ncLock');ncb.classList.toggle('locked',!signedIn);if(ncl)ncl.style.display=signedIn?'none':'flex';
-  $('micBtn').classList.toggle('locked',!signedIn);$('micLock').style.display=signedIn?'none':'flex';
-  $('voiceBtn').classList.toggle('locked',!signedIn);$('voiceLock').style.display=signedIn?'none':'flex';
+  if(S.user){
+    u.classList.add('show');
+    $('uAv').textContent=(S.user.email||'U')[0].toUpperCase();
+    $('uNm').textContent=S.user.email;
+    $('uPl').textContent=S.user.plan.charAt(0).toUpperCase()+S.user.plan.slice(1)+' Plan';
+    sl.innerHTML='<i class="fa-solid fa-right-from-bracket"></i> Log Out';
+    sl.removeAttribute('href');
+    sl.style.cursor='pointer';
+    hp.textContent=S.user.plan.toUpperCase();
+    hp.className='hdr-plan ptag '+(S.user.plan==='lifetime'?'lifetime':(canGenMedia()?'premium':'free'));
+    updateLoginDisplay();
+  } else {
+    u.classList.remove('show');
+    sl.innerHTML='<i class="fa-solid fa-right-to-bracket"></i> Sign In';
+    sl.href='auth.html';
+    sl.style.cursor='';
+    hp.textContent='FREE';
+    hp.className='hdr-plan ptag free';
+  }
+  
+  var ncb=$('newChatBtn'),ncl=$('ncLock');
+  ncb.classList.toggle('locked',!signedIn);
+  if(ncl)ncl.style.display=signedIn?'none':'flex';
+  
+  $('micBtn').classList.toggle('locked',!signedIn);
+  $('micLock').style.display=signedIn?'none':'flex';
+  
+  $('voiceBtn').classList.toggle('locked',!signedIn);
+  $('voiceLock').style.display=signedIn?'none':'flex';
+  
   var wCI=document.querySelector('.w-card[data-media="image"]'),wCV=document.querySelector('.w-card[data-media="video"]'),wLI=$('wLockImg'),wLV=$('wLockVid');
   if(wCI&&wLI){wCI.classList.toggle('locked',!hasMedia);wLI.style.display=hasMedia?'none':'flex';if(!signedIn){wLI.className='w-lock';wLI.innerHTML='<i class="fa-solid fa-lock"></i> Sign in'}else if(!hasMedia){wLI.className='w-lock prem-lock';wLI.innerHTML='<i class="fa-solid fa-crown"></i> Premium'}}
   if(wCV&&wLV){wCV.classList.toggle('locked',!hasMedia);wLV.style.display=hasMedia?'none':'flex';if(!signedIn){wLV.className='w-lock';wLV.innerHTML='<i class="fa-solid fa-lock"></i> Sign in'}else if(!hasMedia){wLV.className='w-lock prem-lock';wLV.innerHTML='<i class="fa-solid fa-crown"></i> Premium'}}
+  
   var aI=$('asImg'),aV=$('asVid'),aLI=$('asLockImg'),aLV=$('asLockVid');
   if(aI&&aLI){aI.classList.toggle('locked',!hasMedia);aLI.style.display=hasMedia?'none':'flex';if(!signedIn)aLI.innerHTML='<i class="fa-solid fa-lock"></i> Sign in';else if(!hasMedia)aLI.innerHTML='<i class="fa-solid fa-crown"></i> Premium'}
   if(aV&&aLV){aV.classList.toggle('locked',!hasMedia);aLV.style.display=hasMedia?'none':'flex';if(!signedIn)aLV.innerHTML='<i class="fa-solid fa-lock"></i> Sign in';else if(!hasMedia)aLV.innerHTML='<i class="fa-solid fa-crown"></i> Premium'}
+  
   updateModelUI();
 }
 
-function updateModelUI(){var icon=$('modelIcon'),name=$('modelName');var map={helox:{n:'HeloxAi',c:'default-icon',t:'H'},chatgpt:{n:'ChatGPT',c:'gpt-icon',t:'G'},chatz:{n:'Chat.Z',c:'z-icon',t:'Z'}};var m=map[S.model]||map.helox;if(icon){icon.className='m-icon '+m.c;icon.textContent=m.t}if(name)name.textContent=m.n;document.querySelectorAll('.model-item').forEach(function(item){item.classList.toggle('active',item.getAttribute('data-model')===S.model)})}
+function updateModelUI(){
+  var icon=$('modelIcon'),name=$('modelName');
+  var map={helox:{n:'HeloxAi',c:'default-icon',t:'H'},chatgpt:{n:'ChatGPT',c:'gpt-icon',t:'G'},chatz:{n:'Chat.Z',c:'z-icon',t:'Z'}};
+  var m=map[S.model]||map.helox;
+  if(icon){icon.className='m-icon '+m.c;icon.textContent=m.t}
+  if(name)name.textContent=m.n;
+  document.querySelectorAll('.model-item').forEach(function(item){item.classList.toggle('active',item.getAttribute('data-model')===S.model)});
+}
+
 function selectModel(m){S.model=m;try{localStorage.setItem('helox-model',m)}catch(e){}updateModelUI();toggleMD(false);var map={helox:'HeloxAi',chatgpt:'ChatGPT',chatz:'Chat.Z'};toast('Switched to '+(map[m]||m),'ok')}
 function toggleMD(open){S.mdOpen=typeof open==='boolean'?open:!S.mdOpen;$('modelSel').classList.toggle('open',S.mdOpen);$('modelDd').classList.toggle('on',S.mdOpen)}
 function initModel(){var saved='helox';try{saved=localStorage.getItem('helox-model')||'helox'}catch(e){}S.model=saved;updateModelUI()}
@@ -710,8 +847,6 @@ function renderAll(){
     }
   });
   $('msgsEl').innerHTML=html;
-  
-  // Post-render: Apply Markdown and Math to AI messages
   S.msgs.forEach(function(m, i){
     if(m.role === 'assistant') {
       var el = $('mc-'+i);
@@ -721,7 +856,6 @@ function renderAll(){
       }
     }
   });
-
   if(S.isAutoScrolling)scrollBot(false);
 }
 
@@ -755,10 +889,7 @@ async function sendMsg(text){
   var hasFiles=S.pendingFiles.some(function(f){return f.type!=='image'});
   if((!t&&!S.pendingFiles.length)||S.streaming)return;
   if(isImage(t)&&mediaGate('image'))return;if(isVideo(t)&&mediaGate('video'))return;
-  
-  // Use newchat endpoint if no chat exists
   if(!S.chatId&&S.user){await startNewChat()}
-  
   var images=S.pendingFiles.filter(function(f){return f.type==='image'}).map(function(f){return{dataUrl:f.dataUrl,name:f.name}});
   var files=S.pendingFiles.filter(function(f){return f.type!=='image'});
   var msg={id:uid(),role:'user',content:t,images:images,time:now()};S.msgs.push(msg);saveMessage({role:'user',content:t||'[Image/File attached]',metadata:{has_images:images.length>0,image_count:images.length}});clearPendingFiles();$('cbInput').value='';autoH($('cbInput'));updateCB();renderAll();
@@ -782,7 +913,6 @@ function initEvents(){
   $('sbClose').addEventListener('click',function(){toggleSB(false)});
   $('sbOv').addEventListener('click',function(){toggleSB(false)});
   
-  // New Chat Button Logic: Uses startNewChat() which calls /newchat
   $('newChatBtn').addEventListener('click',function(){
     if(!S.user) { toast('Please sign in', 'wrn'); return; }
     startNewChat();
@@ -819,7 +949,26 @@ function initEvents(){
   document.addEventListener('paste',function(e){if(S.streaming)return;var items=e.clipboardData&&e.clipboardData.items;if(!items)return;for(var i=0;i<items.length;i++){if(items[i].type.indexOf('image/')===0){e.preventDefault();var file=items[i].getAsFile();if(!file)continue;var name='pasted-image-'+Date.now()+'.'+(file.type.split('/')[1]||'png');(function(f,n){readFileAsDataUrl(f).then(function(dataUrl){S.pendingFiles.push({type:'image',dataUrl:dataUrl,name:n,size:f.size,file:new File([f],n,{type:f.type})});renderImgPreview();updateCB()})})(file,name);break}}});
 }
 
-function init(){initTheme();initMarked();initSupabase();initModel();initEvents();renderAll();updateCB();loadUser().finally(function(){setupAuthListener()})}
+function authGate(feature){if(!S.user){toast('Sign in to use '+feature,'wrn');setTimeout(function(){window.location.href='auth.html'},1000);return true}return false}
+function mediaGate(type){if(!S.user){toast('Sign in to generate '+type+'s','wrn');setTimeout(function(){window.location.href='auth.html'},1000);return true}if(!canGenMedia()){toast(type.charAt(0).toUpperCase()+type.slice(1)+' generation requires Premium','wrn');return true}return false}
+
+function init(){
+  initTheme();
+  initMarked();
+  initSupabase();
+  initModel();
+  initEvents();
+  
+  // Setup Auth Listener BEFORE loading user to catch initial session
+  setupAuthListener();
+  
+  renderAll();
+  updateCB();
+  
+  // Explicitly load user session from LocalStorage
+  loadUser();
+}
+
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 </script>
 </body>
