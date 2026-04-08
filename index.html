@@ -464,20 +464,17 @@ function isVideo(t){var l=t.toLowerCase();for(var i=0;i<VIDEO_KW.length;i++)if(l
 
 // Returns the correct Backend URL based on User Plan
 function getApiUrl(){
-  // Default to Free URL
   var baseUrl = FREE_AI_URL;
-  
-  // Check if user is logged in and has Premium/Lifetime status
   if(S.user) {
-    var plan = (S.user.plan || 'free').toLowerCase();
-    var isPremium = S.user.is_premium || S.user.is_lifetime;
-    
-    if (isPremium || 
-        plan === 'premium' || 
-        plan === 'lifetime' || 
-        plan === 'ultimate_monthly' || 
-        plan === 'ultimate_yearly') {
+    // Strictly check boolean flags first
+    if (S.user.is_lifetime || S.user.is_premium) {
       baseUrl = PREMIUM_AI_URL;
+    } else {
+      // Fallback to string check for safety
+      var plan = (S.user.plan || 'free').toLowerCase();
+      if (plan === 'premium' || plan === 'lifetime' || plan === 'ultimate_monthly' || plan === 'ultimate_yearly') {
+        baseUrl = PREMIUM_AI_URL;
+      }
     }
   }
   return baseUrl;
@@ -487,8 +484,10 @@ function authH(){var h={'Content-Type':'application/json'};if(S.user&&S.user.tok
 function isAuth(){return !!S.user}
 function authSilent(){return !isAuth()}
 function isAuthed(){return isAuth()}
+// FIXED: Checks is_lifetime flag explicitly
 function isPremium(){return isAuth()&&(S.user.is_premium||S.user.is_lifetime||S.user.plan!=='free')}
-function canGenMedia(){return isAuthed()&&isPremium()}
+// FIXED: Checks is_lifetime flag explicitly
+function canGenMedia(){return isAuthed()&&(S.user.is_lifetime||S.user.is_premium)}
 
 var sb=null;
 function initSupabase(){
@@ -773,16 +772,38 @@ function toggleSB(open){S.sbOpen=typeof open==='boolean'?open:!S.sbOpen;$('sideb
 function refreshUI(){
   var u=$('sUser'),sl=$('signInLink'),hp=$('hdrPlan');if(!u||!sl||!hp)return;
   var signedIn=!!S.user,hasMedia=canGenMedia();
+  
+  // Determine correct badge text and class
+  var badgeClass='free';
+  var badgeText='FREE';
+  
+  if(S.user) {
+    // Priority: Lifetime > Premium > Plan String
+    if(S.user.is_lifetime) {
+      badgeClass='lifetime';
+      badgeText='LIFETIME';
+    } else if(S.user.is_premium) {
+      badgeClass='premium';
+      badgeText='PREMIUM';
+    } else if(S.user.plan && S.user.plan !== 'free') {
+      // Fallback to string if flags aren't set but plan string suggests status
+      badgeClass = S.user.plan === 'lifetime' ? 'lifetime' : 'premium';
+      badgeText = S.user.plan.toUpperCase();
+    } else {
+      badgeText = 'FREE';
+    }
+  }
+
   if(S.user){
     u.classList.add('show');
     $('uAv').textContent=(S.user.email||'U')[0].toUpperCase();
     $('uNm').textContent=S.user.email;
-    $('uPl').textContent=S.user.plan.charAt(0).toUpperCase()+S.user.plan.slice(1)+' Plan';
+    $('uPl').textContent=badgeText.charAt(0)+badgeText.slice(1).toLowerCase()+' Plan';
     sl.innerHTML='<i class="fa-solid fa-right-from-bracket"></i> Log Out';
     sl.removeAttribute('href');
     sl.style.cursor='pointer';
-    hp.textContent=S.user.plan.toUpperCase();
-    hp.className='hdr-plan ptag '+(S.user.plan==='lifetime'?'lifetime':(canGenMedia()?'premium':'free'));
+    hp.textContent=badgeText;
+    hp.className='hdr-plan ptag '+badgeClass;
     updateLoginDisplay();
   } else {
     u.classList.remove('show');
