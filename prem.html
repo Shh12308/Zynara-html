@@ -61,122 +61,57 @@
     }
     .back-btn:hover { color: var(--primary-cyan); border-color: var(--primary-cyan); }
 
-    /* --- New Pricing Grid Styles --- */
-    .pricing-section { padding: 80px 0; background: var(--primary-bg); }
-    .pricing-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 30px;
-      margin-top: 50px;
-    }
-    .pricing-card {
-      background: var(--secondary-bg);
-      padding: 40px 30px;
-      border-radius: 16px;
-      border: 1px solid var(--card-bg);
-      display: flex;
-      flex-direction: column;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      position: relative;
-    }
-    .pricing-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    }
-    
-    /* Founder Card Highlight */
-    .pricing-card.founder {
-      border: 2px solid var(--primary-cyan);
-      box-shadow: 0 0 20px rgba(0, 224, 255, 0.15);
-      background: linear-gradient(180deg, rgba(0, 224, 255, 0.05) 0%, var(--secondary-bg) 100%);
-      z-index: 2;
-    }
-    
-    .badge {
-      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-      background: var(--accent-gradient); color: var(--primary-bg);
-      padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 1px;
-    }
-
-    .plan-name { font-size: 1.4rem; color: var(--text-primary); margin-bottom: 10px; font-weight: 600; text-align: center; }
-    .plan-price { font-size: 2.5rem; font-weight: 700; color: var(--primary-cyan); text-align: center; margin-bottom: 5px; }
-    .plan-price span { font-size: 1rem; color: var(--text-secondary); font-weight: 400; }
-    .plan-desc { text-align: center; color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 25px; min-height: 40px; }
-
-    .plan-features { list-style: none; padding: 0; margin-bottom: 30px; flex-grow: 1; }
-    .plan-features li { padding: 10px 0; color: var(--text-secondary); border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.9rem; }
-    .plan-features li::before { content: '\2713 '; color: var(--primary-cyan); font-weight: bold; margin-right: 8px; }
-
-    .plan-btn {
-      width: 100%;
-      padding: 16px;
-      background: var(--card-bg);
-      color: var(--text-primary);
-      border: 1px solid var(--text-muted);
-      border-radius: 8px;
-      font-family: 'Poppins', sans-serif;
-      font-weight: 600;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-    .plan-btn:hover:not(:disabled) {
-      background: var(--primary-cyan);
-      color: var(--primary-bg);
-      border-color: var(--primary-cyan);
-    }
-    .plan-btn:disabled {
-      background: var(--card-bg);
-      color: var(--text-muted);
-      cursor: not-allowed;
-      border-color: transparent;
-    }
-    .pricing-card.founder .plan-btn {
-      background: var(--accent-gradient);
-      color: var(--primary-bg);
-      border: none;
-    }
-    .pricing-card.founder .plan-btn:hover:not(:disabled) {
-      box-shadow: 0 5px 15px rgba(0, 224, 255, 0.4);
-      transform: translateY(-2px);
-    }
-    
-    .countdown-wrapper {
-      background: rgba(0, 0, 0, 0.2);
-      padding: 10px;
-      border-radius: 8px;
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    #countdown { font-size: 1.2rem; font-weight: 600; color: var(--primary-cyan); }
-    /* ----------------------------------- */
-
-    .why-preorder { padding: 80px 0; background: var(--secondary-bg); }
+    .why-preorder { padding: 80px 0; background: var(--primary-bg); }
     .section-title { font-size: 2.5rem; font-weight: 600; color: var(--text-primary); text-align: center; margin-bottom: 20px; }
     .section-subtitle { font-size: 1.1rem; color: var(--text-secondary); text-align: center; max-width: 700px; margin: 0 auto 50px; }
     .benefits-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
     .benefit-card {
-      background: var(--primary-bg); padding: 30px; border-radius: 12px;
+      background: var(--secondary-bg); padding: 30px; border-radius: 12px;
       border-left: 4px solid var(--primary-cyan); transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
     .benefit-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0, 224, 255, 0.1); }
     .benefit-card h3 { font-size: 1.4rem; color: var(--secondary-blue); margin-bottom: 10px; }
     .benefit-card p { color: var(--text-secondary); font-size: 0.95rem; }
 
-    .features-section { padding: 80px 0; background: var(--primary-bg); }
+    .features-section { padding: 80px 0; background: var(--secondary-bg); }
     .feature { display: flex; align-items: flex-start; margin-bottom: 40px; text-align: left; }
     .feature-icon { font-size: 2.5rem; color: var(--primary-cyan); margin-right: 20px; min-width: 50px; text-align: center; }
     .feature-content h3 { font-size: 1.5rem; color: var(--text-primary); margin-bottom: 10px; }
     .feature-content p { color: var(--text-secondary); font-size: 1rem; }
     .highlight { color: var(--primary-cyan); font-weight: 600; }
 
-    .audience-section { padding: 80px 0; background: var(--secondary-bg); }
+    .audience-section { padding: 80px 0; background: var(--primary-bg); }
     .audience-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 40px; }
-    .audience-card { background: var(--primary-bg); padding: 25px; border-radius: 10px; text-align: center; border: 1px solid var(--card-bg); }
+    .audience-card { background: var(--secondary-bg); padding: 25px; border-radius: 10px; text-align: center; border: 1px solid var(--card-bg); }
     .audience-card .icon { font-size: 2.5rem; margin-bottom: 15px; }
     .audience-card h4 { font-size: 1.2rem; color: var(--secondary-blue); margin-bottom: 10px; }
     .audience-card p { color: var(--text-secondary); font-size: 0.9rem; }
+
+    /* --- PREORDER CONTAINER --- */
+    .preorder-container {
+      max-width: 700px; margin: 80px auto; background: var(--secondary-bg); padding: 50px;
+      border-radius: 16px; box-shadow: 0 10px 40px rgba(0, 224, 255, 0.15);
+      border: 1px solid var(--card-bg); text-align: center;
+    }
+    .preorder-container h2 { font-size: 2.5rem; color: var(--primary-cyan); margin-bottom: 20px; }
+    .price { font-size: 3rem; font-weight: 700; margin: 20px 0; color: var(--text-primary); }
+    .price .currency { font-size: 2rem; vertical-align: middle; }
+    .subnote { font-size: 1rem; color: var(--text-secondary); margin-bottom: 30px; }
+    #countdownContainer { margin: 30px 0; background: var(--card-bg); padding: 20px; border-radius: 8px; }
+    #countdown { font-size: 1.8rem; font-weight: 600; color: var(--primary-cyan); }
+    .whats-included { text-align: left; background: var(--card-bg); padding: 25px; border-radius: 8px; margin: 30px 0; }
+    .whats-included ul { list-style: none; padding: 0; }
+    .whats-included li { padding: 8px 0; color: var(--text-secondary); }
+    .whats-included li::before { content: '\2713 '; color: var(--primary-cyan); font-weight: bold; font-size: 1.2rem; }
+    .preorder-button {
+      background: var(--accent-gradient); color: var(--primary-bg); padding: 18px 40px;
+      border: none; font-size: 1.2rem; font-weight: 600; border-radius: 8px; cursor: pointer;
+      transition: all 0.3s ease; width: 100%; margin-top: 20px; font-family: 'Poppins', sans-serif;
+    }
+    .preorder-button:hover { transform: scale(1.02); box-shadow: 0 5px 20px rgba(0, 224, 255, 0.4); }
+    .preorder-button:disabled { background: var(--text-muted); cursor: not-allowed; transform: none; box-shadow: none; }
+    .trust-text { font-size: 0.85rem; color: var(--text-muted); margin-top: 15px; }
+    /* ------------------------- */
 
     .result-banner {
       padding: 24px 30px; border-radius: 12px; margin-bottom: 30px;
@@ -199,10 +134,10 @@
     }
 
     body.show-result .preorder-details { display: none; }
-    body.show-result .pricing-section { display: none; }
+    body.show-result .preorder-container { display: none; } /* Hide the pricing box on success */
 
-    .faq-section { padding: 80px 0; background: var(--primary-bg); }
-    .faq-item { background: var(--secondary-bg); margin-bottom: 15px; border-radius: 8px; overflow: hidden; }
+    .faq-section { padding: 80px 0; background: var(--secondary-bg); }
+    .faq-item { background: var(--card-bg); margin-bottom: 15px; border-radius: 8px; overflow: hidden; }
     .faq-question {
       width: 100%; padding: 20px; background: none; border: none; color: var(--text-primary);
       font-size: 1.1rem; font-family: 'Poppins', sans-serif; text-align: left; cursor: pointer;
@@ -219,7 +154,7 @@
 
     footer {
       margin-top: 0; padding: 40px 20px; font-size: 0.9rem; color: var(--text-muted);
-      background: var(--secondary-bg); border-top: 1px solid var(--card-bg);
+      background: var(--primary-bg); border-top: 1px solid var(--card-bg);
     }
     footer a { color: var(--text-secondary); text-decoration: none; }
     footer a:hover { color: var(--primary-cyan); }
@@ -256,7 +191,10 @@
     @media (max-width: 768px) {
       header h1 { font-size: 2.5rem; }
       .section-title { font-size: 2rem; }
-      .pricing-grid { grid-template-columns: 1fr; }
+      .price { font-size: 2.5rem; }
+      .preorder-container { padding: 30px 20px; }
+      .feature { flex-direction: column; text-align: center; }
+      .feature-icon { margin: 0 auto 20px; }
     }
   </style>
 </head>
@@ -264,9 +202,9 @@
 
 <header>
   <div class="container">
-    <h1>HeloxAi Premium</h1>
-    <p>Unlock the universal AI gateway that reasons, creates, and connects to your data. Choose the plan that fits your journey.</p>
-    <div class="hero-badge">Secure & Private GPU Infrastructure</div>
+    <h1>HeloxAi Premium Founder</h1>
+    <p>Be part of the AI revolution. Get early access to a universal gateway that reasons, creates, and automates. Your support helps us deploy our dedicated GPU infrastructure.</p>
+    <div class="hero-badge">Limited Founder Slots Available</div>
   </div>
 </header>
 
@@ -284,98 +222,76 @@
   </div>
 
   <div class="preorder-details" id="preorderContent">
-    
-    <!-- New Pricing Section -->
-    <section class="pricing-section">
-      <div class="container">
-        <h2 class="section-title">Select Your Plan</h2>
-        <p class="section-subtitle">Flexible options for every user. Upgrade, downgrade, or cancel anytime.</p>
-        
-        <div class="pricing-grid">
-          
-          <!-- Monthly Plan -->
-          <div class="pricing-card">
-            <div class="plan-name">Monthly Premium</div>
-            <div class="plan-price">£29 <span>/mo</span></div>
-            <div class="plan-desc">Flexible access for individuals and explorers.</div>
-            <ul class="plan-features">
-              <li>Full access to HeloxAi models</li>
-              <li>Document analysis (RAG)</li>
-              <li>Image & Media analysis</li>
-              <li>Standard support speed</li>
-            </ul>
-            <button class="plan-btn" id="btn-monthly" data-default-text="Get Monthly" onclick="handlePreorder('monthly')">Loading...</button>
-          </div>
-
-          <!-- Yearly Plan -->
-          <div class="pricing-card">
-            <div class="badge">Best Value</div>
-            <div class="plan-name">Yearly Premium</div>
-            <div class="plan-price">£290 <span>/yr</span></div>
-            <div class="plan-desc">Save 17% with annual billing. Perfect for serious users.</div>
-            <ul class="plan-features">
-              <li>All Monthly features included</li>
-              <li>2 Months Free (equivalent)</li>
-              <li>Priority Queue Access</li>
-              <li>Early access to beta features</li>
-            </ul>
-            <button class="plan-btn" id="btn-yearly" data-default-text="Get Yearly" onclick="handlePreorder('yearly')">Loading...</button>
-          </div>
-
-          <!-- Lifetime Founder Plan -->
-          <div class="pricing-card founder">
-            <div class="badge">Limited Founder Offer</div>
-            <div class="plan-name">Lifetime Founder</div>
-            <div class="plan-price">£499 <span>/once</span></div>
-            <div class="plan-desc">One-time payment. Pay once, own forever.</div>
-            
-            <div class="countdown-wrapper">
-              <div style="font-size:0.8rem; color:var(--text-secondary);">Offer ends in:</div>
-              <div id="countdown">Loading...</div>
-            </div>
-
-            <ul class="plan-features">
-              <li><strong>Everything in Yearly</strong></li>
-              <li>Unlimited future updates</li>
-              <li>No monthly fees ever</li>
-              <li>Exclusive "Founder" badge</li>
-              <li>Direct support line</li>
-            </ul>
-            <button class="plan-btn" id="btn-lifetime" data-default-text="Become a Founder" onclick="handlePreorder('lifetime')">Loading...</button>
-          </div>
-
-        </div>
-      </div>
-    </section>
-
     <section class="why-preorder">
       <div class="container">
-        <h2 class="section-title">Why Choose HeloxAi?</h2>
+        <h2 class="section-title">Why Become a Founder?</h2>
+        <p class="section-subtitle">This isn't just early access. It's a partnership to build the future of AI.</p>
         <div class="benefits-grid">
           <div class="benefit-card"><h3>Shape the Future</h3><p>Your feedback will directly influence our roadmap. Help us prioritize the features you need most.</p></div>
-          <div class="benefit-card"><h3>Privacy First</h3><p>We prioritize your data security. Your documents are processed in secure environments and never used to train public models without consent.</p></div>
-          <div class="benefit-card"><h3>High Performance</h3><p>Your support helps us deploy our dedicated GPU cluster, ensuring a fast, private, and scalable service.</p></div>
+          <div class="benefit-card"><h3>Unbeatable Value</h3><p>A one-time payment for lifetime access. Lock in your premium status now before we move to a monthly subscription model.</p></div>
+          <div class="benefit-card"><h3>Fuel the Infrastructure</h3><p>Your preorder directly funds the deployment of our high-performance GPU cluster, ensuring a fast, private, and scalable service.</p></div>
         </div>
       </div>
     </section>
 
     <section class="features-section">
       <div class="container">
-        <h2 class="section-title">What You Can Achieve</h2>
-        <div class="feature"><div class="feature-icon">&#129504;</div><div class="feature-content"><h3>Talk to an Expert on Anything</h3><p>From solving complex multi-step problems to writing code, HeloxAi's <span class="highlight">intelligent reasoning engine</span> delivers expert-level answers.</p></div></div>
-        <div class="feature"><div class="feature-icon">&#128218;</div><div class="feature-content"><h3>Turn Your Documents into an Expert</h3><p>Instantly chat with your PDFs and reports. Our <span class="highlight">RAG</span> provides precise answers from your own data.</p></div></div>
-        <div class="feature"><div class="feature-icon">&#128444;&#65039;</div><div class="feature-content"><h3>Analyze Media Like a Pro</h3><p>Upload images or audio. HeloxAi can <span class="highlight">see and hear</span> your media to provide detailed analysis.</p></div></div>
-        <div class="feature"><div class="feature-icon">&#9881;&#65039;</div><div class="feature-content"><h3>Automate Workflows</h3><p>Connect to real-time data APIs for daily briefings, monitor trends, and check stock prices automatically.</p></div></div>
+        <h2 class="section-title">What You Can Achieve with HeloxAi</h2>
+        <p class="section-subtitle">One AI, limitless possibilities. We handle the complexity so you can focus on the outcome.</p>
+        <div class="feature"><div class="feature-icon">&#129504;</div><div class="feature-content"><h3>Talk to an Expert on Anything</h3><p>From solving complex multi-step problems to writing code and generating creative stories, HeloxAi's <span class="highlight">intelligent reasoning engine</span> delivers expert-level answers.</p></div></div>
+        <div class="feature"><div class="feature-icon">&#128218;</div><div class="feature-content"><h3>Turn Your Documents into an Expert</h3><p>Instantly chat with your PDFs, reports, and notes. Our <span class="highlight">Retrieval-Augmented Generation (RAG)</span> provides precise, sourced answers from your own data.</p></div></div>
+        <div class="feature"><div class="feature-icon">&#128444;&#65039;</div><div class="feature-content"><h3>Analyze Media Like a Pro</h3><p>Upload images, audio, or video. HeloxAi can <span class="highlight">see, hear, and understand</span> your media.</p></div></div>
+        <div class="feature"><div class="feature-icon">&#9881;&#65039;</div><div class="feature-content"><h3>Automate Your Workflows</h3><p>Let the AI take action. Connect to real-time data APIs for daily briefings, monitor social media trends, check stock prices.</p></div></div>
       </div>
     </section>
+
+    <section class="audience-section">
+      <div class="container">
+        <h2 class="section-title">Who is HeloxAi For?</h2>
+        <p class="section-subtitle">Whether you're a creator, a developer, or a strategist, HeloxAi is built for you.</p>
+        <div class="audience-grid">
+          <div class="audience-card"><div class="icon">&#128104;&#8205;&#128187;</div><h4>Developers</h4><p>Build powerful AI applications with our unified API, real-time streaming, and cost-optimized routing.</p></div>
+          <div class="audience-card"><div class="icon">&#128300;</div><h4>Researchers</h4><p>Analyze vast amounts of data, synthesize information from papers, and accelerate your discoveries.</p></div>
+          <div class="audience-card"><div class="icon">&#9997;&#65039;</div><h4>Content Creators</h4><p>Generate ideas, draft content, analyze media, and automate your creative process.</p></div>
+          <div class="audience-card"><div class="icon">&#128188;</div><h4>Businesses</h4><p>Gain insights from internal documents, automate reports, and build intelligent customer support tools.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SINGLE LIFETIME CONTAINER -->
+    <section class="preorder-container" id="preorderCTA">
+      <h2>Secure Your Founder Access</h2>
+      <p class="price"><span class="currency">&#163;</span>499 <span style="font-size:1rem; color: var(--text-secondary);">one-time</span></p>
+      <p class="subnote">This is a one-time payment for a lifetime premium subscription. The price will increase significantly for future members.</p>
+
+      <div id="countdownContainer">
+        <p style="font-size:1rem; color: var(--text-secondary);">Preorder offer ends in:</p>
+        <div id="countdown">Loading...</div>
+      </div>
+
+      <div class="whats-included">
+        <h4 style="color: var(--text-primary); margin-bottom: 15px;">What's Included:</h4>
+        <ul>
+          <li>Lifetime access to HeloxAi Premium.</li>
+          <li>Access to all current and future core AI models &amp; features.</li>
+          <li>Unlimited document uploads for RAG knowledge bases.</li>
+          <li>Priority support and direct line to the founding team.</li>
+          <li>Exclusive "Founder" badge on your account.</li>
+        </ul>
+      </div>
+
+      <button id="preorderBtn" class="preorder-button">Loading...</button>
+      <p class="trust-text">Secure checkout powered by Stripe. 7-day money-back guarantee.</p>
+    </section>
+    <!-- END SINGLE CONTAINER -->
 
     <section class="faq-section">
       <div class="container">
         <h2 class="section-title">Frequently Asked Questions</h2>
-        <div class="faq-item"><button class="faq-question">What happens after I subscribe?</button><div class="faq-answer">You'll receive an immediate confirmation. Your account is upgraded instantly and you can start using premium features immediately.</div></div>
+        <div class="faq-item"><button class="faq-question">What happens after I preorder?</button><div class="faq-answer">You'll receive an immediate confirmation from Stripe. Your account is upgraded instantly to Lifetime Premium.</div></div>
         <div class="faq-item"><button class="faq-question">How is this different from ChatGPT or Claude?</button><div class="faq-answer">HeloxAi is a universal gateway with access to multiple models, RAG on your data, multi-modal analysis, and workflow automation.</div></div>
         <div class="faq-item"><button class="faq-question">Is my payment secure?</button><div class="faq-answer">Absolutely. We use Stripe, the industry-leading payment processor. Your card details are encrypted and never stored by us.</div></div>
-        <div class="faq-item"><button class="faq-question">Can I cancel my subscription?</button><div class="faq-answer">Yes, you can cancel monthly or yearly plans at any time from your settings. Lifetime plans are a one-time purchase with no recurring fees.</div></div>
+        <div class="faq-item"><button class="faq-question">What does "lifetime access" mean?</button><div class="faq-answer">You will never pay a monthly or annual fee. You receive all future core feature updates for the Premium tier as long as the service exists.</div></div>
       </div>
     </section>
   </div>
@@ -394,7 +310,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.44.0"></script>
 
 <script>
-// --- Variables ---
+var preorderBtn     = document.getElementById('preorderBtn');
 var spinner         = document.getElementById('loadingSpinner');
 var preorderContent = document.getElementById('preorderContent');
 var resultContainer = document.getElementById('resultContainer');
@@ -406,7 +322,6 @@ var SUPABASE_URL      = null;
 var SUPABASE_ANON_KEY = null;
 var BACKEND_URL       = null;
 
-// --- Environment Config ---
 function resolveEnv() {
   var errors = [];
   var found  = false;
@@ -461,7 +376,9 @@ function showDebug(errors) {
   debugBanner.innerHTML = html;
 }
 
-// --- Auth Logic ---
+/* -------------------------------------------------------------- */
+/* Single reliable auth check                                      */
+/* -------------------------------------------------------------- */
 function getLoggedInUser() {
   if (!sb) return Promise.resolve(null);
   return sb.auth.getSession()
@@ -474,35 +391,17 @@ function getLoggedInUser() {
     });
 }
 
-// --- Button State Logic ---
-function refreshButton() {
-  getLoggedInUser().then(function(user) {
-    var btns = document.querySelectorAll('.plan-btn');
-    
-    btns.forEach(function(btn) {
-      var defaultText = btn.getAttribute('data-default-text') || 'Get Plan';
-      
-      if (user) {
-        btn.disabled = false;
-        btn.textContent = defaultText;
-      } else {
-        btn.disabled = true;
-        btn.textContent = 'Login to Access';
-        // Allow click to redirect to login
-        btn.onclick = function() { window.location.href = 'auth.html'; };
-      }
-    });
-  });
-}
-
 function initApp() {
   var errors = resolveEnv();
+
   if (errors.length) {
     showDebug(errors);
-    var btns = document.querySelectorAll('.plan-btn');
-    btns.forEach(function(b) { b.textContent = 'Config Error'; b.disabled = true; });
+    preorderBtn.textContent = 'Configuration Error';
+    preorderBtn.disabled = true;
     return;
   }
+
+  debugBanner.style.display = 'none';
 
   try {
     sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -516,13 +415,32 @@ function initApp() {
     });
   } catch (e) {
     console.error('Supabase init failed:', e);
+    preorderBtn.textContent = 'Init Error';
+    preorderBtn.disabled = true;
     return;
   }
 
   startPage();
 }
 
-// --- Stripe Success / Verification ---
+/* -------------------------------------------------------------- */
+/* Button State Logic (Single Button)                              */
+/* -------------------------------------------------------------- */
+function refreshButton() {
+  getLoggedInUser().then(function(user) {
+    if (user) {
+      preorderBtn.disabled = false;
+      preorderBtn.textContent = 'Pre-Order for \u00A3499';
+    } else {
+      preorderBtn.disabled = true;
+      preorderBtn.textContent = 'Login to Preorder';
+    }
+  });
+}
+
+/* -------------------------------------------------------------- */
+/* Stripe success page                                             */
+/* -------------------------------------------------------------- */
 function handleSuccessPage() {
   var params = new URLSearchParams(window.location.search);
   var sessionId = params.get('session_id');
@@ -537,41 +455,51 @@ function handleSuccessPage() {
   resultContainer.style.display = 'block';
 
   resultBanner.className = 'result-banner success';
-  resultBanner.innerHTML = '<div class="spinner" style="margin:0 auto 15px;border-top-color:var(--success)"></div><h3>Verifying your payment...</h3>';
+  resultBanner.innerHTML = '<div class="spinner" style="margin:0 auto 15px;border-top-color:var(--success)"></div><h3>Verifying your payment...</h3><p>Please wait while we confirm and activate your lifetime access.</p>';
 
   return fetch(BACKEND_URL + '/verify-session?session_id=' + encodeURIComponent(sessionId))
     .then(function(res) {
-      if (!res.ok) return res.json().catch(function() { return {}; }).then(function(e) { throw new Error(e.error || 'HTTP ' + res.status); });
+      if (!res.ok) {
+        return res.json().catch(function() { return {}; }).then(function(e) {
+          throw new Error(e.error || 'HTTP ' + res.status);
+        });
+      }
       return res.json();
     })
     .then(function(data) {
       if (data.upgraded) {
-        resultBanner.innerHTML = '<h3 style="font-size:2.5rem;margin-bottom:12px">\uD83C\uDF89 Payment Successful!</h3><p style="font-size:1.1rem;color:var(--text-primary);margin-bottom:8px">Your access is now active.</p><a href="index.html" class="go-home-btn">Start using HeloxAi \u2192</a>';
+        resultBanner.className = 'result-banner success';
+        resultBanner.innerHTML = '<h3 style="font-size:2.5rem;margin-bottom:12px">\uD83C\uDF89 Welcome, Founder!</h3><p style="font-size:1.1rem;color:var(--text-primary);margin-bottom:8px">Your lifetime premium access is now active.</p><p>You now have unlimited access to all current and future HeloxAi Premium features.</p><a href="index.html" class="go-home-btn">Start using HeloxAi Premium \u2192</a>';
         document.body.classList.add('show-result');
         return true;
       }
       if (data.already_upgraded) {
-        resultBanner.innerHTML = '<h3>Already Active</h3><p>Your account already has access.</p><a href="index.html" class="go-home-btn">Go to HeloxAi \u2192</a>';
+        resultBanner.className = 'result-banner success';
+        resultBanner.innerHTML = '<h3>Already Upgraded</h3><p>Your account already has lifetime premium access.</p><a href="index.html" class="go-home-btn">Go to HeloxAi \u2192</a>';
         document.body.classList.add('show-result');
         return true;
       }
       if (data.pending) {
-        resultBanner.innerHTML = '<h3>Payment Received</h3><p>Processing... please wait a few moments.</p>';
+        resultBanner.className = 'result-banner success';
+        resultBanner.innerHTML = '<h3>Payment Received</h3><p>Processing... your account will upgrade within a few minutes.</p><a href="index.html" class="go-home-btn">Go to HeloxAi \u2192</a>';
         document.body.classList.add('show-result');
         return true;
       }
       throw new Error('Unexpected response');
     })
     .catch(function(err) {
+      console.error('Verify error:', err);
       resultBanner.className = 'result-banner error';
-      resultBanner.innerHTML = '<h3>Verification Issue</h3><p>' + err.message + '</p><p>Your payment may have succeeded. If you don\'t see access shortly, please contact support.</p><a href="index.html" class="go-home-btn">Go to HeloxAi \u2192</a>';
+      resultBanner.innerHTML = '<h3>Verification Issue</h3><p>' + err.message + '</p><p style="font-size:0.85rem;margin-top:4px">Your payment may have succeeded &#8212; the webhook will activate your account within minutes.</p><a href="index.html" class="go-home-btn">Go to HeloxAi \u2192</a>';
       document.body.classList.add('show-result');
       return true;
     });
 }
 
-// --- Checkout Logic ---
-function handlePreorder(planType) {
+/* -------------------------------------------------------------- */
+/* Preorder Logic (Fixed to include 'lifetime' plan)              */
+/* -------------------------------------------------------------- */
+function handlePreorder() {
   spinner.style.display = 'flex';
 
   getLoggedInUser().then(function(user) {
@@ -581,14 +509,14 @@ function handlePreorder(planType) {
       return;
     }
 
-    // CRITICAL FIX: Sending 'plan' in body
+    // CRITICAL FIX: Sending 'plan: lifetime' in the body
     return fetch(BACKEND_URL + '/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         user_id: user.id, 
-        email: user.email, 
-        plan: planType 
+        email: user.email,
+        plan: 'lifetime' 
       })
     });
   })
@@ -613,14 +541,23 @@ function handlePreorder(planType) {
   });
 }
 
+preorderBtn.addEventListener('click', function() {
+  if (preorderBtn.disabled && preorderBtn.textContent.indexOf('Login') !== -1) {
+    window.location.href = 'auth.html';
+    return;
+  }
+  if (!preorderBtn.disabled) handlePreorder();
+});
+
 function startPage() {
   handleSuccessPage().then(function(isSuccess) {
     if (!isSuccess) {
       refreshButton();
+
       try {
         sb.auth.onAuthStateChange(function() { refreshButton(); });
       } catch (e) {
-        console.warn('onAuthStateChange failed, polling:', e);
+        console.warn('onAuthStateChange failed, using fallback polling:', e);
         setInterval(refreshButton, 5000);
       }
     }
@@ -631,21 +568,19 @@ initApp();
 </script>
 
 <script>
-// --- Countdown Logic ---
 (function() {
   var target = new Date('2026-04-10T00:00:00').getTime();
   var el = document.getElementById('countdown');
   if (!el) return;
   function tick() {
     var d = target - Date.now();
-    if (d <= 0) { el.textContent = 'Offer ended!'; return; }
+    if (d <= 0) { el.textContent = 'Preorder offer ended!'; return; }
     el.textContent = Math.floor(d/86400000) + 'd ' + Math.floor((d%86400000)/3600000) + 'h ' + Math.floor((d%3600000)/60000) + 'm ' + Math.floor((d%60000)/1000) + 's';
   }
   tick();
   setInterval(tick, 1000);
 })();
 
-// --- FAQ Logic ---
 document.querySelectorAll('.faq-question').forEach(function(q) {
   q.addEventListener('click', function() {
     var a = q.nextElementSibling;
