@@ -40,7 +40,11 @@ input, select { width:100%; padding:10px; margin:5px 0 10px 0; border-radius:8px
   height:18px;
 }
 
-#email-feedback, #password-feedback, #avatar-feedback { font-size:0.9em; margin-bottom:5px; }
+#email-feedback, #password-feedback, #avatar-feedback, #billing-feedback {
+  font-size:0.9em;
+  margin-top:10px;
+}
+
 img#avatar-preview { width:80px; height:80px; border-radius:50%; margin-bottom:10px; }
 </style>
 </head>
@@ -55,6 +59,7 @@ img#avatar-preview { width:80px; height:80px; border-radius:50%; margin-bottom:1
   </div>
 </header>
 
+<!-- ACCOUNT -->
 <div class="card">
   <h2>Account Info</h2>
   <p><strong>Email:</strong> <span id="user-email">Loading...</span></p>
@@ -77,6 +82,7 @@ img#avatar-preview { width:80px; height:80px; border-radius:50%; margin-bottom:1
   <button id="update-profile" class="primary">Save Settings</button>
 </div>
 
+<!-- EMAIL -->
 <div class="card" id="email-card">
   <h2>Update Email</h2>
   <input type="email" id="new-email" placeholder="new@email.com">
@@ -84,6 +90,7 @@ img#avatar-preview { width:80px; height:80px; border-radius:50%; margin-bottom:1
   <button id="update-email" class="primary">Update Email</button>
 </div>
 
+<!-- PASSWORD -->
 <div class="card" id="password-card">
   <h2>Change Password</h2>
   <input type="password" id="current-password" placeholder="Current password">
@@ -92,26 +99,45 @@ img#avatar-preview { width:80px; height:80px; border-radius:50%; margin-bottom:1
   <button id="update-password" class="primary">Update Password</button>
 </div>
 
+<!-- 🔥 BILLING (NEW) -->
+<div class="card">
+  <h2>Billing</h2>
+
+  <button id="manage-subscription" class="primary">
+    Manage / Cancel Subscription
+  </button>
+
+  <button id="request-refund" class="primary" style="background-color: var(--danger); color:#fff; margin-top:10px;">
+    Request Refund
+  </button>
+
+  <div id="billing-feedback"></div>
+</div>
+
+<!-- DANGER -->
 <div class="card">
   <h2>Danger Zone</h2>
-  <button id="delete-account" class="primary" style="background-color: var(--danger); color:#fff;">Delete Account</button>
+  <button id="delete-account" class="primary" style="background-color: var(--danger); color:#fff;">
+    Delete Account
+  </button>
 </div>
 
 <script src="env.js"></script>
+
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.__ENV__;
+const { SUPABASE_URL, SUPABASE_ANON_KEY, BACKEND_URL } = window.__ENV__;
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const userEmailSpan = document.getElementById("user-email");
 const nicknameInput = document.getElementById("nickname");
 const personalitySelect = document.getElementById("personality");
-const avatarInput = document.getElementById("avatar");
 const avatarPreview = document.getElementById("avatar-preview");
-const avatarFeedback = document.getElementById("avatar-feedback");
 const providerBadge = document.getElementById("provider-badge");
+const billingFeedback = document.getElementById("billing-feedback");
 
+// ------------------ LOAD USER ------------------
 async function loadUser() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) { window.location.href="auth.html"; return; }
@@ -120,7 +146,6 @@ async function loadUser() {
 
   const provider = user.app_metadata?.provider || "email";
 
-  // Provider icons
   const icons = {
     google: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg",
     github: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg",
@@ -131,7 +156,7 @@ async function loadUser() {
   providerBadge.innerHTML = `
     <div class="badge">
       <img src="${icons[provider] || icons.email}">
-      Connected Account: ${provider.charAt(0).toUpperCase() + provider.slice(1)}
+      Connected Account: ${provider}
     </div>
   `;
 
@@ -139,29 +164,83 @@ async function loadUser() {
     document.getElementById("email-card").style.display = "none";
     document.getElementById("password-card").style.display = "none";
   }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single();
-
-  if (profile) {
-    nicknameInput.value = profile.nickname || '';
-    personalitySelect.value = profile.personality || 'friendly';
-    if (profile.avatar_url) {
-      avatarPreview.src =
-        supabase.storage.from('avatars')
-        .getPublicUrl(profile.avatar_url).publicUrl;
-    }
-  }
 }
 loadUser();
 
+// ------------------ LOGOUT ------------------
 document.getElementById("logout-btn").addEventListener("click", async () => {
   await supabase.auth.signOut();
   window.location.href="auth.html";
 });
+
+// ------------------ HELPERS ------------------
+async function getUserId() {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id;
+}
+
+// ------------------ MANAGE SUBSCRIPTION ------------------
+document.getElementById("manage-subscription").addEventListener("click", async () => {
+  billingFeedback.textContent = "Loading...";
+
+  try {
+    const user_id = await getUserId();
+
+    const res = await fetch(`${BACKEND_URL}/create-portal-session`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ user_id })
+    });
+
+    const data = await res.json();
+
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      throw new Error(data.error);
+    }
+
+  } catch (err) {
+    billingFeedback.textContent = "❌ " + err.message;
+  }
+});
+
+// ------------------ REFUND ------------------
+document.getElementById("request-refund").addEventListener("click", async () => {
+  const confirmRefund = confirm("Are you sure you want a refund?");
+  if (!confirmRefund) return;
+
+  billingFeedback.textContent = "Processing refund...";
+
+  try {
+    const user_id = await getUserId();
+
+    const res = await fetch(`${BACKEND_URL}/refund`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        user_id,
+        reason: "requested_by_customer"
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      billingFeedback.textContent = "✅ Refund successful";
+    } else {
+      throw new Error(data.error);
+    }
+
+  } catch (err) {
+    billingFeedback.textContent = "❌ " + err.message;
+  }
+});
 </script>
+
 </body>
 </html>
