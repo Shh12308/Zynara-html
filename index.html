@@ -189,7 +189,7 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 .msg-ct ul,.msg-ct ol{margin:8px 0;padding-left:24px}.msg-ct li{margin-bottom:4px}.msg-ct li::marker{color:var(--accent)}
 .msg-ct strong{font-weight:700}.msg-ct em{font-style:italic}
 .msg-ct blockquote{border-left:3px solid var(--accent);padding:8px 16px;margin:10px 0;color:var(--text-secondary);background:var(--accent-dim);border-radius:0 var(--radius-sm) var(--radius-sm) 0;font-style:italic}
-.msg-ct a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent;transition:border-color var(--speed)}.msg-ct a:hover{border-bottom-color:var(--accent)}
+.msg-ct a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent;transition:border-color var(--speed)}.msg-ct a:hover{border-bottom-color:var(--accent);text-decoration:underline}
 .msg-ct .ext-i{font-size:8px;margin-left:3px;opacity:.5;vertical-align:super}
 
 /* Advanced Markdown Tables */
@@ -309,6 +309,21 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 .modal p{color:var(--text-secondary);font-size:13px;line-height:1.7;margin-bottom:12px}
 .modal-close{margin-top:8px;padding:10px 20px;background:var(--bg-tertiary);color:var(--text-primary);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-family:var(--font-body);font-size:12px;font-weight:600;transition:all var(--speed);width:100%}
 .modal-close:hover{background:var(--bg-hover);border-color:var(--border-active)}
+
+/* LINK MODAL STYLES */
+.link-modal{max-width:560px;width:100%}
+.lm-header{display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:16px}
+.lm-icon{width:40px;height:40px;background:var(--bg-tertiary);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:18px}
+.lm-info{flex:1;min-width:0}
+.lm-title{font-weight:700;font-size:15px;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lm-url{font-size:12px;color:var(--text-secondary);font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lm-body{min-height:100px;background:var(--bg-tertiary);border-radius:var(--radius);margin-bottom:20px;padding:16px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--text-muted);border:1px dashed var(--border)}
+.lm-footer{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.btn-follow{flex:1;padding:12px;border-radius:var(--radius-sm);background:var(--accent);color:#fff;border:none;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:all var(--speed);display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-follow:hover{background:var(--accent-hover);transform:translateY(-1px)}
+.btn-ext{flex:1;padding:12px;border-radius:var(--radius-sm);background:var(--bg-tertiary);color:var(--text-primary);border:1px solid var(--border);font-weight:600;cursor:pointer;font-family:var(--font-body);transition:all var(--speed);display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-ext:hover{background:var(--bg-hover);border-color:var(--border-active)}
+
 .gal-wrap{max-width:960px;margin:0 auto;padding:24px 20px;height:100%;overflow-y:auto}
 .gal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
 .gal-hd h2{font-family:var(--font-display);font-size:22px;font-weight:700;letter-spacing:-.3px;display:flex;align-items:center;gap:10px}
@@ -436,8 +451,31 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
     <button class="as-opt" data-prompt="Analyze this data:\n\n"><i class="fa-solid fa-chart-bar"></i> Analyze Data</button>
   </div>
 </div>
+<div class="vdd" id="voiceDd"><div id="voiceList"></div></div>
 <div class="lb" id="lightbox"><button class="lb-close" id="lbClose" aria-label="Close"><i class="fa-solid fa-xmark"></i></button><div id="lbContent"></div><a class="lb-dl" id="lbDl" download><i class="fa-solid fa-download"></i> Download</a></div>
 <div class="modal-ov" id="contactModal"><div class="modal"><h3>Contact Us</h3><p>Have questions or feedback? We'd love to hear from you.</p><p style="color:var(--accent);font-weight:600;font-size:14px">support@heloxai.com</p><button class="modal-close" data-close="contactModal">Close</button></div></div>
+
+<!-- NEW LINK MODAL -->
+<div class="modal-ov" id="linkModal">
+  <div class="modal link-modal">
+    <div class="lm-header">
+      <div class="lm-icon"><i class="fa-solid fa-link"></i></div>
+      <div class="lm-info">
+        <div class="lm-title">External Link</div>
+        <div class="lm-url" id="lmUrlText">https://example.com</div>
+      </div>
+    </div>
+    <div class="lm-body">
+      <p><i class="fa-solid fa-info-circle"></i> This is an external resource. You can ask the AI to analyze or summarize the content of this link.</p>
+    </div>
+    <div class="lm-footer">
+      <button class="btn-close btn-cn" id="lmClose" data-close="linkModal">Close</button>
+      <button class="btn-ext" id="lmOpenExternal" target="_blank"><i class="fa-solid fa-external-link-alt"></i> Open</button>
+      <button class="btn-follow" id="lmFollowUp"><i class="fa-solid fa-comment-dots"></i> Follow Up</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast-ct" id="toastCt"></div>
 <script>
 // ================= CONFIGURATION (.env) =================
@@ -462,7 +500,7 @@ function isImageFile(file){return file&&file.type&&file.type.indexOf('image/')==
 function readFileAsDataUrl(file){return new Promise(function(resolve,reject){var r=new FileReader();r.onload=function(){resolve(r.result)};r.onerror=reject;r.readAsDataURL(file)})}
 function dataUrlToFile(dataUrl,name){try{var parts=dataUrl.split(','),mime=parts[0].match(/:(.*?);/)[1],bstr=atob(parts[1]),n=bstr.length,u8=new Uint8Array(n);while(n--)u8[n]=bstr.charCodeAt(n);return new File([u8],name,{type:mime})}catch(e){return null}}
 
-var S={user:null,msgs:[],chatId:null,chatListData:[],streaming:false,abort:null,theme:'dark',sbOpen:false,asOpen:false,vdOpen:false,mdOpen:false,recording:false,recorder:null,chunks:[],audio:null,gallery:[],view:'chat',_mdOk:false,_hlOk:false,pendingFiles:[],uploading:false,model:'helox',isAutoScrolling:true,scrollThreshold:100,selectedVoice:'alloy'};
+var S={user:null,msgs:[],chatId:null,chatListData:[],streaming:false,abort:null,theme:'dark',sbOpen:false,asOpen:false,vdOpen:false,mdOpen:false,recording:false,recorder:null,chunks:[],audio:null,gallery:[],view:'chat',_mdOk:false,_hlOk:false,pendingFiles:[],uploading:false,model:'helox',isAutoScrolling:true,scrollThreshold:100,selectedVoice:'alloy',activeLinkUrl:''};
 
 var IMAGE_KW=['generate image','create image','make image','draw me','render image'];
 var VIDEO_KW=['generate video','create video','make video','render video'];
@@ -812,6 +850,19 @@ function applyMath(element) {
   }
 }
 
+// ================= LINK MODAL LOGIC =================
+function openLinkModal(url) {
+  S.activeLinkUrl = url;
+  $('lmUrlText').textContent = url;
+  $('lmOpenExternal').href = url;
+  $('linkModal').classList.add('on');
+}
+
+function closeLinkModal() {
+  $('linkModal').classList.remove('on');
+  S.activeLinkUrl = '';
+}
+
 function toast(msg,type){var icons={ok:'fa-circle-check',err:'fa-circle-xmark',inf:'fa-circle-info',wrn:'fa-triangle-exclamation'};var el=document.createElement('div');el.className='toast '+(type||'inf');el.innerHTML='<i class="fa-solid '+(icons[type||'inf']||icons.inf)+'"></i> '+esc(msg);$('toastCt').appendChild(el);setTimeout(function(){if(el.parentNode)el.remove()},3200)}
 
 function toggleSB(open){S.sbOpen=typeof open==='boolean'?open:!S.sbOpen;$('sidebar').classList.toggle('open',S.sbOpen);$('sbOv').classList.toggle('on',S.sbOpen)}
@@ -851,7 +902,7 @@ function refreshUI(){
     updateLoginDisplay();
   } else {
     u.classList.remove('show');
-    sl.innerHTML='<i class="fa-solid fa-right-to-bracket"></i> Sign In';
+    sl.innerHTML='<i class="fa-solid fa-right-from-bracket"></i> Sign In';
     sl.href='auth.html';
     sl.style.cursor='';
     hp.textContent='FREE';
@@ -971,7 +1022,7 @@ function actVoice(i){
     method:'POST',
     headers:authH(),
     credentials:'include',
-    body:JSON.stringify({ text: m.content, voice: S.selectedVoice }) // Use selected voice
+    body:JSON.stringify({ text: m.content, voice: S.selectedVoice })
   }).then(function(r){
     if(!r.ok) throw new Error('TTS generation failed');
     return r.blob();
@@ -1080,8 +1131,53 @@ function initEvents(){
   $('welcomeEl').addEventListener('click',function(e){var c=e.target.closest('.w-card');if(!c||c.classList.contains('locked'))return;sendMsg(c.getAttribute('data-prompt'))});
   $('galGrid').addEventListener('click',function(e){var item=e.target.closest('.gal-item');if(item){var gid=item.getAttribute('data-gid');var g=S.gallery.find(function(x){return x.id===gid});if(g)openLB(g.url,g.type==='video')}});
   $('lbClose').addEventListener('click',closeLB);$('lightbox').addEventListener('click',function(e){if(e.target===$('lightbox'))closeLB()});
+  
+  // Link Modal Interactions
+  $('lmClose').addEventListener('click', closeLinkModal);
+  $('lmFollowUp').addEventListener('click', function(){
+    sendMsg("Tell me more about this link: " + S.activeLinkUrl);
+    closeLinkModal();
+  });
+
+  // Generic Link Click Handler in Chat
+  $('msgsEl').addEventListener('click', function(e){
+    var cpBtn=e.target.closest('[data-copy-code]');
+    if(cpBtn){
+      var codeEl=cpBtn.closest('.code-blk');
+      if(codeEl)codeEl=codeEl.querySelector('code');
+      if(codeEl)navigator.clipboard.writeText(codeEl.textContent).then(function(){cpBtn.innerHTML='<i class="fa-solid fa-check"></i> Copied';setTimeout(function(){cpBtn.innerHTML='<i class="fa-regular fa-copy"></i> Copy'},1800)});
+      return;
+    }
+
+    var link = e.target.closest('a');
+    if(link && e.currentTarget.id === 'msgsEl') {
+      e.preventDefault();
+      var href = link.getAttribute('href');
+      // Check if it's an image (simple check by extension)
+      if (/\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i.test(href)) {
+        openLB(href, false);
+      } else {
+        // It's a web link, open link modal
+        openLinkModal(href);
+      }
+    }
+
+    var bSave=e.target.closest('.btn-sv'),bCancel=e.target.closest('.btn-cn');
+    if(bSave||bCancel){var target=bSave||bCancel;var i=parseInt(target.getAttribute('data-i'),10);if(!isNaN(i)){if(bSave)actEditSave(i);if(bCancel)actEditCancel(i)}return}
+    var ab=e.target.closest('.ma');
+    if(!ab||ab.classList.contains('locked'))return;
+    var act=ab.getAttribute('data-act'),i=parseInt(ab.getAttribute('data-i'),10);
+    if(isNaN(i)||i<0||i>=S.msgs.length)return;
+    if(act==='copy')actCopy(i);
+    else if(act==='like')actLike(i,'like');
+    else if(act==='dislike')actLike(i,'dislike');
+    else if(act==='edit')actEdit(i);
+    else if(act==='regen')actRegen(i);
+    else if(act==='voice')actVoice(i);
+  });
+  
   $('chatList').addEventListener('click',function(e){var delBtn=e.target.closest('[data-del-cid]');if(delBtn){e.stopPropagation();var cid=delBtn.getAttribute('data-del-cid');deleteConversation(cid).then(function(){if(S.chatId===cid){S.msgs=[];S.chatId=null;renderAll();$('hdrTitle').textContent='HeloxAi'}loadChatList();toast('Deleted','inf')});return}var item=e.target.closest('.cl-item');if(item){var cid=item.getAttribute('data-cid');S.chatId=cid;var conv=S.chatListData.find(function(c){return c.id===cid});if(conv)$('hdrTitle').textContent=conv.title;loadConversation(cid);renderChatList();toggleSB(false)}});
-  $('msgsEl').addEventListener('click',function(e){var cpBtn=e.target.closest('[data-copy-code]');if(cpBtn){var codeEl=cpBtn.closest('.code-blk');if(codeEl)codeEl=codeEl.querySelector('code');if(codeEl)navigator.clipboard.writeText(codeEl.textContent).then(function(){cpBtn.innerHTML='<i class="fa-solid fa-check"></i> Copied';setTimeout(function(){cpBtn.innerHTML='<i class="fa-regular fa-copy"></i> Copy'},1800)});return}var bSave=e.target.closest('.btn-sv'),bCancel=e.target.closest('.btn-cn');if(bSave||bCancel){var target=bSave||bCancel;var i=parseInt(target.getAttribute('data-i'),10);if(!isNaN(i)){if(bSave)actEditSave(i);if(bCancel)actEditCancel(i)}return}var ab=e.target.closest('.ma');if(!ab||ab.classList.contains('locked'))return;var act=ab.getAttribute('data-act'),i=parseInt(ab.getAttribute('data-i'),10);if(isNaN(i)||i<0||i>=S.msgs.length)return;if(act==='copy')actCopy(i);else if(act==='like')actLike(i,'like');else if(act==='dislike')actLike(i,'dislike');else if(act==='edit')actEdit(i);else if(act==='regen')actRegen(i);else if(act==='voice')actVoice(i)});
+  
   document.addEventListener('click',function(e){var btn=e.target.closest('[data-close]');if(btn){$(btn.getAttribute('data-close')).classList.remove('on');return}var ov=e.target.closest('.modal-ov');if(ov&&e.target===ov)ov.classList.remove('on');if(S.vdOpen&&!e.target.closest('#voiceDd')&&!e.target.closest('#voiceBtn'))toggleVD(false);if(S.mdOpen&&!e.target.closest('#modelSel')&&!e.target.closest('#modelDd'))toggleMD(false)});
   document.addEventListener('keydown',function(e){if(e.key==='Escape'){if($('lightbox').classList.contains('on')){closeLB();return}if(S.asOpen)toggleAS(false);if(S.vdOpen)toggleVD(false);if(S.sbOpen)toggleSB(false);if(S.mdOpen)toggleMD(false);document.querySelectorAll('.modal-ov.on').forEach(function(m){m.classList.remove('on')})}});
   document.addEventListener('paste',function(e){if(S.streaming)return;var items=e.clipboardData&&e.clipboardData.items;if(!items)return;for(var i=0;i<items.length;i++){if(items[i].type.indexOf('image/')===0){e.preventDefault();var file=items[i].getAsFile();if(!file)continue;var name='pasted-image-'+Date.now()+'.'+(file.type.split('/')[1]||'png');(function(f,n){readFileAsDataUrl(f).then(function(dataUrl){S.pendingFiles.push({type:'image',dataUrl:dataUrl,name:n,size:f.size,file:new File([f],n,{type:f.type})});renderImgPreview();updateCB()})})(file,name);break}}});
@@ -1097,7 +1193,7 @@ function init(){
   initModel();
   initEvents();
   setupAuthListener();
-  loadVoices(); // Load voices on init
+  loadVoices();
   renderAll();
   updateCB();
   loadUser();
