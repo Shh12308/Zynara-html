@@ -140,12 +140,12 @@ button:hover {
 
 </form>
 
-</div>
+</div><script src="env.js"></script>
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-import { SUPABASE_URL, SUPABASE_KEY, BACKEND_URL } from "./env.js"; // import variables
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+// Use the variables from window
+const supabase = createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
 
 async function getCurrentUser() {
   const { data: { session }, error } = await supabase.auth.getSession();
