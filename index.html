@@ -364,7 +364,7 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
   <button class="nc-btn" id="newChatBtn"><i class="fa-solid fa-plus"></i> New Chat <span class="nc-lock" id="ncLock" style="display:none"><i class="fa-solid fa-lock"></i></span></button>
   <div class="cl" id="chatList"><div class="cl-label">Recent</div><div id="chatListItems"><span style="color:var(--text-muted);font-size:12px;padding:4px 10px;display:block">Loading chats...</span></div></div>
   <nav class="s-nav">
-    <a href="auth.html" id="signInLink"><i class="fa-solid fa-right-to-bracket"></i> Sign In</a>
+    <button id="signInLink"><i class="fa-brands fa-google"></i> Sign In</button>
     <a href="settings.html"><i class="fa-solid fa-sliders"></i> Settings</a>
     <button id="contactLink"><i class="fa-solid fa-envelope"></i> Contact</button>
     <a href="prem.html"><i class="fa-solid fa-crown"></i> Premium <span class="ptag premium">PRO</span></a>
@@ -513,12 +513,17 @@ function getApiUrl(){
   if(S.user) {
     // Check for Lifetime OR Premium explicitly
     if (S.user.is_lifetime || S.user.is_premium) {
-      baseUrl = PREMIUM_AI_URL;
+      // Fallback to Free if Premium URL is placeholder to prevent errors
+      if (PREMIUM_AI_URL.indexOf('your-premium') === -1) {
+        baseUrl = PREMIUM_AI_URL;
+      }
     } else {
       var plan = (S.user.plan || 'free').toLowerCase();
       // Fallback check via plan string name
       if (plan === 'premium' || plan === 'lifetime' || plan === 'ultimate_monthly' || plan === 'ultimate_yearly') {
-        baseUrl = PREMIUM_AI_URL;
+        if (PREMIUM_AI_URL.indexOf('your-premium') === -1) {
+          baseUrl = PREMIUM_AI_URL;
+        }
       }
     }
   }
@@ -551,7 +556,7 @@ function initSupabase(){
       auth: {
         persistSession: true,
         autoRefreshToken: true,
-        detectSessionInUrl: true,
+        detectSessionInUrl: true, // CRITICAL FOR OAUTH
         storage: window.localStorage
       },
       global: {
@@ -578,7 +583,10 @@ async function loadUser(){
       refreshUI();
       return;
     }
+    // Fetch user details (plan, etc)
     var ud = await sb.from('users').select('plan,is_premium,is_lifetime').eq('id', session.user.id).single();
+    
+    // Construct user object
     S.user = {
       id: session.user.id,
       email: session.user.email,
@@ -587,16 +595,17 @@ async function loadUser(){
       is_lifetime: (ud.data && ud.data.is_lifetime) || false,
       token: session.access_token
     };
+    
     refreshUI();
     loadChatList();
   } catch(e){
     console.warn('loadUser error:', e);
-    if(S.user){
-      refreshUI();
-      loadChatList();
+    // If DB query fails, we still have a session, so user is authed.
+    if(S.user && S.user.id) {
+       refreshUI(); // Refresh with what we have
     } else {
-      S.user = null;
-      refreshUI();
+       S.user = null;
+       refreshUI();
     }
   }
 }
@@ -633,8 +642,9 @@ async function handleSignIn(session){
     };
     refreshUI();
     loadChatList();
-    if(document.visibilityState === 'visible') toast('Signed in', 'ok');
+    if(document.visibilityState === 'visible') toast('Signed in successfully', 'ok');
   } catch(e){
+    // Fallback if user row doesn't exist yet
     S.user = {
       id: session.user.id,
       email: session.user.email,
@@ -663,6 +673,24 @@ function handleSignOut(){
 async function signOut(){
   if(sb) try{ await sb.auth.signOut(); } catch(e){}
   handleSignOut();
+}
+
+// Trigger OAuth Popup
+async function triggerOAuth(){
+  if(!sb) {
+    toast('Auth service unavailable', 'err');
+    return;
+  }
+  toast('Connecting to Google...', 'inf');
+  var { error } = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: window.location.href // Redirect back to this page
+    }
+  });
+  if (error) {
+    toast(error.message, 'err');
+  }
 }
 
 // ================= BACKEND CONNECTIONS =================
@@ -905,16 +933,16 @@ function refreshUI(){
     $('uNm').textContent=S.user.email;
     $('uPl').textContent=badgeText.charAt(0)+badgeText.slice(1).toLowerCase()+' Plan';
     sl.innerHTML='<i class="fa-solid fa-right-from-bracket"></i> Log Out';
-    sl.removeAttribute('href');
+    sl.removeAttribute('href'); // Remove href to prevent navigation
     sl.style.cursor='pointer';
     hp.textContent=badgeText;
     hp.className='hdr-plan ptag '+badgeClass;
     updateLoginDisplay();
   } else {
     u.classList.remove('show');
-    sl.innerHTML='<i class="fa-solid fa-right-from-bracket"></i> Sign In';
-    sl.href='auth.html';
-    sl.style.cursor='';
+    sl.innerHTML='<i class="fa-brands fa-google"></i> Sign In';
+    sl.href='#'; // Dummy href
+    sl.style.cursor='pointer';
     hp.textContent='FREE';
     hp.className='hdr-plan ptag free';
   }
@@ -1117,7 +1145,16 @@ function initEvents(){
     startNewChat();
   });
   
-  $('signInLink').addEventListener('click',function(e){if(S.user){e.preventDefault();signOut()}});
+  // FIXED: OAuth Sign In / Sign Out Logic
+  $('signInLink').addEventListener('click',function(e){
+    e.preventDefault();
+    if(S.user){
+      signOut();
+    } else {
+      triggerOAuth();
+    }
+  });
+
   $('contactLink').addEventListener('click',function(){toggleSB(false);$('contactModal').classList.add('on')});
   $('sbSearch').addEventListener('input',function(){var q=this.value.toLowerCase();document.querySelectorAll('#chatListItems .cl-item').forEach(function(el){var text=el.querySelector('.cl-title');if(text)text=text.textContent.toLowerCase();el.style.display=(!q||text.indexOf(q)!==-1)?'flex':'none'})});
   $('themeGrid').addEventListener('click',function(e){var b=e.target.closest('.t-btn');if(b)setTheme(b.getAttribute('data-t'))});
@@ -1145,10 +1182,12 @@ function initEvents(){
   // Link Modal Interactions
   $('lmClose').addEventListener('click', closeLinkModal);
   $('lmFollowUp').addEventListener('click', function(){
-    sendMsg("Tell me more about this link: " + S.activeLinkUrl);
-    closeLinkModal();
+    if(S.activeLinkUrl) {
+      sendMsg("Tell me more about this link: " + S.activeLinkUrl);
+      closeLinkModal();
+    }
   });
-
+  
   // Generic Link Click Handler in Chat
   $('msgsEl').addEventListener('click', function(e){
     var cpBtn=e.target.closest('[data-copy-code]');
@@ -1193,8 +1232,8 @@ function initEvents(){
   document.addEventListener('paste',function(e){if(S.streaming)return;var items=e.clipboardData&&e.clipboardData.items;if(!items)return;for(var i=0;i<items.length;i++){if(items[i].type.indexOf('image/')===0){e.preventDefault();var file=items[i].getAsFile();if(!file)continue;var name='pasted-image-'+Date.now()+'.'+(file.type.split('/')[1]||'png');(function(f,n){readFileAsDataUrl(f).then(function(dataUrl){S.pendingFiles.push({type:'image',dataUrl:dataUrl,name:n,size:f.size,file:new File([f],n,{type:f.type})});renderImgPreview();updateCB()})})(file,name);break}}});
 }
 
-function authGate(feature){if(!S.user){toast('Sign in to use '+feature,'wrn');setTimeout(function(){window.location.href='auth.html'},1000);return true}return false}
-function mediaGate(type){if(!S.user){toast('Sign in to generate '+type+'s','wrn');setTimeout(function(){window.location.href='auth.html'},1000);return true}if(!canGenMedia()){toast(type.charAt(0).toUpperCase()+type.slice(1)+' generation requires Premium or Lifetime','wrn');return true}return false}
+function authGate(feature){if(!S.user){toast('Sign in to use '+feature,'wrn');return true}return false}
+function mediaGate(type){if(!S.user){toast('Sign in to generate '+type+'s','wrn');return true}if(!canGenMedia()){toast(type.charAt(0).toUpperCase()+type.slice(1)+' generation requires Premium or Lifetime','wrn');return true}return false}
 
 function init(){
   initTheme();
@@ -1206,7 +1245,7 @@ function init(){
   loadVoices();
   renderAll();
   updateCB();
-  loadUser();
+  loadUser(); // Important: Checks session on load
 }
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
