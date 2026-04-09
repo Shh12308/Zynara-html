@@ -511,10 +511,12 @@ function isVideo(t){var l=t.toLowerCase();for(var i=0;i<VIDEO_KW.length;i++)if(l
 function getApiUrl(){
   var baseUrl = FREE_AI_URL;
   if(S.user) {
+    // Check for Lifetime OR Premium explicitly
     if (S.user.is_lifetime || S.user.is_premium) {
       baseUrl = PREMIUM_AI_URL;
     } else {
       var plan = (S.user.plan || 'free').toLowerCase();
+      // Fallback check via plan string name
       if (plan === 'premium' || plan === 'lifetime' || plan === 'ultimate_monthly' || plan === 'ultimate_yearly') {
         baseUrl = PREMIUM_AI_URL;
       }
@@ -527,10 +529,18 @@ function authH(){var h={'Content-Type':'application/json'};if(S.user&&S.user.tok
 function isAuth(){return !!S.user}
 function authSilent(){return !isAuth()}
 function isAuthed(){return isAuth()}
-// FIXED: Checks is_lifetime flag explicitly
 function isPremium(){return isAuth()&&(S.user.is_premium||S.user.is_lifetime||S.user.plan!=='free')}
-// FIXED: Checks is_lifetime flag explicitly
-function canGenMedia(){return isAuthed()&&(S.user.is_lifetime||S.user.is_premium)}
+
+// UPDATED LOGIC: Explicitly allows both Lifetime and Premium users to generate media
+function canGenMedia(){
+    if(!isAuthed()) return false;
+    // 1. Primary check: Boolean flags
+    if(S.user.is_lifetime || S.user.is_premium) return true;
+    // 2. Fallback check: Plan string names
+    var plan = (S.user.plan || '').toLowerCase();
+    if(plan === 'lifetime' || plan === 'premium' || plan === 'pro') return true;
+    return false;
+}
 
 var sb=null;
 function initSupabase(){
@@ -920,12 +930,12 @@ function refreshUI(){
   $('voiceLock').style.display=signedIn?'none':'flex';
   
   var wCI=document.querySelector('.w-card[data-media="image"]'),wCV=document.querySelector('.w-card[data-media="video"]'),wLI=$('wLockImg'),wLV=$('wLockVid');
-  if(wCI&&wLI){wCI.classList.toggle('locked',!hasMedia);wLI.style.display=hasMedia?'none':'flex';if(!signedIn){wLI.className='w-lock';wLI.innerHTML='<i class="fa-solid fa-lock"></i> Sign in'}else if(!hasMedia){wLI.className='w-lock prem-lock';wLI.innerHTML='<i class="fa-solid fa-crown"></i> Premium'}}
-  if(wCV&&wLV){wCV.classList.toggle('locked',!hasMedia);wLV.style.display=hasMedia?'none':'flex';if(!signedIn){wLV.className='w-lock';wLV.innerHTML='<i class="fa-solid fa-lock"></i> Sign in'}else if(!hasMedia){wLV.className='w-lock prem-lock';wLV.innerHTML='<i class="fa-solid fa-crown"></i> Premium'}}
+  if(wCI&&wLI){wCI.classList.toggle('locked',!hasMedia);wLI.style.display=hasMedia?'none':'flex';if(!signedIn){wLI.className='w-lock';wLI.innerHTML='<i class="fa-solid fa-lock"></i> Sign in'}else if(!hasMedia){wLI.className='w-lock prem-lock';wLI.innerHTML='<i class="fa-solid fa-crown"></i> Upgrade'}}
+  if(wCV&&wLV){wCV.classList.toggle('locked',!hasMedia);wLV.style.display=hasMedia?'none':'flex';if(!signedIn){wLV.className='w-lock';wLV.innerHTML='<i class="fa-solid fa-lock"></i> Sign in'}else if(!hasMedia){wLV.className='w-lock prem-lock';wLV.innerHTML='<i class="fa-solid fa-crown"></i> Upgrade'}}
   
   var aI=$('asImg'),aV=$('asVid'),aLI=$('asLockImg'),aLV=$('asLockVid');
-  if(aI&&aLI){aI.classList.toggle('locked',!hasMedia);aLI.style.display=hasMedia?'none':'flex';if(!signedIn)aLI.innerHTML='<i class="fa-solid fa-lock"></i> Sign in';else if(!hasMedia)aLI.innerHTML='<i class="fa-solid fa-crown"></i> Premium'}
-  if(aV&&aLV){aV.classList.toggle('locked',!hasMedia);aLV.style.display=hasMedia?'none':'flex';if(!signedIn)aLV.innerHTML='<i class="fa-solid fa-lock"></i> Sign in';else if(!hasMedia)aLV.innerHTML='<i class="fa-solid fa-crown"></i> Premium'}
+  if(aI&&aLI){aI.classList.toggle('locked',!hasMedia);aLI.style.display=hasMedia?'none':'flex';if(!signedIn)aLI.innerHTML='<i class="fa-solid fa-lock"></i> Sign in';else if(!hasMedia)aLI.innerHTML='<i class="fa-solid fa-crown"></i> Upgrade'}
+  if(aV&&aLV){aV.classList.toggle('locked',!hasMedia);aLV.style.display=hasMedia?'none':'flex';if(!signedIn)aLV.innerHTML='<i class="fa-solid fa-lock"></i> Sign in';else if(!hasMedia)aLV.innerHTML='<i class="fa-solid fa-crown"></i> Upgrade'}
   
   updateModelUI();
 }
@@ -1184,7 +1194,7 @@ function initEvents(){
 }
 
 function authGate(feature){if(!S.user){toast('Sign in to use '+feature,'wrn');setTimeout(function(){window.location.href='auth.html'},1000);return true}return false}
-function mediaGate(type){if(!S.user){toast('Sign in to generate '+type+'s','wrn');setTimeout(function(){window.location.href='auth.html'},1000);return true}if(!canGenMedia()){toast(type.charAt(0).toUpperCase()+type.slice(1)+' generation requires Premium','wrn');return true}return false}
+function mediaGate(type){if(!S.user){toast('Sign in to generate '+type+'s','wrn');setTimeout(function(){window.location.href='auth.html'},1000);return true}if(!canGenMedia()){toast(type.charAt(0).toUpperCase()+type.slice(1)+' generation requires Premium or Lifetime','wrn');return true}return false}
 
 function init(){
   initTheme();
