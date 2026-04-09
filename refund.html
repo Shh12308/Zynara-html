@@ -141,47 +141,63 @@ button:hover {
 </form>
 
 </div>
-
 <script>
-document.getElementById("refundForm").addEventListener("submit", async function(e) {
-  e.preventDefault();
+const form = document.getElementById("refundForm");
+const successMessage = document.getElementById("successMessage");
+const errorMessage = document.getElementById("errorMessage");
 
-  const form = e.target;
-
+async function handleRefund(action) {
+  // Collect form data
   const formData = {
-    full_name: form.full_name.value.trim(),
-    email: form.email.value.trim(),
+    user_id: "USER_UUID_HERE", // replace with actual logged-in user ID
     payment_id: form.payment_id.value.trim(),
-    product_name: form.product_name.value.trim(),
-    card_last4: form.card_last4.value.trim(),
     reason: form.reason.value,
-    details: form.details.value.trim()
+    details: form.details.value.trim(),
+    action: action, // "request" | "cancel"
   };
 
   try {
-    // 🔥 Call Supabase Edge Function
     const response = await fetch("https://acbnqeeukfxewiqswgbw.supabase.co/refund", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(formData)
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
     });
 
+    const data = await response.json();
+
     if (response.ok) {
-      document.getElementById("successMessage").style.display = "block";
-      document.getElementById("errorMessage").style.display = "none";
+      if (action === "request") {
+        successMessage.innerText = "Refund requested successfully!";
+      } else if (action === "cancel") {
+        successMessage.innerText = "Refund cancelled successfully!";
+      }
+      successMessage.style.display = "block";
+      errorMessage.style.display = "none";
       form.reset();
     } else {
-      throw new Error();
+      throw new Error(data.error || "Something went wrong");
     }
 
   } catch (err) {
-    document.getElementById("errorMessage").style.display = "block";
-    document.getElementById("successMessage").style.display = "none";
+    errorMessage.innerText = err.message;
+    errorMessage.style.display = "block";
+    successMessage.style.display = "none";
   }
-});
-</script>
+}
 
+// Handle form submission for requesting refund
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  handleRefund("request");
+});
+
+// Optional: add cancel refund button dynamically
+const cancelBtn = document.createElement("button");
+cancelBtn.type = "button";
+cancelBtn.innerText = "Cancel Refund";
+cancelBtn.style.marginTop = "10px";
+cancelBtn.onclick = () => handleRefund("cancel");
+form.appendChild(cancelBtn);
+</script>
 </body>
 </html>
