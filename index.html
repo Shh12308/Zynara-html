@@ -298,8 +298,11 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 .as-opt i{font-size:15px;color:var(--accent);width:20px;text-align:center}
 .as-opt .as-lock{color:var(--text-muted);font-size:10px;margin-left:auto;opacity:.6;display:flex;align-items:center;gap:3px}
 .as-opt .as-lock.prem{color:var(--warning);opacity:.8}
-.vdd{position:fixed;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-lg);z-index:70;min-width:230px;max-height:320px;overflow-y:auto;opacity:0;pointer-events:none;transform:translateY(8px);transition:all .25s var(--ease);padding:6px}
+.vdd{position:absolute;bottom:100%;right:0;margin-bottom:10px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-lg);z-index:70;min-width:180px;max-height:320px;overflow-y:auto;opacity:0;pointer-events:none;transform:translateY(8px);transition:all .25s var(--ease);padding:6px}
 .vdd.on{opacity:1;pointer-events:all;transform:translateY(0)}
+.v-item{padding:8px 12px;font-size:13px;color:var(--text-primary);cursor:pointer;border-radius:6px;transition:background .2s}
+.v-item:hover{background:var(--bg-hover)}
+.v-item.active{background:var(--accent-dim);color:var(--accent)}
 .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:110;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;padding:20px;backdrop-filter:blur(6px)}.modal-ov.on{opacity:1;pointer-events:all}
 .modal{background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-lg);max-width:440px;width:100%;padding:28px;transform:scale(.92) translateY(10px);transition:transform .35s var(--ease-out);box-shadow:var(--shadow-lg)}.modal-ov.on .modal{transform:scale(1) translateY(0)}
 .modal h3{font-family:var(--font-display);font-size:19px;font-weight:700;margin-bottom:8px;letter-spacing:-.3px}
@@ -404,14 +407,19 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
         <textarea class="cb-input" id="cbInput" placeholder="Message HeloxAi..." rows="1" aria-label="Chat input"></textarea>
         <div class="cb-r">
           <button class="cb-btn" id="micBtn" aria-label="Voice input"><i class="fa-solid fa-microphone"></i><span class="lock-badge" id="micLock" style="display:none"><i class="fa-solid fa-lock"></i></span></button>
-          <button class="cb-btn" id="voiceBtn" aria-label="Select voice"><i class="fa-solid fa-volume-high"></i><span class="lock-badge" id="voiceLock" style="display:none"><i class="fa-solid fa-lock"></i></span></button>
+          <!-- Voice Selection Dropdown Container -->
+          <div style="position:relative;">
+            <button class="cb-btn" id="voiceBtn" aria-label="Select voice"><i class="fa-solid fa-volume-high"></i><span class="lock-badge" id="voiceLock" style="display:none"><i class="fa-solid fa-lock"></i></span></button>
+            <div class="vdd" id="voiceDd"><div id="voiceList"></div></div>
+          </div>
           <button class="cb-btn hide" id="sendStopBtn" aria-label="Send"><i class="fa-solid fa-arrow-up"></i></button>
         </div>
       </div>
       <div class="cb-foot"><span><kbd>Enter</kbd> to send</span><span><kbd>Shift+Enter</kbd> new line</span></div>
     </div>
   </div>
-  <input type="file" id="fileInput" style="display:none" accept="image/*,.pdf,.doc,.docx,.txt,.csv,.xlsx,.json,.xml,.html,.md,.py,.js,.ts,.java,.cpp,.c,.rb,.go,.rs,.php,.sql,.yaml,.yml" multiple>
+  <!-- Accept all files -->
+  <input type="file" id="fileInput" style="display:none" accept="*/*" multiple>
 </main>
 <div class="as-ov" id="asOv"></div>
 <div class="as" id="asSheet">
@@ -428,7 +436,6 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
     <button class="as-opt" data-prompt="Analyze this data:\n\n"><i class="fa-solid fa-chart-bar"></i> Analyze Data</button>
   </div>
 </div>
-<div class="vdd" id="voiceDd"><div id="voiceList"></div></div>
 <div class="lb" id="lightbox"><button class="lb-close" id="lbClose" aria-label="Close"><i class="fa-solid fa-xmark"></i></button><div id="lbContent"></div><a class="lb-dl" id="lbDl" download><i class="fa-solid fa-download"></i> Download</a></div>
 <div class="modal-ov" id="contactModal"><div class="modal"><h3>Contact Us</h3><p>Have questions or feedback? We'd love to hear from you.</p><p style="color:var(--accent);font-weight:600;font-size:14px">support@heloxai.com</p><button class="modal-close" data-close="contactModal">Close</button></div></div>
 <div class="toast-ct" id="toastCt"></div>
@@ -455,7 +462,7 @@ function isImageFile(file){return file&&file.type&&file.type.indexOf('image/')==
 function readFileAsDataUrl(file){return new Promise(function(resolve,reject){var r=new FileReader();r.onload=function(){resolve(r.result)};r.onerror=reject;r.readAsDataURL(file)})}
 function dataUrlToFile(dataUrl,name){try{var parts=dataUrl.split(','),mime=parts[0].match(/:(.*?);/)[1],bstr=atob(parts[1]),n=bstr.length,u8=new Uint8Array(n);while(n--)u8[n]=bstr.charCodeAt(n);return new File([u8],name,{type:mime})}catch(e){return null}}
 
-var S={user:null,msgs:[],chatId:null,chatListData:[],streaming:false,abort:null,theme:'dark',sbOpen:false,asOpen:false,vdOpen:false,mdOpen:false,recording:false,recorder:null,chunks:[],audio:null,gallery:[],view:'chat',_mdOk:false,_hlOk:false,pendingFiles:[],uploading:false,model:'helox',isAutoScrolling:true,scrollThreshold:100};
+var S={user:null,msgs:[],chatId:null,chatListData:[],streaming:false,abort:null,theme:'dark',sbOpen:false,asOpen:false,vdOpen:false,mdOpen:false,recording:false,recorder:null,chunks:[],audio:null,gallery:[],view:'chat',_mdOk:false,_hlOk:false,pendingFiles:[],uploading:false,model:'helox',isAutoScrolling:true,scrollThreshold:100,selectedVoice:'alloy'};
 
 var IMAGE_KW=['generate image','create image','make image','draw me','render image'];
 var VIDEO_KW=['generate video','create video','make video','render video'];
@@ -466,11 +473,9 @@ function isVideo(t){var l=t.toLowerCase();for(var i=0;i<VIDEO_KW.length;i++)if(l
 function getApiUrl(){
   var baseUrl = FREE_AI_URL;
   if(S.user) {
-    // Strictly check boolean flags first
     if (S.user.is_lifetime || S.user.is_premium) {
       baseUrl = PREMIUM_AI_URL;
     } else {
-      // Fallback to string check for safety
       var plan = (S.user.plan || 'free').toLowerCase();
       if (plan === 'premium' || plan === 'lifetime' || plan === 'ultimate_monthly' || plan === 'ultimate_yearly') {
         baseUrl = PREMIUM_AI_URL;
@@ -646,9 +651,9 @@ async function startNewChat() {
     });
     if (!res.ok) throw new Error('Failed to create new chat');
     var data = await res.json();
-    if (data && data.id) {
-      S.chatId = data.id;
-      $('hdrTitle').textContent = data.title || 'New Chat';
+    if (data && data.conversation_id) {
+      S.chatId = data.conversation_id;
+      $('hdrTitle').textContent = 'New Chat';
       loadChatList();
     }
   } catch (e) {
@@ -721,6 +726,38 @@ function updateLoginDisplay(){
 function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('data-theme',window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');else document.documentElement.setAttribute('data-theme',t)}catch(e){}S.theme=t;try{localStorage.setItem('helox-theme',t)}catch(e){}document.querySelectorAll('.t-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-t')===t)})}
 function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'dark'}catch(e){}setTheme(s);try{window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(S.theme==='system')setTheme('system')})}catch(e){}}
 
+// ================= VOICE SELECTION =================
+async function loadVoices(){
+  try {
+    var res = await fetch(getApiUrl() + '/tts/voices');
+    if(res.ok) {
+      var data = await res.json();
+      var list = $('voiceList');
+      if(list && data.voices) {
+        list.innerHTML = '';
+        data.voices.forEach(function(v){
+          var div = document.createElement('div');
+          div.className = 'v-item' + (v.id === S.selectedVoice ? ' active' : '');
+          div.textContent = v.name;
+          div.onclick = function(){
+            S.selectedVoice = v.id;
+            renderVoices(); // update active class
+            toggleVD(false);
+            toast('Voice set to ' + v.name, 'ok');
+          };
+          list.appendChild(div);
+        });
+      }
+    }
+  } catch(e){ console.warn('Failed to load voices', e); }
+}
+
+function renderVoices(){
+  document.querySelectorAll('.v-item').forEach(function(el){
+    el.classList.toggle('active', el.textContent.includes(S.selectedVoice) || el.getAttribute('data-voice') === S.selectedVoice); // simple match logic
+  });
+}
+
 // ================= ADVANCED MARKDOWN =================
 function initMarked(){
   try {
@@ -757,7 +794,7 @@ function md(text){
     try {
       rawHtml = marked.parse(text);
       rawHtml = DOMPurify.sanitize(rawHtml, {
-        ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'strong', 'em', 'a', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr', 'img', 'div', 'span', 'button', 'i', 'sup', 'sub'],
+        ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'strong', 'em', 'a', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr', 'img', 'div', 'span', 'button', 'i', 'sup', 'sub', 'dl', 'dt', 'dd'],
         ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'id', 'style', 'src', 'alt', 'title', 'data-copy-code', 'loading'],
         ALLOW_DATA_ATTR: false
       });
@@ -783,12 +820,10 @@ function refreshUI(){
   var u=$('sUser'),sl=$('signInLink'),hp=$('hdrPlan');if(!u||!sl||!hp)return;
   var signedIn=!!S.user,hasMedia=canGenMedia();
   
-  // Determine correct badge text and class
   var badgeClass='free';
   var badgeText='FREE';
   
   if(S.user) {
-    // Priority: Lifetime > Premium > Plan String
     if(S.user.is_lifetime) {
       badgeClass='lifetime';
       badgeText='LIFETIME';
@@ -796,7 +831,6 @@ function refreshUI(){
       badgeClass='premium';
       badgeText='PREMIUM';
     } else if(S.user.plan && S.user.plan !== 'free') {
-      // Fallback to string if flags aren't set but plan string suggests status
       badgeClass = S.user.plan === 'lifetime' ? 'lifetime' : 'premium';
       badgeText = S.user.plan.toUpperCase();
     } else {
@@ -924,13 +958,11 @@ function actVoice(i){
   var m=S.msgs[i];
   if(!m||m.role!=='assistant')return;
   
-  // Stop any existing audio
   if(S.audio){ 
     S.audio.pause(); 
     S.audio = null; 
   }
 
-  // Visual feedback
   var btn = document.querySelector('.ma[data-act="voice"][data-i="'+i+'"]');
   if(btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
   toast('Generating voice...','inf');
@@ -939,7 +971,7 @@ function actVoice(i){
     method:'POST',
     headers:authH(),
     credentials:'include',
-    body:JSON.stringify({ text: m.content }) // Using 'text' key standard for TTS
+    body:JSON.stringify({ text: m.content, voice: S.selectedVoice }) // Use selected voice
   }).then(function(r){
     if(!r.ok) throw new Error('TTS generation failed');
     return r.blob();
@@ -950,7 +982,6 @@ function actVoice(i){
     S.audio.onended=function(){
       URL.revokeObjectURL(url);
       S.audio=null;
-      // Reset icon
       if(btn) btn.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
     };
     toast('Playing audio','ok');
@@ -982,7 +1013,6 @@ function doSTT(blob){
       autoH($('cbInput'));
       updateCB();
       toast('Recognized','ok');
-      // FIX: Auto-send the recognized text to the AI
       setTimeout(function(){
         sendMsg();
       }, 600);
@@ -1006,9 +1036,9 @@ async function sendMsg(text){
 
 function sendToAIWithFiles(text,images,files){S.streaming=true;S.abort=new AbortController();addTyping();updateCB();var fd=new FormData();fd.append('prompt',text||'What is in this image?');images.forEach(function(img){fd.append('image',img.file,img.name)});files.forEach(function(f){fd.append('file',f.file,f.name)});var h={};if(S.user&&S.user.token)h['Authorization']='Bearer '+S.user.token;var full='';fetch(getApiUrl()+'/ask/universal',{method:'POST',headers:h,credentials:'include',signal:S.abort.signal,body:fd}).then(function(res){if(!res.ok)throw new Error('HTTP '+res.status);rmTyping();var ct=(res.headers.get('content-type')||'').toLowerCase();if(ct.indexOf('application/json')!==-1){return res.json().then(function(data){var content=data.response||data.content||data.result||data.message||JSON.stringify(data);var aiMsg={id:uid(),role:'assistant',content:content,liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();addToGallery(content);saveMessage(aiMsg);if(S.chatId)updateConversationTimestamp(S.chatId)})}var aiMsg={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();return streamRes(res,function(chunk){full+=chunk;updateLastAI(full)},function(){S.msgs[S.msgs.length-1].content=full;addToGallery(full);saveMessage(S.msgs[S.msgs.length-1]);if(S.chatId)updateConversationTimestamp(S.chatId)})}).catch(function(e){rmTyping();if(e.name==='AbortError'){if(full){S.msgs[S.msgs.length-1].content=full;saveMessage(S.msgs[S.msgs.length-1]).catch(function(){});updateLastAI(full)}else{S.msgs.pop();renderAll()}toast('Stopped','inf')}else{S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});renderAll();toast('Request failed','err')}}).finally(function(){S.streaming=false;S.abort=null;updateCB()})}
 
-function sendToAI(text){if(!text)return;S.streaming=true;S.abort=new AbortController();addTyping();updateCB();var full='';fetch(getApiUrl()+'/ask/universal',{method:'POST',headers:authH(),credentials:'include',signal:S.abort.signal,body:JSON.stringify({prompt:text})}).then(function(res){if(!res.ok)throw new Error('HTTP '+res.status);rmTyping();var ct=(res.headers.get('content-type')||'').toLowerCase();if(ct.indexOf('application/json')!==-1){return res.json().then(function(data){var content=data.response||data.content||data.result||data.message||JSON.stringify(data);var aiMsg={id:uid(),role:'assistant',content:content,liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();addToGallery(content);saveMessage(aiMsg);if(S.chatId)updateConversationTimestamp(S.chatId)})}var aiMsg={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();return streamRes(res,function(chunk){full+=chunk;updateLastAI(full)},function(){S.msgs[S.msgs.length-1].content=full;addToGallery(full);saveMessage(S.msgs[S.msgs.length-1]);if(S.chatId)updateConversationTimestamp(S.chatId)})}).catch(function(e){rmTyping();if(e.name==='AbortError'){if(full){S.msgs[S.msgs.length-1].content=full;saveMessage(S.msgs[S.msgs.length-1]).catch(function(){});updateLastAI(full)}else{S.msgs.pop();renderAll()}toast('Stopped','inf')}else{S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});renderAll();toast('Request failed','err')}}).finally(function(){S.streaming=false;S.abort=null;updateCB()})}
+function sendToAI(text){if(!text)return;S.streaming=true;S.abort=new AbortController();addTyping();updateCB();var full='';fetch(getApiUrl()+'/ask/universal',{method:'POST',headers:authH(),credentials:'include',signal:S.abort.signal,body:JSON.stringify({prompt:text, conversation_id: S.chatId})}).then(function(res){if(!res.ok)throw new Error('HTTP '+res.status);rmTyping();var ct=(res.headers.get('content-type')||'').toLowerCase();if(ct.indexOf('application/json')!==-1){return res.json().then(function(data){var content=data.response||data.content||data.result||data.message||JSON.stringify(data);var aiMsg={id:uid(),role:'assistant',content:content,liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();addToGallery(content);saveMessage(aiMsg);if(S.chatId)updateConversationTimestamp(S.chatId)})}var aiMsg={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();return streamRes(res,function(chunk){full+=chunk;updateLastAI(full)},function(){S.msgs[S.msgs.length-1].content=full;addToGallery(full);saveMessage(S.msgs[S.msgs.length-1]);if(S.chatId)updateConversationTimestamp(S.chatId)})}).catch(function(e){rmTyping();if(e.name==='AbortError'){if(full){S.msgs[S.msgs.length-1].content=full;saveMessage(S.msgs[S.msgs.length-1]).catch(function(){});updateLastAI(full)}else{S.msgs.pop();renderAll()}toast('Stopped','inf')}else{S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});renderAll();toast('Request failed','err')}}).finally(function(){S.streaming=false;S.abort=null;updateCB()})}
 
-function regenerateAI(){S.streaming=true;S.abort=new AbortController();addTyping();updateCB();var full='';var lastUserMsg='';for(var i=S.msgs.length-1;i>=0;i--){if(S.msgs[i].role==='user'){lastUserMsg=S.msgs[i].content;break}}fetch(getApiUrl()+'/ask/universal',{method:'POST',headers:authH(),credentials:'include',signal:S.abort.signal,body:JSON.stringify({prompt:lastUserMsg})}).then(function(res){if(!res.ok)throw new Error('HTTP '+res.status);rmTyping();var ct=(res.headers.get('content-type')||'').toLowerCase();if(ct.indexOf('application/json')!==-1){return res.json().then(function(data){var content=data.response||data.content||data.result||data.message||JSON.stringify(data);var aiMsg={id:uid(),role:'assistant',content:content,liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();addToGallery(content);saveMessage(aiMsg)})}var aiMsg={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();return streamRes(res,function(chunk){full+=chunk;updateLastAI(full)},function(){S.msgs[S.msgs.length-1].content=full;addToGallery(full);saveMessage(S.msgs[S.msgs.length-1])})}).catch(function(e){rmTyping();if(e.name==='AbortError'){if(full){S.msgs[S.msgs.length-1].content=full;saveMessage(S.msgs[S.msgs.length-1]).catch(function(){});updateLastAI(full)}toast('Stopped','inf')}else{S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});renderAll();toast('Failed','err')}}).finally(function(){S.streaming=false;S.abort=null;updateCB()})}
+function regenerateAI(){S.streaming=true;S.abort=new AbortController();addTyping();updateCB();var full='';var lastUserMsg='';for(var i=S.msgs.length-1;i>=0;i--){if(S.msgs[i].role==='user'){lastUserMsg=S.msgs[i].content;break}}fetch(getApiUrl()+'/ask/universal',{method:'POST',headers:authH(),credentials:'include',signal:S.abort.signal,body:JSON.stringify({prompt:lastUserMsg, conversation_id: S.chatId})}).then(function(res){if(!res.ok)throw new Error('HTTP '+res.status);rmTyping();var ct=(res.headers.get('content-type')||'').toLowerCase();if(ct.indexOf('application/json')!==-1){return res.json().then(function(data){var content=data.response||data.content||data.result||data.message||JSON.stringify(data);var aiMsg={id:uid(),role:'assistant',content:content,liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();addToGallery(content);saveMessage(aiMsg)})}var aiMsg={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();return streamRes(res,function(chunk){full+=chunk;updateLastAI(full)},function(){S.msgs[S.msgs.length-1].content=full;addToGallery(full);saveMessage(S.msgs[S.msgs.length-1])})}).catch(function(e){rmTyping();if(e.name==='AbortError'){if(full){S.msgs[S.msgs.length-1].content=full;saveMessage(S.msgs[S.msgs.length-1]).catch(function(){});updateLastAI(full)}toast('Stopped','inf')}else{S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});renderAll();toast('Failed','err')}}).finally(function(){S.streaming=false;S.abort=null;updateCB()})}
 function stopGen(){if(S.abort)S.abort.abort()}
 
 function autoH(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,200)+'px'}
@@ -1067,6 +1097,7 @@ function init(){
   initModel();
   initEvents();
   setupAuthListener();
+  loadVoices(); // Load voices on init
   renderAll();
   updateCB();
   loadUser();
