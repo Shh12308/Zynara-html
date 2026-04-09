@@ -106,9 +106,6 @@ button:hover {
 <label>Email Used at Purchase</label>
 <input type="email" name="email" required>
 
-<label>Stripe Payment ID</label>
-<input type="text" name="payment_id" placeholder="pi_..." required>
-
 <label>Product Name</label>
 <input type="text" name="product_name" required>
 
@@ -142,21 +139,10 @@ button:hover {
 
 </div>
   <script src="env.js"></script>
-
 <script type="module">
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-  if (!window.__ENV__) {
-    throw new Error("env.js not loaded");
-  }
-
-  const {
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY,
-    RECAPTCHA_SITE_KEY
-  } = window.__ENV__;
-
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
 
 async function getCurrentUser() {
   const { data: { session }, error } = await supabase.auth.getSession();
@@ -176,13 +162,18 @@ async function handleRefund(action) {
   if (!user) return;
 
   const formData = {
-    payment_id: form.payment_id.value.trim(),
+    user_id: user.id,  // logged-in user
+    full_name: form.full_name.value.trim(),
+    email: form.email.value.trim(),
+    product_name: form.product_name.value.trim(),
+    card_last4: form.card_last4.value.trim(),
     reason: form.reason.value,
-    details: form.details.value.trim()
+    details: form.details.value.trim(),
+    action: action
   };
 
   try {
-    const response = await fetch(`${BACKEND_URL}/refund`, {
+    const response = await fetch(`${window.BACKEND_URL}/refund`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData)
@@ -191,7 +182,10 @@ async function handleRefund(action) {
     const data = await response.json();
 
     if (response.ok) {
-      successMessage.innerText = "Refund processed successfully!";
+      successMessage.innerText =
+        action === "request"
+          ? "Refund requested successfully!"
+          : "Refund cancelled successfully!";
       successMessage.style.display = "block";
       errorMessage.style.display = "none";
       form.reset();
@@ -205,19 +199,16 @@ async function handleRefund(action) {
   }
 }
 
-// Submit = request refund
 form.addEventListener("submit", (e) => {
   e.preventDefault();
   handleRefund("request");
 });
 
-// Cancel button
 const cancelBtn = document.createElement("button");
 cancelBtn.type = "button";
 cancelBtn.innerText = "Cancel Refund";
 cancelBtn.style.marginTop = "10px";
 cancelBtn.onclick = () => handleRefund("cancel");
-
 form.appendChild(cancelBtn);
 </script>
 </body>
