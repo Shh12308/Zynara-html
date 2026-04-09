@@ -424,6 +424,55 @@ function initApp() {
 }
 
 /* -------------------------------------------------------------- */
+/* NEW: Check if user is already lifetime                          */
+/* -------------------------------------------------------------- */
+function checkExistingLifetime() {
+  sb.auth.getSession().then(function(sessionRes) {
+    if (!sessionRes.data || !sessionRes.data.session) {
+      // User is not logged in, show normal preorder button
+      refreshButton();
+      return;
+    }
+    
+    var user = sessionRes.data.session.user;
+
+    // Fetch user profile to check plan status
+    sb.from('users').select('plan, is_lifetime').eq('id', user.id).single().then(function(res) {
+      if (res.error) {
+        console.warn("Could not verify lifetime status:", res.error);
+        refreshButton(); // Fallback to normal behavior
+        return;
+      }
+
+      var userData = res.data;
+      // Check if user is already lifetime
+      if (userData && (userData.is_lifetime === true || userData.plan === 'lifetime')) {
+        // HIDE PAYMENT STUFF
+        preorderContent.style.display = 'none';
+        var preorderSection = document.getElementById('preorderCTA');
+        if(preorderSection) preorderSection.style.display = 'none';
+
+        // SHOW "ALREADY LIFETIME" MESSAGE
+        resultContainer.style.display = 'block';
+        resultBanner.className = 'result-banner success';
+        resultBanner.innerHTML = 
+          '<h3>\uD83D\uDC51 You are already a Founder</h3>' +
+          '<p>Your account is already active with Lifetime Premium access. No need to preorder again.</p>' +
+          '<a href="settings.html" class="go-home-btn">Go to Settings \u2192</a>';
+        
+        document.body.classList.add('show-result');
+      } else {
+        // User is logged in but NOT lifetime, show normal button
+        refreshButton();
+      }
+    });
+  }).catch(function(err) {
+    console.error("Auth check error:", err);
+    refreshButton();
+  });
+}
+
+/* -------------------------------------------------------------- */
 /* Button State Logic (Single Button)                              */
 /* -------------------------------------------------------------- */
 function refreshButton() {
@@ -552,14 +601,8 @@ preorderBtn.addEventListener('click', function() {
 function startPage() {
   handleSuccessPage().then(function(isSuccess) {
     if (!isSuccess) {
-      refreshButton();
-
-      try {
-        sb.auth.onAuthStateChange(function() { refreshButton(); });
-      } catch (e) {
-        console.warn('onAuthStateChange failed, using fallback polling:', e);
-        setInterval(refreshButton, 5000);
-      }
+      // Check if user is already Lifetime BEFORE showing preorder button
+      checkExistingLifetime();
     }
   });
 }
