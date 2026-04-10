@@ -753,6 +753,7 @@
        ═══════════════════════════════════ */
     const tsOverlay = document.getElementById('ts-overlay');
     let tsOverlayTimer = null;
+    let isVerified = false;
 
     // IMPORTANT: Returns a Promise that resolves after the UI has visually updated.
     // This prevents the page from feeling "frozen" while async tasks queue up.
@@ -1258,6 +1259,18 @@
         setSubmitLoading(loginBtn, loginSp, false);
       }
     });
+
+    window.addEventListener('load', async () => {
+  await showTSOverlay();
+
+  // simulate / run security check
+  await ensureTS();
+
+  // OPTIONAL: fake delay to feel real (Railway does this)
+  await new Promise(r => setTimeout(r, 1200));
+
+  hideTSOverlay();
+});
   </script>
 </body>
 </html>
