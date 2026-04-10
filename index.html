@@ -360,13 +360,11 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 
 <!-- ================= ENV.JS CONFIGURATION ================= -->
 <script id="env-js">
-  // This section acts as your env.js file.
-  // Replace these values with your actual environment variables.
   const ENV = {
       SUPABASE_URL: 'https://acbnqeeukfxewiqswgbw.supabase.co',
       SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjYm5xZWV1a2Z4ZXdpcXN3Z2J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMDY5MzIsImV4cCI6MjA4OTg4MjkzMn0.bwkZs0yqNAooAh6cV16dcwZwNz_5H5xvAu7eiQtR4wE',
       FREE_AI_URL: 'https://billy-free-ai-production.up.railway.app',
-      PREMIUM_AI_URL: 'https://your-premium-backend-url.com' // REPLACE THIS IF NEEDED
+      PREMIUM_AI_URL: 'https://your-premium-backend-url.com' 
   };
 </script>
 <!-- ================================================ -->
@@ -379,7 +377,6 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
   <div class="cl" id="chatList"><div class="cl-label">Recent</div><div id="chatListItems"><span style="color:var(--text-muted);font-size:12px;padding:4px 10px;display:block">Loading chats...</span></div></div>
   <nav class="s-nav">
     <button id="signInLink"><i class="fa-brands fa-google"></i> Sign In</button>
-    <!-- DONATE LINK ADDED HERE -->
     <a href="donate.html" target="_blank" style="color:#ef4444"><i class="fa-solid fa-heart"></i> Donate</a>
     <a href="settings.html"><i class="fa-solid fa-sliders"></i> Settings</a>
     <button id="contactLink"><i class="fa-solid fa-envelope"></i> Contact</button>
@@ -438,7 +435,6 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
         <textarea class="cb-input" id="cbInput" placeholder="Message HeloxAi..." rows="1" aria-label="Chat input"></textarea>
         <div class="cb-r">
           <button class="cb-btn" id="micBtn" aria-label="Voice input"><i class="fa-solid fa-microphone"></i><span class="lock-badge" id="micLock" style="display:none"><i class="fa-solid fa-lock"></i></span></button>
-          <!-- Voice Selection Dropdown Container -->
           <div style="position:relative;">
             <button class="cb-btn" id="voiceBtn" aria-label="Select voice"><i class="fa-solid fa-volume-high"></i><span class="lock-badge" id="voiceLock" style="display:none"><i class="fa-solid fa-lock"></i></span></button>
             <div class="vdd" id="voiceDd"><div id="voiceList"></div></div>
@@ -449,7 +445,6 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
       <div class="cb-foot"><span><kbd>Enter</kbd> to send</span><span><kbd>Shift+Enter</kbd> new line</span></div>
     </div>
   </div>
-  <!-- Accept all files -->
   <input type="file" id="fileInput" style="display:none" accept="*/*" multiple>
 </main>
 <div class="as-ov" id="asOv"></div>
@@ -514,7 +509,6 @@ function isImage(t){var l=t.toLowerCase();for(var i=0;i<IMAGE_KW.length;i++)if(l
 function isVideo(t){var l=t.toLowerCase();for(var i=0;i<VIDEO_KW.length;i++)if(l.indexOf(VIDEO_KW[i])!==-1)return true;return false}
 
 // ================= ENV & CONFIG =================
-// Use ENV from the script block above
 function getEnvVar(key) {
     if (typeof ENV !== 'undefined' && ENV[key]) return ENV[key];
     console.warn('Missing ENV var: ' + key);
@@ -525,19 +519,17 @@ function getEnvVar(key) {
 function getApiUrl(){
   var baseUrl = getEnvVar('FREE_AI_URL');
   if(S.user) {
-    // Check for Lifetime OR Premium explicitly
-    if (S.user.is_lifetime || S.user.is_premium) {
+    if(S.user.is_lifetime || S.user.is_premium) {
       var pUrl = getEnvVar('PREMIUM_AI_URL');
       // Fallback to Free if Premium URL is placeholder to prevent errors
-      if (pUrl && pUrl.indexOf('your-premium') === -1) {
+      if (pUrl && pUrl.indexOf('your-premium') === -1 && pUrl.indexOf('http') === 0) {
         baseUrl = pUrl;
       }
     } else {
       var plan = (S.user.plan || 'free').toLowerCase();
-      // Fallback check via plan string name
       if (plan === 'premium' || plan === 'lifetime' || plan === 'ultimate_monthly' || plan === 'ultimate_yearly') {
         var pUrl = getEnvVar('PREMIUM_AI_URL');
-        if (pUrl && pUrl.indexOf('your-premium') === -1) {
+        if (pUrl && pUrl.indexOf('your-premium') === -1 && pUrl.indexOf('http') === 0) {
           baseUrl = pUrl;
         }
       }
@@ -552,12 +544,9 @@ function authSilent(){return !isAuth()}
 function isAuthed(){return isAuth()}
 function isPremium(){return isAuth()&&(S.user.is_premium||S.user.is_lifetime||S.user.plan!=='free')}
 
-// UPDATED LOGIC: Explicitly allows both Lifetime and Premium users to generate media
 function canGenMedia(){
     if(!isAuthed()) return false;
-    // 1. Primary check: Boolean flags
     if(S.user.is_lifetime || S.user.is_premium) return true;
-    // 2. Fallback check: Plan string names
     var plan = (S.user.plan || '').toLowerCase();
     if(plan === 'lifetime' || plan === 'premium' || plan === 'pro') return true;
     return false;
@@ -576,7 +565,7 @@ function initSupabase(){
       auth: {
         persistSession: true,
         autoRefreshToken: true,
-        detectSessionInUrl: true, // CRITICAL FOR OAUTH
+        detectSessionInUrl: true,
         storage: window.localStorage
       },
       global: {
@@ -596,7 +585,6 @@ async function loadUser(){
     return;
   }
   try{
-    // Get session immediately from storage
     var result = await sb.auth.getSession();
     var session = result.data && result.data.session;
     
@@ -606,10 +594,8 @@ async function loadUser(){
       return;
     }
     
-    // Fetch user details (plan, etc)
     var ud = await sb.from('users').select('plan,is_premium,is_lifetime').eq('id', session.user.id).single();
     
-    // Construct user object
     S.user = {
       id: session.user.id,
       email: session.user.email,
@@ -623,9 +609,8 @@ async function loadUser(){
     loadChatList();
   } catch(e){
     console.warn('loadUser error:', e);
-    // If DB query fails, we still have a session, so user is authed.
     if(S.user && S.user.id) {
-       refreshUI(); // Refresh with what we have
+       refreshUI();
     } else {
        S.user = null;
        refreshUI();
@@ -667,7 +652,6 @@ async function handleSignIn(session){
     loadChatList();
     if(document.visibilityState === 'visible') toast('Signed in successfully', 'ok');
   } catch(e){
-    // Fallback if user row doesn't exist yet
     S.user = {
       id: session.user.id,
       email: session.user.email,
@@ -698,7 +682,6 @@ async function signOut(){
   handleSignOut();
 }
 
-// Trigger OAuth Popup
 async function triggerOAuth(){
   if(!sb) {
     toast('Auth service unavailable', 'err');
@@ -708,7 +691,7 @@ async function triggerOAuth(){
   var { error } = await sb.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: window.location.href // Redirect back to this page
+      redirectTo: window.location.href
     }
   });
   if (error) {
@@ -716,7 +699,6 @@ async function triggerOAuth(){
   }
 }
 
-// ================= BACKEND CONNECTIONS =================
 async function loadChatList(){
   if(!S.user){
     S.chatListData = [];
@@ -742,7 +724,6 @@ async function loadChatList(){
 async function startNewChat() {
   if(!S.user) return;
   try {
-    // Connected to /newchat as requested
     var res = await fetch(getApiUrl() + '/newchat', {
       method: 'POST',
       headers: authH(),
@@ -826,10 +807,8 @@ function updateLoginDisplay(){
 function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('data-theme',window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');else document.documentElement.setAttribute('data-theme',t)}catch(e){}S.theme=t;try{localStorage.setItem('helox-theme',t)}catch(e){}document.querySelectorAll('.t-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-t')===t)})}
 function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'dark'}catch(e){}setTheme(s);try{window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(S.theme==='system')setTheme('system')})}catch(e){}}
 
-// ================= VOICE SELECTION (/tts/voices) =================
 async function loadVoices(){
   try {
-    // Fixed to use the dynamic API URL
     var res = await fetch(getApiUrl() + '/tts/voices');
     if(res.ok) {
       var data = await res.json();
@@ -842,7 +821,7 @@ async function loadVoices(){
           div.textContent = v.name;
           div.onclick = function(){
             S.selectedVoice = v.id;
-            renderVoices(); // update active class
+            renderVoices();
             toggleVD(false);
             toast('Voice set to ' + v.name, 'ok');
           };
@@ -857,11 +836,10 @@ async function loadVoices(){
 
 function renderVoices(){
   document.querySelectorAll('.v-item').forEach(function(el){
-    el.classList.toggle('active', el.textContent.includes(S.selectedVoice) || el.getAttribute('data-voice') === S.selectedVoice); // simple match logic
+    el.classList.toggle('active', el.textContent.includes(S.selectedVoice) || el.getAttribute('data-voice') === S.selectedVoice); 
   });
 }
 
-// ================= ADVANCED MARKDOWN =================
 function initMarked(){
   try {
     if (typeof marked === 'undefined' || typeof hljs === 'undefined' || typeof katex === 'undefined') return;
@@ -914,7 +892,6 @@ function applyMath(element) {
   }
 }
 
-// ================= LINK MODAL LOGIC =================
 function openLinkModal(url) {
   S.activeLinkUrl = url;
   $('lmUrlText').textContent = url;
@@ -959,7 +936,7 @@ function refreshUI(){
     $('uNm').textContent=S.user.email;
     $('uPl').textContent=badgeText.charAt(0)+badgeText.slice(1).toLowerCase()+' Plan';
     sl.innerHTML='<i class="fa-solid fa-right-from-bracket"></i> Log Out';
-    sl.removeAttribute('href'); // Remove href to prevent navigation
+    sl.removeAttribute('href'); 
     sl.style.cursor='pointer';
     hp.textContent=badgeText;
     hp.className='hdr-plan ptag '+badgeClass;
@@ -967,7 +944,7 @@ function refreshUI(){
   } else {
     u.classList.remove('show');
     sl.innerHTML='<i class="fa-brands fa-google"></i> Sign In';
-    sl.href='#'; // Dummy href
+    sl.href='#'; 
     sl.style.cursor='pointer';
     hp.textContent='FREE';
     hp.className='hdr-plan ptag free';
@@ -1067,7 +1044,6 @@ function actEditSave(i){var ta=$('et-'+i);if(!ta)return;var v=ta.value.trim();va
 function actEditCancel(i){var ea=$('ea-'+i);if(ea)ea.innerHTML=''}
 function actRegen(i){if(S.streaming)return;S.msgs=S.msgs.slice(0,i);renderAll();regenerateAI()}
 
-// ================= TTS / VOICE REPLY FIX =================
 function actVoice(i){
   if(authGate('voice'))return;
   var m=S.msgs[i];
@@ -1108,7 +1084,6 @@ function actVoice(i){
   });
 }
 
-// ================= STT / MIC INPUT FIX =================
 function toggleMic(){if(authGate('voice input'))return;if(S.recording){if(S.recorder)S.recorder.stop();S.recording=false;$('micBtn').classList.remove('mic-on');return}navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){S.chunks=[];S.recorder=new MediaRecorder(stream);S.recorder.ondataavailable=function(e){if(e.data.size>0)S.chunks.push(e.data)};S.recorder.onstop=function(){stream.getTracks().forEach(function(t){t.stop()});doSTT(new Blob(S.chunks,{type:'audio/webm'}))};S.recorder.start();S.recording=true;$('micBtn').classList.add('mic-on');toast('Listening...','inf')}).catch(function(){toast('Mic access denied','err')})}
 
 function doSTT(blob){
@@ -1149,26 +1124,40 @@ async function sendMsg(text){
   if(images.length||files.length){sendToAIWithFiles(t,images.map(function(img){var f=dataUrlToFile(img.dataUrl,img.name);return f?{type:'image',dataUrl:img.dataUrl,name:img.name,file:f}:null}).filter(Boolean),files)}else{sendToAI(t)}
 }
 
-// FIXED: File/Image Upload sends to /analyse
+// FIXED: File/Image Upload sends to /analysis, key is 'file', only one file sent
 function sendToAIWithFiles(text,images,files){
   S.streaming=true;
   S.abort=new AbortController();
   addTyping();
   updateCB();
   var fd=new FormData();
-  // Append text as prompt
   fd.append('prompt',text||'What is in this image?');
   
-  images.forEach(function(img){fd.append('image',img.file,img.name)});
-  files.forEach(function(f){fd.append('file',f.file,f.name)});
+  // FIX 1: Backend /analysis accepts ONE file named 'file'.
+  // We prioritize images, then text files.
+  var primaryFile = null;
+  var primaryName = 'file.bin';
+  
+  if(images.length > 0) {
+      primaryFile = images[0].file;
+      primaryName = images[0].name;
+  } else if (files.length > 0) {
+      primaryFile = files[0].file;
+      primaryName = files[0].name;
+  }
+  
+  if(primaryFile) {
+      // FIX 2: Must use key 'file' to match backend UploadFile parameter
+      fd.append('file', primaryFile, primaryName);
+  }
   
   var h={};
   if(S.user&&S.user.token)h['Authorization']='Bearer '+S.user.token;
   
   var full='';
   
-  // FIXED ENDPOINT: Sending to /analyse instead of /ask/universal
-  fetch(getApiUrl()+'/analyse',{
+  // FIX 3: Endpoint is /analysis, not /analyse
+  fetch(getApiUrl()+'/analysis',{
     method:'POST',
     headers:h,
     credentials:'include',
@@ -1242,7 +1231,6 @@ function initEvents(){
     startNewChat();
   });
   
-  // FIXED: OAuth Sign In / Sign Out Logic
   $('signInLink').addEventListener('click',function(e){
     e.preventDefault();
     if(S.user){
@@ -1276,7 +1264,6 @@ function initEvents(){
   $('galGrid').addEventListener('click',function(e){var item=e.target.closest('.gal-item');if(item){var gid=item.getAttribute('data-gid');var g=S.gallery.find(function(x){return x.id===gid});if(g)openLB(g.url,g.type==='video')}});
   $('lbClose').addEventListener('click',closeLB);$('lightbox').addEventListener('click',function(e){if(e.target===$('lightbox'))closeLB()});
   
-  // Link Modal Interactions
   $('lmClose').addEventListener('click', closeLinkModal);
   $('lmFollowUp').addEventListener('click', function(){
     if(S.activeLinkUrl) {
@@ -1285,7 +1272,6 @@ function initEvents(){
     }
   });
   
-  // Generic Link Click Handler in Chat
   $('msgsEl').addEventListener('click', function(e){
     var cpBtn=e.target.closest('[data-copy-code]');
     if(cpBtn){
@@ -1299,11 +1285,9 @@ function initEvents(){
     if(link && e.currentTarget.id === 'msgsEl') {
       e.preventDefault();
       var href = link.getAttribute('href');
-      // Check if it's an image (simple check by extension)
       if (/\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i.test(href)) {
         openLB(href, false);
       } else {
-        // It's a web link, open link modal
         openLinkModal(href);
       }
     }
@@ -1342,7 +1326,7 @@ function init(){
   loadVoices();
   renderAll();
   updateCB();
-  loadUser(); // Important: Checks session on load
+  loadUser();
 }
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
