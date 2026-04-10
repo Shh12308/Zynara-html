@@ -18,7 +18,6 @@
       --text-primary: #f1f5f9;
       --text-secondary: #94a3b8;
       --danger: #ef4444;
-      --danger-hover: #dc2626;
       --success: #10b981;
     }
 
@@ -48,12 +47,6 @@
       -webkit-text-fill-color: transparent;
       margin: 0;
       letter-spacing: -1px;
-    }
-
-    header p {
-      color: var(--text-secondary);
-      margin-top: 10px;
-      font-size: 1.1rem;
     }
 
     .close-button {
@@ -97,7 +90,7 @@
       border-radius: 16px;
       padding: 30px;
       width: 340px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
       border: 1px solid rgba(255, 255, 255, 0.05);
       transition: all 0.3s ease;
       display: flex;
@@ -108,7 +101,7 @@
 
     .plan:hover {
       transform: translateY(-5px);
-      box-shadow: 0 20px 25px -5px rgba(0, 224, 255, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      box-shadow: 0 20px 25px -5px rgba(0, 224, 255, 0.1);
       border-color: rgba(0, 224, 255, 0.3);
     }
 
@@ -241,39 +234,6 @@
       opacity: 0.8;
     }
 
-    .stripe-badge svg {
-      width: 40px;
-      height: auto;
-    }
-
-    footer {
-      margin-top: auto;
-      padding: 40px 20px;
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-      background: #0f172a;
-      border-top: 1px solid #1e293b;
-    }
-
-    footer a {
-      color: var(--text-secondary);
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-
-    footer a:hover {
-      color: var(--accent-cyan);
-    }
-
-    .footer-container {
-      max-width: 1100px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 40px;
-      text-align: left;
-    }
-
     .footer-legal {
       margin-top: 40px;
       text-align: center;
@@ -282,22 +242,6 @@
       font-size: 0.8rem;
     }
 
-    .platform-indicator {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      font-size: 0.75rem;
-      color: var(--text-secondary);
-      background: rgba(30, 41, 59, 0.8);
-      padding: 4px 12px;
-      border-radius: 20px;
-      border: 1px solid rgba(255,255,255,0.1);
-      display: none;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    /* Loading Spinner */
     .loading-spinner {
       display: inline-block;
       width: 16px;
@@ -324,7 +268,6 @@
 <body>
   <header>
     <button class="close-button" onclick="window.location.href='index.html'" aria-label="Close">✕</button>
-    <div id="platformIndicator" class="platform-indicator"></div>
     <h1>HeloxAi Premium</h1>
     <p>Unlock Super Intelligence with flexible plans</p>
   </header>
@@ -341,19 +284,7 @@
         </li>
         <li>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          Limited knowledge models
-        </li>
-        <li>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
           Basic chat & Q/A
-        </li>
-        <li>
-          <svg viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          <span style="color:#64748b; text-decoration: line-through;">Image & Video Gen</span>
-        </li>
-        <li>
-          <svg viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          <span style="color:#64748b; text-decoration: line-through;">Advanced Reasoning</span>
         </li>
       </ul>
       <button class="subscribe-button" id="freeBtn">Use Free Plan</button>
@@ -365,21 +296,11 @@
       <p class="price">£4.99<span>/mo</span></p>
       <ul class="features">
         <li><strong>HeloxAi Super Intelligence</strong></li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Multimodal AI (Text, Vision, Audio)</li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Image & Video generation</li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> ElevenLabs voice synthesis</li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> 3D modeling & animation</li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Code generation (StarCoder)</li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Supabase memory & learning</li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> AI moderation & safety</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Multimodal AI & Gen</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> 3D modeling & Code</li>
       </ul>
       <button class="subscribe-button" id="ultimateMonthlyBtn">Go Ultimate Monthly</button>
-      <div class="stripe-badge">
-        <svg viewBox="0 0 60 25" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M59.64 14.28h-8.06c.19 1.93 1.6 2.55 3.2 2.55 1.64 0 2.96-.37 4.05-.95v3.32a12.3 12.3 0 01-4.56.88c-4.15 0-6.87-2.35-6.87-7.3 0-4.17 2.36-7.32 6.3-7.32 3.95 0 6.05 3.08 6.05 7.1 0 .5-.04 1.12-.11 1.72zm-4.18-5.62c-1.02 0-2.15.73-2.15 2.62h4.15c0-1.89-1.02-2.62-2-2.62z" fill="#64748b"/>
-        </svg>
-        Secured by Stripe
-      </div>
+      <div class="stripe-badge">Secured by Stripe</div>
     </div>
 
     <!-- Ultimate Yearly -->
@@ -387,61 +308,18 @@
       <div class="popular-badge">Best Value</div>
       <h2>Ultimate Yearly</h2>
       <p class="price">£115<span>/yr</span></p>
-      <p style="font-size:0.85rem; color:var(--success); font-weight:600; margin-top:-15px; margin-bottom:15px;">Save 2 months</p>
       <ul class="features">
         <li><strong>Everything in Monthly, plus:</strong></li>
         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> <strong>Priority GPU Cloud</strong></li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Instant video streaming</li>
         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Private API access</li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Custom model fine-tuning</li>
         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Offline mode & PWA</li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> 24/7 Cloud compute</li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Early access to new models</li>
       </ul>
       <button class="subscribe-button" id="ultimateYearlyBtn">Go Ultimate Yearly</button>
-      <div class="stripe-badge">
-        <svg viewBox="0 0 60 25" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M59.64 14.28h-8.06c.19 1.93 1.6 2.55 3.2 2.55 1.64 0 2.96-.37 4.05-.95v3.32a12.3 12.3 0 01-4.56.88c-4.15 0-6.87-2.35-6.87-7.3 0-4.17 2.36-7.32 6.3-7.32 3.95 0 6.05 3.08 6.05 7.1 0 .5-.04 1.12-.11 1.72z" fill="#64748b"/>
-        </svg>
-        Secured by Stripe
-      </div>
+      <div class="stripe-badge">Secured by Stripe</div>
     </div>
   </main>
 
-  <div id="restoreContainer" style="text-align:center;margin:2rem 0; padding: 0 20px;">
-    <button id="restoreBtn" class="subscribe-button" style="display:none; max-width: 300px;">Restore Purchases</button>
-  </div>
-
   <footer>
-    <div class="footer-container">
-      <div class="footer-section">
-        <h3 style="color:var(--accent-cyan); margin-top:0;">HeloxAI</h3>
-        <p style="font-size:0.9rem; line-height:1.6;">The next-generation AI built for creation, communication, and intelligence.</p>
-      </div>
-      <div class="footer-section">
-        <h4 style="color:var(--text-primary); margin-top:0; margin-bottom:15px;">Company</h4>
-        <ul style="list-style:none; padding:0; margin:0; line-height:2;">
-          <li><a href="about.html">About Us</a></li>
-          <li><a href="career.html">Careers</a></li>
-          <li><a href="contact.html">Contact</a></li>
-        </ul>
-      </div>
-      <div class="footer-section">
-        <h4 style="color:var(--text-primary); margin-top:0; margin-bottom:15px;">Legal</h4>
-        <ul style="list-style:none; padding:0; margin:0; line-height:2;">
-          <li><a href="terms.html">Terms of Service</a></li>
-          <li><a href="priv.html">Privacy Policy</a></li>
-        </ul>
-      </div>
-      <div class="footer-section">
-        <h4 style="color:var(--text-primary); margin-top:0; margin-bottom:15px;">Connect</h4>
-        <p style="margin:0;">
-          <a href="https://twitter.com/HeloxAi">Twitter</a> | 
-          <a href="https://github.com/shh12308">GitHub</a>
-        </p>
-        <p style="margin-top:10px;"><a href="/download.html" style="color:var(--accent-cyan);">Download App</a></p>
-      </div>
-    </div>
     <div class="footer-legal">
       &copy; 2025 HeloxAI — All rights reserved.
     </div>
@@ -451,84 +329,35 @@
 <script src="env.js"></script>
 <script type="module">
 // ===========================
-// ⚡ Supabase setup
+// ⚡ Supabase setup (Auth Only)
 // ===========================
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-// Fallback if env.js fails to load or window.__ENV__ is not set
 if (!window.__ENV__) {
-  console.error("Environment variables are not loaded. Ensure env.js is included and correct.");
-  document.body.innerHTML = `
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:80vh;text-align:center;padding:20px;">
-      <h1 style="color:#f1f5f9;margin-bottom:10px;">Configuration Error</h1>
-      <p style="color:#94a3b8;">Unable to load application settings. Please contact support.</p>
-    </div>
-  `;
+  console.error("Environment variables missing.");
   throw new Error("Environment not loaded");
 }
 
-const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.__ENV__;
+const { SUPABASE_URL, SUPABASE_ANON_KEY, BACKEND_URL } = window.__ENV__;
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Global state to track if user is logged in
+// Global state
 let isUserLoggedIn = false;
-
-// ===========================
-// 📱 Platform Detection
-// ===========================
-function getPlatform() {
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  const isAndroid = /Android/.test(navigator.userAgent);
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
-                       window.navigator.standalone ||
-                       document.referrer.includes('android-app://');
-  const isNativeApp = window.heloxaiNativeApp ||
-                      navigator.userAgent.includes("HeloxAiApp") ||
-                      navigator.userAgent.includes("HeloxAiIOS") ||
-                      navigator.userAgent.includes("HeloxAiAndroid");
-
-  if (isNativeApp) {
-    if (isIOS) return 'ios';
-    if (isAndroid) return 'android';
-    return 'native';
-  }
-
-  if (isStandalone) {
-    if (isIOS) return 'ios-pwa';
-    if (isAndroid) return 'android-pwa';
-    return 'pwa';
-  }
-
-  return 'web';
-}
-
-function updatePlatformIndicator() {
-  const platform = getPlatform();
-  const indicator = document.getElementById('platformIndicator');
-  if (indicator) {
-    indicator.textContent = platform;
-    indicator.style.display = 'block';
-  }
-  return platform;
-}
 
 // ===========================
 // 🧠 Supabase Plan Functions
 // ===========================
 async function getUserPlan() {
-  // We use getSession() first for a quick local check before hitting the DB
   const { data: { session } } = await supabase.auth.getSession();
-  
   if (!session) {
     isUserLoggedIn = false;
     return null;
   }
-
   isUserLoggedIn = true;
+
   const { data, error } = await supabase
     .from("users")
-    .select("plan")
+    .select("plan, is_premium")
     .eq("id", session.user.id)
     .single();
 
@@ -539,92 +368,86 @@ async function getUserPlan() {
   return data?.plan || null;
 }
 
-async function updateSupabasePlan(plan, provider = "stripe", extraData = {}) {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      // REDIRECT INSTEAD OF ERROR
-      console.warn("User not authenticated. Redirecting to login...");
-      window.location.href = 'index.html'; 
-      return;
-    }
-
-    const { data, error } = await supabase.functions.invoke('update-plan', {
-      body: {
-        userId: user.id,
-        email: user.email,
-        plan,
-        provider,
-        platform: getPlatform(),
-        ...extraData,
-      },
-    });
-
-    if (error) throw error;
-
-    if (plan === 'free') {
-      console.log(`Plan downgraded to Free.`);
-    } else {
-      alert(`✅ Success! You are now on the ${plan.toUpperCase()} plan.`);
-    }
-    
-    updatePlanButtons();
-  } catch (err) {
-    console.error("Plan update error:", err.message || err);
-    alert(`⚠️ Could not update your plan. Please try again. Error: ${err.message || 'Unknown error'}`);
-  } finally {
-    resetLoadingButtons();
-  }
-}
-
 // ===========================
-// 💳 Stripe Checkout
+// 💳 CONNECT TO BACKEND
 // ===========================
+
 async function createStripeCheckoutSession(planType) {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      // REDIRECT INSTEAD OF ERROR
-      console.warn("User not authenticated for checkout. Redirecting...");
       window.location.href = 'index.html';
       return;
     }
 
-    const priceMap = {
-      ultimate_monthly: 'heloxai_ultimate_monthly',
-      ultimate_yearly:  'heloxai_ultimate_yearly',
-    };
+    // Map frontend IDs to backend plan names
+    // Backend expects: "monthly", "yearly", "lifetime"
+    let backendPlanType = planType;
+    if (planType === 'ultimate_monthly') backendPlanType = 'monthly';
+    if (planType === 'ultimate_yearly') backendPlanType = 'yearly';
 
-    const priceKey = priceMap[planType];
-    if (!priceKey) throw new Error("Invalid plan type.");
-
-    const { data, error } = await supabase.functions.invoke('create-stripe-checkout', {
-      body: {
-        userId: user.id,
+    const response = await fetch(`${BACKEND_URL}/create-checkout-session`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: user.id,
         email: user.email,
-        priceKey,
-        planType,
-        successUrl: `${window.location.origin}${window.location.pathname}?success=true&plan=${planType === 'ultimate_yearly' ? 'yearly' : 'monthly'}`,
-        cancelUrl: `${window.location.origin}${window.location.pathname}?cancelled=true`,
-      },
+        plan: backendPlanType
+      })
     });
 
-    if (error) throw error;
+    const data = await response.json();
 
-    if (data && data.checkoutUrl) {
-      window.location.href = data.checkoutUrl;
+    if (!response.ok) {
+      throw new Error(data.error || "Failed to create session");
+    }
+
+    if (data.url) {
+      window.location.href = data.url;
     } else {
-      throw new Error("No checkout URL returned from server.");
+      throw new Error("No URL returned from backend");
     }
   } catch (err) {
-    console.error("Stripe checkout error:", err.message || err);
-    alert(`⚠️ Could not start checkout. Error: ${err.message || 'Unknown error'}`);
+    console.error("Stripe checkout error:", err);
+    alert(`⚠️ Could not start checkout: ${err.message}`);
+    resetLoadingButtons();
+  }
+}
+
+async function createPortalSession() {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      window.location.href = 'index.html';
+      return;
+    }
+
+    const response = await fetch(`${BACKEND_URL}/create-portal-session`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: user.id
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Failed to create portal session");
+    }
+
+    if (data.url) {
+      window.location.href = data.url;
+    }
+  } catch (err) {
+    console.error("Portal error:", err);
+    alert(`⚠️ Could not open account settings: ${err.message}`);
     resetLoadingButtons();
   }
 }
 
 // ===========================
-// 🎨 UI Loading Helpers
+// 🎨 UI Helpers
 // ===========================
 function setButtonLoading(btn) {
   if (!btn) return;
@@ -643,65 +466,13 @@ function resetLoadingButtons() {
   });
 }
 
-// ===========================
-// 🤖 Mobile Payment Placeholders
-// ===========================
-function handleIOSPayment(planType) {
-  console.log("🍎 iOS App Store payment flow placeholder — HeloxAi");
-  alert("iOS App Store payments are not yet fully implemented. Simulating purchase for demo.");
-  return { receipt: `IOS_FAKE_RECEIPT_${Date.now()}` };
-}
-
-function handleAndroidPayment(planType) {
-  console.log("🤖 Android Play Store payment flow placeholder — HeloxAi");
-  alert("Android Play Store payments are not yet fully implemented. Simulating purchase for demo.");
-  return { purchase_token: `ANDROID_FAKE_TOKEN_${Date.now()}` };
-}
-
-// ===========================
-// 💳 Unified Subscription Handler
-// ===========================
 async function handleSubscription(planType, btn) {
   setButtonLoading(btn);
-  const platform = getPlatform();
-
-  // Double check auth before starting payment flow
   if (!isUserLoggedIn) {
      window.location.href = 'index.html';
      return;
   }
-
-  try {
-    if (platform === 'ios' || platform === 'ios-pwa') {
-      const receipt = handleIOSPayment(planType);
-      await updateSupabasePlan(planType, "ios_store", receipt);
-    } else if (platform === 'android' || platform === 'android-pwa') {
-      const token = handleAndroidPayment(planType);
-      await updateSupabasePlan(planType, "android_play", token);
-    } else if (platform === 'native') {
-      alert("Native payments are not yet fully implemented. Simulating purchase for demo.");
-      const fakeReceipt = `HELIXAI_NATIVE_FAKE_RECEIPT_${Date.now()}`;
-      await updateSupabasePlan(planType, "native_bridge", { receipt: fakeReceipt });
-    } else {
-      await createStripeCheckoutSession(planType);
-    }
-  } catch (err) {
-    console.error("Subscription failed:", err.message);
-    alert(`⚠️ Subscription failed: ${err.message}`);
-    resetLoadingButtons();
-  }
-}
-
-// ===========================
-// 🔁 Restore Purchases
-// ===========================
-function restorePurchases() {
-  const platform = getPlatform();
-  if (platform === 'web') {
-    alert("Restore purchases is available within the mobile app.");
-    return;
-  }
-  alert("Restore purchases is not yet fully implemented. This would check your active App Store / Play Store subscriptions.");
+  await createStripeCheckoutSession(planType);
 }
 
 // ===========================
@@ -715,15 +486,12 @@ async function updatePlanButtons() {
     ultimate_yearly: document.getElementById("ultimateYearlyBtn"),
   };
 
-  // Helper to reset buttons to base state
   const resetButtons = () => {
     Object.values(buttons).forEach(btn => {
       if (btn) {
         btn.disabled = false;
         btn.classList.remove("cancel-mode", "login-required");
-        btn.onclick = null; // Remove specific click handlers attached directly
-        
-        // Restore default IDs if needed, but we manage state via text
+        btn.onclick = null;
         if(btn.innerHTML.includes('loading-spinner')) btn.innerHTML = btn.dataset.originalHTML || btn.textContent;
       }
     });
@@ -733,9 +501,7 @@ async function updatePlanButtons() {
 
   // CASE 1: USER IS NOT LOGGED IN
   if (!isUserLoggedIn) {
-    console.log("User is guest. Showing login buttons.");
     if (buttons.free) buttons.free.textContent = "Use Free Plan";
-    
     [buttons.ultimate_monthly, buttons.ultimate_yearly].forEach(btn => {
       if (btn) {
         btn.textContent = "Login to Subscribe";
@@ -750,17 +516,30 @@ async function updatePlanButtons() {
   if (!currentPlan) return; 
 
   // CASE 3: PAID PLANS ACTIVE
-  if (currentPlan === 'ultimate_monthly' || currentPlan === 'ultimate_yearly') {
-    if (buttons[currentPlan]) {
-      buttons[currentPlan].textContent = "Current Plan";
-      buttons[currentPlan].disabled = true;
+  if (currentPlan === 'monthly' || currentPlan === 'yearly' || currentPlan === 'ultimate_monthly' || currentPlan === 'ultimate_yearly' || currentPlan === 'lifetime') {
+    // Normalize current plan for comparison
+    let normalizedPlan = currentPlan;
+    if(currentPlan === 'ultimate_monthly') normalizedPlan = 'monthly';
+    if(currentPlan === 'ultimate_yearly') normalizedPlan = 'yearly';
+
+    // Mark active button
+    if (normalizedPlan === 'monthly' && buttons.ultimate_monthly) {
+      buttons.ultimate_monthly.textContent = "Current Plan";
+      buttons.ultimate_monthly.disabled = true;
+    } else if (normalizedPlan === 'yearly' && buttons.ultimate_yearly) {
+      buttons.ultimate_yearly.textContent = "Current Plan";
+      buttons.ultimate_yearly.disabled = true;
     }
 
+    // Set Free Button to "Manage Subscription" (Portal)
     if (buttons.free) {
-      buttons.free.textContent = "Cancel Subscription";
+      buttons.free.textContent = "Manage Subscription";
       buttons.free.disabled = false;
-      buttons.free.classList.add("cancel-mode");
-      buttons.free.dataset.isCancel = "true";
+      buttons.free.classList.add("cancel-mode"); // Use red styling for management
+      buttons.free.onclick = async () => {
+        setButtonLoading(buttons.free);
+        await createPortalSession();
+      };
     }
   } 
   // CASE 4: FREE PLAN ACTIVE
@@ -779,65 +558,30 @@ document.addEventListener("DOMContentLoaded", () => {
   const freeBtn = document.getElementById("freeBtn");
   const monthlyBtn = document.getElementById("ultimateMonthlyBtn");
   const yearlyBtn = document.getElementById("ultimateYearlyBtn");
-  const restoreBtn = document.getElementById("restoreBtn");
-
-  const platform = updatePlatformIndicator();
-  console.log(`Running on platform: ${platform} — HeloxAi`);
-
-  if ((platform.includes('ios') || platform.includes('android') || platform === 'native') && restoreBtn) {
-    restoreBtn.style.display = "inline-block";
-  }
 
   updatePlanButtons();
 
-  // Free Button Logic (Handles both "Select Free" and "Cancel Subscription")
-  freeBtn?.addEventListener("click", async () => {
-    if (!isUserLoggedIn) {
-      window.location.href = 'index.html';
-      return;
-    }
-
-    const isCancelling = freeBtn.classList.contains("cancel-mode");
-
-    if (isCancelling) {
-      const confirmCancel = confirm("Are you sure you want to cancel your subscription? You will lose access to premium features immediately.");
-      if (confirmCancel) {
-        setButtonLoading(freeBtn);
-        await updateSupabasePlan("free", "manual");
-      }
-    } else {
-      // Selecting free plan manually
-      setButtonLoading(freeBtn);
-      await updateSupabasePlan("free", "manual");
-    }
-  });
-
+  // Monthly Button
   monthlyBtn?.addEventListener("click", () => {
     if(!monthlyBtn.classList.contains("login-required")) {
       handleSubscription("ultimate_monthly", monthlyBtn);
     }
   });
   
+  // Yearly Button
   yearlyBtn?.addEventListener("click", () => {
     if(!yearlyBtn.classList.contains("login-required")) {
       handleSubscription("ultimate_yearly", yearlyBtn);
     }
   });
 
-  restoreBtn?.addEventListener("click", restorePurchases);
-
   // Handle Stripe Redirect
   const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('success') === 'true') {
-    const planParam = urlParams.get('plan');
-    const planType = planParam === 'yearly' ? 'ultimate_yearly' : 'ultimate_monthly';
-    console.log("Detected successful redirect from Stripe Checkout.");
+  if (urlParams.get('session_id')) {
+    // User returned from checkout. We let the webhook handle the DB update,
+    // but we refresh the UI.
+    console.log("Detected return from Stripe.");
     updatePlanButtons();
-    window.history.replaceState({}, document.title, window.location.pathname);
-  }
-
-  if (urlParams.get('cancelled') === 'true') {
-    console.log("User cancelled Stripe Checkout.");
     window.history.replaceState({}, document.title, window.location.pathname);
   }
 });
