@@ -3,187 +3,362 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HeloxAi — NFT & Bitcoin Support</title>
+  <title>HeloxAi — Crypto & NFT Support</title>
+  <!-- Google Fonts for a modern tech look -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+  
   <style>
     :root {
-      --primary: #00e0ff;
-      --secondary: #0077ff;
-      --bg: #0a0a0a;
-      --card-bg: #111;
-      --text: #f9f9f9;
-      --muted: #bbb;
+      --primary: #00f2ea;
+      --secondary: #7c4dff;
+      --bg: #050505;
+      --card-bg: rgba(20, 20, 25, 0.6);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text: #ffffff;
+      --muted: #a0a0a0;
+      --glow: 0 0 20px rgba(0, 242, 234, 0.3);
+      --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
     body {
-      font-family: "Poppins", Arial, sans-serif;
+      font-family: 'Outfit', sans-serif;
       background: var(--bg);
       color: var(--text);
       margin: 0;
       padding: 0;
       text-align: center;
-      line-height: 1.6;
+      line-height: 1.7;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      /* Animated Background Mesh */
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(124, 77, 255, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(0, 242, 234, 0.15) 0%, transparent 40%);
     }
 
+    /* Header Styling */
     header {
-      background: linear-gradient(90deg, var(--secondary), var(--primary));
-      padding: 1rem;
-      color: #fff;
-      font-size: 1.6rem;
+      padding: 2rem 1rem 1rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2.5rem;
       font-weight: 700;
-      text-shadow: 0 0 6px var(--primary), 0 0 12px var(--secondary);
-      letter-spacing: 1px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      background: linear-gradient(135deg, #fff 0%, var(--primary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin: 0;
+      letter-spacing: -1px;
+      text-shadow: 0 0 30px rgba(0, 242, 234, 0.2);
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 1.1rem;
+      margin-top: 0.5rem;
+      font-weight: 300;
     }
 
     main {
-      padding: 2rem 1rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      padding: 2rem 1rem 4rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      align-items: start;
     }
 
+    /* Advanced Card Styling */
     .card {
       background: var(--card-bg);
-      padding: 2rem;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0, 224, 255, 0.15);
-      max-width: 700px;
-      width: 100%;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 2.5rem;
+      border-radius: 20px;
+      border: 1px solid var(--card-border);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
       text-align: left;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+      transform: scaleX(0);
+      transition: transform 0.6s ease;
     }
 
     .card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 0 15px rgba(0, 224, 255, 0.3);
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5), var(--glow);
+      border-color: rgba(0, 242, 234, 0.3);
     }
 
-    h1, h2 {
-      text-align: center;
+    .card:hover::before {
+      transform: scaleX(1);
+    }
+
+    /* Typography inside cards */
+    .card h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.5rem;
       color: var(--primary);
-      margin-bottom: 0.5rem;
+      margin-top: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
     p, li {
-      color: var(--muted);
-      font-size: 1rem;
+      color: #d1d1d1;
+      font-size: 0.95rem;
     }
 
     ul {
       padding-left: 20px;
+      margin: 1.5rem 0;
     }
 
-    a {
-      color: var(--primary);
+    li {
+      margin-bottom: 0.8rem;
+    }
+
+    /* Buttons & Links */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--secondary), var(--primary));
+      color: #000;
       text-decoration: none;
-      font-weight: 600;
-      transition: color 0.3s ease;
-    }
-
-    a:hover {
-      color: #fff;
-      text-decoration: underline;
-    }
-
-    .wallet-address {
-      display: inline-block;
-      background: #1a1a1a;
-      color: var(--primary);
-      font-family: monospace;
-      padding: 10px 16px;
-      border-radius: 6px;
-      margin-top: 10px;
-      font-size: 0.95rem;
-      box-shadow: inset 0 0 5px rgba(0,224,255,0.3);
-    }
-
-    footer {
-      background: #050505;
-      color: var(--muted);
-      padding: 1rem;
-      font-size: 0.9rem;
-      border-top: 1px solid rgba(255,255,255,0.1);
-      margin-top: 3rem;
-    }
-
-    img {
-      display: block;
-      margin: 1rem auto;
-      max-width: 220px;
-      border-radius: 10px;
-      border: 2px solid rgba(0, 224, 255, 0.3);
-    }
-
-    .coffee-section {
-      text-align: center;
+      font-weight: 700;
+      padding: 12px 24px;
+      border-radius: 12px;
       margin-top: 1.5rem;
-    }
-
-    .coffee-placeholder {
-      background: rgba(255,255,255,0.05);
-      border: 1px dashed rgba(0,224,255,0.4);
-      padding: 1.5rem;
-      border-radius: 8px;
-      color: var(--muted);
+      transition: var(--transition);
+      box-shadow: 0 4px 15px rgba(0, 242, 234, 0.3);
+      border: none;
+      cursor: pointer;
+      width: 100%;
       font-size: 1rem;
-      margin-top: 1rem;
     }
 
-    @media (max-width: 600px) {
-      main {
-        padding: 1rem;
-      }
-      .card {
-        padding: 1.5rem;
-      }
+    .btn:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 8px 25px rgba(0, 242, 234, 0.5);
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      box-shadow: none;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(0, 242, 234, 0.1);
+      color: #fff;
+    }
+
+    /* Wallet Address Box */
+    .wallet-box {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 1rem;
+      margin: 1.5rem 0;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      color: var(--primary);
+      word-break: break-all;
+      position: relative;
+    }
+
+    .copy-hint {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .copy-hint:hover {
+      background: var(--primary);
+      color: #000;
+    }
+
+    /* Ko-fi Placeholder Styling */
+    .kofi-placeholder {
+      background: linear-gradient(135deg, rgba(255, 222, 140, 0.1), rgba(255, 222, 140, 0.05));
+      border: 2px dashed rgba(255, 222, 140, 0.3);
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      margin-top: 1rem;
+      color: var(--muted);
+      transition: var(--transition);
+    }
+
+    .kofi-placeholder:hover {
+      border-color: var(--primary);
+      background: rgba(0, 242, 234, 0.05);
+    }
+
+    .kofi-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      display: block;
+      filter: drop-shadow(0 0 10px rgba(255, 222, 140, 0.4));
+    }
+
+    /* Footer */
+    footer {
+      margin-top: auto;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      color: var(--muted);
+      padding: 2rem 1rem;
+      font-size: 0.9rem;
+      border-top: 1px solid var(--card-border);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      h1 { font-size: 2rem; }
+      main { grid-template-columns: 1fr; padding: 1rem; }
+      .card { padding: 1.5rem; }
     }
   </style>
 </head>
 <body>
-  <header>HeloxAi NFT & Bitcoin Support</header>
+
+  <header>
+    <h1>HeloxAi Support Hub</h1>
+    <p class="subtitle">Powering the future of AI with community support.</p>
+  </header>
+
   <main>
-    <section class="card">
-      <h1>💎 Explore My NFT</h1>
-      <p>Check out my latest NFT collection — each piece supports the vision behind <strong>HeloxAi</strong>.</p>
-      <a href="https://rarible.com/user/0x7681dc9bc0c1cc87aa79b2b83b9399b22efe6334" target="_blank">
-        🔗 View My NFT on Rarible
-      </a>
-    </section>
-<a href="https://ko-fi.com/nexisphere" target="_blank">
-        🔗 Donate on Ko-Fi
-      </a>
-
-    <section class="card">
-      <h2>₿ Support HeloxAi with Bitcoin</h2>
-      <p>Your donations power our development, fund innovation, and help grow the HeloxAi ecosystem — while giving back to community projects and charities.</p>
+    <!-- Crypto Donation Section -->
+    <section class="card" style="grid-row: span 2;">
+      <h2>💎 Crypto Donations</h2>
+      <p>Support the development of HeloxAi directly via cryptocurrency. Your contribution fuels innovation, server costs, and new features.</p>
+      
       <ul>
-        <li><strong>🚀 Development:</strong> Fuel platform improvements and new features.</li>
-        <li><strong>⚙️ Equipment:</strong> Invest in tools, servers, and advanced security testing.</li>
-        <li><strong>🤝 Team Support:</strong> Sustain developers and volunteers building HeloxAi.</li>
+        <li><strong>🚀 Development:</strong> Accelerate platform updates and AI model training.</li>
+        <li><strong>🛡️ Infrastructure:</strong> High-performance servers and advanced security.</li>
+        <li><strong>🌍 Community:</strong> Funding open-source tools and community events.</li>
       </ul>
-      <div class="wallet-address">0x7681dC9BC0C1Cc87aA79B2b83B9399B22Efe6334</div>
-      <p>Every satoshi helps us move forward — thank you for supporting our journey 💙</p>
+
+      <p style="margin-top: 1rem; color: #fff;"><strong>Ethereum (ERC-20) / USDT:</strong></p>
+      
+      <div class="wallet-box" id="walletAddress" title="Click to copy">
+        0x7681dC9BC0C1Cc87aA79B2b83B9399B22Efe6334
+        <span class="copy-hint" onclick="copyToClipboard()">COPY</span>
+      </div>
+
+      <p style="font-size: 0.85rem; margin-top: -10px; margin-bottom: 20px; color: var(--muted);">
+        * Ensure you are sending on the Ethereum Network (ERC20).
+      </p>
+
+      <button class="btn" onclick="copyToClipboard()">
+        <i class="fa-regular fa-copy"></i> Copy Wallet Address
+      </button>
     </section>
 
-    <!-- ☕ BUY ME A COFFEE SECTION -->
-    <section class="card coffee-section">
-      <h2>☕ Buy Me a Coffee</h2>
-      <p>Want to show some love for HeloxAi? You can support us with a coffee donation below!</p>
+    <!-- NFT Section -->
+    <section class="card">
+      <h2>🎨 NFT Collection</h2>
+      <p>Own a piece of the HeloxAi ecosystem. Our NFTs grant exclusive access to future beta features and community channels.</p>
+      <a href="https://rarible.com/user/0x7681dc9bc0c1cc87aa79b2b83b9399b22efe6334" target="_blank" class="btn btn-secondary">
+        View Collection on Rarible
+      </a>
+    </section>
 
-      <!-- 🔽 PLACEHOLDER — Paste your Buy Me a Coffee embed/button here -->
-      <div class="coffee-placeholder">
-        🪙 <em>Buy Me a Coffee widget or button goes here</em>  
-        <br><br>
-        Example:  
-        <code>&lt;script src="https://www.buymeacoffee.com/widget.js"&gt;&lt;/script&gt;</code>
+    <!-- Ko-fi Section -->
+    <section class="card">
+      <h2>☕ Ko-fi Support</h2>
+      <p>Prefer using credit/debit cards or PayPal? You can support us via Ko-fi with a one-time donation.</p>
+      
+      <!-- Ko-fi Placeholder Area -->
+      <div class="kofi-placeholder">
+        <span class="kofi-icon">☕</span>
+        <h3>Ko-fi Widget Placeholder</h3>
+        <p style="font-size: 0.85rem; margin-bottom: 0;">
+          <em>Your Ko-fi button or widget embed code goes here.</em>
+        </p>
       </div>
-      <!-- 🔼 END PLACEHOLDER -->
+      <!-- End Placeholder -->
+
+      <a href="https://ko-fi.com/nexisphere" target="_blank" class="btn">
+        Donate on Ko-fi
+      </a>
     </section>
   </main>
 
-  <footer>&copy; 2025 HeloxAi. All rights reserved.</footer>
+  <footer>
+    &copy; 2025 HeloxAi. Built with intelligence. <br>
+    <span style="font-size: 0.8rem; opacity: 0.6;">Crypto donations are non-refundable.</span>
+  </footer>
+
+  <script>
+    function copyToClipboard() {
+      const address = document.getElementById('walletAddress').innerText.replace('COPY', '').trim();
+      navigator.clipboard.writeText(address).then(() => {
+        const btn = document.querySelector('.copy-hint') || document.querySelector('button');
+        const originalText = btn.innerHTML;
+        
+        // Visual Feedback
+        if(btn.classList.contains('copy-hint')) {
+            btn.innerText = 'COPIED!';
+            btn.style.background = 'var(--primary)';
+            btn.style.color = '#000';
+        } else {
+            btn.innerText = 'Address Copied!';
+            btn.style.background = 'var(--primary)';
+            btn.style.color = '#000';
+        }
+
+        setTimeout(() => {
+            if(btn.classList.contains('copy-hint')){
+                btn.innerHTML = 'COPY';
+                btn.style.background = '';
+                btn.style.color = '';
+            } else {
+                btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy Wallet Address';
+                btn.style.background = '';
+                btn.style.color = '';
+            }
+        }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy: ', err);
+        alert('Failed to copy address. Please select and copy manually.');
+      });
+    }
+  </script>
 </body>
 </html>
