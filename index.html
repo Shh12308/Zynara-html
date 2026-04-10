@@ -357,6 +357,20 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 </style>
 </head>
 <body>
+
+<!-- ================= ENV.JS CONFIGURATION ================= -->
+<script id="env-js">
+  // This section acts as your env.js file.
+  // Replace these values with your actual environment variables.
+  const ENV = {
+      SUPABASE_URL: 'https://acbnqeeukfxewiqswgbw.supabase.co',
+      SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjYm5xZWV1a2Z4ZXdpcXN3Z2J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMDY5MzIsImV4cCI6MjA4OTg4MjkzMn0.bwkZs0yqNAooAh6cV16dcwZwNz_5H5xvAu7eiQtR4wE',
+      FREE_AI_URL: 'https://billy-free-ai-production.up.railway.app',
+      PREMIUM_AI_URL: 'https://your-premium-backend-url.com' // REPLACE THIS IF NEEDED
+  };
+</script>
+<!-- ================================================ -->
+
 <div class="sb-overlay" id="sbOv"></div>
 <aside class="sidebar" id="sidebar">
   <div class="sb-head"><div class="sb-logo">Helox<span>Ai</span></div><button class="ib" id="sbClose" aria-label="Close sidebar"><i class="fa-solid fa-xmark"></i></button></div>
@@ -365,6 +379,8 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
   <div class="cl" id="chatList"><div class="cl-label">Recent</div><div id="chatListItems"><span style="color:var(--text-muted);font-size:12px;padding:4px 10px;display:block">Loading chats...</span></div></div>
   <nav class="s-nav">
     <button id="signInLink"><i class="fa-brands fa-google"></i> Sign In</button>
+    <!-- DONATE LINK ADDED HERE -->
+    <a href="donate.html" target="_blank" style="color:#ef4444"><i class="fa-solid fa-heart"></i> Donate</a>
     <a href="settings.html"><i class="fa-solid fa-sliders"></i> Settings</a>
     <button id="contactLink"><i class="fa-solid fa-envelope"></i> Contact</button>
     <a href="prem.html"><i class="fa-solid fa-crown"></i> Premium <span class="ptag premium">PRO</span></a>
@@ -478,18 +494,7 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 
 <div class="toast-ct" id="toastCt"></div>
 <script>
-// ================= CONFIGURATION (.env) =================
-// Replace these values with your actual environment variables
-var SUPABASE_URL = 'https://acbnqeeukfxewiqswgbw.supabase.co';
-var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjYm5xZWV1a2Z4ZXdpcXN3Z2J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMDY5MzIsImV4cCI6MjA4OTg4MjkzMn0.bwkZs0yqNAooAh6cV16dcwZwNz_5H5xvAu7eiQtR4wE';
-
-// Free Tier Backend URL
-var FREE_AI_URL = 'https://billy-free-ai-production.up.railway.app';
-
-// Premium/Lifetime Tier Backend URL
-var PREMIUM_AI_URL = 'https://your-premium-backend-url.com'; // REPLACE THIS
-// =================================================
-
+// ================= HELPER FUNCTIONS =================
 function $(id){return document.getElementById(id)}
 function esc(s){if(s==null)return'';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
 function uid(){try{return crypto.randomUUID()}catch(e){return Date.now().toString(36)+Math.random().toString(36).slice(2)}}
@@ -500,6 +505,7 @@ function isImageFile(file){return file&&file.type&&file.type.indexOf('image/')==
 function readFileAsDataUrl(file){return new Promise(function(resolve,reject){var r=new FileReader();r.onload=function(){resolve(r.result)};r.onerror=reject;r.readAsDataURL(file)})}
 function dataUrlToFile(dataUrl,name){try{var parts=dataUrl.split(','),mime=parts[0].match(/:(.*?);/)[1],bstr=atob(parts[1]),n=bstr.length,u8=new Uint8Array(n);while(n--)u8[n]=bstr.charCodeAt(n);return new File([u8],name,{type:mime})}catch(e){return null}}
 
+// ================= STATE MANAGEMENT =================
 var S={user:null,msgs:[],chatId:null,chatListData:[],streaming:false,abort:null,theme:'dark',sbOpen:false,asOpen:false,vdOpen:false,mdOpen:false,recording:false,recorder:null,chunks:[],audio:null,gallery:[],view:'chat',_mdOk:false,_hlOk:false,pendingFiles:[],uploading:false,model:'helox',isAutoScrolling:true,scrollThreshold:100,selectedVoice:'alloy',activeLinkUrl:''};
 
 var IMAGE_KW=['generate image','create image','make image','draw me','render image'];
@@ -507,22 +513,32 @@ var VIDEO_KW=['generate video','create video','make video','render video'];
 function isImage(t){var l=t.toLowerCase();for(var i=0;i<IMAGE_KW.length;i++)if(l.indexOf(IMAGE_KW[i])!==-1)return true;return false}
 function isVideo(t){var l=t.toLowerCase();for(var i=0;i<VIDEO_KW.length;i++)if(l.indexOf(VIDEO_KW[i])!==-1)return true;return false}
 
+// ================= ENV & CONFIG =================
+// Use ENV from the script block above
+function getEnvVar(key) {
+    if (typeof ENV !== 'undefined' && ENV[key]) return ENV[key];
+    console.warn('Missing ENV var: ' + key);
+    return '';
+}
+
 // Returns the correct Backend URL based on User Plan
 function getApiUrl(){
-  var baseUrl = FREE_AI_URL;
+  var baseUrl = getEnvVar('FREE_AI_URL');
   if(S.user) {
     // Check for Lifetime OR Premium explicitly
     if (S.user.is_lifetime || S.user.is_premium) {
+      var pUrl = getEnvVar('PREMIUM_AI_URL');
       // Fallback to Free if Premium URL is placeholder to prevent errors
-      if (PREMIUM_AI_URL.indexOf('your-premium') === -1) {
-        baseUrl = PREMIUM_AI_URL;
+      if (pUrl && pUrl.indexOf('your-premium') === -1) {
+        baseUrl = pUrl;
       }
     } else {
       var plan = (S.user.plan || 'free').toLowerCase();
       // Fallback check via plan string name
       if (plan === 'premium' || plan === 'lifetime' || plan === 'ultimate_monthly' || plan === 'ultimate_yearly') {
-        if (PREMIUM_AI_URL.indexOf('your-premium') === -1) {
-          baseUrl = PREMIUM_AI_URL;
+        var pUrl = getEnvVar('PREMIUM_AI_URL');
+        if (pUrl && pUrl.indexOf('your-premium') === -1) {
+          baseUrl = pUrl;
         }
       }
     }
@@ -550,9 +566,13 @@ function canGenMedia(){
 var sb=null;
 function initSupabase(){
   try{
-    if(SUPABASE_URL.indexOf('your-')!==-1||SUPABASE_ANON_KEY.indexOf('your-')!==-1)return;
+    var sUrl = getEnvVar('SUPABASE_URL');
+    var sKey = getEnvVar('SUPABASE_ANON_KEY');
+    
+    if(!sUrl || !sKey || sUrl.indexOf('https://') === -1) return;
     if(typeof window.supabase==='undefined')return;
-    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    
+    sb = window.supabase.createClient(sUrl, sKey, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
@@ -576,13 +596,16 @@ async function loadUser(){
     return;
   }
   try{
+    // Get session immediately from storage
     var result = await sb.auth.getSession();
     var session = result.data && result.data.session;
+    
     if(result.error || !session || !session.user){
       S.user = null;
       refreshUI();
       return;
     }
+    
     // Fetch user details (plan, etc)
     var ud = await sb.from('users').select('plan,is_premium,is_lifetime').eq('id', session.user.id).single();
     
@@ -719,6 +742,7 @@ async function loadChatList(){
 async function startNewChat() {
   if(!S.user) return;
   try {
+    // Connected to /newchat as requested
     var res = await fetch(getApiUrl() + '/newchat', {
       method: 'POST',
       headers: authH(),
@@ -802,9 +826,10 @@ function updateLoginDisplay(){
 function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('data-theme',window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');else document.documentElement.setAttribute('data-theme',t)}catch(e){}S.theme=t;try{localStorage.setItem('helox-theme',t)}catch(e){}document.querySelectorAll('.t-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-t')===t)})}
 function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'dark'}catch(e){}setTheme(s);try{window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(S.theme==='system')setTheme('system')})}catch(e){}}
 
-// ================= VOICE SELECTION =================
+// ================= VOICE SELECTION (/tts/voices) =================
 async function loadVoices(){
   try {
+    // Fixed to use the dynamic API URL
     var res = await fetch(getApiUrl() + '/tts/voices');
     if(res.ok) {
       var data = await res.json();
@@ -824,6 +849,8 @@ async function loadVoices(){
           list.appendChild(div);
         });
       }
+    } else {
+        console.warn('Failed to load voices status:', res.status);
     }
   } catch(e){ console.warn('Failed to load voices', e); }
 }
@@ -839,7 +866,6 @@ function initMarked(){
   try {
     if (typeof marked === 'undefined' || typeof hljs === 'undefined' || typeof katex === 'undefined') return;
     
-    // Configure marked for robust rendering (Tables, GFM, breaks)
     marked.setOptions({ 
       breaks: true, 
       gfm: true,
@@ -1123,7 +1149,78 @@ async function sendMsg(text){
   if(images.length||files.length){sendToAIWithFiles(t,images.map(function(img){var f=dataUrlToFile(img.dataUrl,img.name);return f?{type:'image',dataUrl:img.dataUrl,name:img.name,file:f}:null}).filter(Boolean),files)}else{sendToAI(t)}
 }
 
-function sendToAIWithFiles(text,images,files){S.streaming=true;S.abort=new AbortController();addTyping();updateCB();var fd=new FormData();fd.append('prompt',text||'What is in this image?');images.forEach(function(img){fd.append('image',img.file,img.name)});files.forEach(function(f){fd.append('file',f.file,f.name)});var h={};if(S.user&&S.user.token)h['Authorization']='Bearer '+S.user.token;var full='';fetch(getApiUrl()+'/ask/universal',{method:'POST',headers:h,credentials:'include',signal:S.abort.signal,body:fd}).then(function(res){if(!res.ok)throw new Error('HTTP '+res.status);rmTyping();var ct=(res.headers.get('content-type')||'').toLowerCase();if(ct.indexOf('application/json')!==-1){return res.json().then(function(data){var content=data.response||data.content||data.result||data.message||JSON.stringify(data);var aiMsg={id:uid(),role:'assistant',content:content,liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();addToGallery(content);saveMessage(aiMsg);if(S.chatId)updateConversationTimestamp(S.chatId)})}var aiMsg={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();return streamRes(res,function(chunk){full+=chunk;updateLastAI(full)},function(){S.msgs[S.msgs.length-1].content=full;addToGallery(full);saveMessage(S.msgs[S.msgs.length-1]);if(S.chatId)updateConversationTimestamp(S.chatId)})}).catch(function(e){rmTyping();if(e.name==='AbortError'){if(full){S.msgs[S.msgs.length-1].content=full;saveMessage(S.msgs[S.msgs.length-1]).catch(function(){});updateLastAI(full)}else{S.msgs.pop();renderAll()}toast('Stopped','inf')}else{S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});renderAll();toast('Request failed','err')}}).finally(function(){S.streaming=false;S.abort=null;updateCB()})}
+// FIXED: File/Image Upload sends to /analyse
+function sendToAIWithFiles(text,images,files){
+  S.streaming=true;
+  S.abort=new AbortController();
+  addTyping();
+  updateCB();
+  var fd=new FormData();
+  // Append text as prompt
+  fd.append('prompt',text||'What is in this image?');
+  
+  images.forEach(function(img){fd.append('image',img.file,img.name)});
+  files.forEach(function(f){fd.append('file',f.file,f.name)});
+  
+  var h={};
+  if(S.user&&S.user.token)h['Authorization']='Bearer '+S.user.token;
+  
+  var full='';
+  
+  // FIXED ENDPOINT: Sending to /analyse instead of /ask/universal
+  fetch(getApiUrl()+'/analyse',{
+    method:'POST',
+    headers:h,
+    credentials:'include',
+    signal:S.abort.signal,
+    body:fd
+  }).then(function(res){
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    rmTyping();
+    var ct=(res.headers.get('content-type')||'').toLowerCase();
+    if(ct.indexOf('application/json')!==-1){
+      return res.json().then(function(data){
+        var content=data.response||data.content||data.result||data.message||JSON.stringify(data);
+        var aiMsg={id:uid(),role:'assistant',content:content,liked:false,disliked:false,time:now()};
+        S.msgs.push(aiMsg);
+        renderAll();
+        addToGallery(content);
+        saveMessage(aiMsg);
+        if(S.chatId)updateConversationTimestamp(S.chatId);
+      })
+    }
+    var aiMsg={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};
+    S.msgs.push(aiMsg);
+    renderAll();
+    return streamRes(res,function(chunk){full+=chunk;updateLastAI(full)},function(){
+      S.msgs[S.msgs.length-1].content=full;
+      addToGallery(full);
+      saveMessage(S.msgs[S.msgs.length-1]);
+      if(S.chatId)updateConversationTimestamp(S.chatId);
+    })
+  }).catch(function(e){
+    rmTyping();
+    if(e.name==='AbortError'){
+      if(full){
+        S.msgs[S.msgs.length-1].content=full;
+        saveMessage(S.msgs[S.msgs.length-1]).catch(function(){});
+        updateLastAI(full);
+      }else{
+        S.msgs.pop();
+        renderAll();
+      }
+      toast('Stopped','inf');
+    }else{
+      S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});
+      renderAll();
+      toast('Request failed','err');
+    }
+  }).finally(function(){
+    S.streaming=false;
+    S.abort=null;
+    updateCB();
+  });
+}
 
 function sendToAI(text){if(!text)return;S.streaming=true;S.abort=new AbortController();addTyping();updateCB();var full='';fetch(getApiUrl()+'/ask/universal',{method:'POST',headers:authH(),credentials:'include',signal:S.abort.signal,body:JSON.stringify({prompt:text, conversation_id: S.chatId})}).then(function(res){if(!res.ok)throw new Error('HTTP '+res.status);rmTyping();var ct=(res.headers.get('content-type')||'').toLowerCase();if(ct.indexOf('application/json')!==-1){return res.json().then(function(data){var content=data.response||data.content||data.result||data.message||JSON.stringify(data);var aiMsg={id:uid(),role:'assistant',content:content,liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();addToGallery(content);saveMessage(aiMsg);if(S.chatId)updateConversationTimestamp(S.chatId)})}var aiMsg={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();return streamRes(res,function(chunk){full+=chunk;updateLastAI(full)},function(){S.msgs[S.msgs.length-1].content=full;addToGallery(full);saveMessage(S.msgs[S.msgs.length-1]);if(S.chatId)updateConversationTimestamp(S.chatId)})}).catch(function(e){rmTyping();if(e.name==='AbortError'){if(full){S.msgs[S.msgs.length-1].content=full;saveMessage(S.msgs[S.msgs.length-1]).catch(function(){});updateLastAI(full)}else{S.msgs.pop();renderAll()}toast('Stopped','inf')}else{S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});renderAll();toast('Request failed','err')}}).finally(function(){S.streaming=false;S.abort=null;updateCB()})}
 
