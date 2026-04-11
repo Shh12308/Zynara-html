@@ -25,10 +25,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css.css">
-
-<!-- Socket.IO Client -->
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
 <!-- Advanced Markdown Dependencies -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/atom-one-dark.min.css">
@@ -357,14 +354,6 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 @media(max-width:1024px){.sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-100%);width:280px;box-shadow:var(--shadow-lg)}.sidebar.open{transform:translateX(0)}.menu-btn{display:inline-flex!important}}
 @media(max-width:640px){.sidebar{width:100%;--sidebar-w:100%}.w-grid{grid-template-columns:1fr}.as-grid{grid-template-columns:1fr}.msgs-inner{padding:16px 14px 6px}.cb-container{padding:0 12px 14px}.msg-acts{opacity:1}.gal-grid{grid-template-columns:repeat(2,1fr);gap:8px}.msg.ai-msg{padding-right:16px}.msg.user-msg{padding-left:16px}.msg.user-msg .msg-inner{max-width:92%}.model-sel{display:none}.cb-foot{display:none}.w-logo{font-size:38px}.w-sub{font-size:14px;margin-bottom:32px}.sidebar{border-right:none}.msg-img-item.single{max-width:200px}.msg-img-item.single img{max-width:200px;max-height:240px}.msg-img-item.multi{width:96px;height:96px}.msg-img-item.multi img{width:96px;height:96px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
-
-/* CHECKING SPINNER STYLES */
-.checking-ov{position:fixed;inset:0;background:var(--bg-primary);z-index:3000;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .4s var(--ease)}
-.checking-ov.on{opacity:1;pointer-events:all}
-.checking-box{text-align:center}
-.spinner{width:48px;height:48px;border:4px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
-.checking-box p{color:var(--text-primary);font-family:var(--font-body);font-size:14px;font-weight:500;letter-spacing:.5px}
-@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -379,14 +368,6 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
   };
 </script>
 <!-- ================================================ -->
-
-<!-- CHECKING MODAL -->
-<div class="checking-ov" id="checkingModal">
-  <div class="checking-box">
-    <div class="spinner"></div>
-    <p>Checking</p>
-  </div>
-</div>
 
 <div class="sb-overlay" id="sbOv"></div>
 <aside class="sidebar" id="sidebar">
@@ -520,7 +501,7 @@ function readFileAsDataUrl(file){return new Promise(function(resolve,reject){var
 function dataUrlToFile(dataUrl,name){try{var parts=dataUrl.split(','),mime=parts[0].match(/:(.*?);/)[1],bstr=atob(parts[1]),n=bstr.length,u8=new Uint8Array(n);while(n--)u8[n]=bstr.charCodeAt(n);return new File([u8],name,{type:mime})}catch(e){return null}}
 
 // ================= STATE MANAGEMENT =================
-var S={user:null,msgs:[],chatId:null,chatListData:[],streaming:false,abort:null,socket:null,theme:'dark',sbOpen:false,asOpen:false,vdOpen:false,mdOpen:false,recording:false,recorder:null,chunks:[],audio:null,gallery:[],view:'chat',_mdOk:false,_hlOk:false,pendingFiles:[],uploading:false,model:'helox',isAutoScrolling:true,scrollThreshold:100,selectedVoice:'alloy',activeLinkUrl:'',currentStreamContent:''};
+var S={user:null,msgs:[],chatId:null,chatListData:[],streaming:false,abort:null,theme:'dark',sbOpen:false,asOpen:false,vdOpen:false,mdOpen:false,recording:false,recorder:null,chunks:[],audio:null,gallery:[],view:'chat',_mdOk:false,_hlOk:false,pendingFiles:[],uploading:false,model:'helox',isAutoScrolling:true,scrollThreshold:100,selectedVoice:'alloy',activeLinkUrl:''};
 
 var IMAGE_KW=['generate image','create image','make image','draw me','render image'];
 var VIDEO_KW=['generate video','create video','make video','render video'];
@@ -540,6 +521,7 @@ function getApiUrl(){
   if(S.user) {
     if(S.user.is_lifetime || S.user.is_premium) {
       var pUrl = getEnvVar('PREMIUM_AI_URL');
+      // Fallback to Free if Premium URL is placeholder to prevent errors
       if (pUrl && pUrl.indexOf('your-premium') === -1 && pUrl.indexOf('http') === 0) {
         baseUrl = pUrl;
       }
@@ -598,12 +580,8 @@ function initSupabase(){
 }
 
 async function loadUser(){
-  // Show checking spinner on load attempt
-  if(isAuth()) $('checkingModal').classList.add('on');
-
   if(!sb){
     refreshUI();
-    if($('checkingModal')) $('checkingModal').classList.remove('on');
     return;
   }
   try{
@@ -613,7 +591,6 @@ async function loadUser(){
     if(result.error || !session || !session.user){
       S.user = null;
       refreshUI();
-      if($('checkingModal')) $('checkingModal').classList.remove('on');
       return;
     }
     
@@ -630,11 +607,6 @@ async function loadUser(){
     
     refreshUI();
     loadChatList();
-    
-    // Hide spinner after everything is loaded
-    if($('checkingModal')) $('checkingModal').classList.remove('on');
-    if(document.visibilityState === 'visible') toast('Signed in successfully', 'ok');
-    
   } catch(e){
     console.warn('loadUser error:', e);
     if(S.user && S.user.id) {
@@ -643,7 +615,6 @@ async function loadUser(){
        S.user = null;
        refreshUI();
     }
-    if($('checkingModal')) $('checkingModal').classList.remove('on');
   }
 }
 
@@ -651,8 +622,6 @@ function setupAuthListener(){
   if(!sb) return;
   sb.auth.onAuthStateChange(function(ev, session){
     if(ev === 'SIGNED_IN' && session && session.user){
-      // Show spinner immediately on sign in
-      $('checkingModal').classList.add('on');
       handleSignIn(session);
     } else if (ev === 'SIGNED_OUT'){
       handleSignOut();
@@ -660,7 +629,6 @@ function setupAuthListener(){
       S.user.token = session.access_token;
     } else if (ev === 'INITIAL_SESSION'){
       if(session && session.user){
-        $('checkingModal').classList.add('on');
         handleSignIn(session);
       }
     }
@@ -682,8 +650,7 @@ async function handleSignIn(session){
     };
     refreshUI();
     loadChatList();
-    // Hide spinner
-    if($('checkingModal')) $('checkingModal').classList.remove('on');
+    if(document.visibilityState === 'visible') toast('Signed in successfully', 'ok');
   } catch(e){
     S.user = {
       id: session.user.id,
@@ -694,7 +661,6 @@ async function handleSignIn(session){
       token: session.access_token
     };
     refreshUI();
-    if($('checkingModal')) $('checkingModal').classList.remove('on');
   }
 }
 
@@ -717,10 +683,20 @@ async function signOut(){
 }
 
 async function triggerOAuth(){
-  // REMOVED: This function is no longer used for the main button, 
-  // but kept in case called elsewhere.
-  // Per requirements, main button now links to auth.html
-  window.location.href = 'auth.html';
+  if(!sb) {
+    toast('Auth service unavailable', 'err');
+    return;
+  }
+  toast('Connecting to Google...', 'inf');
+  var { error } = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: window.location.href
+    }
+  });
+  if (error) {
+    toast(error.message, 'err');
+  }
 }
 
 async function loadChatList(){
@@ -1133,80 +1109,7 @@ function doSTT(blob){
     } else toast('No speech detected','err')
   }).catch(function(){toast('STT failed','err')})}
 
-// ================= SOCKET.IO IMPLEMENTATION =================
-function initSocket(){
-  if (typeof io === 'undefined') {
-    console.error('Socket.IO client library not loaded.');
-    return;
-  }
-  
-  // Connect to the backend URL
-  var url = getApiUrl();
-  S.socket = io(url, {
-    transports: ['websocket', 'polling'],
-    reconnection: true,
-    reconnectionAttempts: 5,
-    reconnectionDelay: 1000
-  });
-
-  S.socket.on('connect', function() {
-    console.log('Socket.IO connected to ' + url);
-  });
-
-  S.socket.on('disconnect', function() {
-    console.log('Socket.IO disconnected');
-  });
-
-  // Listen for streaming chunks
-  S.socket.on('chunk', function(data) {
-    if (!S.streaming) return;
-    // Assuming server sends { text: "..." }
-    var chunk = data.text || data.content || '';
-    if (chunk) {
-      S.currentStreamContent += chunk;
-      updateLastAI(S.currentStreamContent);
-    }
-  });
-
-  // Listen for stream end
-  S.socket.on('end', function(data) {
-    if (!S.streaming) return;
-    finishStream();
-  });
-  
-  // Listen for errors from socket
-  S.socket.on('error', function(err) {
-    console.error('Socket Error:', err);
-    if (S.streaming) {
-      S.streaming = false;
-      S.abort = null;
-      rmTyping();
-      updateCB();
-      toast('Stream Error: ' + (err.message || 'Unknown error'), 'err');
-      // Remove partial message if needed, or keep it
-      if(S.currentStreamContent === '') {
-        S.msgs.pop(); 
-        renderAll();
-      }
-    }
-  });
-}
-
-function finishStream() {
-  S.streaming = false;
-  S.abort = null;
-  rmTyping();
-  updateCB();
-  
-  var lastMsg = S.msgs[S.msgs.length - 1];
-  if (lastMsg && lastMsg.role === 'assistant') {
-    lastMsg.content = S.currentStreamContent;
-    addToGallery(lastMsg.content);
-    saveMessage(lastMsg);
-    if(S.chatId) updateConversationTimestamp(S.chatId);
-  }
-  S.currentStreamContent = '';
-}
+function streamRes(res,onChunk,onDone){var reader,dec,buf,finished;if(res.body&&typeof res.body.getReader==='function'){reader=res.body.getReader();dec=new TextDecoder();buf='';finished=false;function finish(){if(finished)return;finished=true;onDone()}function pump(){return reader.read().then(function(result){if(result.done){finish();return}buf+=dec.decode(result.value,{stream:true});var lines=buf.split('\n');buf=lines.pop()||'';for(var i=0;i<lines.length;i++){var line=lines[i].trim();if(!line||line.indexOf('data:')!==0)continue;var d=line.slice(5).trim();if(d==='[DONE]'){finish();return}try{var p=JSON.parse(d);var text='';if(p.type==='token')text=p.text||'';else text=p.content||p.text||'';if(text)onChunk(text)}catch(e){if(d)onChunk(d)}}if(!finished)return pump()}).catch(function(){finish()})}return pump()}return res.text().then(function(text){onChunk(text);onDone()})}
 
 async function sendMsg(text){
   var t=text||$('cbInput').value.trim();
@@ -1308,83 +1211,10 @@ function sendToAIWithFiles(text,images,files){
   });
 }
 
-function sendToAI(text){
-  if(!text)return;
-  S.streaming=true;
-  S.abort=new AbortController();
-  addTyping();
-  updateCB();
-  S.currentStreamContent = ''; // Reset buffer
-  
-  var aiMsg={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};
-  S.msgs.push(aiMsg);
-  renderAll();
-  
-  if(S.socket && S.socket.connected){
-    // Emit event to Socket.IO server
-    S.socket.emit('ask_universal', { 
-      prompt: text, 
-      conversation_id: S.chatId,
-      model: S.model
-    });
-  } else {
-    // Fallback if socket is not connected (should ideally connect automatically)
-    toast('Not connected to server. Retrying...', 'err');
-    S.streaming=false;
-    rmTyping();
-    S.msgs.pop();
-    renderAll();
-    updateCB();
-  }
-}
+function sendToAI(text){if(!text)return;S.streaming=true;S.abort=new AbortController();addTyping();updateCB();var full='';fetch(getApiUrl()+'/ask/universal',{method:'POST',headers:authH(),credentials:'include',signal:S.abort.signal,body:JSON.stringify({prompt:text, conversation_id: S.chatId})}).then(function(res){if(!res.ok)throw new Error('HTTP '+res.status);rmTyping();var ct=(res.headers.get('content-type')||'').toLowerCase();if(ct.indexOf('application/json')!==-1){return res.json().then(function(data){var content=data.response||data.content||data.result||data.message||JSON.stringify(data);var aiMsg={id:uid(),role:'assistant',content:content,liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();addToGallery(content);saveMessage(aiMsg);if(S.chatId)updateConversationTimestamp(S.chatId)})}var aiMsg={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();return streamRes(res,function(chunk){full+=chunk;updateLastAI(full)},function(){S.msgs[S.msgs.length-1].content=full;addToGallery(full);saveMessage(S.msgs[S.msgs.length-1]);if(S.chatId)updateConversationTimestamp(S.chatId)})}).catch(function(e){rmTyping();if(e.name==='AbortError'){if(full){S.msgs[S.msgs.length-1].content=full;saveMessage(S.msgs[S.msgs.length-1]).catch(function(){});updateLastAI(full)}else{S.msgs.pop();renderAll()}toast('Stopped','inf')}else{S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});renderAll();toast('Request failed','err')}}).finally(function(){S.streaming=false;S.abort=null;updateCB()})}
 
-function regenerateAI(){
-  if(S.streaming)return;
-  S.msgs.pop(); // Remove last AI response
-  renderAll();
-  
-  S.streaming=true;
-  S.abort=new AbortController();
-  addTyping();
-  updateCB();
-  S.currentStreamContent = '';
-  
-  var lastUserMsg='';
-  for(var i=S.msgs.length-1;i>=0;i--){
-    if(S.msgs[i].role==='user'){
-      lastUserMsg=S.msgs[i].content;
-      break;
-    }
-  }
-  
-  var aiMsg={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};
-  S.msgs.push(aiMsg);
-  renderAll();
-
-  if(S.socket && S.socket.connected){
-    S.socket.emit('ask_universal', { 
-      prompt: lastUserMsg, 
-      conversation_id: S.chatId,
-      model: S.model
-    });
-  } else {
-    toast('Not connected to server.', 'err');
-    S.streaming=false;
-    rmTyping();
-    S.msgs.pop();
-    renderAll();
-    updateCB();
-  }
-}
-
-function stopGen(){
-  if(S.socket && S.socket.connected){
-    S.socket.emit('stop_generation');
-  }
-  if(S.abort)S.abort.abort();
-  finishStream();
-  toast('Stopped','inf');
-}
+function regenerateAI(){S.streaming=true;S.abort=new AbortController();addTyping();updateCB();var full='';var lastUserMsg='';for(var i=S.msgs.length-1;i>=0;i--){if(S.msgs[i].role==='user'){lastUserMsg=S.msgs[i].content;break}}fetch(getApiUrl()+'/ask/universal',{method:'POST',headers:authH(),credentials:'include',signal:S.abort.signal,body:JSON.stringify({prompt:lastUserMsg, conversation_id: S.chatId})}).then(function(res){if(!res.ok)throw new Error('HTTP '+res.status);rmTyping();var ct=(res.headers.get('content-type')||'').toLowerCase();if(ct.indexOf('application/json')!==-1){return res.json().then(function(data){var content=data.response||data.content||data.result||data.message||JSON.stringify(data);var aiMsg={id:uid(),role:'assistant',content:content,liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();addToGallery(content);saveMessage(aiMsg)})}var aiMsg={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(aiMsg);renderAll();return streamRes(res,function(chunk){full+=chunk;updateLastAI(full)},function(){S.msgs[S.msgs.length-1].content=full;addToGallery(full);saveMessage(S.msgs[S.msgs.length-1])})}).catch(function(e){rmTyping();if(e.name==='AbortError'){if(full){S.msgs[S.msgs.length-1].content=full;saveMessage(S.msgs[S.msgs.length-1]).catch(function(){});updateLastAI(full)}toast('Stopped','inf')}else{S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});renderAll();toast('Failed','err')}}).finally(function(){S.streaming=false;S.abort=null;updateCB()})}
+function stopGen(){if(S.abort)S.abort.abort()}
 
 function autoH(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,200)+'px'}
 function updateCB(){var hasText=$('cbInput').value.trim().length>0,hasFiles=S.pendingFiles.length>0;var mic=$('micBtn'),voice=$('voiceBtn'),ss=$('sendStopBtn');if(S.streaming||S.uploading){mic.classList.add('hide');voice.classList.add('hide');ss.classList.remove('hide');ss.classList.remove('send');ss.classList.add('stop');ss.innerHTML='<i class="fa-solid fa-stop"></i>'}else if(hasText||hasFiles){mic.classList.add('hide');voice.classList.add('hide');ss.classList.remove('hide');ss.classList.add('send');ss.classList.remove('stop');ss.innerHTML='<i class="fa-solid fa-arrow-up"></i>'}else{mic.classList.remove('hide');voice.classList.remove('hide');ss.classList.add('hide');ss.classList.remove('send','stop')}}
@@ -1406,8 +1236,7 @@ function initEvents(){
     if(S.user){
       signOut();
     } else {
-      // CHANGE: Link to auth.html instead of triggering OAuth popup
-      window.location.href = 'auth.html';
+      triggerOAuth();
     }
   });
 
@@ -1492,7 +1321,6 @@ function init(){
   initMarked();
   initSupabase();
   initModel();
-  initSocket(); // Initialize Socket.IO
   initEvents();
   setupAuthListener();
   loadVoices();
