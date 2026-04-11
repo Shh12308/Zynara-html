@@ -25,6 +25,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
 <!-- Advanced Markdown Dependencies -->
@@ -350,6 +351,12 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 @keyframes fu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes ti{from{opacity:0;transform:translateX(40px) scale(.95)}to{opacity:1;transform:translateX(0) scale(1)}}
 @keyframes to{to{opacity:0;transform:translateX(40px) scale(.95)}}
+
+/* AUTH LOADER */
+#globalLoader{position:fixed;inset:0;background:var(--bg-primary);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:var(--text-primary);font-family:var(--font-body)}
+#globalLoader i{font-size:32px;color:var(--accent)}
+#globalLoader span{font-weight:500;font-size:16px;letter-spacing:.5px}
+
 @media(min-width:1025px){.sidebar{position:relative;transform:translateX(0)!important}.sb-overlay{display:none!important}.menu-btn{display:none!important}}
 @media(max-width:1024px){.sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-100%);width:280px;box-shadow:var(--shadow-lg)}.sidebar.open{transform:translateX(0)}.menu-btn{display:inline-flex!important}}
 @media(max-width:640px){.sidebar{width:100%;--sidebar-w:100%}.w-grid{grid-template-columns:1fr}.as-grid{grid-template-columns:1fr}.msgs-inner{padding:16px 14px 6px}.cb-container{padding:0 12px 14px}.msg-acts{opacity:1}.gal-grid{grid-template-columns:repeat(2,1fr);gap:8px}.msg.ai-msg{padding-right:16px}.msg.user-msg{padding-left:16px}.msg.user-msg .msg-inner{max-width:92%}.model-sel{display:none}.cb-foot{display:none}.w-logo{font-size:38px}.w-sub{font-size:14px;margin-bottom:32px}.sidebar{border-right:none}.msg-img-item.single{max-width:200px}.msg-img-item.single img{max-width:200px;max-height:240px}.msg-img-item.multi{width:96px;height:96px}.msg-img-item.multi img{width:96px;height:96px}}
@@ -357,6 +364,12 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 </style>
 </head>
 <body>
+
+<!-- GLOBAL AUTH LOADER -->
+<div id="globalLoader" style="display:none">
+  <i class="fa-solid fa-circle-notch fa-spin"></i>
+  <span>Checking...</span>
+</div>
 
 <!-- ================= ENV.JS CONFIGURATION ================= -->
 <script id="env-js">
@@ -376,7 +389,8 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
   <button class="nc-btn" id="newChatBtn"><i class="fa-solid fa-plus"></i> New Chat <span class="nc-lock" id="ncLock" style="display:none"><i class="fa-solid fa-lock"></i></span></button>
   <div class="cl" id="chatList"><div class="cl-label">Recent</div><div id="chatListItems"><span style="color:var(--text-muted);font-size:12px;padding:4px 10px;display:block">Loading chats...</span></div></div>
   <nav class="s-nav">
-    <button id="signInLink"><i class="fa-brands fa-google"></i> Sign In</button>
+    <!-- Updated: Link to auth.html -->
+    <a href="auth.html" id="signInLink"><i class="fa-brands fa-google"></i> Sign In</a>
     <a href="donate.html" target="_blank" style="color:#ef4444"><i class="fa-solid fa-heart"></i> Donate</a>
     <a href="settings.html"><i class="fa-solid fa-sliders"></i> Settings</a>
     <button id="contactLink"><i class="fa-solid fa-envelope"></i> Contact</button>
@@ -580,8 +594,10 @@ function initSupabase(){
 }
 
 async function loadUser(){
+  $('globalLoader').style.display = 'flex'; // Show "Checking..." loader
   if(!sb){
     refreshUI();
+    $('globalLoader').style.display = 'none';
     return;
   }
   try{
@@ -591,6 +607,7 @@ async function loadUser(){
     if(result.error || !session || !session.user){
       S.user = null;
       refreshUI();
+      $('globalLoader').style.display = 'none';
       return;
     }
     
@@ -615,6 +632,8 @@ async function loadUser(){
        S.user = null;
        refreshUI();
     }
+  } finally {
+      $('globalLoader').style.display = 'none'; // Hide loader
   }
 }
 
@@ -637,6 +656,8 @@ function setupAuthListener(){
 
 async function handleSignIn(session){
   if(!session || !session.user) return;
+  $('globalLoader').style.display = 'flex'; // Show loader on signin
+  
   try{ localStorage.setItem('helox-last-login', Date.now()); } catch(e){}
   try{
     var ud = await sb.from('users').select('plan,is_premium,is_lifetime').eq('id', session.user.id).single();
@@ -661,6 +682,8 @@ async function handleSignIn(session){
       token: session.access_token
     };
     refreshUI();
+  } finally {
+      $('globalLoader').style.display = 'none';
   }
 }
 
@@ -944,7 +967,7 @@ function refreshUI(){
   } else {
     u.classList.remove('show');
     sl.innerHTML='<i class="fa-brands fa-google"></i> Sign In';
-    sl.href='#'; 
+    sl.href = 'auth.html'; // Updated to link to auth.html
     sl.style.cursor='pointer';
     hp.textContent='FREE';
     hp.className='hdr-plan ptag free';
@@ -1109,7 +1132,65 @@ function doSTT(blob){
     } else toast('No speech detected','err')
   }).catch(function(){toast('STT failed','err')})}
 
-function streamRes(res,onChunk,onDone){var reader,dec,buf,finished;if(res.body&&typeof res.body.getReader==='function'){reader=res.body.getReader();dec=new TextDecoder();buf='';finished=false;function finish(){if(finished)return;finished=true;onDone()}function pump(){return reader.read().then(function(result){if(result.done){finish();return}buf+=dec.decode(result.value,{stream:true});var lines=buf.split('\n');buf=lines.pop()||'';for(var i=0;i<lines.length;i++){var line=lines[i].trim();if(!line||line.indexOf('data:')!==0)continue;var d=line.slice(5).trim();if(d==='[DONE]'){finish();return}try{var p=JSON.parse(d);var text='';if(p.type==='token')text=p.text||'';else text=p.content||p.text||'';if(text)onChunk(text)}catch(e){if(d)onChunk(d)}}if(!finished)return pump()}).catch(function(){finish()})}return pump()}return res.text().then(function(text){onChunk(text);onDone()})}
+// ENHANCED SSE STREAMING HANDLER
+function streamRes(res,onChunk,onDone){
+  var reader,dec,buf,finished;
+  if(res.body&&typeof res.body.getReader==='function'){
+    reader=res.body.getReader();
+    dec=new TextDecoder();
+    buf='';
+    finished=false;
+    function finish(){
+      if(finished)return;
+      finished=true;
+      onDone();
+    }
+    function pump(){
+      return reader.read().then(function(result){
+        if(result.done){
+          finish();
+          return;
+        }
+        buf+=dec.decode(result.value,{stream:true});
+        var lines=buf.split('\n');
+        buf=lines.pop()||'';
+        for(var i=0;i<lines.length;i++){
+          var line=lines[i].trim();
+          if(!line) continue;
+          
+          // Handle SSE data lines
+          if(line.indexOf('data:')===0){
+             var d=line.slice(5).trim();
+             if(d==='[DONE]'){
+               finish();
+               return;
+             }
+             try{
+               var p=JSON.parse(d);
+               var text='';
+               if(p.type==='token')text=p.text||'';
+               else text=p.content||p.text||p.delta?.content||'';
+               
+               if(text)onChunk(text);
+             }catch(e){
+               // Fallback for plain text streams sometimes wrapped in data:
+               if(d) onChunk(d); 
+             }
+          } else if (line === '[DONE]') {
+              finish();
+              return;
+          }
+        }
+        if(!finished)return pump();
+      }).catch(function(e){
+        console.warn("Stream error", e);
+        finish();
+      });
+    }
+    return pump();
+  }
+  return res.text().then(function(text){onChunk(text);onDone()});
+}
 
 async function sendMsg(text){
   var t=text||$('cbInput').value.trim();
@@ -1232,12 +1313,11 @@ function initEvents(){
   });
   
   $('signInLink').addEventListener('click',function(e){
-    e.preventDefault();
     if(S.user){
+      e.preventDefault();
       signOut();
-    } else {
-      triggerOAuth();
     }
+    // If not signed in, let the href="auth.html" handle navigation
   });
 
   $('contactLink').addEventListener('click',function(){toggleSB(false);$('contactModal').classList.add('on')});
