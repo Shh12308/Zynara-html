@@ -553,10 +553,15 @@ function getApiUrl(){
   return baseUrl;
 }
 
-function authH(){var h={'Content-Type':'application/json'};if(S.user&&S.user.token)h['Authorization']='Bearer '+S.user.token;return h}
-function isAuth(){return !!S.user}
-function authSilent(){return !isAuth()}
-function isAuthed(){return isAuth()}
+function authH(){
+  const h = { 'Content-Type': 'application/json' };
+
+  if (S.user?.token) {
+    h['Authorization'] = `Bearer ${S.user.token}`;
+  }
+
+  return h;
+}
 function isPremium(){return isAuth()&&(S.user.is_premium||S.user.is_lifetime||S.user.plan!=='free')}
 
 function canGenMedia(){
@@ -595,22 +600,60 @@ function initSupabase(){
 }
 
 async function loadUser(){
-  $('globalLoader').style.display = 'flex'; // Show "Checking..." loader
-  if(!sb){
-    refreshUI();
-    $('globalLoader').style.display = 'none';
-    return;
-  }
-  try{
-    var result = await sb.auth.getSession();
-    var session = result.data && result.data.session;
-    
-    if(result.error || !session || !session.user){
+  if(!sb) return;
+
+  $('globalLoader').style.display = 'flex';
+
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+
+    if (!session || !session.user) {
       S.user = null;
       refreshUI();
-      $('globalLoader').style.display = 'none';
       return;
     }
+
+    await setUserFromSession(session);
+
+  } catch(e){
+    console.warn('loadUser error:', e);
+    S.user = null;
+  } finally {
+    refreshUI();
+    $('globalLoader').style.display = 'none';
+  }
+}
+
+async function setUserFromSession(session){
+  try {
+    const { data, error } = await sb
+      .from('users')
+      .select('plan,is_premium,is_lifetime')
+      .eq('id', session.user.id)
+      .single();
+
+    S.user = {
+      id: session.user.id,
+      email: session.user.email,
+      token: session.access_token,
+      plan: data?.plan || 'free',
+      is_premium: data?.is_premium || false,
+      is_lifetime: data?.is_lifetime || false
+    };
+
+  } catch(e){
+    console.warn('user fetch failed:', e);
+
+    S.user = {
+      id: session.user.id,
+      email: session.user.email,
+      token: session.access_token,
+      plan: 'free',
+      is_premium: false,
+      is_lifetime: false
+    };
+  }
+}
     
     var ud = await sb.from('users').select('plan,is_premium,is_lifetime').eq('id', session.user.id).single();
     
@@ -640,18 +683,24 @@ async function loadUser(){
 
 function setupAuthListener(){
   if(!sb) return;
-  sb.auth.onAuthStateChange(function(ev, session){
-    if(ev === 'SIGNED_IN' && session && session.user){
-      handleSignIn(session);
-    } else if (ev === 'SIGNED_OUT'){
+
+  sb.auth.onAuthStateChange(async (event, session) => {
+
+    if (event === 'SIGNED_OUT') {
       handleSignOut();
-    } else if (ev === 'TOKEN_REFRESHED' && session && S.user){
-      S.user.token = session.access_token;
-    } else if (ev === 'INITIAL_SESSION'){
-      if(session && session.user){
-        handleSignIn(session);
+      return;
+    }
+
+    if (session && session.user) {
+      await setUserFromSession(session);
+      refreshUI();
+      loadChatList();
+
+      if(event === 'SIGNED_IN'){
+        toast('Signed in', 'ok');
       }
     }
+
   });
 }
 
@@ -866,45 +915,82 @@ function renderVoices(){
 
 function initMarked(){
   try {
-    if (typeof marked === 'undefined' || typeof hljs === 'undefined' || typeof katex === 'undefined') return;
-    
-    marked.setOptions({ 
-      breaks: true, 
-      gfm: true,
-      highlight: function(code, lang) { 
-        var language = hljs.getLanguage(lang) ? lang : 'plaintext'; 
-        return hljs.highlight(code, { language: language }).value; 
-      } 
+    if (typeof marked === 'undefined') {
+      console.warn('marked not loaded');
+      return;
+    }
+
+    marked.setOptions({
+      breaks: true,
+      gfm: true
     });
-    
-    var renderer = new marked.Renderer();
-    renderer.code = function(code, language) {
-      var validLang = language && hljs.getLanguage(language) ? language : 'plaintext';
-      var highlighted = hljs.highlight(code, { language: validLang, ignoreIllegals: true }).value;
-      return '<div class="code-blk">' + '<div class="code-hd"><span>' + esc(validLang) + '</span>' + '<button class="cp-btn" data-copy-code><i class="fa-regular fa-copy"></i> Copy</button></div>' + '<pre><code class="hljs language-' + validLang + '">' + highlighted + '</code></pre></div>';
+
+    const renderer = new marked.Renderer();
+
+    renderer.code = function(code, lang) {
+      let validLang = (typeof hljs !== 'undefined' && hljs.getLanguage(lang)) ? lang : 'plaintext';
+      let highlighted = code;
+
+      if (typeof hljs !== 'undefined') {
+        try {
+          highlighted = hljs.highlight(code, {
+            language: validLang,
+            ignoreIllegals: true
+          }).value;
+        } catch(e){}
+      }
+
+      return `
+        <div class="code-blk">
+          <div class="code-hd">
+            <span>${esc(validLang)}</span>
+            <button class="cp-btn" data-copy-code>Copy</button>
+          </div>
+          <pre><code class="hljs language-${validLang}">${highlighted}</code></pre>
+        </div>
+      `;
     };
-    renderer.image = function(href, title, text) { return '<div class="img-wrap"><img src="' + href + '" alt="' + (text || '') + '" loading="lazy"></div>'; };
-    renderer.link = function(href, title, text) { if (!href) return text; return '<a href="' + href + '" target="_blank" rel="noopener noreferrer">' + text + '<i class="fa-solid fa-arrow-up-right-from-square ext-i"></i></a>'; };
-    marked.setOptions({ renderer: renderer });
+
+    renderer.link = function(href, title, text) {
+      if (!href) return text;
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+    };
+
+    renderer.image = function(href, title, text) {
+      return `<div class="img-wrap"><img src="${href}" alt="${text || ''}" loading="lazy"></div>`;
+    };
+
+    marked.use({ renderer });
+
     S._mdOk = true;
-    S._hlOk = true;
-  } catch(e) { console.warn("Markdown init failed", e); }
+
+  } catch(e) {
+    console.warn('Markdown init failed:', e);
+    S._mdOk = false;
+  }
 }
 
 function md(text){
   if(!text) return '';
-  var rawHtml = '';
-  if(S._mdOk) {
-    try {
-      rawHtml = marked.parse(text);
-      rawHtml = DOMPurify.sanitize(rawHtml, {
-        ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'strong', 'em', 'a', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr', 'img', 'div', 'span', 'button', 'i', 'sup', 'sub', 'dl', 'dt', 'dd'],
-        ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'id', 'style', 'src', 'alt', 'title', 'data-copy-code', 'loading'],
-        ALLOW_DATA_ATTR: false
-      });
-    } catch(e) { rawHtml = '<p>' + esc(text).replace(/\n/g, '<br>') + '</p>'; }
-  } else { rawHtml = '<p>' + esc(text).replace(/\n/g, '<br>') + '</p>'; }
-  return rawHtml;
+
+  let html = '';
+
+  try {
+    if (S._mdOk && typeof marked !== 'undefined') {
+      html = marked.parse(text);
+    } else {
+      html = esc(text).replace(/\n/g, '<br>');
+    }
+
+    if (typeof DOMPurify !== 'undefined') {
+      html = DOMPurify.sanitize(html);
+    }
+
+  } catch(e){
+    html = esc(text).replace(/\n/g, '<br>');
+  }
+
+  return html;
 }
 
 function applyMath(element) {
@@ -1263,7 +1349,7 @@ function sendToAIWithFiles(text,images,files){
     var aiMsg={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};
     S.msgs.push(aiMsg);
     renderAll();
-    return streamRes(res,function(chunk){full+=chunk;updateLastAI(full)},function(){
+    return streamRes(res,function(chunk){full+=chunk;requestAnimationFrame(() => updateLastAI(full));},function(){
       S.msgs[S.msgs.length-1].content=full;
       addToGallery(full);
       saveMessage(S.msgs[S.msgs.length-1]);
@@ -1275,7 +1361,7 @@ function sendToAIWithFiles(text,images,files){
       if(full){
         S.msgs[S.msgs.length-1].content=full;
         saveMessage(S.msgs[S.msgs.length-1]).catch(function(){});
-        updateLastAI(full);
+        requestAnimationFrame(() => updateLastAI(full));
       }else{
         S.msgs.pop();
         renderAll();
@@ -1397,7 +1483,7 @@ function initEvents(){
 function authGate(feature){if(!S.user){toast('Sign in to use '+feature,'wrn');return true}return false}
 function mediaGate(type){if(!S.user){toast('Sign in to generate '+type+'s','wrn');return true}if(!canGenMedia()){toast(type.charAt(0).toUpperCase()+type.slice(1)+' generation requires Premium or Lifetime','wrn');return true}return false}
 
-function init(){
+async function init(){
   initTheme();
   initMarked();
   initSupabase();
@@ -1407,7 +1493,8 @@ function init(){
   loadVoices();
   renderAll();
   updateCB();
-  loadUser();
+
+  await loadUser(); // ✅ important
 }
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
