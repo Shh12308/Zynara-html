@@ -13,9 +13,9 @@
 <meta name="apple-mobile-web-app-title" content="HeloxAi">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="format-detection" content="telephone=no">
-<meta name="theme-color" content="#09090b">
-<meta name="msapplication-navbutton-color" content="#09090b">
-<meta name="msapplication-TileColor" content="#09090b">
+<meta name="theme-color" content="#08080c">
+<meta name="msapplication-navbutton-color" content="#08080c">
+<meta name="msapplication-TileColor" content="#08080c">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
@@ -24,14 +24,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
-
-<!-- MOVED TO HEAD: Supabase Client Library (Must load before app script) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-<!-- Markdown Dependencies -->
+<!-- Advanced Markdown Dependencies -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/atom-one-dark.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -39,7 +36,6 @@
 <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/javascript.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/python.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/css.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/bash.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
@@ -49,19 +45,43 @@
 :root{--font-display:'Space Grotesk',sans-serif;--font-body:'DM Sans',sans-serif;--radius:14px;--radius-sm:10px;--radius-lg:18px;--radius-xl:24px;--speed:.25s;--speed-slow:.4s;--ease:cubic-bezier(.4,0,.2,1);--ease-out:cubic-bezier(0,0,.2,1);--ease-in:cubic-bezier(.4,0,1,1);--msg-max:680px;--sidebar-w:290px}
 
 /* ===== DARK ===== */
-[data-theme="dark"]{--bg-primary:#09090b;--bg-secondary:#121214;--bg-tertiary:#1e1e22;--bg-quaternary:#27272a;--bg-user-bubble:rgba(16,185,129,.08);--bg-user-bubble-border:rgba(16,185,129,.2);--bg-sidebar:#0f0f11;--bg-input:#1a1a1e;--bg-hover:#26262a;--bg-code:#0d0d0f;--text-primary:#f4f4f5;--text-secondary:#a1a1aa;--text-muted:#71717a;--accent:#10b981;--accent-hover:#059669;--accent-dim:rgba(16,185,129,.1);--accent-soft:rgba(16,185,129,.15);--accent-glow:rgba(16,185,129,.15);--border:rgba(255,255,255,.12);--border-active:rgba(16,185,129,.4);--danger:#ef4444;--warning:#f59e0b;--success:#10b981;--shadow-sm:0 1px 2px rgba(0,0,0,.5);--shadow:0 4px 12px rgba(0,0,0,.4);--shadow-lg:0 10px 30px rgba(0,0,0,.5);--glow:0 0 50px rgba(16,185,129,.05)}
+[data-theme="dark"]{--bg-primary:#08080c;--bg-secondary:#111116;--bg-tertiary:#1a1a22;--bg-quaternary:#22222c;--bg-user-bubble:rgba(16,185,129,.08);--bg-user-bubble-border:rgba(16,185,129,.15);--bg-sidebar:#0c0c10;--bg-input:#14141a;--bg-hover:#1e1e28;--bg-code:#0a0a10;--text-primary:#eeeef2;--text-secondary:#9494a6;--text-muted:#55556a;--accent:#10b981;--accent-hover:#059669;--accent-dim:rgba(16,185,129,.06);--accent-soft:rgba(16,185,129,.1);--accent-glow:rgba(16,185,129,.15);--border:rgba(255,255,255,.06);--border-active:rgba(16,185,129,.3);--danger:#ef4444;--warning:#f59e0b;--success:#10b981;--shadow-sm:0 1px 3px rgba(0,0,0,.3);--shadow:0 4px 20px rgba(0,0,0,.4);--shadow-lg:0 8px 40px rgba(0,0,0,.5);--glow:0 0 60px rgba(16,185,129,.06)}
 
 /* ===== LIGHT ===== */
-[data-theme="light"]{--bg-primary:#ffffff;--bg-secondary:#f4f4f5;--bg-tertiary:#e4e4e7;--bg-quaternary:#d4d4d8;--bg-user-bubble:rgba(16,185,129,.08);--bg-user-bubble-border:rgba(16,185,129,.2);--bg-sidebar:#fcfcfc;--bg-input:#f4f4f5;--bg-hover:#e4e4e7;--bg-code:#27272a;--text-primary:#09090b;--text-secondary:#52525b;--text-muted:#a1a1aa;--accent:#059669;--accent-hover:#047857;--accent-dim:rgba(16,185,129,.08);--accent-soft:rgba(16,185,129,.12);--accent-glow:rgba(16,185,129,.1);--border:rgba(0,0,0,.1);--border-active:rgba(5,150,105,.3);--danger:#dc2626;--warning:#d97706;--success:#059669;--shadow-sm:0 1px 2px rgba(0,0,0,.05);--shadow:0 4px 12px rgba(0,0,0,.08);--shadow-lg:0 10px 30px rgba(0,0,0,.1);--glow:0 0 30px rgba(16,185,129,.04)}
+[data-theme="light"]{--bg-primary:#fafafa;--bg-secondary:#f0f0f2;--bg-tertiary:#e6e6ea;--bg-quaternary:#dddde2;--bg-user-bubble:rgba(5,150,105,.06);--bg-user-bubble-border:rgba(5,150,105,.15);--bg-sidebar:#f4f4f6;--bg-input:#f0f0f2;--bg-hover:#e4e4e8;--bg-code:#1e1e2e;--text-primary:#111114;--text-secondary:#555566;--text-muted:#999aaa;--accent:#059669;--accent-hover:#047857;--accent-dim:rgba(5,150,105,.04);--accent-soft:rgba(5,150,105,.08);--accent-glow:rgba(5,150,105,.1);--border:rgba(0,0,0,.07);--border-active:rgba(5,150,105,.3);--danger:#dc2626;--warning:#d97706;--success:#059669;--shadow-sm:0 1px 3px rgba(0,0,0,.04);--shadow:0 4px 20px rgba(0,0,0,.06);--shadow-lg:0 8px 40px rgba(0,0,0,.08);--glow:none}
+
+/* ===== GOLD ===== */
+[data-theme="gold"]{--bg-primary:#0c0a08;--bg-secondary:#151210;--bg-tertiary:#1e1a15;--bg-quaternary:#28221a;--bg-user-bubble:rgba(245,158,11,.07);--bg-user-bubble-border:rgba(245,158,11,.15);--bg-sidebar:#0e0b08;--bg-input:#161310;--bg-hover:#221c14;--bg-code:#0a0908;--text-primary:#f5f0e8;--text-secondary:#a89880;--text-muted:#6b5d4d;--accent:#f59e0b;--accent-hover:#d97706;--accent-dim:rgba(245,158,11,.06);--accent-soft:rgba(245,158,11,.1);--accent-glow:rgba(245,158,11,.12);--border:rgba(245,158,11,.08);--border-active:rgba(245,158,11,.3);--danger:#ef4444;--warning:#f59e0b;--success:#22c55e;--shadow-sm:0 1px 3px rgba(0,0,0,.4);--shadow:0 4px 20px rgba(0,0,0,.5);--shadow-lg:0 8px 40px rgba(0,0,0,.6);--glow:0 0 60px rgba(245,158,11,.06)}
+
+/* ===== OCEAN ===== */
+[data-theme="ocean"]{--bg-primary:#060a10;--bg-secondary:#0c1218;--bg-tertiary:#121a24;--bg-quaternary:#182230;--bg-user-bubble:rgba(59,130,246,.07);--bg-user-bubble-border:rgba(59,130,246,.15);--bg-sidebar:#080d14;--bg-input:#0e141c;--bg-hover:#162030;--bg-code:#080c12;--text-primary:#e8eef5;--text-secondary:#8899b0;--text-muted:#4d6080;--accent:#3b82f6;--accent-hover:#2563eb;--accent-dim:rgba(59,130,246,.06);--accent-soft:rgba(59,130,246,.1);--accent-glow:rgba(59,130,246,.12);--border:rgba(59,130,246,.08);--border-active:rgba(59,130,246,.3);--danger:#f87171;--warning:#fbbf24;--success:#34d399;--shadow-sm:0 1px 3px rgba(0,0,0,.4);--shadow:0 4px 20px rgba(0,0,0,.5);--shadow-lg:0 8px 40px rgba(0,0,0,.6);--glow:0 0 60px rgba(59,130,246,.06)}
+
+/* ===== MIDNIGHT ===== */
+[data-theme="midnight"]{--bg-primary:#030308;--bg-secondary:#08080f;--bg-tertiary:#0e0e1a;--bg-quaternary:#14142a;--bg-user-bubble:rgba(99,102,241,.07);--bg-user-bubble-border:rgba(99,102,241,.14);--bg-sidebar:#050510;--bg-input:#0a0a16;--bg-hover:#12122a;--bg-code:#050510;--text-primary:#e0e0f0;--text-secondary:#8080a8;--text-muted:#4a4a70;--accent:#6366f1;--accent-hover:#4f46e5;--accent-dim:rgba(99,102,241,.06);--accent-soft:rgba(99,102,241,.1);--accent-glow:rgba(99,102,241,.1);--border:rgba(99,102,241,.08);--border-active:rgba(99,102,241,.3);--danger:#f87171;--warning:#fbbf24;--success:#34d399;--shadow-sm:0 1px 3px rgba(0,0,0,.5);--shadow:0 4px 20px rgba(0,0,0,.6);--shadow-lg:0 8px 40px rgba(0,0,0,.7);--glow:0 0 60px rgba(99,102,241,.06)}
+
+/* ===== CYBER ===== */
+[data-theme="cyber"]{--bg-primary:#060610;--bg-secondary:#0a0a18;--bg-tertiary:#10101e;--bg-quaternary:#18182c;--bg-user-bubble:rgba(0,255,200,.05);--bg-user-bubble-border:rgba(0,255,200,.12);--bg-sidebar:#070712;--bg-input:#0c0c1a;--bg-hover:#16162c;--bg-code:#060610;--text-primary:#e0fff5;--text-secondary:#70b8a0;--text-muted:#3d6b5c;--accent:#00ffc8;--accent-hover:#00ddb0;--accent-dim:rgba(0,255,200,.04);--accent-soft:rgba(0,255,200,.08);--accent-glow:rgba(0,255,200,.1);--border:rgba(0,255,200,.07);--border-active:rgba(0,255,200,.25);--danger:#ff4060;--warning:#ffc800;--success:#00ffc8;--shadow-sm:0 1px 3px rgba(0,0,0,.5);--shadow:0 4px 20px rgba(0,0,0,.6);--shadow-lg:0 8px 40px rgba(0,0,0,.7);--glow:0 0 60px rgba(0,255,200,.06)}
+
+/* ===== FOREST ===== */
+[data-theme="forest"]{--bg-primary:#060a06;--bg-secondary:#0c120c;--bg-tertiary:#121a12;--bg-quaternary:#1a241a;--bg-user-bubble:rgba(34,197,94,.07);--bg-user-bubble-border:rgba(34,197,94,.14);--bg-sidebar:#080e08;--bg-input:#0e140e;--bg-hover:#162016;--bg-code:#060a06;--text-primary:#e8f5e8;--text-secondary:#80b080;--text-muted:#4a6b4a;--accent:#22c55e;--accent-hover:#16a34a;--accent-dim:rgba(34,197,94,.06);--accent-soft:rgba(34,197,94,.1);--accent-glow:rgba(34,197,94,.1);--border:rgba(34,197,94,.08);--border-active:rgba(34,197,94,.3);--danger:#f87171;--warning:#fbbf24;--success:#22c55e;--shadow-sm:0 1px 3px rgba(0,0,0,.4);--shadow:0 4px 20px rgba(0,0,0,.5);--shadow-lg:0 8px 40px rgba(0,0,0,.6);--glow:0 0 60px rgba(34,197,94,.06)}
+
+/* ===== SUNSET ===== */
+[data-theme="sunset"]{--bg-primary:#0c0606;--bg-secondary:#160c0c;--bg-tertiary:#201212;--bg-quaternary:#2c1818;--bg-user-bubble:rgba(249,115,22,.07);--bg-user-bubble-border:rgba(249,115,22,.14);--bg-sidebar:#0e0808;--bg-input:#140e0e;--bg-hover:#201414;--bg-code:#0c0606;--text-primary:#f5ece8;--text-secondary:#b09080;--text-muted:#705848;--accent:#f97316;--accent-hover:#ea580c;--accent-dim:rgba(249,115,22,.06);--accent-soft:rgba(249,115,22,.1);--accent-glow:rgba(249,115,22,.1);--border:rgba(249,115,22,.08);--border-active:rgba(249,115,22,.3);--danger:#f87171;--warning:#f97316;--success:#4ade80;--shadow-sm:0 1px 3px rgba(0,0,0,.4);--shadow:0 4px 20px rgba(0,0,0,.5);--shadow-lg:0 8px 40px rgba(0,0,0,.6);--glow:0 0 60px rgba(249,115,22,.06)}
+
+/* ===== ARCTIC ===== */
+[data-theme="arctic"]{--bg-primary:#f0f4f8;--bg-secondary:#e4eaf0;--bg-tertiary:#d8e0ea;--bg-quaternary:#ccd6e2;--bg-user-bubble:rgba(14,165,233,.06);--bg-user-bubble-border:rgba(14,165,233,.14);--bg-sidebar:#eaf0f5;--bg-input:#e0e8f0;--bg-hover:#d0dae6;--bg-code:#1e2a3a;--text-primary:#0f1a2a;--text-secondary:#4a6070;--text-muted:#8a9aaa;--accent:#0ea5e9;--accent-hover:#0284c7;--accent-dim:rgba(14,165,233,.04);--accent-soft:rgba(14,165,233,.08);--accent-glow:rgba(14,165,233,.08);--border:rgba(14,165,233,.1);--border-active:rgba(14,165,233,.3);--danger:#dc2626;--warning:#d97706;--success:#0ea5e9;--shadow-sm:0 1px 3px rgba(0,0,0,.04);--shadow:0 4px 20px rgba(0,0,0,.06);--shadow-lg:0 8px 40px rgba(0,0,0,.08);--glow:none}
+
+/* ===== LAVENDER ===== */
+[data-theme="lavender"]{--bg-primary:#f5f0fa;--bg-secondary:#ebe4f2;--bg-tertiary:#e0d8ec;--bg-quaternary:#d5cce2;--bg-user-bubble:rgba(139,92,246,.06);--bg-user-bubble-border:rgba(139,92,246,.14);--bg-sidebar:#f0eaf6;--bg-input:#e8e0f0;--bg-hover:#dcd2e8;--bg-code:#1e182e;--text-primary:#1a1028;--text-secondary:#5a4870;--text-muted:#9080a8;--accent:#8b5cf6;--accent-hover:#7c3aed;--accent-dim:rgba(139,92,246,.04);--accent-soft:rgba(139,92,246,.08);--accent-glow:rgba(139,92,246,.08);--border:rgba(139,92,246,.1);--border-active:rgba(139,92,246,.3);--danger:#dc2626;--warning:#d97706;--success:#8b5cf6;--shadow-sm:0 1px 3px rgba(0,0,0,.04);--shadow:0 4px 20px rgba(0,0,0,.06);--shadow-lg:0 8px 40px rgba(0,0,0,.08);--glow:none}
+
+/* ===== ESPRESSO ===== */
+[data-theme="espresso"]{--bg-primary:#0c0806;--bg-secondary:#16100c;--bg-tertiary:#201812;--bg-quaternary:#2c2018;--bg-user-bubble:rgba(180,120,60,.07);--bg-user-bubble-border:rgba(180,120,60,.14);--bg-sidebar:#0e0a08;--bg-input:#14100c;--bg-hover:#201810;--bg-code:#0c0806;--text-primary:#f0e8e0;--text-secondary:#a89080;--text-muted:#6b5848;--accent:#c8956c;--accent-hover:#b07850;--accent-dim:rgba(180,120,60,.06);--accent-soft:rgba(180,120,60,.1);--accent-glow:rgba(180,120,60,.08);--border:rgba(180,120,60,.08);--border-active:rgba(180,120,60,.3);--danger:#f87171;--warning:#fbbf24;--success:#4ade80;--shadow-sm:0 1px 3px rgba(0,0,0,.5);--shadow:0 4px 20px rgba(0,0,0,.6);--shadow-lg:0 8px 40px rgba(0,0,0,.7);--glow:0 0 60px rgba(180,120,60,.04)}
 
 /* ===== BASE STYLES ===== */
 html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;-webkit-overflow-scrolling:touch;height:100dvh;height:100%}
 body{font-family:var(--font-body);background:var(--bg-primary);color:var(--text-primary);transition:background var(--speed-slow),color var(--speed-slow);-webkit-font-smoothing:antialiased;display:flex;flex-direction:row;width:100vw;height:100vh;position:relative}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.4;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");background-repeat:repeat;background-size:200px}
-::-webkit-scrollbar{width:6px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--text-muted);border-radius:10px}
-::-webkit-scrollbar-thumb:hover{background:var(--text-secondary)}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}::-webkit-scrollbar-thumb:hover{background:var(--text-muted)}
 .sb-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:90;opacity:0;pointer-events:none;transition:opacity .35s var(--ease);backdrop-filter:blur(4px)}.sb-overlay.on{opacity:1;pointer-events:all}
 .sidebar{background:var(--bg-sidebar);border-right:1px solid var(--border);z-index:100;display:flex;flex-direction:column;overflow:hidden;width:var(--sidebar-w);height:100vh;flex-shrink:0;transition:transform .35s var(--ease)}
 .sb-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
@@ -171,7 +191,7 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 .msg-ct strong{font-weight:700}.msg-ct em{font-style:italic}
 .msg-ct blockquote{border-left:3px solid var(--accent);padding:8px 16px;margin:10px 0;color:var(--text-secondary);background:var(--accent-dim);border-radius:0 var(--radius-sm) var(--radius-sm) 0;font-style:italic}
 .msg-ct a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent;transition:border-color var(--speed)}.msg-ct a:hover{border-bottom-color:var(--accent);text-decoration:underline}
-.msg-ct a[href^="mailto:"]{color:var(--warning);border-bottom-color:var(--warning-dim, rgba(245,158,11,0.2));}
+.msg-ct .ext-i{font-size:8px;margin-left:3px;opacity:.5;vertical-align:super}
 
 /* Advanced Markdown Tables */
 .msg-ct table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid var(--border);border-radius:8px;overflow:hidden}
@@ -182,13 +202,6 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 .msg-ct hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 .msg-ct h1,.msg-ct h2,.msg-ct h3,.msg-ct h4{font-family:var(--font-display);font-weight:700;margin:16px 0 8px;letter-spacing:-.3px}
 .msg-ct h1{font-size:22px}.msg-ct h2{font-size:18px}.msg-ct h3{font-size:15px}.msg-ct h4{font-size:14px}
-
-/* Media Wrapper with Download Button */
-.media-wrapper{position:relative;display:inline-block;max-width:100%;margin:12px 0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:var(--bg-tertiary)}
-.media-wrapper img,.media-wrapper video{display:block;max-width:100%;height:auto;border-radius:var(--radius)}
-.media-dl{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.85);color:#fff;padding:6px 12px;border-radius:20px;font-size:12px;text-decoration:none;backdrop-filter:blur(6px);opacity:0;transition:opacity 0.2s, transform 0.2s;transform:translateY(4px);display:flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,0.2);font-weight:600;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,0.3)}
-.media-wrapper:hover .media-dl{opacity:1;transform:translateY(0)}
-.media-dl:hover{background:rgba(0,0,0,1);color:var(--accent)}
 
 /* KaTeX Styling override */
 .katex-display{margin:10px 0;overflow-x:auto;padding:4px 0}.katex{font-size:1.1em}
@@ -353,7 +366,7 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 <body>
 
 <!-- GLOBAL AUTH LOADER -->
-<div id="globalLoader" style="display:flex">
+<div id="globalLoader" style="display:none">
   <i class="fa-solid fa-circle-notch fa-spin"></i>
   <span>Checking...</span>
 </div>
@@ -376,6 +389,7 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
   <button class="nc-btn" id="newChatBtn"><i class="fa-solid fa-plus"></i> New Chat <span class="nc-lock" id="ncLock" style="display:none"><i class="fa-solid fa-lock"></i></span></button>
   <div class="cl" id="chatList"><div class="cl-label">Recent</div><div id="chatListItems"><span style="color:var(--text-muted);font-size:12px;padding:4px 10px;display:block">Loading chats...</span></div></div>
   <nav class="s-nav">
+    <!-- Updated: Link to auth.html -->
     <a href="auth.html" id="signInLink"><i class="fa-brands fa-google"></i> Sign In</a>
     <a href="donate.html" target="_blank" style="color:#ef4444"><i class="fa-solid fa-heart"></i> Donate</a>
     <a href="settings.html"><i class="fa-solid fa-sliders"></i> Settings</a>
@@ -481,6 +495,7 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
     </div>
     <div class="lm-footer">
       <button class="btn-close btn-cn" id="lmClose" data-close="linkModal">Close</button>
+      <!-- Changed to <a> for href support -->
       <a href="#" class="btn-ext" id="lmOpenExternal" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-external-link-alt"></i> Open</a>
       <button class="btn-follow" id="lmFollowUp"><i class="fa-solid fa-comment-dots"></i> Follow Up</button>
     </div>
@@ -515,11 +530,13 @@ function getEnvVar(key) {
     return '';
 }
 
+// Returns the correct Backend URL based on User Plan
 function getApiUrl(){
   var baseUrl = getEnvVar('FREE_AI_URL');
   if(S.user) {
     if(S.user.is_lifetime || S.user.is_premium) {
       var pUrl = getEnvVar('PREMIUM_AI_URL');
+      // Fallback to Free if Premium URL is placeholder to prevent errors
       if (pUrl && pUrl.indexOf('your-premium') === -1 && pUrl.indexOf('http') === 0) {
         baseUrl = pUrl;
       }
@@ -538,14 +555,18 @@ function getApiUrl(){
 
 function authH(){
   const h = { 'Content-Type': 'application/json' };
+
   if (S.user?.token) {
     h['Authorization'] = `Bearer ${S.user.token}`;
   }
+
   return h;
 }
 function isPremium(){return isAuthed()&&(S.user.is_premium||S.user.is_lifetime||S.user.plan!=='free')}
+
 function isAuthed(){return !!S.user;}
 function authSilent(){return !isAuthed();}
+
 function canGenMedia(){
     if(!isAuthed()) return false;
     if(S.user.is_lifetime || S.user.is_premium) return true;
@@ -554,26 +575,14 @@ function canGenMedia(){
     return false;
 }
 
-// ================= SUPABASE CONNECTION (FIXED) =================
 var sb=null;
-
 function initSupabase(){
-  // CRITICAL FIX: Check if library exists
-  if (typeof window.supabase === 'undefined') {
-    console.error('CRITICAL ERROR: Supabase JS library not found.');
-    console.error('Ensure <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> is loaded in <head>.');
-    return;
-  }
-
   try{
     var sUrl = getEnvVar('SUPABASE_URL');
     var sKey = getEnvVar('SUPABASE_ANON_KEY');
     
-    // Validation
-    if(!sUrl || !sKey || sUrl.indexOf('https://') === -1) {
-      console.error('Supabase Connection Failed: Invalid URL or Key configuration.');
-      return;
-    }
+    if(!sUrl || !sKey || sUrl.indexOf('https://') === -1) return;
+    if(typeof window.supabase==='undefined')return;
     
     sb = window.supabase.createClient(sUrl, sKey, {
       auth: {
@@ -590,22 +599,29 @@ function initSupabase(){
         }
       }
     });
-    
-    if(sb && sb.auth) {
-        console.log('Supabase client initialized successfully.');
-    } else {
-        throw new Error("Client creation returned invalid object");
-    }
-
-  } catch(e){ 
-    console.error('Supabase init error:', e); 
-    sb = null; 
-  }
+  } catch(e){ console.warn('Supabase init skipped:', e); }
 }
 
 async function setUserFromSession(session){
   try {
-    // Optimistic UI update
+    const { data, error } = await sb
+      .from('users')
+      .select('plan,is_premium,is_lifetime')
+      .eq('id', session.user.id)
+      .single();
+
+    S.user = {
+      id: session.user.id,
+      email: session.user.email,
+      token: session.access_token,
+      plan: data?.plan || 'free',
+      is_premium: data?.is_premium || false,
+      is_lifetime: data?.is_lifetime || false
+    };
+
+  } catch(e){
+    console.warn('user fetch failed:', e);
+
     S.user = {
       id: session.user.id,
       email: session.user.email,
@@ -614,57 +630,30 @@ async function setUserFromSession(session){
       is_premium: false,
       is_lifetime: false
     };
-    refreshUI(); 
-
-    // Fetch metadata
-    const { data, error } = await sb
-      .from('users')
-      .select('plan,is_premium,is_lifetime')
-      .eq('id', session.user.id)
-      .single();
-
-    if (data) {
-        S.user.plan = data.plan || 'free';
-        S.user.is_premium = data.is_premium || false;
-        S.user.is_lifetime = data.is_lifetime || false;
-        refreshUI(); 
-    }
-  } catch(e){
-    console.warn('User metadata fetch failed:', e);
   }
 }
 
 async function loadUser(){
-  // FIX: Check if client is available
-  if(!sb) {
-    console.warn('Supabase client not initialized. Skipping auth check.');
-    S.user = null;
-    refreshUI();
-    $('globalLoader').style.display = 'none';
-    return;
-  }
+  if(!sb) return;
 
-  // Force loader to stay visible until we are sure
   $('globalLoader').style.display = 'flex';
 
   try {
-    // getSession is the modern method
-    const { data: { session }, error } = await sb.auth.getSession();
+    const { data: { session } } = await sb.auth.getSession();
 
-    if (error) {
-      console.error('Error getting session:', error.message);
+    if (!session || !session.user) {
       S.user = null;
-    } else if (session && session.user) {
-      await setUserFromSession(session);
-    } else {
-      S.user = null;
+      refreshUI();
+      return;
     }
+
+    await setUserFromSession(session);
+
   } catch(e){
-    console.error('Critical error in loadUser:', e);
+    console.warn('loadUser error:', e);
     S.user = null;
   } finally {
     refreshUI();
-    // Hide loader only after auth is resolved
     $('globalLoader').style.display = 'none';
   }
 }
@@ -673,6 +662,7 @@ function setupAuthListener(){
   if(!sb) return;
 
   sb.auth.onAuthStateChange(async (event, session) => {
+
     if (event === 'SIGNED_OUT') {
       handleSignOut();
       return;
@@ -680,17 +670,20 @@ function setupAuthListener(){
 
     if (session && session.user) {
       await setUserFromSession(session);
+      refreshUI();
       loadChatList();
+
       if(event === 'SIGNED_IN'){
         toast('Signed in', 'ok');
       }
     }
+
   });
 }
 
 async function handleSignIn(session){
   if(!session || !session.user) return;
-  $('globalLoader').style.display = 'flex'; 
+  $('globalLoader').style.display = 'flex'; // Show loader on signin
   
   try{ localStorage.setItem('helox-last-login', Date.now()); } catch(e){}
   try{
@@ -900,8 +893,11 @@ function renderVoices(){
 // HELPER: Convert Raw URLs to Markdown Links
 function autoLinkMarkdown(text){
   if(!text) return '';
+  // Regex to find http/https URLs
   return text.replace(/(https?:\/\/[^\s]+)/g, function(url){
+    // Clean the URL to make a nice label
     var label = url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+    // Capitalize first letter
     label = label.charAt(0).toUpperCase() + label.slice(1);
     return '[' + label + '](' + url + ')';
   });
@@ -927,7 +923,6 @@ function initMarked(){
 
     const renderer = new marked.Renderer();
 
-    // FIX 1: Code Blocks with Copy
     renderer.code = function(code, lang) {
       let validLang = (typeof hljs !== 'undefined' && hljs.getLanguage(lang)) ? lang : 'plaintext';
       let highlighted = code;
@@ -952,43 +947,22 @@ function initMarked(){
       `;
     };
 
-    // FIX 2: Safe Links (Email & External)
     function safeUrl(url){
-      try {
-        const u = new URL(url, location.origin);
-        return ['http:', 'https:', 'mailto:'].includes(u.protocol) ? url : '#';
-      } catch {
-        return '#';
-      }
-    }
+  try {
+    const u = new URL(url, location.origin);
+    return ['http:', 'https:'].includes(u.protocol) ? url : '#';
+  } catch {
+    return '#';
+  }
+}
 
-    renderer.link = function(href, title, text) {
-      const safe = safeUrl(href);
-      var isMail = href.indexOf('mailto:') === 0;
-      var target = isMail ? '' : 'target="_blank"';
-      var icon = isMail ? '<i class="fa-solid fa-envelope" style="font-size:0.8em;margin-right:4px"></i>' : '';
-      return `<a href="${safe}" ${target} rel="noopener noreferrer" style="${isMail ? 'color:var(--warning);border-bottom-color:rgba(245,158,11,0.3)' : ''}">${icon}${text}</a>`;
-    };
+renderer.link = function(href, title, text) {
+  const safe = safeUrl(href);
+  return `<a href="${safe}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+};
 
-    // FIX 3: Images & Videos with Download Button
     renderer.image = function(href, title, text) {
-      var isVideo = /\.(mp4|webm|ogg|mov)$/i.test(href);
-      var mediaHtml = '';
-      
-      if (isVideo) {
-          mediaHtml = `<video src="${href}" controls class="msg-media"></video>`;
-      } else {
-          mediaHtml = `<img src="${href}" alt="${text || ''}" class="msg-media" loading="lazy">`;
-      }
-
-      return `
-        <div class="media-wrapper">
-            ${mediaHtml}
-            <a href="${href}" download class="media-dl" title="Download">
-               <i class="fa-solid fa-download"></i> Download
-            </a>
-        </div>
-      `;
+      return `<div class="img-wrap"><img src="${href}" alt="${text || ''}" loading="lazy"></div>`;
     };
 
     marked.use({ renderer });
@@ -1013,13 +987,8 @@ function md(text){
       html = esc(text).replace(/\n/g, '<br>');
     }
 
-    // FIX 4: Configure DOMPurify to allow Video, Source, and Download attributes
     if (typeof DOMPurify !== 'undefined') {
-      html = DOMPurify.sanitize(html, {
-          ALLOWED_TAGS: ['p', 'b', 'i', 'em', 'strong', 'a', 'ul', 'ol', 'li', 'br', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'code', 'pre', 'div', 'span', 'img', 'video', 'source', 'track', 'blockquote', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'button', 'input'],
-          ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'title', 'class', 'id', 'style', 'download', 'controls', 'type', 'data-copy-code'],
-          ALLOW_DATA_ATTR: true
-      });
+      html = DOMPurify.sanitize(html);
     }
 
   } catch(e){
@@ -1090,7 +1059,7 @@ function refreshUI(){
   } else {
     u.classList.remove('show');
     sl.innerHTML='<i class="fa-brands fa-google"></i> Sign In';
-    sl.href = 'auth.html'; 
+    sl.href = 'auth.html'; // Updated to link to auth.html
     sl.style.cursor='pointer';
     hp.textContent='FREE';
     hp.className='hdr-plan ptag free';
@@ -1273,6 +1242,7 @@ function streamRes(res, onChunk, onDone){
     if(finished) return;
     finished = true;
 
+    // Flush remaining buffer
     if(buffer.trim()){
       tryParseAndEmit(buffer.trim());
     }
@@ -1284,6 +1254,7 @@ function streamRes(res, onChunk, onDone){
   function tryParseAndEmit(line){
     if(!line) return;
 
+    // Handle SSE format
     if(line.startsWith('data:')){
       line = line.slice(5).trim();
     }
@@ -1307,6 +1278,7 @@ function streamRes(res, onChunk, onDone){
       if(text) onChunk(text);
 
     } catch(e){
+      // Fallback: treat as raw text
       onChunk(line);
     }
   }
@@ -1351,6 +1323,7 @@ async function sendMsg(text){
   if(images.length||files.length){sendToAIWithFiles(t,images.map(function(img){var f=dataUrlToFile(img.dataUrl,img.name);return f?{type:'image',dataUrl:img.dataUrl,name:img.name,file:f}:null}).filter(Boolean),files)}else{sendToAI(t)}
 }
 
+// FIXED: File/Image Upload sends to /analysis, key is 'file', only one file sent
 function sendToAIWithFiles(text,images,files){
   S.streaming=true;
   S.abort=new AbortController();
@@ -1359,6 +1332,8 @@ function sendToAIWithFiles(text,images,files){
   var fd=new FormData();
   fd.append('prompt',text||'What is in this image?');
   
+  // FIX 1: Backend /analysis accepts ONE file named 'file'.
+  // We prioritize images, then text files.
   var primaryFile = null;
   var primaryName = 'file.bin';
   
@@ -1371,6 +1346,7 @@ function sendToAIWithFiles(text,images,files){
   }
   
   if(primaryFile) {
+      // FIX 2: Must use key 'file' to match backend UploadFile parameter
       fd.append('file', primaryFile, primaryName);
   }
   
@@ -1379,6 +1355,7 @@ function sendToAIWithFiles(text,images,files){
   
   var full='';
   
+  // FIX 3: Endpoint is /analysis, not /analyse
   fetch(getApiUrl()+'/analysis',{
     method:'POST',
     headers:h,
@@ -1487,6 +1464,7 @@ function initEvents(){
   $('welcomeEl').addEventListener('click',function(e){var c=e.target.closest('.w-card');if(!c||c.classList.contains('locked'))return;e.stopPropagation(); sendMsg(c.getAttribute('data-prompt'))});
   $('galGrid').addEventListener('click',function(e){var item=e.target.closest('.gal-item');if(item){var gid=item.getAttribute('data-gid');var g=S.gallery.find(function(x){return x.id===gid});if(g)openLB(g.url,g.type==='video')}});
 
+  // Modal Close Buttons
   document.querySelectorAll('.btn-close').forEach(function(btn){
     btn.addEventListener('click', function(e){
         e.stopPropagation();
@@ -1557,7 +1535,7 @@ function mediaGate(type){if(!S.user){toast('Sign in to generate '+type+'s','wrn'
 async function init(){
   initTheme();
   initMarked();
-  initSupabase(); // FIX: Initialize Supabase first
+  initSupabase();
   initModel();
   initEvents();
   setupAuthListener();
@@ -1565,8 +1543,7 @@ async function init(){
   renderAll();
   updateCB();
 
-  // FIX: Wait for user load to complete before hiding loader
-  await loadUser(); 
+  await loadUser(); // ✅ important
 }
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
