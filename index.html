@@ -928,10 +928,19 @@ function initMarked(){
       `;
     };
 
-    renderer.link = function(href, title, text) {
-      if (!href) return text;
-      return `<a href="${href}" target="_blank" rel="noopener noreferrer">${text}</a>`;
-    };
+    function safeUrl(url){
+  try {
+    const u = new URL(url, location.origin);
+    return ['http:', 'https:'].includes(u.protocol) ? url : '#';
+  } catch {
+    return '#';
+  }
+}
+
+renderer.link = function(href, title, text) {
+  const safe = safeUrl(href);
+  return `<a href="${safe}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+};
 
     renderer.image = function(href, title, text) {
       return `<div class="img-wrap"><img src="${href}" alt="${text || ''}" loading="lazy"></div>`;
@@ -1197,65 +1206,91 @@ function doSTT(blob){
   }).catch(function(){toast('STT failed','err')})}
 
 // ENHANCED SSE STREAMING HANDLER
-function streamRes(res,onChunk,onDone){
-  var reader,dec,buf,finished;
-  if(res.body&&typeof res.body.getReader==='function'){
-    reader=res.body.getReader();
-    dec=new TextDecoder();
-    buf='';
-    finished=false;
-    function finish(){
-      if(finished)return;
-      finished=true;
+function streamRes(res, onChunk, onDone){
+  if(!res.body || typeof res.body.getReader !== 'function'){
+    return res.text().then(function(text){
+      onChunk(text);
       onDone();
-    }
-    function pump(){
-      return reader.read().then(function(result){
-        if(result.done){
-          finish();
-          return;
-        }
-        buf+=dec.decode(result.value,{stream:true});
-        var lines=buf.split('\n');
-        buf=lines.pop()||'';
-        for(var i=0;i<lines.length;i++){
-          var line=lines[i].trim();
-          if(!line) continue;
-          
-          // Handle SSE data lines
-          if(line.indexOf('data:')===0){
-             var d=line.slice(5).trim();
-             if(d==='[DONE]'){
-               finish();
-               return;
-             }
-             try{
-               var p=JSON.parse(d);
-               var text='';
-               if(p.type==='token')text=p.text||'';
-               else text=p.content||p.text||p.delta?.content||'';
-               
-               if(text)onChunk(text);
-             }catch(e){
-               // Fallback for plain text streams sometimes wrapped in data:
-               if(d) onChunk(d); 
-             }
-          } else if (line === '[DONE]') {
-              finish();
-              return;
-          }
-        }
-        if(!finished)return pump();
-      }).catch(function(e){
-        console.warn("Stream error", e);
-        finish();
-      });
-    }
-    return pump();
+    });
   }
-  return res.text().then(function(text){onChunk(text);onDone()});
-}
 
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let finished = false;
+
+  function finish(){
+    if(finished) return;
+    finished = true;
+
+    // Flush remaining buffer
+    if(buffer.trim()){
+      tryParseAndEmit(buffer.trim());
+    }
+
+    try { reader.cancel(); } catch(e){}
+    onDone();
+  }
+
+  function tryParseAndEmit(line){
+    if(!line) return;
+
+    // Handle SSE format
+    if(line.startsWith('data:')){
+      line = line.slice(5).trim();
+    }
+
+    if(line === '[DONE]'){
+      finish();
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(line);
+
+      let text =
+        parsed.type === 'token'
+          ? parsed.text
+          : parsed.content ||
+            parsed.text ||
+            parsed.delta?.content ||
+            '';
+
+      if(text) onChunk(text);
+
+    } catch(e){
+      // Fallback: treat as raw text
+      onChunk(line);
+    }
+  }
+
+  function pump(){
+    return reader.read().then(function({done, value}){
+      if(done){
+        finish();
+        return;
+      }
+
+      buffer += decoder.decode(value, { stream: true });
+
+      let lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for(let i = 0; i < lines.length; i++){
+        tryParseAndEmit(lines[i].trim());
+        if(finished) return;
+      }
+
+      if(!finished) return pump();
+    }).catch(function(err){
+      console.warn('Stream error:', err);
+      finish();
+    });
+  }
+
+  return pump();
+}
+  
 async function sendMsg(text){
   var t=text||$('cbInput').value.trim();
   var hasImages=S.pendingFiles.some(function(f){return f.type==='image'});
