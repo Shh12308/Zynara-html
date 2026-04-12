@@ -322,7 +322,7 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 .lm-footer{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .btn-follow{flex:1;padding:12px;border-radius:var(--radius-sm);background:var(--accent);color:#fff;border:none;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:all var(--speed);display:flex;align-items:center;justify-content:center;gap:8px}
 .btn-follow:hover{background:var(--accent-hover);transform:translateY(-1px)}
-.btn-ext{flex:1;padding:12px;border-radius:var(--radius-sm);background:var(--bg-tertiary);color:var(--text-primary);border:1px solid var(--border);font-weight:600;cursor:pointer;font-family:var(--font-body);transition:all var(--speed);display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-ext{flex:1;padding:12px;border-radius:var(--radius-sm);background:var(--bg-tertiary);color:var(--text-primary);border:1px solid var(--border);font-weight:600;cursor:pointer;font-family:var(--font-body);transition:all var(--speed);display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
 .btn-ext:hover{background:var(--bg-hover);border-color:var(--border-active)}
 
 .gal-wrap{max-width:960px;margin:0 auto;padding:24px 20px;height:100%;overflow-y:auto}
@@ -372,8 +372,7 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 </div>
 
 <!-- ================= ENV.JS CONFIGURATION ================= -->
-<script src="env.js"></script>
-  <script>
+<script>
   const ENV = {
       SUPABASE_URL: 'https://acbnqeeukfxewiqswgbw.supabase.co',
       SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjYm5xZWV1a2Z4ZXdpcXN3Z2J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMDY5MzIsImV4cCI6MjA4OTg4MjkzMn0.bwkZs0yqNAooAh6cV16dcwZwNz_5H5xvAu7eiQtR4wE',
@@ -496,7 +495,8 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
     </div>
     <div class="lm-footer">
       <button class="btn-close btn-cn" id="lmClose" data-close="linkModal">Close</button>
-      <button class="btn-ext" id="lmOpenExternal" target="_blank"><i class="fa-solid fa-external-link-alt"></i> Open</button>
+      <!-- Changed to <a> for href support -->
+      <a href="#" class="btn-ext" id="lmOpenExternal" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-external-link-alt"></i> Open</a>
       <button class="btn-follow" id="lmFollowUp"><i class="fa-solid fa-comment-dots"></i> Follow Up</button>
     </div>
   </div>
@@ -562,7 +562,10 @@ function authH(){
 
   return h;
 }
-function isPremium(){return isAuth()&&(S.user.is_premium||S.user.is_lifetime||S.user.plan!=='free')}
+function isPremium(){return isAuthed()&&(S.user.is_premium||S.user.is_lifetime||S.user.plan!=='free')}
+
+function isAuthed(){return !!S.user;}
+function authSilent(){return !isAuthed();}
 
 function canGenMedia(){
     if(!isAuthed()) return false;
@@ -599,31 +602,6 @@ function initSupabase(){
   } catch(e){ console.warn('Supabase init skipped:', e); }
 }
 
-async function loadUser(){
-  if(!sb) return;
-
-  $('globalLoader').style.display = 'flex';
-
-  try {
-    const { data: { session } } = await sb.auth.getSession();
-
-    if (!session || !session.user) {
-      S.user = null;
-      refreshUI();
-      return;
-    }
-
-    await setUserFromSession(session);
-
-  } catch(e){
-    console.warn('loadUser error:', e);
-    S.user = null;
-  } finally {
-    refreshUI();
-    $('globalLoader').style.display = 'none';
-  }
-}
-
 async function setUserFromSession(session){
   try {
     const { data, error } = await sb
@@ -654,30 +632,29 @@ async function setUserFromSession(session){
     };
   }
 }
-    
-    var ud = await sb.from('users').select('plan,is_premium,is_lifetime').eq('id', session.user.id).single();
-    
-    S.user = {
-      id: session.user.id,
-      email: session.user.email,
-      plan: (ud.data && ud.data.plan) || 'free',
-      is_premium: (ud.data && ud.data.is_premium) || false,
-      is_lifetime: (ud.data && ud.data.is_lifetime) || false,
-      token: session.access_token
-    };
-    
-    refreshUI();
-    loadChatList();
+
+async function loadUser(){
+  if(!sb) return;
+
+  $('globalLoader').style.display = 'flex';
+
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+
+    if (!session || !session.user) {
+      S.user = null;
+      refreshUI();
+      return;
+    }
+
+    await setUserFromSession(session);
+
   } catch(e){
     console.warn('loadUser error:', e);
-    if(S.user && S.user.id) {
-       refreshUI();
-    } else {
-       S.user = null;
-       refreshUI();
-    }
+    S.user = null;
   } finally {
-      $('globalLoader').style.display = 'none'; // Hide loader
+    refreshUI();
+    $('globalLoader').style.display = 'none';
   }
 }
 
