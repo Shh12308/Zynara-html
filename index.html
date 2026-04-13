@@ -333,7 +333,7 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 .gal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
 .gal-hd h2{font-family:var(--font-display);font-size:22px;font-weight:700;letter-spacing:-.3px;display:flex;align-items:center;gap:10px}
 .gal-hd h2 i{color:var(--accent)}.gal-count{font-size:12px;color:var(--text-muted);font-weight:500}
-.gal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.gal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr)),gap:12px}
 .gal-item{border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:var(--bg-secondary);transition:all var(--speed);cursor:pointer;position:relative;touch-action: manipulation}
 .gal-item:hover{border-color:var(--border-active);transform:translateY(-3px);box-shadow:var(--glow)}
 .gal-item img,.gal-item video{width:100%;aspect-ratio:1;object-fit:cover;display:block;transition:transform .4s var(--ease)}
@@ -402,7 +402,8 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
   <button class="nc-btn" id="newChatBtn"><i class="fa-solid fa-plus"></i> New Chat <span class="nc-lock" id="ncLock" style="display:none"><i class="fa-solid fa-lock"></i></span></button>
   <div class="cl" id="chatList"><div class="cl-label">Recent</div><div id="chatListItems"><span style="color:var(--text-muted);font-size:12px;padding:4px 10px;display:block">Loading chats...</span></div></div>
   <nav class="s-nav">
-    <a href="auth.html" id="signInLink"><i class="fa-brands fa-google"></i> Sign In</a>
+    <!-- Changed to button to handle JS Auth better, styled as link -->
+    <button id="signInLink"><i class="fa-brands fa-google"></i> Sign In</button>
     <a href="donate.html" target="_blank" style="color:#ef4444"><i class="fa-solid fa-heart"></i> Donate</a>
     <a href="settings.html"><i class="fa-solid fa-sliders"></i> Settings</a>
     <button id="contactLink"><i class="fa-solid fa-envelope"></i> Contact</button>
@@ -507,7 +508,6 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
     </div>
     <div class="lm-footer">
       <button class="btn-close btn-cn" id="lmClose" data-close="linkModal">Close</button>
-      <!-- Changed to <a> for href support -->
       <a href="#" class="btn-ext" id="lmOpenExternal" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-external-link-alt"></i> Open</a>
       <button class="btn-follow" id="lmFollowUp"><i class="fa-solid fa-comment-dots"></i> Follow Up</button>
     </div>
@@ -524,7 +524,6 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
   <div class="em-body">
     <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Attachments</div>
     <div class="em-attach-box" id="emAttachBox">
-      <!-- Attachments injected here -->
       <div class="em-attach-empty">No files attached</div>
     </div>
     
@@ -588,9 +587,17 @@ function getApiUrl(){
 
 function authH(){
   const h = { 'Content-Type': 'application/json' };
+  if (sb) {
+    const { data } = sb.auth.getSession();
+    if (data?.session?.access_token) {
+      h['Authorization'] = `Bearer ${data.session.access_token}`;
+      return h;
+    }
+  }
   if (S.user?.token) h['Authorization'] = `Bearer ${S.user.token}`;
   return h;
 }
+
 function isPremium(){return isAuthed()&&(S.user.is_premium||S.user.is_lifetime||S.user.plan!=='free')}
 function isAuthed(){return !!S.user;}
 function authSilent(){return !isAuthed();}
@@ -608,7 +615,11 @@ function initSupabase(){
     var sUrl = getEnvVar('SUPABASE_URL');
     var sKey = getEnvVar('SUPABASE_ANON_KEY');
     if(!sUrl || !sKey || sUrl.indexOf('https://') === -1) return;
-    if(typeof window.supabase==='undefined')return;
+    if(typeof window.supabase==='undefined'){
+      console.warn('Supabase JS not loaded yet, retrying in 500ms');
+      setTimeout(initSupabase, 500);
+      return;
+    }
     sb = window.supabase.createClient(sUrl, sKey, {
       auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: window.localStorage },
       global: { fetch: function(input, init){ init = init || {}; init.credentials = 'include'; return window.fetch(input, init); } }
@@ -624,19 +635,27 @@ async function setUserFromSession(session){
 }
 
 async function loadUser(){
-  if(!sb) return;
+  if(!sb) {
+    console.log('Supabase not ready in loadUser, deferring...');
+    setTimeout(loadUser, 1000);
+    return;
+  }
   $('globalLoader').style.display = 'flex';
   try {
-    const { data: { session } } = await sb.auth.getSession();
-    if (!session || !session.user) { S.user = null; refreshUI(); return; }
-    await setUserFromSession(session);
+    const { data: { session }, error } = await sb.auth.getSession();
+    if (error) console.error('Error getting session:', error);
+    if (session && session.user) {
+      await setUserFromSession(session);
+      console.log('User loaded:', S.user.email);
+    } else { S.user = null; console.log('No active session found.'); }
   } catch(e){ console.warn('loadUser error:', e); S.user = null; }
-  finally { refreshUI(); $('globalLoader').style.display = 'none'; }
+  finally { refreshUI(); $('globalLoader').style.display = 'none'; loadChatList(); }
 }
 
 function setupAuthListener(){
   if(!sb) return;
   sb.auth.onAuthStateChange(async (event, session) => {
+    console.log('Auth state changed:', event, session?.user?.email);
     if (event === 'SIGNED_OUT') { handleSignOut(); return; }
     if (session && session.user) { await setUserFromSession(session); refreshUI(); loadChatList(); if(event === 'SIGNED_IN') toast('Signed in', 'ok'); }
   });
@@ -752,7 +771,6 @@ function renderVoices(){
   document.querySelectorAll('.v-item').forEach(function(el){ el.classList.toggle('active', el.textContent.includes(S.selectedVoice) || el.getAttribute('data-voice') === S.selectedVoice); });
 }
 
-// HELPER: Convert Raw URLs to Markdown Links
 function autoLinkMarkdown(text){
   if(!text) return '';
   return text.replace(/(https?:\/\/[^\s]+)/g, function(url){
@@ -767,51 +785,49 @@ function getAiContent(data){
   return autoLinkMarkdown(raw);
 }
 
-// ================= MARKDOWN FIXES =================
 function initMarked(){
+  if (typeof marked === 'undefined' || typeof hljs === 'undefined') { 
+    console.warn('marked or hljs not loaded yet, deferring initMarked'); 
+    S._mdOk = false;
+    return; 
+  }
   try {
-    if (typeof marked === 'undefined') { console.warn('marked not loaded'); return; }
-    marked.setOptions({ breaks: true, gfm: true });
+    marked.setOptions({ 
+      breaks: true, 
+      gfm: true,
+      langPrefix: 'hljs language-'
+    });
     const renderer = new marked.Renderer();
-
-    // Enhanced Code Block Renderer
     renderer.code = function(code, lang) {
-      var validLang = (typeof hljs !== 'undefined' && lang && hljs.getLanguage(lang)) ? lang : 'plaintext';
+      var validLang = (lang && typeof hljs.getLanguage === 'function' && hljs.getLanguage(lang)) ? lang : 'plaintext';
       var highlighted = code;
-      
-      if (typeof hljs !== 'undefined') {
+      if (typeof hljs.highlight !== 'undefined') {
         try {
-          // highlight auto-detects if lang is empty, but we passed plaintext fallback
-          highlighted = hljs.highlight(code, { language: validLang, ignoreIllegals: true }).value;
-        } catch(e){ console.warn('Highlight error:', e); }
+          if (validLang !== 'plaintext') {
+             highlighted = hljs.highlight(code, { language: validLang, ignoreIllegals: true }).value;
+          } else {
+             highlighted = hljs.highlightAuto(code).value;
+          }
+        } catch(e){ 
+          console.warn('Highlight error for ' + validLang + ':', e); 
+          highlighted = hljs.highlightAuto(code).value; 
+        }
       }
-
-      return `
-        <div class="code-blk">
-          <div class="code-hd">
-            <span>${esc(validLang)}</span>
-            <button class="cp-btn" data-copy-code>Copy</button>
-          </div>
-          <pre><code class="hljs language-${validLang}">${highlighted}</code></pre>
-        </div>
-      `;
+      return `<div class="code-blk"><div class="code-hd"><span>${esc(validLang)}</span><button class="cp-btn" data-copy-code>Copy</button></div><pre><code class="hljs language-${validLang}">${highlighted}</code></pre></div>`;
     };
-
     function safeUrl(url){
       try { const u = new URL(url, location.origin); return ['http:', 'https:'].includes(u.protocol) ? url : '#'; } catch { return '#'; }
     }
-
     renderer.link = function(href, title, text) {
       const safe = safeUrl(href);
       return `<a href="${safe}" target="_blank" rel="noopener noreferrer">${text}</a>`;
     };
-
     renderer.image = function(href, title, text) {
       return `<div class="img-wrap"><img src="${href}" alt="${text || ''}" loading="lazy"></div>`;
     };
-
     marked.use({ renderer });
     S._mdOk = true;
+    console.log('Markdown initialized successfully.');
   } catch(e) { console.warn('Markdown init failed:', e); S._mdOk = false; }
 }
 
@@ -821,7 +837,13 @@ function md(text){
   try {
     if (S._mdOk && typeof marked !== 'undefined') { html = marked.parse(text); } 
     else { html = esc(text).replace(/\n/g, '<br>'); }
-    if (typeof DOMPurify !== 'undefined') { html = DOMPurify.sanitize(html); }
+    if (typeof DOMPurify !== 'undefined') { 
+       html = DOMPurify.sanitize(html, { 
+         ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'strong', 'em', 'a', 'code', 'pre', 'span', 'div', 'ul', 'ol', 'li', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr', 'img', 'button', 'copy-btn', 'sup', 'sub'],
+         ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'id', 'style', 'title', 'alt', 'data-copy-code', 'src'],
+         ALLOW_DATA_ATTR: true
+       }); 
+    }
   } catch(e){ html = esc(text).replace(/\n/g, '<br>'); }
   return html;
 }
@@ -846,35 +868,29 @@ function refreshUI(){
   var u=$('sUser'),sl=$('signInLink'),hp=$('hdrPlan');if(!u||!sl||!hp)return;
   var signedIn=!!S.user,hasMedia=canGenMedia();
   var badgeClass='free'; var badgeText='FREE';
-  
   if(S.user) {
     if(S.user.is_lifetime) { badgeClass='lifetime'; badgeText='LIFETIME'; } 
     else if(S.user.is_premium) { badgeClass='premium'; badgeText='PREMIUM'; } 
     else if(S.user.plan && S.user.plan !== 'free') { badgeClass = S.user.plan === 'lifetime' ? 'lifetime' : 'premium'; badgeText = S.user.plan.toUpperCase(); } 
     else { badgeText = 'FREE'; }
   }
-
   if(S.user){
     u.classList.add('show'); $('uAv').textContent=(S.user.email||'U')[0].toUpperCase(); $('uNm').textContent=S.user.email; $('uPl').textContent=badgeText.charAt(0)+badgeText.slice(1).toLowerCase()+' Plan';
-    sl.innerHTML='<i class="fa-solid fa-right-from-bracket"></i> Log Out'; sl.removeAttribute('href'); sl.style.cursor='pointer';
+    sl.innerHTML='<i class="fa-solid fa-right-from-bracket"></i> Log Out'; 
     hp.textContent=badgeText; hp.className='hdr-plan ptag '+badgeClass; updateLoginDisplay();
   } else {
-    u.classList.remove('show'); sl.innerHTML='<i class="fa-brands fa-google"></i> Sign In'; sl.href = 'auth.html'; sl.style.cursor='pointer';
+    u.classList.remove('show'); sl.innerHTML='<i class="fa-brands fa-google"></i> Sign In'; 
     hp.textContent='FREE'; hp.className='hdr-plan ptag free';
   }
-  
   var ncb=$('newChatBtn'),ncl=$('ncLock'); ncb.classList.toggle('locked',!signedIn); if(ncl)ncl.style.display=signedIn?'none':'flex';
   $('micBtn').classList.toggle('locked',!signedIn); $('micLock').style.display=signedIn?'none':'flex';
   $('voiceBtn').classList.toggle('locked',!signedIn); $('voiceLock').style.display=signedIn?'none':'flex';
-  
   var wCI=document.querySelector('.w-card[data-media="image"]'),wCV=document.querySelector('.w-card[data-media="video"]'),wLI=$('wLockImg'),wLV=$('wLockVid');
   if(wCI&&wLI){wCI.classList.toggle('locked',!hasMedia);wLI.style.display=hasMedia?'none':'flex';if(!signedIn){wLI.className='w-lock';wLI.innerHTML='<i class="fa-solid fa-lock"></i> Sign in'}else if(!hasMedia){wLI.className='w-lock prem-lock';wLI.innerHTML='<i class="fa-solid fa-crown"></i> Upgrade'}}
   if(wCV&&wLV){wCV.classList.toggle('locked',!hasMedia);wLV.style.display=hasMedia?'none':'flex';if(!signedIn){wLV.className='w-lock';wLV.innerHTML='<i class="fa-solid fa-lock"></i> Sign in'}else if(!hasMedia){wLV.className='w-lock prem-lock';wLV.innerHTML='<i class="fa-solid fa-crown"></i> Upgrade'}}
-  
   var aI=$('asImg'),aV=$('asVid'),aLI=$('asLockImg'),aLV=$('asLockVid');
   if(aI&&aLI){aI.classList.toggle('locked',!hasMedia);aLI.style.display=hasMedia?'none':'flex';if(!signedIn)aLI.innerHTML='<i class="fa-solid fa-lock"></i> Sign in';else if(!hasMedia)aLI.innerHTML='<i class="fa-solid fa-crown"></i> Upgrade'}
   if(aV&&aLV){aV.classList.toggle('locked',!hasMedia);aLV.style.display=hasMedia?'none':'flex';if(!signedIn)aLV.innerHTML='<i class="fa-solid fa-lock"></i> Sign in';else if(!hasMedia)aLV.innerHTML='<i class="fa-solid fa-crown"></i> Upgrade'}
-  
   updateModelUI();
 }
 
@@ -917,7 +933,6 @@ function renderAll(){
     }else{
       var imgHtml=buildMsgImagesHtml(m.images);var textHtml=m.content?'<p>'+esc(m.content).replace(/\n/g,'<br>')+'</p>':'';
       var bubbleContent=(imgHtml||textHtml)?(imgHtml+textHtml):'<p style="color:var(--text-muted);font-style:italic">Empty message</p>';
-      // Edit button is in the actions, no longer inline
       var uAct = '<div class="msg-acts"><button class="ma" data-act="copy" data-i="'+i+'" data-tip="Copy"><i class="fa-regular fa-copy"></i></button><button class="ma" data-act="edit" data-i="'+i+'" data-tip="Edit"><i class="fa-regular fa-pen-to-square"></i></button></div>';
       html+='<div class="msg user-msg" id="msg-'+i+'"><div class="msg-inner"><div class="msg-label">You</div><div class="msg-bubble"><div class="msg-ct" id="mc-'+i+'">'+bubbleContent+'</div></div>'+uAct+'<div class="msg-time">'+(m.time||'')+'</div><div id="ea-'+i+'"></div></div></div>';
     }
@@ -944,98 +959,49 @@ function clearPendingFiles(){S.pendingFiles=[];renderImgPreview();renderFileIndi
 function renderFileIndicator(){var fi=$('fileIndicator');var nonImages=S.pendingFiles.filter(function(f){return f.type!=='image'});if(!nonImages.length){fi.style.display='none';return}fi.style.display='block';var html='';nonImages.forEach(function(f){var realIdx=S.pendingFiles.indexOf(f);html+='<div class="file-indicator"><i class="fa-solid fa-file"></i><span class="fi-name">'+esc(f.name)+'</span><span class="fi-size">'+fmtSize(f.size)+'</span><button class="fi-rm" data-rm-idx="'+realIdx+'"><i class="fa-solid fa-xmark"></i></button></div>'});fi.innerHTML=html}
 
 function actCopy(i){var t=S.msgs[i]&&S.msgs[i].content;if(!t)return;navigator.clipboard.writeText(t).then(function(){toast('Copied','ok')}).catch(function(){toast('Copy failed','err')})}
-function actLike(i,type){if(type==='like'){S.msgs[i].liked=!S.msgs[i].liked;S.msgs[i].disliked=false}else{S.msgs[i].disliked=!S.msgs[i].disliked;S.msgs[i].liked=false}renderAll()}
+function actLike(i,type){
+  if(type==='like'){S.msgs[i].liked=!S.msgs[i].liked;S.msgs[i].disliked=false}else{S.msgs[i].disliked=!S.msgs[i].disliked;S.msgs[i].liked=false}
+  renderAll()
+}
 
 // ================= NEW EDIT MODAL LOGIC =================
 function openEditModal(i){
-  var m=S.msgs[i];
-  if(!m||m.role!=='user')return;
-  
-  S.editingIndex = i;
-  // Deep copy images to editing state
-  S.editingFiles = (m.images || []).map(function(img){ return {...img}; });
-  
-  $('emTextarea').value = m.content || '';
-  renderEditAttachments();
-  
-  $('emOverlay').classList.add('on');
-  $('emModal').classList.add('on');
+  var m=S.msgs[i];if(!m||m.role!=='user')return;
+  S.editingIndex = i; S.editingFiles = (m.images || []).map(function(img){ return {...img}; });
+  $('emTextarea').value = m.content || ''; renderEditAttachments();
+  $('emOverlay').classList.add('on'); $('emModal').classList.add('on');
 }
-
-function closeEditModal(){
-  $('emOverlay').classList.remove('on');
-  $('emModal').classList.remove('on');
-  S.editingIndex = null;
-  S.editingFiles = [];
-}
-
+function closeEditModal(){$('emOverlay').classList.remove('on');$('emModal').classList.remove('on');S.editingIndex = null;S.editingFiles = [];}
 function renderEditAttachments(){
   var box = $('emAttachBox');
-  if(!S.editingFiles || !S.editingFiles.length){
-    box.innerHTML = '<div class="em-attach-empty">No files attached</div>';
-    return;
-  }
-  
+  if(!S.editingFiles || !S.editingFiles.length){box.innerHTML = '<div class="em-attach-empty">No files attached</div>';return}
   var html = '';
   S.editingFiles.forEach(function(img, idx){
     html += '<div class="em-attach-item"><img src="'+img.dataUrl+'" alt="'+esc(img.name)+'"><button class="em-attach-remove" onclick="removeEditFile('+idx+')"><i class="fa-solid fa-xmark"></i></button></div>';
   });
   box.innerHTML = html;
 }
-
-// Global function for onclick in HTML string
-window.removeEditFile = function(idx){
-  if(idx>=0 && idx<S.editingFiles.length){
-    S.editingFiles.splice(idx, 1);
-    renderEditAttachments();
-  }
-};
-
+window.removeEditFile = function(idx){if(idx>=0 && idx<S.editingFiles.length){S.editingFiles.splice(idx, 1);renderEditAttachments();}};
 function saveEditedMessage(){
   if(S.editingIndex === null) return;
-  
-  var newText = $('emTextarea').value.trim();
-  var msg = S.msgs[S.editingIndex];
-  
-  // Update the message in the list
-  msg.content = newText;
-  msg.images = S.editingFiles; // Update images (could have removed some)
-  
-  // Slice history to this point and resend
-  S.msgs = S.msgs.slice(0, S.editingIndex + 1);
-  renderAll();
-  
-  closeEditModal();
-  
-  // Determine how to send
+  var newText = $('emTextarea').value.trim(); var msg = S.msgs[S.editingIndex];
+  msg.content = newText; msg.images = S.editingFiles;
+  S.msgs = S.msgs.slice(0, S.editingIndex + 1); renderAll(); closeEditModal();
   if(msg.images && msg.images.length){
-    var imgFiles = msg.images.map(function(img){
-       var f = dataUrlToFile(img.dataUrl, img.name);
-       return f ? {type:'image', dataUrl:img.dataUrl, name:img.name, file:f} : null;
-    }).filter(Boolean);
+    var imgFiles = msg.images.map(function(img){var f = dataUrlToFile(img.dataUrl, img.name);return f ? {type:'image', dataUrl:img.dataUrl, name:img.name, file:f} : null;}).filter(Boolean);
     sendToAIWithFiles(newText, imgFiles, []);
-  } else {
-    sendToAI(newText);
-  }
+  } else { sendToAI(newText); }
 }
-
-// Connect Modal Buttons
  $('emClose').addEventListener('click', closeEditModal);
  $('emCancel').addEventListener('click', closeEditModal);
  $('emOverlay').addEventListener('click', closeEditModal);
  $('emSave').addEventListener('click', saveEditedMessage);
-
-
-function actEdit(i){
-  openEditModal(i);
-}
-
+function actEdit(i){openEditModal(i);}
 function actRegen(i){if(S.streaming)return;S.msgs=S.msgs.slice(0,i);renderAll();regenerateAI()}
 
 function actVoice(i){
   if(authGate('voice'))return;
-  var m=S.msgs[i];
-  if(!m||m.role!=='assistant')return;
+  var m=S.msgs[i];if(!m||m.role!=='assistant')return;
   if(S.audio){ S.audio.pause(); S.audio = null; }
   var btn = document.querySelector('.ma[data-act="voice"][data-i="'+i+'"]');
   if(btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
@@ -1165,7 +1131,18 @@ function initEvents(){
   $('sbClose').addEventListener('click',function(e){e.stopPropagation(); toggleSB(false)});
   $('sbOv').addEventListener('click',function(){toggleSB(false)});
   $('newChatBtn').addEventListener('click',function(e){ e.stopPropagation(); if(!S.user) { toast('Please sign in', 'wrn'); return; } if(this.classList.contains('locked')) { toast('Locked', 'wrn'); return; } startNewChat(); });
-  $('signInLink').addEventListener('click',function(e){ if(S.user){ e.preventDefault(); e.stopPropagation(); signOut(); } });
+  
+  // FIX: Sign In Button Logic
+  $('signInLink').addEventListener('click', function(e) {
+    e.preventDefault(); 
+    e.stopPropagation();
+    if(S.user) {
+      signOut();
+    } else {
+      triggerOAuth();
+    }
+  });
+
   $('contactLink').addEventListener('click',function(e){e.stopPropagation(); toggleSB(false);$('contactModal').classList.add('on')});
   $('sbSearch').addEventListener('input',function(){var q=this.value.toLowerCase();document.querySelectorAll('#chatListItems .cl-item').forEach(function(el){var text=el.querySelector('.cl-title');if(text)text=text.textContent.toLowerCase();el.style.display=(!q||text.indexOf(q)!==-1)?'flex':'none'})});
   $('themeGrid').addEventListener('click',function(e){var b=e.target.closest('.t-btn');if(b){e.stopPropagation();setTheme(b.getAttribute('data-t'))}});
@@ -1176,7 +1153,7 @@ function initEvents(){
   $('asBtn').addEventListener('click',function(e){e.stopPropagation(); toggleAS()});
   $('asClose').addEventListener('click',function(e){e.stopPropagation(); toggleAS(false)});
   $('asOv').addEventListener('click',function(){toggleAS(false)});
-  $('asSheet').addEventListener('click',function(e){var o=e.target.closest('.as-opt');if(!o)return;if(o.classList.contains('locked'))return;e.stopPropagation(); $('cbInput').value=o.getAttribute('data-prompt');$('cbInput').focus();autoH($('cbInput'));updateCB();toggleAS(false)});
+  $('asSheet').addEventListener('click',function(e){var o=e.target.closest('.as-opt');if(!o)return;if(o.classList.contains('locked')){toast('Sign in to use this feature','wrn');if(!isAuthed())triggerOAuth();return;}e.stopPropagation(); $('cbInput').value=o.getAttribute('data-prompt');$('cbInput').focus();autoH($('cbInput'));updateCB();toggleAS(false)});
   $('voiceBtn').addEventListener('click',function(e){e.stopPropagation(); if(authGate('voice'))return;toggleVD()});
   $('fileBtn').addEventListener('click',function(e){e.stopPropagation(); $('fileInput').click()});
   $('fileInput').addEventListener('change',function(){var files=this.files;if(!files||!files.length)return;var promises=[];for(var i=0;i<files.length;i++){(function(file){if(isImageFile(file)){promises.push(readFileAsDataUrl(file).then(function(dataUrl){S.pendingFiles.push({type:'image',dataUrl:dataUrl,name:file.name,size:file.size,file:file})}))}else{S.pendingFiles.push({type:'file',name:file.name,size:file.size,file:file})}})(files[i])}Promise.all(promises).then(function(){renderImgPreview();renderFileIndicator();updateCB()});this.value=''});
