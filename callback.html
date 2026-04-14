@@ -169,7 +169,7 @@ async function handleCallback(){
   UI.showSuccess();
 
   // Clean URL (VERY IMPORTANT)
-  window.history.replaceState({}, "", "/callback");
+  window.history.replaceState({},"/index");
 }
 
     document.addEventListener('DOMContentLoaded',()=>{ CanvasBG.init(); handleCallback(); });
