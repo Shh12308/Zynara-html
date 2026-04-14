@@ -919,9 +919,9 @@
       });
     }
 
-    handleOAuth('google',  'login-google',  'login', location.origin + '/oauth-callback.html');
-    handleOAuth('github',  'login-github',  'login', location.origin + '/oauth-callback.html');
-    handleOAuth('discord', 'login-discord', 'login', location.origin + '/oauth-callback.html');
+    handleOAuth('google',  'login-google',  'login', location.origin + '/callback.html');
+    handleOAuth('github',  'login-github',  'login', location.origin + '/callback.html');
+    handleOAuth('discord', 'login-discord', 'login', location.origin + '/callback.html');
     handleOAuth('google',  'signup-google',  'signup', location.origin + '/callback');
     handleOAuth('github',  'signup-github',  'signup', location.origin + '/callback');
     handleOAuth('discord', 'signup-discord', 'signup', location.origin + '/callback');
@@ -947,7 +947,7 @@
         const { error: ve } = await sb.auth.verifyWeb3({ message: sd.message, signature: sig });
         if (ve) throw ve;
         showMsg('success', 'login', 'Wallet login successful!');
-        setTimeout(() => { location.href = 'index.html'; }, 800);
+        setTimeout(() => { location.href = 'callback.html'; }, 800);
       } catch (err) {
         showMsg('error', 'login', err.message || 'Wallet login failed.');
         setSocialLoading(this, false);
@@ -975,7 +975,7 @@
         const { error: ve } = await sb.auth.verifyWeb3({ message: sd.message, signature: sig });
         if (ve) throw ve;
         showMsg('success', 'signup', 'Wallet connected!');
-        setTimeout(() => { location.href = 'index.html'; }, 800);
+        setTimeout(() => { location.href = 'callback.html'; }, 800);
       } catch (err) {
         showMsg('error', 'signup', err.message || 'Wallet signup failed.');
         setSocialLoading(this, false);
@@ -1064,7 +1064,7 @@
 
         hideTSOverlay();
         showMsg('success', 'login', 'Login successful!');
-        setTimeout(() => { location.href = 'index.html'; }, 800);
+        setTimeout(() => { location.href = 'callback.html'; }, 800);
 
       } catch (err) {
         hideTSOverlay();
