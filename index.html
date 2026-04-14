@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
@@ -532,13 +531,35 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 </div>
 
 <div class="toast-ct" id="toastCt"></div>
-<script src="env.js"></script>
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.__ENV__;
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  
+// ================= INITIALIZATION =================
+// Access env variables set by env.js
+const ENV_VARS = window.__ENV__ || {};
+const SUPABASE_URL = ENV_VARS.SUPABASE_URL;
+const SUPABASE_ANON_KEY = ENV_VARS.SUPABASE_ANON_KEY;
+
+// Initialize Supabase Client immediately
+let sb = null;
+if (SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL.startsWith('http')) {
+  try {
+    sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storage: window.localStorage
+      }
+    });
+    console.log('Supabase client initialized.');
+  } catch (e) {
+    console.error('Supabase init error:', e);
+  }
+} else {
+  console.warn('Supabase credentials missing or invalid in env.js');
+}
+
 // ================= HELPER FUNCTIONS =================
 function $(id){return document.getElementById(id)}
 function esc(s){if(s==null)return'';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
@@ -560,6 +581,9 @@ function isVideo(t){var l=t.toLowerCase();for(var i=0;i<VIDEO_KW.length;i++)if(l
 
 // ================= ENV & CONFIG =================
 function getEnvVar(key) {
+    // Check the window.__ENV__ object first (from env.js)
+    if (typeof window.__ENV__ !== 'undefined' && window.__ENV__[key]) return window.__ENV__[key];
+    // Fallback for legacy ENV object
     if (typeof ENV !== 'undefined' && ENV[key]) return ENV[key];
     console.warn('Missing ENV var: ' + key);
     return '';
@@ -570,32 +594,25 @@ function getApiUrl(){
   if(S.user) {
     if(S.user.is_lifetime || S.user.is_premium) {
       var pUrl = getEnvVar('PREMIUM_AI_URL');
-      if (pUrl && pUrl.indexOf('your-premium') === -1 && pUrl.indexOf('http') === 0) {
-        baseUrl = pUrl;
-      }
+      if (pUrl && pUrl.indexOf('your-premium') === -1 && pUrl.indexOf('http') === 0) baseUrl = pUrl;
     } else {
       var plan = (S.user.plan || 'free').toLowerCase();
       if (plan === 'premium' || plan === 'lifetime' || plan === 'ultimate_monthly' || plan === 'ultimate_yearly') {
         var pUrl = getEnvVar('PREMIUM_AI_URL');
-        if (pUrl && pUrl.indexOf('your-premium') === -1 && pUrl.indexOf('http') === 0) {
-          baseUrl = pUrl;
-        }
+        if (pUrl && pUrl.indexOf('your-premium') === -1 && pUrl.indexOf('http') === 0) baseUrl = pUrl;
       }
     }
   }
   return baseUrl;
 }
 
+// FIX: authH must be synchronous. Supabase v2 getSession is async.
+// We rely on the token stored in our State (S.user.token), which is updated by onAuthStateChange.
 function authH(){
   const h = { 'Content-Type': 'application/json' };
-  if (sb) {
-    const { data } = sb.auth.getSession();
-    if (data?.session?.access_token) {
-      h['Authorization'] = `Bearer ${data.session.access_token}`;
-      return h;
-    }
+  if (S.user && S.user.token) {
+    h['Authorization'] = `Bearer ${S.user.token}`;
   }
-  if (S.user?.token) h['Authorization'] = `Bearer ${S.user.token}`;
   return h;
 }
 
@@ -610,58 +627,39 @@ function canGenMedia(){
     return false;
 }
 
-var sb=null;
-function initSupabase(){
-  try{
-    var sUrl = getEnvVar('SUPABASE_URL');
-    var sKey = getEnvVar('SUPABASE_ANON_KEY');
-    if(!sUrl || !sKey || sUrl.indexOf('https://') === -1) return;
-    
-    if(typeof window.supabase==='undefined'){
-      console.warn('Supabase JS not loaded yet, retrying in 500ms');
-      setTimeout(initSupabase, 500);
-      return;
-    }
-    
-    sb = window.supabase.createClient(sUrl, sKey, {
-      auth: { 
-        persistSession: true, 
-        autoRefreshToken: true, 
-        detectSessionInUrl: true, 
-        storage: window.localStorage 
-      },
-      global: { 
-        fetch: function(input, init){ 
-          init = init || {}; 
-          init.credentials = 'include'; 
-          return window.fetch(input, init); 
-        } 
-      }
-    });
-  } catch(e){ console.warn('Supabase init skipped:', e); }
-}
-
 async function setUserFromSession(session){
   try {
-    const { data, error } = await sb.from('users').select('plan,is_premium,is_lifetime').eq('id', session.user.id).single();
+    // Fetch profile only if sb is available
+    let profileData = null;
+    if (sb) {
+      const { data, error } = await sb.from('users').select('plan,is_premium,is_lifetime').eq('id', session.user.id).single();
+      if (error) console.warn('Profile fetch error:', error.message);
+      profileData = data;
+    }
+    
     var u = { id: session.user.id, email: session.user.email, token: session.access_token, plan: 'free', is_premium: false, is_lifetime: false };
-    if (data) {
-      u.plan = data.plan || 'free';
-      u.is_premium = data.is_premium || false;
-      u.is_lifetime = data.is_lifetime || false;
+    if (profileData) {
+      u.plan = profileData.plan || 'free';
+      u.is_premium = profileData.is_premium || false;
+      u.is_lifetime = profileData.is_lifetime || false;
     }
     S.user = u;
     try{ localStorage.setItem('helox-last-login', Date.now()); } catch(e){}
   } catch(e){ 
-    console.warn('user fetch failed, setting defaults:', e); 
+    console.warn('User fetch failed, setting defaults:', e); 
     S.user = { id: session.user.id, email: session.user.email, token: session.access_token, plan: 'free', is_premium: false, is_lifetime: false }; 
   }
 }
 
 async function loadUser(){
-  if(!sb) { setTimeout(loadUser, 1000); return; }
+  if(!sb) { 
+    console.warn('No Supabase client, skipping user load.');
+    // Optionally handle anonymous state here
+    return; 
+  }
   $('globalLoader').style.display = 'flex';
   try {
+    // Correct async call for Supabase v2
     const { data: { session }, error } = await sb.auth.getSession();
     if (error) console.error('Error getting session:', error);
     if (session && session.user) {
@@ -696,15 +694,6 @@ function setupAuthListener(){
   });
 }
 
-async function handleSignIn(session){
-  if(!session || !session.user) return;
-  $('globalLoader').style.display = 'flex';
-  await setUserFromSession(session);
-  refreshUI(); loadChatList(); 
-  if(document.visibilityState === 'visible') toast('Signed in successfully', 'ok');
-  $('globalLoader').style.display = 'none';
-}
-
 function handleSignOut(){
   S.user = null; S.msgs = []; S.chatId = null; S.chatListData = []; S.gallery = []; refreshUI(); renderAll(); renderChatList(); renderGallery(); toast('Signed out', 'inf');
 }
@@ -721,11 +710,8 @@ async function triggerOAuth(){
 async function handleSignInClick(e) {
   e.preventDefault();
   e.stopPropagation();
-  if(S.user){
-    signOut();
-  } else {
-    triggerOAuth();
-  }
+  if(S.user) signOut();
+  else triggerOAuth();
 }
 
 async function loadChatList(){
@@ -740,11 +726,7 @@ async function loadChatList(){
 }
 
 async function startNewChat() {
-  if(!S.user){ 
-    toast('Please sign in to start a new chat', 'wrn'); 
-    return; 
-  }
-  
+  if(!S.user){ toast('Please sign in to start a new chat', 'wrn'); return; }
   try {
     var res = await fetch(getApiUrl() + '/newchat', { method: 'POST', headers: authH(), credentials: 'include', body: JSON.stringify({ model: S.model }) });
     if (!res.ok) throw new Error('Failed to create new chat');
@@ -807,7 +789,7 @@ async function loadVoices(){
           list.appendChild(div);
         });
       }
-    } else { console.warn('Failed to load voices status:', res.status); }
+    }
   } catch(e){ console.warn('Failed to load voices', e); }
 }
 
@@ -859,7 +841,6 @@ function initMarked(){
         }
       }
 
-      // Check if this is HTML code
       var isHtml = validLang === 'html' || validLang === 'htm' || validLang === 'xml' || 
                    (validLang === 'plaintext' && (
                      code.trim().toLowerCase().startsWith('<!doctype') || 
@@ -915,8 +896,6 @@ function initMarked(){
 function openHtmlRunner(code) {
   S.htmlRunnerCode = code;
   $('htmlRunnerOverlay').classList.add('on');
-  
-  // Write to iframe
   var iframe = $('htmlRunnerFrame');
   var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
   iframeDoc.open();
@@ -926,8 +905,6 @@ function openHtmlRunner(code) {
 
 function closeHtmlRunner(){
   $('htmlRunnerOverlay').classList.remove('on');
-  
-  // Clear iframe
   var iframe = $('htmlRunnerFrame');
   var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
   iframeDoc.open();
@@ -1099,13 +1076,10 @@ function actLike(i,type){if(type==='like'){S.msgs[i].liked=!S.msgs[i].liked;S.ms
 function openEditModal(i){
   var m=S.msgs[i];
   if(!m||m.role!=='user')return;
-  
   S.editingIndex = i;
   S.editingFiles = (m.images || []).map(function(img){ return {...img}; });
-  
   $('emTextarea').value = m.content || '';
   renderEditAttachments();
-  
   $('emOverlay').classList.add('on');
   $('emModal').classList.add('on');
 }
@@ -1119,10 +1093,7 @@ function closeEditModal(){
 
 function renderEditAttachments(){
   var box = $('emAttachBox');
-  if(!S.editingFiles || !S.editingFiles.length){
-    box.innerHTML = '<div class="em-attach-empty">No files attached</div>';
-    return;
-  }
+  if(!S.editingFiles || !S.editingFiles.length){ box.innerHTML = '<div class="em-attach-empty">No files attached</div>'; return; }
   var html = '';
   S.editingFiles.forEach(function(img, idx){
     html += '<div class="em-attach-item"><img src="'+img.dataUrl+'" alt="'+esc(img.name)+'"><button type="button" class="em-attach-remove" data-rm-edit-idx="'+idx+'"><i class="fa-solid fa-xmark"></i></button></div>';
@@ -1132,33 +1103,20 @@ function renderEditAttachments(){
 
 function saveEditedMessage(){
   if(S.editingIndex === null) return;
-  
   var newText = $('emTextarea').value.trim();
   var msg = S.msgs[S.editingIndex];
-  
   msg.content = newText;
   msg.images = S.editingFiles; 
-  
   S.msgs = S.msgs.slice(0, S.editingIndex + 1);
   renderAll();
-  
   closeEditModal();
-  
   if(msg.images && msg.images.length){
-    var imgFiles = msg.images.map(function(img){
-       var f = dataUrlToFile(img.dataUrl, img.name);
-       return f ? {type:'image', dataUrl:img.dataUrl, name:img.name, file:f} : null;
-    }).filter(Boolean);
+    var imgFiles = msg.images.map(function(img){ var f = dataUrlToFile(img.dataUrl, img.name); return f ? {type:'image', dataUrl:img.dataUrl, name:img.name, file:f} : null; }).filter(Boolean);
     sendToAIWithFiles(newText, imgFiles, []);
-  } else {
-    sendToAI(newText);
-  }
+  } else { sendToAI(newText); }
 }
 
-function actEdit(i){
-  openEditModal(i);
-}
-
+function actEdit(i){ openEditModal(i); }
 function actRegen(i){if(S.streaming)return;S.msgs=S.msgs.slice(0,i);renderAll();regenerateAI()}
 
 function actVoice(i){
@@ -1421,7 +1379,7 @@ function mediaGate(type){if(!S.user){toast('Sign in to generate '+type+'s','wrn'
 async function init(){
   initTheme();
   initMarked();
-  initSupabase();
+  // initSupabase is no longer needed here as it is initialized at the top.
   initModel();
   initEvents();
   setupAuthListener();
