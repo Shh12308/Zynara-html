@@ -209,7 +209,6 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 .cp-btn{background:none;border:none;color:var(--text-muted);font-size:11px;cursor:pointer;padding:3px 8px;border-radius:5px;display:flex;align-items:center;gap:5px;font-family:var(--font-body);transition:all var(--speed);font-weight:500;touch-action: manipulation}
 .cp-btn:hover{color:var(--text-primary);background:var(--bg-hover)}
 .code-blk pre{margin:0;padding:14px;overflow-x:auto;background:var(--bg-code)!important;position:relative}
-/* Fix for long code lines to scroll instead of breaking layout */
 .code-blk pre code{white-space:pre;display:block;min-width:100%} 
 .code-blk code{font-family:'Fira Code','Cascadia Code',monospace;font-size:12.5px;background:none!important;padding:0!important;line-height:1.7}
 
@@ -333,7 +332,7 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 .gal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
 .gal-hd h2{font-family:var(--font-display);font-size:22px;font-weight:700;letter-spacing:-.3px;display:flex;align-items:center;gap:10px}
 .gal-hd h2 i{color:var(--accent)}.gal-count{font-size:12px;color:var(--text-muted);font-weight:500}
-.gal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr)),gap:12px}
+.gal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
 .gal-item{border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:var(--bg-secondary);transition:all var(--speed);cursor:pointer;position:relative;touch-action: manipulation}
 .gal-item:hover{border-color:var(--border-active);transform:translateY(-3px);box-shadow:var(--glow)}
 .gal-item img,.gal-item video{width:100%;aspect-ratio:1;object-fit:cover;display:block;transition:transform .4s var(--ease)}
@@ -397,24 +396,25 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 
 <div class="sb-overlay" id="sbOv"></div>
 <aside class="sidebar" id="sidebar">
-  <div class="sb-head"><div class="sb-logo">Helox<span>Ai</span></div><button class="ib" id="sbClose" aria-label="Close sidebar"><i class="fa-solid fa-xmark"></i></button></div>
+  <div class="sb-head"><div class="sb-logo">Helox<span>Ai</span></div><button type="button" class="ib" id="sbClose" aria-label="Close sidebar"><i class="fa-solid fa-xmark"></i></button></div>
   <div class="sb-search"><div class="sb-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" id="sbSearch" placeholder="Search conversations..."></div></div>
-  <button class="nc-btn" id="newChatBtn"><i class="fa-solid fa-plus"></i> New Chat <span class="nc-lock" id="ncLock" style="display:none"><i class="fa-solid fa-lock"></i></span></button>
+  <!-- FIXED: New Chat Button checks auth immediately on click -->
+  <button type="button" class="nc-btn" id="newChatBtn"><i class="fa-solid fa-plus"></i> New Chat <span class="nc-lock" id="ncLock" style="display:none"><i class="fa-solid fa-lock"></i></span></button>
   <div class="cl" id="chatList"><div class="cl-label">Recent</div><div id="chatListItems"><span style="color:var(--text-muted);font-size:12px;padding:4px 10px;display:block">Loading chats...</span></div></div>
   <nav class="s-nav">
-    <!-- Changed to button to handle JS Auth better, styled as link -->
-    <button id="signInLink"><i class="fa-brands fa-google"></i> Sign In</button>
+    <!-- FIXED: Sign In button triggers JS directly -->
+    <a href="#" id="signInLink" onclick="handleSignInClick(event)"><i class="fa-brands fa-google"></i> Sign In</a>
     <a href="donate.html" target="_blank" style="color:#ef4444"><i class="fa-solid fa-heart"></i> Donate</a>
     <a href="settings.html"><i class="fa-solid fa-sliders"></i> Settings</a>
-    <button id="contactLink"><i class="fa-solid fa-envelope"></i> Contact</button>
+    <button type="button" id="contactLink"><i class="fa-solid fa-envelope"></i> Contact</button>
     <a href="prem.html"><i class="fa-solid fa-crown"></i> Premium <span class="ptag premium">PRO</span></a>
   </nav>
-  <div class="theme-sec"><div class="theme-lbl">Appearance</div><div class="theme-grid" id="themeGrid"><button class="t-btn" data-t="light">Light</button><button class="t-btn active" data-t="dark">Dark</button><button class="t-btn" data-t="system">System</button><button class="t-btn" data-t="gold">Gold</button><button class="t-btn" data-t="ocean">Ocean</button><button class="t-btn" data-t="midnight">Midnight</button><button class="t-btn" data-t="cyber">Cyber</button><button class="t-btn" data-t="forest">Forest</button><button class="t-btn" data-t="sunset">Sunset</button><button class="t-btn" data-t="arctic">Arctic</button><button class="t-btn" data-t="lavender">Lavender</button><button class="t-btn" data-t="espresso">Espresso</button></div></div>
+  <div class="theme-sec"><div class="theme-lbl">Appearance</div><div class="theme-grid" id="themeGrid"><button type="button" class="t-btn" data-t="light">Light</button><button type="button" class="t-btn active" data-t="dark">Dark</button><button type="button" class="t-btn" data-t="system">System</button><button type="button" class="t-btn" data-t="gold">Gold</button><button type="button" class="t-btn" data-t="ocean">Ocean</button><button type="button" class="t-btn" data-t="midnight">Midnight</button><button type="button" class="t-btn" data-t="cyber">Cyber</button><button type="button" class="t-btn" data-t="forest">Forest</button><button type="button" class="t-btn" data-t="sunset">Sunset</button><button type="button" class="t-btn" data-t="arctic">Arctic</button><button type="button" class="t-btn" data-t="lavender">Lavender</button><button type="button" class="t-btn" data-t="espresso">Espresso</button></div></div>
   <div class="s-user" id="sUser"><div class="av" id="uAv">?</div><div class="inf"><div class="nm" id="uNm">Guest</div><div class="pl" id="uPl">Free Plan</div><div class="ll" id="uLl">Last login: Never</div></div></div>
 </aside>
 <main>
   <header class="chat-hdr">
-    <button class="ib menu-btn" id="menuBtn" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
+    <button type="button" class="ib menu-btn" id="menuBtn" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
     <div class="hdr-title" id="hdrTitle">HeloxAi</div>
     <div class="model-sel" id="modelSel" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false">
       <div class="m-icon default-icon" id="modelIcon">H</div>
@@ -427,8 +427,8 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
         <div class="model-item" data-model="chatz" role="option" tabindex="0"><div class="mi-icon z-icon">Z</div><div class="mi-info"><div class="mi-name">Chat.Z</div><div class="mi-desc">Advanced reasoning model</div></div><i class="fa-solid fa-check mi-check"></i></div>
       </div>
     </div>
-    <button class="htab active" id="chatTab"><i class="fa-solid fa-message"></i> Chat</button>
-    <button class="htab" id="galleryTab"><i class="fa-solid fa-images"></i> Gallery</button>
+    <button type="button" class="htab active" id="chatTab"><i class="fa-solid fa-message"></i> Chat</button>
+    <button type="button" class="htab" id="galleryTab"><i class="fa-solid fa-images"></i> Gallery</button>
     <span class="hdr-plan ptag free" id="hdrPlan">FREE</span>
   </header>
   <div class="msgs-wrap" id="msgsWrap">
@@ -451,22 +451,23 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
       <div class="gal-empty" id="galEmpty" style="display:none"><i class="fa-solid fa-image"></i><p>No images or videos yet.</p></div>
     </div>
   </div>
-  <button class="scroll-bot" id="scrollBot" aria-label="Scroll to bottom"><i class="fa-solid fa-chevron-down"></i></button>
+  <button type="button" class="scroll-bot" id="scrollBot" aria-label="Scroll to bottom"><i class="fa-solid fa-chevron-down"></i></button>
   <div id="fileIndicator" style="display:none"></div>
   <div class="cb-container" id="cbContainer">
     <div class="cb-wrap">
       <div class="chatbar" id="chatbar">
         <div id="imgPreviewStrip" class="img-preview-strip" style="display:none"></div>
-        <button class="cb-btn" id="fileBtn" aria-label="Upload file"><i class="fa-solid fa-paperclip"></i></button>
-        <button class="cb-btn" id="asBtn" aria-label="Quick actions"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
+        <button type="button" class="cb-btn" id="fileBtn" aria-label="Upload file"><i class="fa-solid fa-paperclip"></i></button>
+        <button type="button" class="cb-btn" id="asBtn" aria-label="Quick actions"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
         <textarea class="cb-input" id="cbInput" placeholder="Message HeloxAi..." rows="1" aria-label="Chat input"></textarea>
         <div class="cb-r">
-          <button class="cb-btn" id="micBtn" aria-label="Voice input"><i class="fa-solid fa-microphone"></i><span class="lock-badge" id="micLock" style="display:none"><i class="fa-solid fa-lock"></i></span></button>
+          <button type="button" class="cb-btn" id="micBtn" aria-label="Voice input"><i class="fa-solid fa-microphone"></i><span class="lock-badge" id="micLock" style="display:none"><i class="fa-solid fa-lock"></i></span></button>
           <div style="position:relative;">
-            <button class="cb-btn" id="voiceBtn" aria-label="Select voice"><i class="fa-solid fa-volume-high"></i><span class="lock-badge" id="voiceLock" style="display:none"><i class="fa-solid fa-lock"></i></span></button>
+            <button type="button" class="cb-btn" id="voiceBtn" aria-label="Select voice"><i class="fa-solid fa-volume-high"></i><span class="lock-badge" id="voiceLock" style="display:none"><i class="fa-solid fa-lock"></i></span></button>
             <div class="vdd" id="voiceDd"><div id="voiceList"></div></div>
           </div>
-          <button class="cb-btn hide" id="sendStopBtn" aria-label="Send"><i class="fa-solid fa-arrow-up"></i></button>
+          <!-- FIXED: type="button" added -->
+          <button type="button" class="cb-btn hide" id="sendStopBtn" aria-label="Send"><i class="fa-solid fa-arrow-up"></i></button>
         </div>
       </div>
       <div class="cb-foot"><span><kbd>Enter</kbd> to send</span><span><kbd>Shift+Enter</kbd> new line</span></div>
@@ -477,21 +478,21 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 <div class="as-ov" id="asOv"></div>
 <div class="as" id="asSheet">
   <div class="as-handle"></div>
-  <div class="as-hd"><h3>Quick Actions</h3><button class="ib" id="asClose" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
+  <div class="as-hd"><h3>Quick Actions</h3><button type="button" class="ib" id="asClose" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
   <div class="as-grid">
-    <button class="as-opt locked" data-prompt="Generate an image of " data-media="image" id="asImg"><i class="fa-solid fa-image"></i> Generate Image <span class="as-lock" id="asLockImg"><i class="fa-solid fa-lock"></i> Sign in</span></button>
-    <button class="as-opt locked" data-prompt="Generate a video of " data-media="video" id="asVid"><i class="fa-solid fa-video"></i> Generate Video <span class="as-lock" id="asLockVid"><i class="fa-solid fa-lock"></i> Sign in</span></button>
-    <button class="as-opt" data-prompt="Search the web for "><i class="fa-solid fa-magnifying-glass"></i> Search the Web</button>
-    <button class="as-opt" data-prompt="Summarize the following:\n\n"><i class="fa-solid fa-file-lines"></i> Summarize</button>
-    <button class="as-opt" data-prompt="Write a professional email about "><i class="fa-solid fa-at"></i> Write Email</button>
-    <button class="as-opt" data-prompt="Help me write code for "><i class="fa-solid fa-code"></i> Code Assistant</button>
-    <button class="as-opt" data-prompt="Translate to English:\n\n"><i class="fa-solid fa-language"></i> Translate</button>
-    <button class="as-opt" data-prompt="Analyze this data:\n\n"><i class="fa-solid fa-chart-bar"></i> Analyze Data</button>
+    <button type="button" class="as-opt locked" data-prompt="Generate an image of " data-media="image" id="asImg"><i class="fa-solid fa-image"></i> Generate Image <span class="as-lock" id="asLockImg"><i class="fa-solid fa-lock"></i> Sign in</span></button>
+    <button type="button" class="as-opt locked" data-prompt="Generate a video of " data-media="video" id="asVid"><i class="fa-solid fa-video"></i> Generate Video <span class="as-lock" id="asLockVid"><i class="fa-solid fa-lock"></i> Sign in</span></button>
+    <button type="button" class="as-opt" data-prompt="Search the web for "><i class="fa-solid fa-magnifying-glass"></i> Search the Web</button>
+    <button type="button" class="as-opt" data-prompt="Summarize the following:\n\n"><i class="fa-solid fa-file-lines"></i> Summarize</button>
+    <button type="button" class="as-opt" data-prompt="Write a professional email about "><i class="fa-solid fa-at"></i> Write Email</button>
+    <button type="button" class="as-opt" data-prompt="Help me write code for "><i class="fa-solid fa-code"></i> Code Assistant</button>
+    <button type="button" class="as-opt" data-prompt="Translate to English:\n\n"><i class="fa-solid fa-language"></i> Translate</button>
+    <button type="button" class="as-opt" data-prompt="Analyze this data:\n\n"><i class="fa-solid fa-chart-bar"></i> Analyze Data</button>
   </div>
 </div>
 <div class="vdd" id="voiceDd"><div id="voiceList"></div></div>
-<div class="lb" id="lightbox"><button class="lb-close" id="lbClose" aria-label="Close"><i class="fa-solid fa-xmark"></i></button><div id="lbContent"></div><a class="lb-dl" id="lbDl" download><i class="fa-solid fa-download"></i> Download</a></div>
-<div class="modal-ov" id="contactModal"><div class="modal"><h3>Contact Us</h3><p>Have questions or feedback? We'd love to hear from you.</p><p style="color:var(--accent);font-weight:600;font-size:14px">support@heloxai.com</p><button class="modal-close" data-close="contactModal">Close</button></div></div>
+<div class="lb" id="lightbox"><button type="button" class="lb-close" id="lbClose" aria-label="Close"><i class="fa-solid fa-xmark"></i></button><div id="lbContent"></div><a class="lb-dl" id="lbDl" download><i class="fa-solid fa-download"></i> Download</a></div>
+<div class="modal-ov" id="contactModal"><div class="modal"><h3>Contact Us</h3><p>Have questions or feedback? We'd love to hear from you.</p><p style="color:var(--accent);font-weight:600;font-size:14px">support@heloxai.com</p><button type="button" class="modal-close" data-close="contactModal">Close</button></div></div>
 
 <!-- NEW LINK MODAL -->
 <div class="modal-ov" id="linkModal">
@@ -507,9 +508,10 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
       <p><i class="fa-solid fa-info-circle"></i> This is an external resource. You can ask the AI to analyze or summarize the content of this link.</p>
     </div>
     <div class="lm-footer">
-      <button class="btn-close btn-cn" id="lmClose" data-close="linkModal">Close</button>
+      <button type="button" class="btn-close btn-cn" id="lmClose" data-close="linkModal">Close</button>
+      <!-- Changed to <a> for href support -->
       <a href="#" class="btn-ext" id="lmOpenExternal" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-external-link-alt"></i> Open</a>
-      <button class="btn-follow" id="lmFollowUp"><i class="fa-solid fa-comment-dots"></i> Follow Up</button>
+      <button type="button" class="btn-follow" id="lmFollowUp"><i class="fa-solid fa-comment-dots"></i> Follow Up</button>
     </div>
   </div>
 </div>
@@ -519,11 +521,12 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 <div class="em-modal" id="emModal">
   <div class="em-head">
     <h3>Edit Message</h3>
-    <button class="em-close" id="emClose"><i class="fa-solid fa-xmark"></i></button>
+    <button type="button" class="em-close" id="emClose"><i class="fa-solid fa-xmark"></i></button>
   </div>
   <div class="em-body">
     <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Attachments</div>
     <div class="em-attach-box" id="emAttachBox">
+      <!-- Attachments injected here -->
       <div class="em-attach-empty">No files attached</div>
     </div>
     
@@ -531,8 +534,8 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
     <textarea class="em-textarea" id="emTextarea" placeholder="Edit your message..."></textarea>
   </div>
   <div class="em-foot">
-    <button class="em-btn em-btn-cancel" id="emCancel">Cancel</button>
-    <button class="em-btn em-btn-save" id="emSave">Save & Submit</button>
+    <button type="button" class="em-btn em-btn-cancel" id="emCancel">Cancel</button>
+    <button type="button" class="em-btn em-btn-save" id="emSave">Save & Submit</button>
   </div>
 </div>
 
@@ -615,14 +618,27 @@ function initSupabase(){
     var sUrl = getEnvVar('SUPABASE_URL');
     var sKey = getEnvVar('SUPABASE_ANON_KEY');
     if(!sUrl || !sKey || sUrl.indexOf('https://') === -1) return;
+    
     if(typeof window.supabase==='undefined'){
       console.warn('Supabase JS not loaded yet, retrying in 500ms');
       setTimeout(initSupabase, 500);
       return;
     }
+    
     sb = window.supabase.createClient(sUrl, sKey, {
-      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: window.localStorage },
-      global: { fetch: function(input, init){ init = init || {}; init.credentials = 'include'; return window.fetch(input, init); } }
+      auth: { 
+        persistSession: true, 
+        autoRefreshToken: true, 
+        detectSessionInUrl: true, 
+        storage: window.localStorage 
+      },
+      global: { 
+        fetch: function(input, init){ 
+          init = init || {}; 
+          init.credentials = 'include'; 
+          return window.fetch(input, init); 
+        } 
+      }
     });
   } catch(e){ console.warn('Supabase init skipped:', e); }
 }
@@ -630,16 +646,22 @@ function initSupabase(){
 async function setUserFromSession(session){
   try {
     const { data, error } = await sb.from('users').select('plan,is_premium,is_lifetime').eq('id', session.user.id).single();
-    S.user = { id: session.user.id, email: session.user.email, token: session.access_token, plan: data?.plan || 'free', is_premium: data?.is_premium || false, is_lifetime: data?.is_lifetime || false };
-  } catch(e){ console.warn('user fetch failed:', e); S.user = { id: session.user.id, email: session.user.email, token: session.access_token, plan: 'free', is_premium: false, is_lifetime: false }; }
+    var u = { id: session.user.id, email: session.user.email, token: session.access_token, plan: 'free', is_premium: false, is_lifetime: false };
+    if (data) {
+      u.plan = data.plan || 'free';
+      u.is_premium = data.is_premium || false;
+      u.is_lifetime = data.is_lifetime || false;
+    }
+    S.user = u;
+    try{ localStorage.setItem('helox-last-login', Date.now()); } catch(e){}
+  } catch(e){ 
+    console.warn('user fetch failed, setting defaults:', e); 
+    S.user = { id: session.user.id, email: session.user.email, token: session.access_token, plan: 'free', is_premium: false, is_lifetime: false }; 
+  }
 }
 
 async function loadUser(){
-  if(!sb) {
-    console.log('Supabase not ready in loadUser, deferring...');
-    setTimeout(loadUser, 1000);
-    return;
-  }
+  if(!sb) { setTimeout(loadUser, 1000); return; }
   $('globalLoader').style.display = 'flex';
   try {
     const { data: { session }, error } = await sb.auth.getSession();
@@ -647,9 +669,19 @@ async function loadUser(){
     if (session && session.user) {
       await setUserFromSession(session);
       console.log('User loaded:', S.user.email);
-    } else { S.user = null; console.log('No active session found.'); }
-  } catch(e){ console.warn('loadUser error:', e); S.user = null; }
-  finally { refreshUI(); $('globalLoader').style.display = 'none'; loadChatList(); }
+    } else {
+      S.user = null;
+      console.log('No active session found.');
+    }
+  } catch(e){ 
+    console.warn('loadUser error:', e); 
+    S.user = null; 
+  }
+  finally { 
+    refreshUI(); 
+    $('globalLoader').style.display = 'none'; 
+    loadChatList();
+  }
 }
 
 function setupAuthListener(){
@@ -657,22 +689,22 @@ function setupAuthListener(){
   sb.auth.onAuthStateChange(async (event, session) => {
     console.log('Auth state changed:', event, session?.user?.email);
     if (event === 'SIGNED_OUT') { handleSignOut(); return; }
-    if (session && session.user) { await setUserFromSession(session); refreshUI(); loadChatList(); if(event === 'SIGNED_IN') toast('Signed in', 'ok'); }
+    if (session && session.user) { 
+      await setUserFromSession(session); 
+      refreshUI(); 
+      loadChatList(); 
+      if(event === 'SIGNED_IN') toast('Signed in', 'ok'); 
+    }
   });
 }
 
 async function handleSignIn(session){
   if(!session || !session.user) return;
   $('globalLoader').style.display = 'flex';
-  try{ localStorage.setItem('helox-last-login', Date.now()); } catch(e){}
-  try{
-    var ud = await sb.from('users').select('plan,is_premium,is_lifetime').eq('id', session.user.id).single();
-    S.user = { id: session.user.id, email: session.user.email, plan: (ud.data && ud.data.plan) || 'free', is_premium: (ud.data && ud.data.is_premium) || false, is_lifetime: (ud.data && ud.data.is_lifetime) || false, token: session.access_token };
-    refreshUI(); loadChatList(); if(document.visibilityState === 'visible') toast('Signed in successfully', 'ok');
-  } catch(e){
-    S.user = { id: session.user.id, email: session.user.email, plan: 'free', is_premium: false, is_lifetime: false, token: session.access_token };
-    refreshUI();
-  } finally { $('globalLoader').style.display = 'none'; }
+  await setUserFromSession(session);
+  refreshUI(); loadChatList(); 
+  if(document.visibilityState === 'visible') toast('Signed in successfully', 'ok');
+  $('globalLoader').style.display = 'none';
 }
 
 function handleSignOut(){
@@ -688,6 +720,17 @@ async function triggerOAuth(){
   if (error) toast(error.message, 'err');
 }
 
+// FIXED: Dedicated handler for the sidebar sign in button
+async function handleSignInClick(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  if(S.user){
+    signOut();
+  } else {
+    triggerOAuth();
+  }
+}
+
 async function loadChatList(){
   if(!S.user){ S.chatListData = []; renderChatList(); return; }
   try {
@@ -700,7 +743,12 @@ async function loadChatList(){
 }
 
 async function startNewChat() {
-  if(!S.user) return;
+  // FIXED: Explicit check before starting
+  if(!S.user){ 
+    toast('Please sign in to start a new chat', 'wrn'); 
+    return; 
+  }
+  
   try {
     var res = await fetch(getApiUrl() + '/newchat', { method: 'POST', headers: authH(), credentials: 'include', body: JSON.stringify({ model: S.model }) });
     if (!res.ok) throw new Error('Failed to create new chat');
@@ -771,6 +819,7 @@ function renderVoices(){
   document.querySelectorAll('.v-item').forEach(function(el){ el.classList.toggle('active', el.textContent.includes(S.selectedVoice) || el.getAttribute('data-voice') === S.selectedVoice); });
 }
 
+// HELPER: Convert Raw URLs to Markdown Links
 function autoLinkMarkdown(text){
   if(!text) return '';
   return text.replace(/(https?:\/\/[^\s]+)/g, function(url){
@@ -785,22 +834,23 @@ function getAiContent(data){
   return autoLinkMarkdown(raw);
 }
 
+// ================= MARKDOWN FIXES =================
 function initMarked(){
   if (typeof marked === 'undefined' || typeof hljs === 'undefined') { 
     console.warn('marked or hljs not loaded yet, deferring initMarked'); 
     S._mdOk = false;
     return; 
   }
+  
   try {
-    marked.setOptions({ 
-      breaks: true, 
-      gfm: true,
-      langPrefix: 'hljs language-'
-    });
+    marked.setOptions({ breaks: true, gfm: true, langPrefix: 'hljs language-' });
+    
     const renderer = new marked.Renderer();
+
     renderer.code = function(code, lang) {
       var validLang = (lang && typeof hljs.getLanguage === 'function' && hljs.getLanguage(lang)) ? lang : 'plaintext';
       var highlighted = code;
+      
       if (typeof hljs.highlight !== 'undefined') {
         try {
           if (validLang !== 'plaintext') {
@@ -813,18 +863,31 @@ function initMarked(){
           highlighted = hljs.highlightAuto(code).value; 
         }
       }
-      return `<div class="code-blk"><div class="code-hd"><span>${esc(validLang)}</span><button class="cp-btn" data-copy-code>Copy</button></div><pre><code class="hljs language-${validLang}">${highlighted}</code></pre></div>`;
+
+      return `
+        <div class="code-blk">
+          <div class="code-hd">
+            <span>${esc(validLang)}</span>
+            <button type="button" class="cp-btn" data-copy-code>Copy</button>
+          </div>
+          <pre><code class="hljs language-${validLang}">${highlighted}</code></pre>
+        </div>
+      `;
     };
+
     function safeUrl(url){
       try { const u = new URL(url, location.origin); return ['http:', 'https:'].includes(u.protocol) ? url : '#'; } catch { return '#'; }
     }
+
     renderer.link = function(href, title, text) {
       const safe = safeUrl(href);
       return `<a href="${safe}" target="_blank" rel="noopener noreferrer">${text}</a>`;
     };
+
     renderer.image = function(href, title, text) {
       return `<div class="img-wrap"><img src="${href}" alt="${text || ''}" loading="lazy"></div>`;
     };
+
     marked.use({ renderer });
     S._mdOk = true;
     console.log('Markdown initialized successfully.');
@@ -868,29 +931,36 @@ function refreshUI(){
   var u=$('sUser'),sl=$('signInLink'),hp=$('hdrPlan');if(!u||!sl||!hp)return;
   var signedIn=!!S.user,hasMedia=canGenMedia();
   var badgeClass='free'; var badgeText='FREE';
+  
   if(S.user) {
     if(S.user.is_lifetime) { badgeClass='lifetime'; badgeText='LIFETIME'; } 
     else if(S.user.is_premium) { badgeClass='premium'; badgeText='PREMIUM'; } 
     else if(S.user.plan && S.user.plan !== 'free') { badgeClass = S.user.plan === 'lifetime' ? 'lifetime' : 'premium'; badgeText = S.user.plan.toUpperCase(); } 
     else { badgeText = 'FREE'; }
   }
+
   if(S.user){
     u.classList.add('show'); $('uAv').textContent=(S.user.email||'U')[0].toUpperCase(); $('uNm').textContent=S.user.email; $('uPl').textContent=badgeText.charAt(0)+badgeText.slice(1).toLowerCase()+' Plan';
-    sl.innerHTML='<i class="fa-solid fa-right-from-bracket"></i> Log Out'; 
+    sl.innerHTML='<i class="fa-solid fa-right-from-bracket"></i> Log Out'; sl.removeAttribute('href'); sl.style.cursor='pointer';
     hp.textContent=badgeText; hp.className='hdr-plan ptag '+badgeClass; updateLoginDisplay();
   } else {
-    u.classList.remove('show'); sl.innerHTML='<i class="fa-brands fa-google"></i> Sign In'; 
+    u.classList.remove('show'); sl.innerHTML='<i class="fa-brands fa-google"></i> Sign In'; sl.href = '#'; // Updated to #, relies on onclick
+    sl.style.cursor='pointer';
     hp.textContent='FREE'; hp.className='hdr-plan ptag free';
   }
+  
   var ncb=$('newChatBtn'),ncl=$('ncLock'); ncb.classList.toggle('locked',!signedIn); if(ncl)ncl.style.display=signedIn?'none':'flex';
   $('micBtn').classList.toggle('locked',!signedIn); $('micLock').style.display=signedIn?'none':'flex';
   $('voiceBtn').classList.toggle('locked',!signedIn); $('voiceLock').style.display=signedIn?'none':'flex';
+  
   var wCI=document.querySelector('.w-card[data-media="image"]'),wCV=document.querySelector('.w-card[data-media="video"]'),wLI=$('wLockImg'),wLV=$('wLockVid');
   if(wCI&&wLI){wCI.classList.toggle('locked',!hasMedia);wLI.style.display=hasMedia?'none':'flex';if(!signedIn){wLI.className='w-lock';wLI.innerHTML='<i class="fa-solid fa-lock"></i> Sign in'}else if(!hasMedia){wLI.className='w-lock prem-lock';wLI.innerHTML='<i class="fa-solid fa-crown"></i> Upgrade'}}
   if(wCV&&wLV){wCV.classList.toggle('locked',!hasMedia);wLV.style.display=hasMedia?'none':'flex';if(!signedIn){wLV.className='w-lock';wLV.innerHTML='<i class="fa-solid fa-lock"></i> Sign in'}else if(!hasMedia){wLV.className='w-lock prem-lock';wLV.innerHTML='<i class="fa-solid fa-crown"></i> Upgrade'}}
+  
   var aI=$('asImg'),aV=$('asVid'),aLI=$('asLockImg'),aLV=$('asLockVid');
   if(aI&&aLI){aI.classList.toggle('locked',!hasMedia);aLI.style.display=hasMedia?'none':'flex';if(!signedIn)aLI.innerHTML='<i class="fa-solid fa-lock"></i> Sign in';else if(!hasMedia)aLI.innerHTML='<i class="fa-solid fa-crown"></i> Upgrade'}
   if(aV&&aLV){aV.classList.toggle('locked',!hasMedia);aLV.style.display=hasMedia?'none':'flex';if(!signedIn)aLV.innerHTML='<i class="fa-solid fa-lock"></i> Sign in';else if(!hasMedia)aLV.innerHTML='<i class="fa-solid fa-crown"></i> Upgrade'}
+  
   updateModelUI();
 }
 
@@ -919,7 +989,7 @@ function closeLB(){$('lightbox').classList.remove('on');$('lbContent').innerHTML
 function showWelcome(){$('welcomeEl').style.display='flex';$('msgsEl').style.display='none'}
 function showMsgs(){$('welcomeEl').style.display='none';$('msgsEl').style.display='block'}
 
-function renderChatList(){var el=$('chatListItems');if(!el)return;if(!S.chatListData.length){el.innerHTML='<span style="color:var(--text-muted);font-size:12px;padding:4px 10px;display:block">No conversations yet</span>';return}var html='';S.chatListData.forEach(function(c){html+='<button class="cl-item'+(c.id===S.chatId?' active':'')+'" data-cid="'+c.id+'"><i class="fa-regular fa-message"></i><span class="cl-title">'+esc(c.title)+'</span><span class="cl-time">'+ago(c.updated_at)+'</span><button class="cl-del" data-del-cid="'+c.id+'" aria-label="Delete"><i class="fa-solid fa-trash"></i></button></button>'});el.innerHTML=html}
+function renderChatList(){var el=$('chatListItems');if(!el)return;if(!S.chatListData.length){el.innerHTML='<span style="color:var(--text-muted);font-size:12px;padding:4px 10px;display:block">No conversations yet</span>';return}var html='';S.chatListData.forEach(function(c){html+='<button class="cl-item'+(c.id===S.chatId?' active':'')+'" data-cid="'+c.id+'"><i class="fa-regular fa-message"></i><span class="cl-title">'+esc(c.title)+'</span><span class="cl-time">'+ago(c.updated_at)+'</span><button type="button" class="cl-del" data-del-cid="'+c.id+'" aria-label="Delete"><i class="fa-solid fa-trash"></i></button></button>'});el.innerHTML=html}
 
 function buildMsgImagesHtml(images){if(!images||!images.length)return'';var cls=images.length===1?'single':'multi';var html='<div class="msg-imgs">';images.forEach(function(img){html+='<div class="msg-img-item '+cls+'" data-msg-img="'+esc(img.dataUrl)+'"><img src="'+img.dataUrl+'" alt="'+esc(img.name||'Image')+'" loading="lazy"></div>'});html+='</div>';return html}
 
@@ -928,12 +998,12 @@ function renderAll(){
   showMsgs();var html='';
   S.msgs.forEach(function(m,i){
     if(m.role==='assistant'){
-      var act='<div class="msg-acts"><button class="ma" data-act="copy" data-i="'+i+'" data-tip="Copy"><i class="fa-regular fa-copy"></i></button><button class="ma'+(m.liked?' liked':'')+'" data-act="like" data-i="'+i+'" data-tip="Good"><i class="fa-regular fa-thumbs-up"></i></button><button class="ma'+(m.disliked?' disliked':'')+'" data-act="dislike" data-i="'+i+'" data-tip="Bad"><i class="fa-regular fa-thumbs-down"></i></button>'+(i===S.msgs.length-1&&!S.streaming?'<button class="ma" data-act="regen" data-i="'+i+'" data-tip="Regenerate"><i class="fa-solid fa-arrows-rotate"></i></button>':'')+'<button class="ma'+(authSilent()?' locked':'')+'" data-act="voice" data-i="'+i+'" data-tip="'+(S.user?'Read aloud':'Sign in')+'"><i class="fa-solid fa-volume-high"></i></button></div>';
+      var act='<div class="msg-acts"><button type="button" class="ma" data-act="copy" data-i="'+i+'" data-tip="Copy"><i class="fa-regular fa-copy"></i></button><button type="button" class="ma'+(m.liked?' liked':'')+'" data-act="like" data-i="'+i+'" data-tip="Good"><i class="fa-regular fa-thumbs-up"></i></button><button type="button" class="ma'+(m.disliked?' disliked':'')+'" data-act="dislike" data-i="'+i+'" data-tip="Bad"><i class="fa-regular fa-thumbs-down"></i></button>'+(i===S.msgs.length-1&&!S.streaming?'<button type="button" class="ma" data-act="regen" data-i="'+i+'" data-tip="Regenerate"><i class="fa-solid fa-arrows-rotate"></i></button>':'')+'<button type="button" class="ma'+(authSilent()?' locked':'')+'" data-act="voice" data-i="'+i+'" data-tip="'+(S.user?'Read aloud':'Sign in')+'"><i class="fa-solid fa-volume-high"></i></button></div>';
       html+='<div class="msg ai-msg" id="msg-'+i+'"><div class="msg-inner"><div class="msg-label"><span class="ai-dot"></span> AI</div><div class="msg-ct" id="mc-'+i+'"></div>'+act+'<div class="msg-time">'+(m.time||'')+'</div><div id="ea-'+i+'"></div></div></div>';
     }else{
       var imgHtml=buildMsgImagesHtml(m.images);var textHtml=m.content?'<p>'+esc(m.content).replace(/\n/g,'<br>')+'</p>':'';
       var bubbleContent=(imgHtml||textHtml)?(imgHtml+textHtml):'<p style="color:var(--text-muted);font-style:italic">Empty message</p>';
-      var uAct = '<div class="msg-acts"><button class="ma" data-act="copy" data-i="'+i+'" data-tip="Copy"><i class="fa-regular fa-copy"></i></button><button class="ma" data-act="edit" data-i="'+i+'" data-tip="Edit"><i class="fa-regular fa-pen-to-square"></i></button></div>';
+      var uAct = '<div class="msg-acts"><button type="button" class="ma" data-act="copy" data-i="'+i+'" data-tip="Copy"><i class="fa-regular fa-copy"></i></button><button type="button" class="ma" data-act="edit" data-i="'+i+'" data-tip="Edit"><i class="fa-regular fa-pen-to-square"></i></button></div>';
       html+='<div class="msg user-msg" id="msg-'+i+'"><div class="msg-inner"><div class="msg-label">You</div><div class="msg-bubble"><div class="msg-ct" id="mc-'+i+'">'+bubbleContent+'</div></div>'+uAct+'<div class="msg-time">'+(m.time||'')+'</div><div id="ea-'+i+'"></div></div></div>';
     }
   });
@@ -953,55 +1023,101 @@ function rmTyping(){var e=$('typMsg');if(e)e.remove()}
 function checkScrollButton(){var w=$('msgsWrap');if(!w)return;var dist=w.scrollHeight-w.scrollTop-w.clientHeight;if(dist>S.scrollThreshold){$('scrollBot').classList.add('vis');S.isAutoScrolling=false}else{$('scrollBot').classList.remove('vis');S.isAutoScrolling=true}}
 function scrollBot(force){if(force||S.isAutoScrolling){requestAnimationFrame(function(){var w=$('msgsWrap');if(w){w.scrollTop=w.scrollHeight;S.isAutoScrolling=true;$('scrollBot').classList.remove('vis')}})}}
 
-function renderImgPreview(){var strip=$('imgPreviewStrip'),chatbar=$('chatbar');var images=S.pendingFiles.filter(function(f){return f.type==='image'});if(!images.length){strip.style.display='none';strip.innerHTML='';chatbar.classList.remove('has-images');return}chatbar.classList.add('has-images');strip.style.display='flex';var html='';images.forEach(function(f){var realIdx=S.pendingFiles.indexOf(f);html+='<div class="img-prev-item"><img src="'+f.dataUrl+'" alt="'+esc(f.name)+'"><button class="img-prev-rm" data-rm-idx="'+realIdx+'" aria-label="Remove"><i class="fa-solid fa-xmark"></i></button></div>'});strip.innerHTML=html}
+function renderImgPreview(){var strip=$('imgPreviewStrip'),chatbar=$('chatbar');var images=S.pendingFiles.filter(function(f){return f.type==='image'});if(!images.length){strip.style.display='none';strip.innerHTML='';chatbar.classList.remove('has-images');return}chatbar.classList.add('has-images');strip.style.display='flex';var html='';images.forEach(function(f){var realIdx=S.pendingFiles.indexOf(f);html+='<div class="img-prev-item"><img src="'+f.dataUrl+'" alt="'+esc(f.name)+'"><button type="button" class="img-prev-rm" data-rm-idx="'+realIdx+'" aria-label="Remove"><i class="fa-solid fa-xmark"></i></button></div>'});strip.innerHTML=html}
 function removePendingFile(idx){if(idx>=0&&idx<S.pendingFiles.length){S.pendingFiles.splice(idx,1);renderImgPreview();renderFileIndicator();updateCB()}}
 function clearPendingFiles(){S.pendingFiles=[];renderImgPreview();renderFileIndicator();$('fileInput').value='';updateCB()}
-function renderFileIndicator(){var fi=$('fileIndicator');var nonImages=S.pendingFiles.filter(function(f){return f.type!=='image'});if(!nonImages.length){fi.style.display='none';return}fi.style.display='block';var html='';nonImages.forEach(function(f){var realIdx=S.pendingFiles.indexOf(f);html+='<div class="file-indicator"><i class="fa-solid fa-file"></i><span class="fi-name">'+esc(f.name)+'</span><span class="fi-size">'+fmtSize(f.size)+'</span><button class="fi-rm" data-rm-idx="'+realIdx+'"><i class="fa-solid fa-xmark"></i></button></div>'});fi.innerHTML=html}
+function renderFileIndicator(){var fi=$('fileIndicator');var nonImages=S.pendingFiles.filter(function(f){return f.type!=='image'});if(!nonImages.length){fi.style.display='none';return}fi.style.display='block';var html='';nonImages.forEach(function(f){var realIdx=S.pendingFiles.indexOf(f);html+='<div class="file-indicator"><i class="fa-solid fa-file"></i><span class="fi-name">'+esc(f.name)+'</span><span class="fi-size">'+fmtSize(f.size)+'</span><button type="button" class="fi-rm" data-rm-idx="'+realIdx+'"><i class="fa-solid fa-xmark"></i></button></div>'});fi.innerHTML=html}
 
 function actCopy(i){var t=S.msgs[i]&&S.msgs[i].content;if(!t)return;navigator.clipboard.writeText(t).then(function(){toast('Copied','ok')}).catch(function(){toast('Copy failed','err')})}
-function actLike(i,type){
-  if(type==='like'){S.msgs[i].liked=!S.msgs[i].liked;S.msgs[i].disliked=false}else{S.msgs[i].disliked=!S.msgs[i].disliked;S.msgs[i].liked=false}
-  renderAll()
-}
+function actLike(i,type){if(type==='like'){S.msgs[i].liked=!S.msgs[i].liked;S.msgs[i].disliked=false}else{S.msgs[i].disliked=!S.msgs[i].disliked;S.msgs[i].liked=false}renderAll()}
 
 // ================= NEW EDIT MODAL LOGIC =================
 function openEditModal(i){
-  var m=S.msgs[i];if(!m||m.role!=='user')return;
-  S.editingIndex = i; S.editingFiles = (m.images || []).map(function(img){ return {...img}; });
-  $('emTextarea').value = m.content || ''; renderEditAttachments();
-  $('emOverlay').classList.add('on'); $('emModal').classList.add('on');
+  var m=S.msgs[i];
+  if(!m||m.role!=='user')return;
+  
+  S.editingIndex = i;
+  S.editingFiles = (m.images || []).map(function(img){ return {...img}; });
+  
+  $('emTextarea').value = m.content || '';
+  renderEditAttachments();
+  
+  $('emOverlay').classList.add('on');
+  $('emModal').classList.add('on');
 }
-function closeEditModal(){$('emOverlay').classList.remove('on');$('emModal').classList.remove('on');S.editingIndex = null;S.editingFiles = [];}
+
+function closeEditModal(){
+  $('emOverlay').classList.remove('on');
+  $('emModal').classList.remove('on');
+  S.editingIndex = null;
+  S.editingFiles = [];
+}
+
 function renderEditAttachments(){
   var box = $('emAttachBox');
-  if(!S.editingFiles || !S.editingFiles.length){box.innerHTML = '<div class="em-attach-empty">No files attached</div>';return}
+  if(!S.editingFiles || !S.editingFiles.length){
+    box.innerHTML = '<div class="em-attach-empty">No files attached</div>';
+    return;
+  }
   var html = '';
   S.editingFiles.forEach(function(img, idx){
-    html += '<div class="em-attach-item"><img src="'+img.dataUrl+'" alt="'+esc(img.name)+'"><button class="em-attach-remove" onclick="removeEditFile('+idx+')"><i class="fa-solid fa-xmark"></i></button></div>';
+    html += '<div class="em-attach-item"><img src="'+img.dataUrl+'" alt="'+esc(img.name)+'"><button type="button" class="em-attach-remove" onclick="removeEditFile('+idx+')"><i class="fa-solid fa-xmark"></i></button></div>';
   });
   box.innerHTML = html;
 }
-window.removeEditFile = function(idx){if(idx>=0 && idx<S.editingFiles.length){S.editingFiles.splice(idx, 1);renderEditAttachments();}};
+
+window.removeEditFile = function(idx){
+  if(idx>=0 && idx<S.editingFiles.length){
+    S.editingFiles.splice(idx, 1);
+    renderEditAttachments();
+  }
+};
+
 function saveEditedMessage(){
   if(S.editingIndex === null) return;
-  var newText = $('emTextarea').value.trim(); var msg = S.msgs[S.editingIndex];
-  msg.content = newText; msg.images = S.editingFiles;
-  S.msgs = S.msgs.slice(0, S.editingIndex + 1); renderAll(); closeEditModal();
+  
+  var newText = $('emTextarea').value.trim();
+  var msg = S.msgs[S.editingIndex];
+  
+  // Update the message in the list
+  msg.content = newText;
+  msg.images = S.editingFiles; 
+  
+  // Slice history to this point and resend
+  S.msgs = S.msgs.slice(0, S.editingIndex + 1);
+  renderAll();
+  
+  closeEditModal();
+  
+  // Determine how to send
   if(msg.images && msg.images.length){
-    var imgFiles = msg.images.map(function(img){var f = dataUrlToFile(img.dataUrl, img.name);return f ? {type:'image', dataUrl:img.dataUrl, name:img.name, file:f} : null;}).filter(Boolean);
+    var imgFiles = msg.images.map(function(img){
+       var f = dataUrlToFile(img.dataUrl, img.name);
+       return f ? {type:'image', dataUrl:img.dataUrl, name:img.name, file:f} : null;
+    }).filter(Boolean);
     sendToAIWithFiles(newText, imgFiles, []);
-  } else { sendToAI(newText); }
+  } else {
+    sendToAI(newText);
+  }
 }
+
+// Connect Modal Buttons
  $('emClose').addEventListener('click', closeEditModal);
  $('emCancel').addEventListener('click', closeEditModal);
  $('emOverlay').addEventListener('click', closeEditModal);
  $('emSave').addEventListener('click', saveEditedMessage);
-function actEdit(i){openEditModal(i);}
+
+
+function actEdit(i){
+  openEditModal(i);
+}
+
 function actRegen(i){if(S.streaming)return;S.msgs=S.msgs.slice(0,i);renderAll();regenerateAI()}
 
 function actVoice(i){
   if(authGate('voice'))return;
-  var m=S.msgs[i];if(!m||m.role!=='assistant')return;
+  var m=S.msgs[i];
+  if(!m||m.role!=='assistant')return;
   if(S.audio){ S.audio.pause(); S.audio = null; }
   var btn = document.querySelector('.ma[data-act="voice"][data-i="'+i+'"]');
   if(btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
@@ -1130,19 +1246,8 @@ function initEvents(){
   $('menuBtn').addEventListener('click',function(){toggleSB()});
   $('sbClose').addEventListener('click',function(e){e.stopPropagation(); toggleSB(false)});
   $('sbOv').addEventListener('click',function(){toggleSB(false)});
-  $('newChatBtn').addEventListener('click',function(e){ e.stopPropagation(); if(!S.user) { toast('Please sign in', 'wrn'); return; } if(this.classList.contains('locked')) { toast('Locked', 'wrn'); return; } startNewChat(); });
-  
-  // FIX: Sign In Button Logic
-  $('signInLink').addEventListener('click', function(e) {
-    e.preventDefault(); 
-    e.stopPropagation();
-    if(S.user) {
-      signOut();
-    } else {
-      triggerOAuth();
-    }
-  });
-
+  $('newChatBtn').addEventListener('click',function(e){ e.stopPropagation(); startNewChat(); });
+  // $('signInLink') is handled by onclick in HTML for direct auth
   $('contactLink').addEventListener('click',function(e){e.stopPropagation(); toggleSB(false);$('contactModal').classList.add('on')});
   $('sbSearch').addEventListener('input',function(){var q=this.value.toLowerCase();document.querySelectorAll('#chatListItems .cl-item').forEach(function(el){var text=el.querySelector('.cl-title');if(text)text=text.textContent.toLowerCase();el.style.display=(!q||text.indexOf(q)!==-1)?'flex':'none'})});
   $('themeGrid').addEventListener('click',function(e){var b=e.target.closest('.t-btn');if(b){e.stopPropagation();setTheme(b.getAttribute('data-t'))}});
@@ -1153,7 +1258,7 @@ function initEvents(){
   $('asBtn').addEventListener('click',function(e){e.stopPropagation(); toggleAS()});
   $('asClose').addEventListener('click',function(e){e.stopPropagation(); toggleAS(false)});
   $('asOv').addEventListener('click',function(){toggleAS(false)});
-  $('asSheet').addEventListener('click',function(e){var o=e.target.closest('.as-opt');if(!o)return;if(o.classList.contains('locked')){toast('Sign in to use this feature','wrn');if(!isAuthed())triggerOAuth();return;}e.stopPropagation(); $('cbInput').value=o.getAttribute('data-prompt');$('cbInput').focus();autoH($('cbInput'));updateCB();toggleAS(false)});
+  $('asSheet').addEventListener('click',function(e){var o=e.target.closest('.as-opt');if(!o)return;if(o.classList.contains('locked'))return;e.stopPropagation(); $('cbInput').value=o.getAttribute('data-prompt');$('cbInput').focus();autoH($('cbInput'));updateCB();toggleAS(false)});
   $('voiceBtn').addEventListener('click',function(e){e.stopPropagation(); if(authGate('voice'))return;toggleVD()});
   $('fileBtn').addEventListener('click',function(e){e.stopPropagation(); $('fileInput').click()});
   $('fileInput').addEventListener('change',function(){var files=this.files;if(!files||!files.length)return;var promises=[];for(var i=0;i<files.length;i++){(function(file){if(isImageFile(file)){promises.push(readFileAsDataUrl(file).then(function(dataUrl){S.pendingFiles.push({type:'image',dataUrl:dataUrl,name:file.name,size:file.size,file:file})}))}else{S.pendingFiles.push({type:'file',name:file.name,size:file.size,file:file})}})(files[i])}Promise.all(promises).then(function(){renderImgPreview();renderFileIndicator();updateCB()});this.value=''});
