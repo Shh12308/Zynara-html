@@ -9,37 +9,89 @@
 <body>
   <h3>Signing you in...</h3>
 <script src="env.js"></script>
-<script type="module">
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-/* =========================
-   ENV + CLIENT
-   ========================= */
-if (!window.__ENV__) {
-  throw new Error("env.js not loaded");
-}
+    const statusEl = document.getElementById('status');
+    const errorEl = document.getElementById('error');
+    const retryBtn = document.getElementById('retry');
 
-const {
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY,
-  RECAPTCHA_SITE_KEY
-} = window.__ENV__;
+    /* =========================
+       ENV VALIDATION
+       ========================= */
+    if (!window.__ENV__) {
+      statusEl.textContent = "Configuration error";
+      errorEl.textContent = "env.js failed to load.";
+      throw new Error("env.js not loaded");
+    }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.__ENV__;
 
-async function run() {
-  const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      statusEl.textContent = "Configuration error";
+      errorEl.textContent = "Missing Supabase credentials.";
+      throw new Error("Missing Supabase config");
+    }
 
-  if (error) {
-    console.error(error);
-    document.body.innerHTML = "Login failed: " + error.message;
-    return;
-  }
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  window.location.href = "/index.html";
-}
+    /* =========================
+       CALLBACK HANDLER
+       ========================= */
+    async function handleAuth() {
+      try {
+        statusEl.textContent = "Finalizing secure login...";
 
-run();
-</script>
+        // Exchange OAuth code for session
+        const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
+
+        if (error) throw error;
+
+        // Validate session exists
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session) {
+          throw new Error("No session created. Please try again.");
+        }
+
+        // OPTIONAL: fetch user profile / ban check
+        try {
+          const { data: userData } = await supabase
+            .from('users')
+            .select('is_banned')
+            .eq('id', session.user.id)
+            .single();
+
+          if (userData?.is_banned) {
+            await supabase.auth.signOut();
+            throw new Error("Your account has been restricted.");
+          }
+        } catch (e) {
+          console.warn("Profile check skipped:", e.message);
+        }
+
+        statusEl.textContent = "Success! Redirecting...";
+
+        // Small delay for UX polish
+        setTimeout(() => {
+          window.location.replace("/index.html");
+        }, 600);
+
+      } catch (err) {
+        console.error(err);
+
+        statusEl.textContent = "Login failed";
+        errorEl.textContent = err.message || "Something went wrong.";
+
+        retryBtn.style.display = "inline-block";
+      }
+    }
+
+    retryBtn.addEventListener('click', () => {
+      window.location.href = "/login.html";
+    });
+
+    handleAuth();
+  </script>
 </body>
 </html>
