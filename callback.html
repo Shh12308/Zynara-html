@@ -9,25 +9,26 @@
 <body>
   <h3>Signing you in...</h3>
 <script src="env.js"></script>
-  <script type="module">
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-const supabase = createClient(
-  window.__ENV__.SUPABASE_URL,
-  window.__ENV__.SUPABASE_ANON_KEY
-);
+/* =========================
+   ENV + CLIENT
+   ========================= */
+if (!window.__ENV__) {
+  throw new Error("env.js not loaded");
+}
+
+const {
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY,
+  RECAPTCHA_SITE_KEY
+} = window.__ENV__;
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 async function run() {
-  const code = new URLSearchParams(window.location.search).get("code");
-
-  if (!code) {
-    document.body.innerHTML = "Missing OAuth code";
-    return;
-  }
-
-  const { data, error } = await supabase.auth.exchangeCodeForSession({
-    auth_code: code
-  });
+  const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
 
   if (error) {
     console.error(error);
