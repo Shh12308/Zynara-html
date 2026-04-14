@@ -383,15 +383,6 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
   <span>Checking...</span>
 </div>
 
-<!-- ================= ENV.JS CONFIGURATION ================= -->
-<script>
-  const ENV = {
-      SUPABASE_URL: 'https://acbnqeeukfxewiqswgbw.supabase.co',
-      SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjYm5xZWV1a2Z4ZXdpcXN3Z2J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMDY5MzIsImV4cCI6MjA4OTg4MjkzMn0.bwkZs0yqNAooAh6cV16dcwZwNz_5H5xvAu7eiQtR4wE',
-      FREE_AI_URL: 'https://billy-free-ai-production.up.railway.app',
-      PREMIUM_AI_URL: 'https://your-premium-backend-url.com' 
-  };
-</script>
 <!-- ================================================ -->
 
 <div class="sb-overlay" id="sbOv"></div>
@@ -540,7 +531,13 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 </div>
 
 <div class="toast-ct" id="toastCt"></div>
-<script>
+<script src="env.js"></script>
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.__ENV__;
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  
 // ================= HELPER FUNCTIONS =================
 function $(id){return document.getElementById(id)}
 function esc(s){if(s==null)return'';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
