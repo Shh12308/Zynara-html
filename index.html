@@ -1335,11 +1335,36 @@ function initEvents(){
   });
   
   // HTML Runner Modal Buttons
-  $('htmlRunnerClose').addEventListener('click', function(e){ e.stopPropagation(); closeHtmlRunner(); });
-  $('htmlRunnerOverlay').addEventListener('click', function(e){ if(e.target === $('htmlRunnerOverlay')) closeHtmlRunner(); });
-  $('htmlRunnerCopy').addEventListener('click', function(e){ e.stopPropagation(); copyHtmlRunnerCode(); });
-  $('htmlRunnerNewTab').addEventListener('click', function(e){ e.stopPropagation(); openHtmlInNewTab(); });
-  
+  const closeBtn = $('htmlRunnerClose');
+if (closeBtn) {
+  closeBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    closeHtmlRunner();
+  });
+}
+
+const overlay = $('htmlRunnerOverlay');
+if (overlay) {
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) closeHtmlRunner();
+  });
+}
+
+const copyBtn = $('htmlRunnerCopy');
+if (copyBtn) {
+  copyBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    copyHtmlRunnerCode();
+  });
+}
+
+const newTabBtn = $('htmlRunnerNewTab');
+if (newTabBtn) {
+  newTabBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    openHtmlInNewTab();
+  });
+}
   // Edit Modal Buttons
   $('emClose').addEventListener('click', closeEditModal);
   $('emCancel').addEventListener('click', closeEditModal);
