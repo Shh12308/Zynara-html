@@ -775,8 +775,20 @@ function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('
 function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'dark'}catch(e){}setTheme(s);try{window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(S.theme==='system')setTheme('system')})}catch(e){}}
 
 async function loadVoices(){
+  var baseUrl = getApiUrl();
+  
+  // FIX: Check if URL is valid before fetching
+  if (!baseUrl || baseUrl.indexOf('http') !== 0) {
+    console.warn('API URL is missing or invalid. Skipping voice loading.');
+    return;
+  }
+
   try {
-    var res = await fetch(getApiUrl() + '/tts/voices');
+    var res = await fetch(baseUrl + '/tts/voices', {
+      headers: authH(), // Add auth headers if your endpoint requires them
+      credentials: 'include'
+    });
+    
     if(res.ok) {
       var data = await res.json();
       var list = $('voiceList');
@@ -786,12 +798,21 @@ async function loadVoices(){
           var div = document.createElement('div');
           div.className = 'v-item' + (v.id === S.selectedVoice ? ' active' : '');
           div.textContent = v.name;
-          div.onclick = function(){ S.selectedVoice = v.id; renderVoices(); toggleVD(false); toast('Voice set to ' + v.name, 'ok'); };
+          div.onclick = function(){ 
+            S.selectedVoice = v.id; 
+            renderVoices(); 
+            toggleVD(false); 
+            toast('Voice set to ' + v.name, 'ok'); 
+          };
           list.appendChild(div);
         });
       }
+    } else {
+      console.warn('Failed to load voices: Status ' + res.status);
     }
-  } catch(e){ console.warn('Failed to load voices', e); }
+  } catch(e){ 
+    console.warn('Failed to load voices', e); 
+  }
 }
 
 function renderVoices(){
