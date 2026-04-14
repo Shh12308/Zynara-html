@@ -10,54 +10,35 @@
   <h3>Signing you in...</h3>
 <script src="env.js"></script>
   <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-    // ⚠️ HARD REQUIRE: ensure these are correct
-    const SUPABASE_URL = window.__ENV__?.SUPABASE_URL;
-    const SUPABASE_ANON_KEY = window.__ENV__?.SUPABASE_ANON_KEY;
+const supabase = createClient(
+  window.__ENV__.SUPABASE_URL,
+  window.__ENV__.SUPABASE_ANON_KEY
+);
 
-    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-      document.body.innerHTML = "Missing Supabase config (env.js issue)";
-      throw new Error("Missing env");
-    }
+async function run() {
+  const code = new URLSearchParams(window.location.search).get("code");
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  if (!code) {
+    document.body.innerHTML = "Missing OAuth code";
+    return;
+  }
 
-    async function handleAuth() {
-      try {
-        console.log("Callback URL:", window.location.href);
+  const { data, error } = await supabase.auth.exchangeCodeForSession({
+    auth_code: code
+  });
 
-        // 🔥 IMPORTANT: this is correct PKCE exchange
-        const { data, error } = await supabase.auth.exchangeCodeForSession(
-          window.location.href
-        );
+  if (error) {
+    console.error(error);
+    document.body.innerHTML = "Login failed: " + error.message;
+    return;
+  }
 
-        if (error) {
-          console.error("Auth error:", error.message);
-          document.body.innerHTML = "Login failed: " + error.message;
-          return;
-        }
+  window.location.href = "/index.html";
+}
 
-        if (!data?.session) {
-          document.body.innerHTML = "No session returned";
-          return;
-        }
-
-        console.log("User:", data.session.user.email);
-
-        // 🧹 Clean URL (remove ?code=...)
-        window.history.replaceState({}, document.title, "/");
-
-        // ✅ Redirect to dashboard
-        window.location.href = "/index.html";
-
-      } catch (err) {
-        console.error("Unexpected error:", err);
-        document.body.innerHTML = "Unexpected error during login";
-      }
-    }
-
-    handleAuth();
-  </script>
+run();
+</script>
 </body>
 </html>
