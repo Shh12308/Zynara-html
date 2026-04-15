@@ -1,164 +1,80 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Auth Callback</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <style>
-    body {
-      font-family: system-ui, Arial;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      background: #0f1724;
-      color: #e6eef6;
-    }
-
-    #status {
-      font-size: 16px;
-      margin-bottom: 10px;
-      opacity: 0.9;
-    }
-
-    #error {
-      color: #ff6b6b;
-      margin-top: 10px;
-      max-width: 400px;
-      text-align: center;
-    }
-
-    #retry {
-      margin-top: 20px;
-      padding: 10px 16px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      background: #6ee7b7;
-      color: #062022;
-      font-weight: 600;
-      display: none;
-    }
-
-    .spinner {
-      width: 28px;
-      height: 28px;
-      border: 3px solid rgba(255,255,255,0.2);
-      border-top-color: #6ee7b7;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin-bottom: 20px;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-  </style>
+  <meta charset="UTF-8">
+  <title>Callback</title>
 </head>
-
 <body>
-
-  <div class="spinner"></div>
-
-  <div id="status">Starting authentication...</div>
-  <div id="error"></div>
-
-  <button id="retry">Retry</button>
+  <h3 id="status">Signing you in...</h3>
+  <p id="error"></p>
+  <button id="retry" style="display:none;">Retry</button>
 
   <script src="env.js"></script>
 
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-    const statusEl = document.getElementById("status");
-    const errorEl = document.getElementById("error");
-    const retryBtn = document.getElementById("retry");
+    const status = document.getElementById("status");
+    const error = document.getElementById("error");
+    const retry = document.getElementById("retry");
 
-    retryBtn.addEventListener("click", () => {
-      window.location.href = "/login.html";
-    });
+    retry.onclick = () => location.href = "/login.html";
 
     function fail(msg) {
-      statusEl.textContent = "Login failed";
-      errorEl.textContent = msg;
-      retryBtn.style.display = "inline-block";
+      status.textContent = "Login failed";
+      error.textContent = msg;
+      retry.style.display = "block";
     }
 
-    if (!window.__ENV__) {
-      fail("Missing environment config (env.js not loaded).");
-      throw new Error("env.js missing");
+    const ENV = window.__ENV__;
+    if (!ENV?.SUPABASE_URL || !ENV?.SUPABASE_ANON_KEY) {
+      fail("Missing config");
+      throw new Error("Missing env");
     }
 
-    const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.__ENV__;
-
-    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-      fail("Missing Supabase credentials.");
-      throw new Error("Missing config");
-    }
-
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabase = createClient(ENV.SUPABASE_URL, ENV.SUPABASE_ANON_KEY);
 
     async function run() {
       try {
-        statusEl.textContent = "Finalizing secure login...";
-
-        // Prevent repeated runs (VERY important for OAuth loops)
-        if (sessionStorage.getItem("callback_done")) {
-          statusEl.textContent = "Already processed. Redirecting...";
-          window.location.replace("/index.html");
-          return;
-        }
-
         const url = new URL(window.location.href);
-        const hasCode = url.searchParams.get("code");
+        const code = url.searchParams.get("code");
 
-        if (!hasCode) {
-          throw new Error("Missing OAuth code in URL.");
+        if (!code) {
+          location.replace("/login.html");
+          return;
         }
 
         const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
         if (error) throw error;
 
         const { data: { session } } = await supabase.auth.getSession();
+        if (!session) throw new Error("No session");
 
-        if (!session) {
-          throw new Error("No session created.");
+        // SAFE profile fetch (no recursion possible now)
+        const { data } = await supabase
+          .from("users")
+          .select("is_banned")
+          .eq("id", session.user.id)
+          .single();
+
+        if (data?.is_banned) {
+          await supabase.auth.signOut();
+          throw new Error("Account banned");
         }
 
-        // Optional ban check
-        try {
-          const { data } = await supabase
-            .from("users")
-            .select("is_banned")
-            .eq("id", session.user.id)
-            .single();
-
-          if (data?.is_banned) {
-            await supabase.auth.signOut();
-            throw new Error("Account is banned.");
-          }
-        } catch (e) {
-          console.warn("Profile check skipped:", e.message);
-        }
-
-        sessionStorage.setItem("callback_done", "1");
-
-        statusEl.textContent = "Success! Redirecting...";
+        status.textContent = "Success! Redirecting...";
 
         setTimeout(() => {
-          window.location.replace("/index.html");
+          location.replace("/index.html");
         }, 800);
 
-      } catch (err) {
-        console.error(err);
-        fail(err.message || "Unknown error during authentication.");
+      } catch (e) {
+        console.error(e);
+        fail(e.message || "Auth error");
       }
     }
 
     run();
   </script>
-
 </body>
 </html>
