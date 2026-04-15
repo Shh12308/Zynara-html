@@ -560,45 +560,54 @@ function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('
 function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'dark'}catch(e){}setTheme(s);try{window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(S.theme==='system')setTheme('system')})}catch(e){}}
 
 /* ========== MARKDOWN (Marked v12 Fix) ========== */
+/* ========== MARKDOWN (Marked v12+ Compatible) ========== */
 function initMarked() {
+  // Ensure dependencies are loaded
   if (typeof marked === 'undefined' || typeof hljs === 'undefined') {
     S._mdOk = false;
+    console.warn('Marked or Highlight.js not loaded.');
     return;
   }
   try {
-    marked.setOptions({ breaks: true, gfm: true });
-    
+    // Configure Marked options
+    marked.setOptions({
+      breaks: true,  // Enable Github Flavored Markdown line breaks
+      gfm: true      // Enable Github Flavored Markdown
+    });
+
+    // Define custom renderers
     marked.use({
       renderer: {
+        // Handle Code Blocks
         code: function(token) {
-          // Marked v12 passes a token object
-          var text = token.text || '';
+          // Marked v12 passes a token object: { text, lang, type, ... }
           var lang = token.lang || '';
-          
-          // Validate and highlight
-          var validLang = null;
-          if (lang && typeof hljs.getLanguage === 'function') {
-            try {
-              if (hljs.getLanguage(lang)) {
-                validLang = lang;
-              }
-            } catch (e) {}
+          var text = token.text || '';
+
+          // Validate language for Highlight.js
+          var validLang = '';
+          if (lang && typeof hljs.getLanguage === 'function' && hljs.getLanguage(lang)) {
+            validLang = lang;
           }
-          
-          var highlighted;
+
+          // Perform highlighting
+          var highlighted = '';
           try {
             if (validLang) {
               highlighted = hljs.highlight(text, { language: validLang, ignoreIllegals: true }).value;
             } else if (text.trim()) {
+              // Auto-detect if no specific language is valid
               highlighted = hljs.highlightAuto(text).value;
             } else {
-              highlighted = '';
+              highlighted = esc(text);
             }
           } catch (e) {
             highlighted = esc(text);
           }
-          
+
           var displayLang = validLang || 'plaintext';
+
+          // Return HTML structure for code block
           return '<div class="code-blk">' +
             '<div class="code-hd">' +
             '<span>' + esc(displayLang) + '</span>' +
@@ -609,58 +618,62 @@ function initMarked() {
             highlighted +
             '</code></pre></div>';
         },
-        
+
+        // Handle Links
         link: function(token) {
-          // Marked v12 token
           var href = token.href || '';
-          var title = token.title || '';
           var text = token.text || '';
-          
-          // URL sanitization - only allow http/https
+          var title = token.title || '';
+
+          // Security: Only allow http/https protocols
           var safeUrl = '#';
           try {
-            var url = new URL(href, location.origin);
+            var url = new URL(href, window.location.origin);
             if (['http:', 'https:'].includes(url.protocol)) {
               safeUrl = href;
             }
-          } catch (e) {}
-          
+          } catch (e) {
+            // Invalid URL structure
+          }
+
           var titleAttr = title ? ' title="' + esc(title) + '"' : '';
-          return '<a href="' + safeUrl + '"' + titleAttr + 
+          return '<a href="' + esc(safeUrl) + '"' + titleAttr +
             ' target="_blank" rel="noopener noreferrer">' + text + '</a>';
         },
-        
+
+        // Handle Images
         image: function(token) {
-          // Marked v12 token
           var href = token.href || '';
           var title = token.title || '';
-          var text = token.text || '';
-          
+          var text = token.text || ''; // This acts as the alt text
+
           return '<div class="img-wrap">' +
             '<img src="' + esc(href) + '" alt="' + esc(text || title || 'Image') + '" loading="lazy">' +
             '</div>';
         }
       }
     });
-    
+
     S._mdOk = true;
   } catch (e) {
     console.error('Marked init failed:', e);
     S._mdOk = false;
   }
 }
+
 function md(text) {
   if (!text) return '';
-  
+
   var html = '';
   try {
     if (S._mdOk && typeof marked !== 'undefined') {
       html = marked.parse(text);
     } else {
+      // Fallback if Marked failed to initialize
       html = esc(text).replace(/\n/g, '<br>');
     }
-    
-    // Sanitize with DOMPurify
+
+    // Sanitize HTML to prevent XSS attacks
     if (typeof DOMPurify !== 'undefined') {
       html = DOMPurify.sanitize(html, {
         ALLOWED_TAGS: [
@@ -680,10 +693,26 @@ function md(text) {
     console.error('Markdown parse error:', e);
     html = esc(text).replace(/\n/g, '<br>');
   }
-  
+
   return html;
 }
-function applyMath(el){if(typeof renderMathInElement!=='undefined'){try{renderMathInElement(el,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false})}catch(e){}}}
+
+// Apply KaTeX/MathJax rendering to a DOM element
+function applyMath(el){
+  if(typeof renderMathInElement!=='undefined'){
+    try{
+      renderMathInElement(el,{
+        delimiters:[
+          {left:'$$',right:'$$',display:true},
+          {left:'$',right:'$',display:false},
+          {left:'\\(',right:'\\)',display:false},
+          {left:'\\[',right:'\\]',display:true}
+        ],
+        throwOnError:false
+      });
+    }catch(e){}
+  }
+}
 
 /* ========== UI HELPERS ========== */
 function toast(msg,type){
