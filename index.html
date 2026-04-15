@@ -559,8 +559,7 @@ async function loadConv(cid){
 function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('data-theme',window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');else document.documentElement.setAttribute('data-theme',t)}catch(e){}S.theme=t;try{localStorage.setItem('helox-theme',t)}catch(e){}document.querySelectorAll('.t-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-t')===t)})}
 function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'dark'}catch(e){}setTheme(s);try{window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(S.theme==='system')setTheme('system')})}catch(e){}}
 
-/* ========== MARKDOWN (marked v12 fix) ========== */
-/* ========== MARKDOWN (marked v12 fix) ========== */
+/* ========== MARKDOWN (Marked v12 Fix) ========== */
 function initMarked() {
   if (typeof marked === 'undefined' || typeof hljs === 'undefined') {
     S._mdOk = false;
@@ -571,23 +570,18 @@ function initMarked() {
     
     marked.use({
       renderer: {
-        code(token) {
-          var text = '', lang = '';
-          
-          // Handle both v12 token object and legacy arguments
-          if (token && typeof token === 'object') {
-            text = token.text || '';
-            lang = token.lang || '';
-          } else if (arguments.length >= 1) {
-            text = String(arguments[0] || '');
-            lang = arguments[1] || '';
-          }
+        code: function(token) {
+          // Marked v12 provides a token object: { text, lang, ... }
+          var text = token.text || '';
+          var lang = token.lang || '';
           
           // Validate and highlight
           var validLang = null;
           if (lang && typeof hljs.getLanguage === 'function') {
             try {
-              if (hljs.getLanguage(lang)) validLang = lang;
+              if (hljs.getLanguage(lang)) {
+                validLang = lang;
+              }
             } catch (e) {}
           }
           
@@ -616,18 +610,11 @@ function initMarked() {
             '</code></pre></div>';
         },
         
-        link(token) {
-          var href = '', title = '', text = '';
-          
-          if (token && typeof token === 'object') {
-            href = token.href || '';
-            title = token.title || '';
-            text = token.text || '';
-          } else {
-            href = arguments[0] || '';
-            title = arguments[1] || '';
-            text = arguments[2] || '';
-          }
+        link: function(token) {
+          // Marked v12 token: { href, title, text }
+          var href = token.href || '';
+          var title = token.title || '';
+          var text = token.text || '';
           
           // URL sanitization - only allow http/https
           var safeUrl = '#';
@@ -643,18 +630,11 @@ function initMarked() {
             ' target="_blank" rel="noopener noreferrer">' + text + '</a>';
         },
         
-        image(token) {
-          var href = '', title = '', text = '';
-          
-          if (token && typeof token === 'object') {
-            href = token.href || '';
-            title = token.title || '';
-            text = token.text || '';
-          } else {
-            href = arguments[0] || '';
-            title = arguments[1] || '';
-            text = arguments[2] || '';
-          }
+        image: function(token) {
+          // Marked v12 token: { href, title, text }
+          var href = token.href || '';
+          var title = token.title || '';
+          var text = token.text || '';
           
           return '<div class="img-wrap">' +
             '<img src="' + esc(href) + '" alt="' + esc(text || title || 'Image') + '" loading="lazy">' +
@@ -669,6 +649,7 @@ function initMarked() {
     S._mdOk = false;
   }
 }
+
 function md(text) {
   if (!text) return '';
   
