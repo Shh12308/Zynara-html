@@ -560,57 +560,147 @@ function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('
 function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'dark'}catch(e){}setTheme(s);try{window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(S.theme==='system')setTheme('system')})}catch(e){}}
 
 /* ========== MARKDOWN (marked v12 fix) ========== */
-function initMarked(){
-  if(typeof marked==='undefined'||typeof hljs==='undefined'){S._mdOk=false;return;}
-  try{
-    marked.use({breaks:true,gfm:true});
+/* ========== MARKDOWN (marked v12 fix) ========== */
+function initMarked() {
+  if (typeof marked === 'undefined' || typeof hljs === 'undefined') {
+    S._mdOk = false;
+    return;
+  }
+  try {
+    marked.setOptions({ breaks: true, gfm: true });
+    
     marked.use({
-      renderer:{
-        code:function(token){
-          var text,lang;
-          if(token&&typeof token==='object'){text=token.text||'';lang=token.lang||'';}
-          else{text=arguments[0]||'';lang=arguments[1]||'';}
-          var vl=null;
-          if(lang&&typeof hljs.getLanguage==='function'&&hljs.getLanguage(lang))vl=lang;
-          var hi;
-          if(vl){try{hi=hljs.highlight(text,{language:vl,ignoreIllegals:true}).value}catch(e){hi=hljs.highlightAuto(text).value}}
-          else if(text){hi=hljs.highlightAuto(text).value}else{hi=''}
-          var dl=vl||'code';
-          return '<div class="code-blk"><div class="code-hd"><span>'+esc(dl)+'</span><button type="button" class="cp-btn" data-action="copy-code"><i class="fa-regular fa-copy"></i> Copy</button></div><pre><code class="hljs language-'+dl+'">'+hi+'</code></pre></div>';
+      renderer: {
+        code(token) {
+          var text = '', lang = '';
+          
+          // Handle both v12 token object and legacy arguments
+          if (token && typeof token === 'object') {
+            text = token.text || '';
+            lang = token.lang || '';
+          } else if (arguments.length >= 1) {
+            text = String(arguments[0] || '');
+            lang = arguments[1] || '';
+          }
+          
+          // Validate and highlight
+          var validLang = null;
+          if (lang && typeof hljs.getLanguage === 'function') {
+            try {
+              if (hljs.getLanguage(lang)) validLang = lang;
+            } catch (e) {}
+          }
+          
+          var highlighted;
+          try {
+            if (validLang) {
+              highlighted = hljs.highlight(text, { language: validLang, ignoreIllegals: true }).value;
+            } else if (text.trim()) {
+              highlighted = hljs.highlightAuto(text).value;
+            } else {
+              highlighted = '';
+            }
+          } catch (e) {
+            highlighted = esc(text);
+          }
+          
+          var displayLang = validLang || 'plaintext';
+          return '<div class="code-blk">' +
+            '<div class="code-hd">' +
+            '<span>' + esc(displayLang) + '</span>' +
+            '<button type="button" class="cp-btn" data-action="copy-code">' +
+            '<i class="fa-regular fa-copy"></i> Copy</button>' +
+            '</div>' +
+            '<pre><code class="hljs language-' + esc(displayLang) + '">' +
+            highlighted +
+            '</code></pre></div>';
         },
-        link:function(token){
-          var href,title,text;
-          if(token&&typeof token==='object'){href=token.href||'';title=token.title||'';text=token.text||'';}
-          else{href=arguments[0]||'';title=arguments[1]||'';text=arguments[2]||'';}
-          function safe(u){try{var x=new URL(u,location.origin);return['http:','https:'].includes(x.protocol)?u:'#'}catch(e){return '#'}}
-          var ta=title?' title="'+esc(title)+'"':'';
-          return '<a href="'+safe(href)+'"'+ta+' target="_blank" rel="noopener noreferrer">'+text+'</a>';
+        
+        link(token) {
+          var href = '', title = '', text = '';
+          
+          if (token && typeof token === 'object') {
+            href = token.href || '';
+            title = token.title || '';
+            text = token.text || '';
+          } else {
+            href = arguments[0] || '';
+            title = arguments[1] || '';
+            text = arguments[2] || '';
+          }
+          
+          // URL sanitization - only allow http/https
+          var safeUrl = '#';
+          try {
+            var url = new URL(href, location.origin);
+            if (['http:', 'https:'].includes(url.protocol)) {
+              safeUrl = href;
+            }
+          } catch (e) {}
+          
+          var titleAttr = title ? ' title="' + esc(title) + '"' : '';
+          return '<a href="' + safeUrl + '"' + titleAttr + 
+            ' target="_blank" rel="noopener noreferrer">' + text + '</a>';
         },
-        image:function(token){
-          var href,title,text;
-          if(token&&typeof token==='object'){href=token.href||'';title=token.title||'';text=token.text||'';}
-          else{href=arguments[0]||'';title=arguments[1]||'';text=arguments[2]||'';}
-          return '<div class="img-wrap"><img src="'+href+'" alt="'+esc(text||title||'Image')+'" loading="lazy"></div>';
+        
+        image(token) {
+          var href = '', title = '', text = '';
+          
+          if (token && typeof token === 'object') {
+            href = token.href || '';
+            title = token.title || '';
+            text = token.text || '';
+          } else {
+            href = arguments[0] || '';
+            title = arguments[1] || '';
+            text = arguments[2] || '';
+          }
+          
+          return '<div class="img-wrap">' +
+            '<img src="' + esc(href) + '" alt="' + esc(text || title || 'Image') + '" loading="lazy">' +
+            '</div>';
         }
       }
     });
-    S._mdOk=true;
-  }catch(e){console.error('Marked init:',e);S._mdOk=false;}
+    
+    S._mdOk = true;
+  } catch (e) {
+    console.error('Marked init failed:', e);
+    S._mdOk = false;
+  }
 }
-function md(text){
-  if(!text) return '';
-  var html='';
-  try{
-    if(S._mdOk&&typeof marked!=='undefined') html=marked.parse(text);
-    else html=esc(text).replace(/\n/g,'<br>');
-    if(typeof DOMPurify!=='undefined'){
-      html=DOMPurify.sanitize(html,{
-        ALLOWED_TAGS:['p','br','b','i','strong','em','a','code','pre','span','div','ul','ol','li','blockquote','h1','h2','h3','h4','h5','h6','table','thead','tbody','tr','th','td','hr','img','button','sup','sub','del','s'],
-        ALLOWED_ATTR:['href','target','rel','class','id','style','title','alt','data-action','src','loading'],
-        ALLOW_DATA_ATTR:true
+function md(text) {
+  if (!text) return '';
+  
+  var html = '';
+  try {
+    if (S._mdOk && typeof marked !== 'undefined') {
+      html = marked.parse(text);
+    } else {
+      html = esc(text).replace(/\n/g, '<br>');
+    }
+    
+    // Sanitize with DOMPurify
+    if (typeof DOMPurify !== 'undefined') {
+      html = DOMPurify.sanitize(html, {
+        ALLOWED_TAGS: [
+          'p', 'br', 'b', 'i', 'strong', 'em', 'a', 'code', 'pre', 'span',
+          'div', 'ul', 'ol', 'li', 'blockquote', 'h1', 'h2', 'h3', 'h4',
+          'h5', 'h6', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr',
+          'img', 'button', 'sup', 'sub', 'del', 's'
+        ],
+        ALLOWED_ATTR: [
+          'href', 'target', 'rel', 'class', 'id', 'style', 'title',
+          'alt', 'data-action', 'src', 'loading'
+        ],
+        ALLOW_DATA_ATTR: true
       });
     }
-  }catch(e){html=esc(text).replace(/\n/g,'<br>');}
+  } catch (e) {
+    console.error('Markdown parse error:', e);
+    html = esc(text).replace(/\n/g, '<br>');
+  }
+  
   return html;
 }
 function applyMath(el){if(typeof renderMathInElement!=='undefined'){try{renderMathInElement(el,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false})}catch(e){}}}
