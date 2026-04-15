@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>HeloxAi – Login & Sign Up</title>
+  <title>HeloxAi – Social Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -77,9 +77,9 @@
 
     .auth-container {
       position: relative; z-index: 1;
-      width: 100%; max-width: min(440px, 95vw); margin: 20px 0;
+      width: 100%; max-width: min(420px, 90vw); margin: 40px 0;
     }
-    .brand { text-align: center; margin-bottom: 20px; }
+    .brand { text-align: center; margin-bottom: 24px; }
     .brand-logo {
       display: inline-flex; align-items: center; gap: 10px;
       text-decoration: none; color: var(--fg);
@@ -109,49 +109,23 @@
       border: 1px solid var(--border-light);
       box-shadow: 0 8px 40px rgba(2,6,23,0.75), inset 0 1px 0 rgba(255,255,255,0.03);
       overflow: hidden; backdrop-filter: blur(10px);
+      padding: clamp(24px, 5vw, 32px);
     }
-
-    .tab-bar {
-      display: flex; position: relative;
-      background: rgba(0,0,0,0.2);
-      border-bottom: 1px solid var(--border-light);
-    }
-    .tab-btn {
-      flex: 1; padding: 16px 0; background: transparent; border: none;
-      color: var(--muted); font-family: var(--font); font-size: 15px;
-      font-weight: 500; cursor: pointer; position: relative; z-index: 1;
-      -webkit-appearance: none; appearance: none; outline: none;
-      transition: color 0.25s ease;
-    }
-    .tab-btn:hover { color: var(--fg); }
-    .tab-btn.active { color: var(--accent); }
-    .tab-indicator {
-      position: absolute; bottom: 0; left: 0; width: 50%; height: 2px;
-      background: linear-gradient(90deg, var(--accent2), var(--accent3));
-      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-      border-radius: 2px 2px 0 0;
-      box-shadow: 0 0 12px rgba(110,231,183,0.4);
-    }
-    .tab-indicator.right { transform: translateX(100%); }
-
-    .tab-panel { display: none; padding: clamp(20px, 5vw, 28px); animation: panelIn 0.35s ease; }
-    .tab-panel.active { display: block; }
-    @keyframes panelIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
     .panel-title {
-      font-size: clamp(18px, 4vw, 22px); font-weight: 600;
-      text-align: center; margin-bottom: 20px; letter-spacing: -0.3px;
+      font-size: clamp(20px, 4vw, 24px); font-weight: 600;
+      text-align: center; margin-bottom: 24px; letter-spacing: -0.3px;
     }
 
-    .social-logins { display: grid; gap: 10px; margin-bottom: 20px; }
+    .social-logins { display: grid; gap: 12px; margin-bottom: 24px; }
     .social-btn {
       display: flex; align-items: center; gap: 12px;
-      width: 100%; padding: 13px 16px;
+      width: 100%; padding: 14px 20px;
       border-radius: var(--radius-sm);
       border: 1px solid var(--border);
       background: rgba(8,20,36,0.85);
       color: var(--fg); font-family: var(--font);
-      font-size: 14px; font-weight: 500; cursor: pointer;
+      font-size: 15px; font-weight: 500; cursor: pointer;
       transition: background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s;
       -webkit-appearance: none; appearance: none; outline: none;
     }
@@ -161,6 +135,8 @@
     }
     .social-btn:active:not(:disabled) { transform: translateY(0); box-shadow: none; }
     .social-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    
+    /* Provider specific hover colors */
     .social-btn[data-provider="wallet"]:hover:not(:disabled) {
       background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.25);
       box-shadow: 0 4px 16px rgba(245,158,11,0.08);
@@ -176,9 +152,10 @@
       background: rgba(234,67,53,0.07); border-color: rgba(234,67,53,0.2);
       box-shadow: 0 4px 16px rgba(234,67,53,0.06);
     }
-    .social-btn .social-icon { width: 20px; height: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-    .social-btn .social-icon img { width: 20px; height: 20px; display: block; }
-    .social-btn .btn-label { flex: 1; text-align: left; }
+
+    .social-btn .social-icon { width: 22px; height: 22px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    .social-btn .social-icon img { width: 22px; height: 22px; display: block; }
+    .social-btn .btn-label { flex: 1; text-align: center; }
     .social-btn .btn-spinner {
       width: 16px; height: 16px;
       border: 2px solid rgba(255,255,255,0.15); border-top-color: var(--fg);
@@ -193,89 +170,13 @@
       font-weight: 400; flex-shrink: 0;
     }
 
-    .divider {
-      display: flex; align-items: center; gap: 14px; margin: 18px 0;
-      color: var(--muted); font-size: 11px; text-transform: uppercase;
-      letter-spacing: 1.2px; font-weight: 500;
-    }
-    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .msg-error { color: var(--danger); font-size: 13px; text-align: center; min-height: 20px; margin-top: 10px; }
+    .msg-success { color: #7ee787; font-size: 13px; text-align: center; min-height: 20px; margin-top: 10px; }
 
-    form { display: flex; flex-direction: column; gap: 12px; }
-    input[type="email"], input[type="password"], input[type="text"] {
-      width: 100%; padding: 13px 16px; border-radius: var(--radius-sm);
-      background: var(--card-input); color: var(--fg); border: 1px solid var(--border);
-      font-family: var(--font); font-size: 15px; outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    input:focus { border-color: rgba(14,165,165,0.4); box-shadow: 0 0 0 3px rgba(14,165,165,0.1); }
-    input::placeholder { color: rgba(154,164,178,0.5); }
-
-    .password-wrapper { position: relative; display: flex; align-items: center; }
-    .password-wrapper input { padding-right: 48px; flex-grow: 1; }
-    .toggle-pw {
-      position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
-      background: transparent; border: none; color: var(--muted);
-      cursor: pointer; font-size: 15px; padding: 8px; border-radius: 6px;
-      transition: color 0.2s, background 0.2s;
-      -webkit-appearance: none; appearance: none; outline: none;
-    }
-    .toggle-pw:hover { color: var(--fg); background: rgba(255,255,255,0.05); }
-
-    .strength-wrap { margin-top: -6px; }
-    .strength-bar { height: 4px; border-radius: 4px; background: rgba(255,255,255,0.05); overflow: hidden; margin-top: 4px; }
-    .strength-fill { height: 100%; width: 0%; border-radius: 4px; transition: width 0.3s, background 0.3s; }
-    .strength-label { font-size: 11px; margin-top: 4px; color: var(--muted); font-family: var(--mono); min-height: 16px; }
-    .hint-text { font-size: 12px; color: rgba(154,164,178,0.5); line-height: 1.4; margin-top: -4px; }
-
-    .remember-row { display: flex; align-items: center; justify-content: space-between; }
-    .remember-label { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; cursor: pointer; }
-    .remember-label input[type="checkbox"] { width: auto; accent-color: var(--accent2); cursor: pointer; }
-    .forgot-link {
-      color: var(--accent); font-size: 13px; text-decoration: none; font-weight: 500;
-      background: transparent; border: none; cursor: pointer; font-family: var(--font);
-      padding: 0; -webkit-appearance: none; appearance: none; outline: none;
-      transition: color 0.2s;
-    }
-    .forgot-link:hover { color: var(--accent3); }
-
-    /* Container for Turnstile - fixed height to prevent layout shift */
-    .turnstile-wrap {
-      display: flex; justify-content: center; min-height: 65px;
-      margin-top: 8px; overflow: hidden;
-    }
-
-    .submit-btn {
-      display: flex; align-items: center; justify-content: center; gap: 10px;
-      width: 100%; padding: 14px 24px; border-radius: var(--radius-sm);
-      border: none; background: linear-gradient(90deg, var(--accent2), var(--accent3));
-      color: #062022; font-family: var(--font); font-size: 15px; font-weight: 600;
-      cursor: pointer; margin-top: 4px; min-height: 50px; position: relative;
-      overflow: hidden; letter-spacing: 0.2px;
-      -webkit-appearance: none; appearance: none; outline: none;
-      transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
-    }
-    .submit-btn::before {
-      content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
-      transition: left 0.5s;
-    }
-    .submit-btn:hover:not(:disabled)::before { left: 100%; }
-    .submit-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(14,165,165,0.35); }
-    .submit-btn:active:not(:disabled) { transform: translateY(0); box-shadow: 0 2px 8px rgba(14,165,165,0.2); }
-    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .submit-btn .spinner {
-      width: 18px; height: 18px;
-      border: 2.5px solid rgba(6,32,34,0.25); border-top-color: #062022;
-      border-radius: 50%; animation: spin 0.6s linear infinite; flex-shrink: 0;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .msg-error { color: var(--danger); font-size: 13px; text-align: center; min-height: 0; margin-top: 10px; }
-    .msg-success { color: #7ee787; font-size: 13px; text-align: center; min-height: 0; margin-top: 6px; }
-
+    /* Admin Button Styling */
     .admin-btn {
       display: flex; align-items: center; justify-content: center; gap: 8px;
-      width: 100%; margin-top: 16px; padding: 11px 0;
+      width: 100%; margin-top: 20px; padding: 11px 0;
       border-radius: var(--radius-sm);
       border: 1px solid rgba(255,107,107,0.15);
       background: rgba(255,107,107,0.04);
@@ -288,7 +189,7 @@
     .admin-btn:active { transform: translateY(0); }
 
     .auth-footer {
-      padding: 16px clamp(20px, 5vw, 28px);
+      margin-top: 24px; padding-top: 20px;
       border-top: 1px solid var(--border-light);
       text-align: center; font-size: 13px; color: var(--muted); line-height: 1.6;
     }
@@ -330,160 +231,7 @@
     }
     .cookie-decline:hover { border-color: rgba(255,255,255,0.2); color: var(--fg); background: rgba(255,255,255,0.03); }
 
-    /* ── Turnstile verification overlay ── */
-    .ts-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(7, 16, 40, 0.92);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      pointer-events: none; /* Default: allow clicks through */
-      transition: opacity 0.3s ease;
-    }
-    
-    /* When visible, block all interaction */
-    .ts-overlay.visible {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .ts-overlay-inner {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 22px;
-      opacity: 0;
-      transform: translateY(14px) scale(0.96);
-    }
-    .ts-overlay.visible .ts-overlay-inner {
-      animation: tsOverlayIn 0.45s 0.05s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-    @keyframes tsOverlayIn {
-      from { opacity: 0; transform: translateY(14px) scale(0.96); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
-    /* Shield icon container with pulse rings */
-    .ts-shield-wrap {
-      position: relative;
-      width: 76px;
-      height: 76px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .ts-shield-ring {
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      border: 1.5px solid rgba(110, 231, 183, 0.25);
-      animation: tsRingPulse 2.4s ease-out infinite;
-    }
-    .ts-shield-ring:nth-child(2) {
-      animation-delay: 0.8s;
-    }
-    @keyframes tsRingPulse {
-      0% { transform: scale(0.85); opacity: 0.7; }
-      100% { transform: scale(1.7); opacity: 0; }
-    }
-    .ts-shield-icon {
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      background: linear-gradient(145deg, rgba(14, 165, 165, 0.18), rgba(110, 231, 183, 0.06));
-      border: 1px solid rgba(110, 231, 183, 0.2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      color: var(--accent);
-      position: relative;
-      z-index: 1;
-      animation: tsIconGlow 3s ease-in-out infinite;
-    }
-    @keyframes tsIconGlow {
-      0%, 100% { box-shadow: 0 0 20px rgba(110, 231, 183, 0.08), inset 0 0 12px rgba(14, 165, 165, 0.05); }
-      50% { box-shadow: 0 0 32px rgba(110, 231, 183, 0.18), inset 0 0 16px rgba(14, 165, 165, 0.1); }
-    }
-
-    /* Spinning ring around shield */
-    .ts-spinner-ring {
-      position: absolute;
-      inset: -4px;
-      border-radius: 50%;
-      border: 2px solid transparent;
-      border-top-color: var(--accent);
-      border-right-color: rgba(110, 231, 183, 0.3);
-      animation: tsSpinRing 1.2s linear infinite;
-      z-index: 2;
-    }
-    @keyframes tsSpinRing {
-      to { transform: rotate(360deg); }
-    }
-
-    .ts-overlay-title {
-      font-size: 17px;
-      font-weight: 600;
-      color: var(--fg);
-      letter-spacing: -0.2px;
-    }
-    .ts-overlay-sub {
-      font-size: 13px;
-      color: var(--muted);
-      text-align: center;
-      max-width: 260px;
-      line-height: 1.55;
-    }
-
-    /* Animated dots */
-    .ts-dots {
-      display: flex;
-      gap: 6px;
-      margin-top: -6px;
-    }
-    .ts-dots span {
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      background: var(--accent);
-      opacity: 0.3;
-      animation: tsDotBounce 1.4s ease-in-out infinite;
-    }
-    .ts-dots span:nth-child(2) { animation-delay: 0.16s; }
-    .ts-dots span:nth-child(3) { animation-delay: 0.32s; }
-    @keyframes tsDotBounce {
-      0%, 80%, 100% { transform: scale(0.6); opacity: 0.25; }
-      40% { transform: scale(1.1); opacity: 1; }
-    }
-
-    /* Subtle corner accents on overlay */
-    .ts-overlay::before,
-    .ts-overlay::after {
-      content: '';
-      position: absolute;
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      pointer-events: none;
-      filter: blur(60px);
-      opacity: 0.5;
-    }
-    .ts-overlay::before {
-      top: -40px;
-      left: -40px;
-      background: rgba(14, 165, 165, 0.08);
-    }
-    .ts-overlay::after {
-      bottom: -40px;
-      right: -40px;
-      background: rgba(110, 231, 183, 0.06);
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     :focus-visible { outline: 2px solid var(--accent2); outline-offset: 2px; }
 
@@ -495,18 +243,11 @@
       }
     }
     @media (max-width: 480px) {
-      .auth-container { max-width: 100%; }
-      .auth-card { border-radius: 0; }
-      body { padding: 0; }
-      .tab-btn { font-size: 14px; padding: 14px 0; }
-      .social-btn { justify-content: center; gap: 10px; }
-      .social-btn .btn-label { text-align: center; }
-      .social-btn .disabled-badge { display: none; }
+      .auth-container { max-width: 100%; margin: 0; }
+      .auth-card { border-radius: 0; height: 100vh; display: flex; flex-direction: column; justify-content: center; border: none; box-shadow: none; background: transparent; backdrop-filter: none; }
       .cookie-banner { left: 12px; right: 12px; bottom: 12px; }
-      .ts-overlay-sub { max-width: 220px; }
     }
     @media (min-height: 750px) { body { align-items: center; } }
-    @media (max-height: 749px) { body { align-items: flex-start; } }
   </style>
 </head>
 <body>
@@ -514,27 +255,6 @@
   <div class="orb orb-1" aria-hidden="true"></div>
   <div class="orb orb-2" aria-hidden="true"></div>
   <div class="orb orb-3" aria-hidden="true"></div>
-
-  <!-- Turnstile verification overlay -->
-  <div class="ts-overlay" id="ts-overlay" role="alert" aria-live="assertive" aria-label="Security verification in progress">
-    <div class="ts-overlay-inner">
-      <div class="ts-shield-wrap">
-        <div class="ts-shield-ring" aria-hidden="true"></div>
-        <div class="ts-shield-ring" aria-hidden="true"></div>
-        <div class="ts-shield-icon">
-          <i class="fa-solid fa-shield-halved"></i>
-        </div>
-        <div class="ts-spinner-ring" aria-hidden="true"></div>
-      </div>
-      <div class="ts-overlay-title">Verifying you are human</div>
-      <div class="ts-overlay-sub">Running a security check to protect your account. This will only take a moment.</div>
-      <div class="ts-dots" aria-hidden="true">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
-    </div>
-  </div>
 
   <div class="auth-container" role="main">
     <div class="brand">
@@ -545,101 +265,42 @@
     </div>
 
     <div class="auth-card">
-      <div class="tab-bar" role="tablist" aria-label="Login or Sign Up">
-        <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-login" id="tab-login" data-tab="login">Log In</button>
-        <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-signup" id="tab-signup" data-tab="signup">Sign Up</button>
-        <div class="tab-indicator" aria-hidden="true"></div>
+      <h2 class="panel-title">Welcome Back</h2>
+      
+      <div class="social-logins">
+        <button class="social-btn" id="btn-google" type="button" data-provider="google">
+          <span class="social-icon"><img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="" /></span>
+          <span class="btn-label">Continue with Google</span>
+          <span class="btn-spinner" aria-hidden="true"></span>
+        </button>
+        
+        <button class="social-btn" id="btn-wallet" type="button" data-provider="wallet">
+          <span class="social-icon"><img src="https://www.svgrepo.com/show/331345/metamask.svg" alt="" /></span>
+          <span class="btn-label">Continue with Wallet</span>
+          <span class="btn-spinner" aria-hidden="true"></span>
+        </button>
+        
+        <button class="social-btn" id="btn-github" type="button" data-provider="github">
+          <span class="social-icon"><img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="" /></span>
+          <span class="btn-label">Continue with GitHub</span>
+          <span class="btn-spinner" aria-hidden="true"></span>
+        </button>
+        
+        <button class="social-btn" id="btn-discord" type="button" data-provider="discord">
+          <span class="social-icon"><img src="https://www.svgrepo.com/show/353655/discord-icon.svg" alt="" /></span>
+          <span class="btn-label">Continue with Discord</span>
+          <span class="btn-spinner" aria-hidden="true"></span>
+        </button>
       </div>
 
-      <!-- LOGIN -->
-      <div class="tab-panel active" id="panel-login" role="tabpanel" aria-labelledby="tab-login">
-        <h2 class="panel-title">Welcome Back</h2>
-        <div class="social-logins">
-          <button class="social-btn" id="login-google" type="button" data-provider="google">
-            <span class="social-icon"><img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="" /></span>
-            <span class="btn-label">Continue with Google</span>
-            <span class="btn-spinner" aria-hidden="true"></span>
-          </button>
-          <button class="social-btn" id="login-wallet" type="button" data-provider="wallet">
-            <span class="social-icon"><img src="https://www.svgrepo.com/show/331345/metamask.svg" alt="" /></span>
-            <span class="btn-label">Continue with Wallet</span>
-            <span class="btn-spinner" aria-hidden="true"></span>
-          </button>
-          <button class="social-btn" id="login-github" type="button" data-provider="github">
-            <span class="social-icon"><img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="" /></span>
-            <span class="btn-label">Continue with GitHub</span>
-            <span class="btn-spinner" aria-hidden="true"></span>
-          </button>
-          <button class="social-btn" id="login-discord" type="button" data-provider="discord">
-            <span class="social-icon"><img src="https://www.svgrepo.com/show/353655/discord-icon.svg" alt="" /></span>
-            <span class="btn-label">Continue with Discord</span>
-            <span class="btn-spinner" aria-hidden="true"></span>
-          </button>
-        </div>
-        <div class="divider">or use email</div>
-        <form id="login-form" autocomplete="on" novalidate>
-          <input type="email" id="login-email" placeholder="Email" aria-label="Email" required autocomplete="email" />
-          <div class="password-wrapper">
-            <input type="password" id="login-password" placeholder="Password" aria-label="Password" required autocomplete="current-password" />
-            <button type="button" class="toggle-pw" data-target="login-password" aria-label="Show password"><i class="fa-regular fa-eye"></i></button>
-          </div>
-          <div class="remember-row">
-            <label class="remember-label"><input type="checkbox" id="remember-me" /> Remember me</label>
-            <button type="button" class="forgot-link" id="forgot-link">Forgot password?</button>
-          </div>
-          <div class="turnstile-wrap" id="login-turnstile"></div>
-          <button type="submit" class="submit-btn" id="login-btn">Log In<span class="spinner" id="login-spinner" hidden aria-hidden="true"></span></button>
-          <div class="msg-error" id="login-error" role="alert" aria-live="assertive"></div>
-          <div class="msg-success" id="login-success" role="status" aria-live="polite"></div>
-        </form>
-        <button class="admin-btn" id="admin-btn" type="button"><i class="fa-solid fa-shield-halved"></i><span>Admin Login</span></button>
-      </div>
+      <div class="msg-error" id="auth-error" role="alert" aria-live="assertive"></div>
+      <div class="msg-success" id="auth-success" role="status" aria-live="polite"></div>
 
-      <!-- SIGNUP -->
-      <div class="tab-panel" id="panel-signup" role="tabpanel" aria-labelledby="tab-signup">
-        <h2 class="panel-title">Create Your Account</h2>
-        <div class="social-logins">
-          <button class="social-btn" id="signup-google" type="button" data-provider="google">
-            <span class="social-icon"><img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="" /></span>
-            <span class="btn-label">Sign up with Google</span>
-            <span class="btn-spinner" aria-hidden="true"></span>
-          </button>
-          <button class="social-btn" id="signup-wallet" type="button" data-provider="wallet">
-            <span class="social-icon"><img src="https://www.svgrepo.com/show/331345/metamask.svg" alt="" /></span>
-            <span class="btn-label">Sign up with Wallet</span>
-            <span class="btn-spinner" aria-hidden="true"></span>
-          </button>
-          <button class="social-btn" id="signup-github" type="button" data-provider="github">
-            <span class="social-icon"><img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="" /></span>
-            <span class="btn-label">Sign up with GitHub</span>
-            <span class="btn-spinner" aria-hidden="true"></span>
-          </button>
-          <button class="social-btn" id="signup-discord" type="button" data-provider="discord">
-            <span class="social-icon"><img src="https://www.svgrepo.com/show/353655/discord-icon.svg" alt="" /></span>
-            <span class="btn-label">Sign up with Discord</span>
-            <span class="btn-spinner" aria-hidden="true"></span>
-          </button>
-        </div>
-        <div class="divider">or use email</div>
-        <form id="signup-form" autocomplete="on" novalidate>
-          <input type="text" id="signup-name" placeholder="Full Name" aria-label="Full Name" required autocomplete="name" />
-          <input type="text" id="signup-username" placeholder="Username" aria-label="Username" required autocomplete="username" />
-          <input type="email" id="signup-email" placeholder="Email" aria-label="Email" required autocomplete="email" />
-          <div class="password-wrapper">
-            <input type="password" id="signup-password" placeholder="Password" aria-label="Password" required autocomplete="new-password" />
-            <button type="button" class="toggle-pw" data-target="signup-password" aria-label="Show password"><i class="fa-regular fa-eye"></i></button>
-          </div>
-          <div class="strength-wrap">
-            <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
-            <div class="strength-label" id="strength-label"></div>
-          </div>
-          <div class="hint-text">At least 8 characters with uppercase, lowercase, numbers, and special characters.</div>
-          <div class="turnstile-wrap" id="signup-turnstile"></div>
-          <button type="submit" class="submit-btn" id="signup-btn">Sign Up<span class="spinner" id="signup-spinner" hidden aria-hidden="true"></span></button>
-          <div class="msg-error" id="signup-error" role="alert" aria-live="assertive"></div>
-          <div class="msg-success" id="signup-success" role="status" aria-live="polite"></div>
-        </form>
-      </div>
+      <!-- Admin Login Button -->
+      <button class="admin-btn" id="admin-btn" type="button">
+        <i class="fa-solid fa-shield-halved"></i>
+        <span>Admin Login</span>
+      </button>
 
       <div class="auth-footer">
         By continuing, you agree to our
@@ -662,69 +323,8 @@
 
   <script type="module">
     /* ═══════════════════════════════════
-       Pure UI — always runs, no deps
+       Cookie consent
        ═══════════════════════════════════ */
-
-    // Tab switching
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    const tabPanels = document.querySelectorAll('.tab-panel');
-    const tabIndicator = document.querySelector('.tab-indicator');
-
-    tabBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const t = btn.dataset.tab;
-        tabBtns.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
-        tabPanels.forEach(p => p.classList.remove('active'));
-        btn.classList.add('active');
-        btn.setAttribute('aria-selected', 'true');
-        document.getElementById('panel-' + t).classList.add('active');
-        tabIndicator.classList.toggle('right', t === 'signup');
-      });
-    });
-
-    // Password visibility toggles
-    document.querySelectorAll('.toggle-pw').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const inp = document.getElementById(btn.dataset.target);
-        const ico = btn.querySelector('i');
-        const show = inp.type === 'password';
-        inp.type = show ? 'text' : 'password';
-        ico.className = show ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
-        btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
-      });
-    });
-
-    // Password strength
-    const sPw = document.getElementById('signup-password');
-    const sFill = document.getElementById('strength-fill');
-    const sLabel = document.getElementById('strength-label');
-    const sLevels = [
-      { l: '', c: 'transparent' },
-      { l: 'Very weak', c: '#ff6b6b' },
-      { l: 'Weak', c: '#ff9f43' },
-      { l: 'Fair', c: '#feca57' },
-      { l: 'Strong', c: '#48dbfb' },
-      { l: 'Excellent', c: '#6ee7b7' }
-    ];
-    function calcStr(pw) {
-      let s = 0;
-      if (pw.length >= 8) s++;
-      if (/[a-z]/.test(pw)) s++;
-      if (/[A-Z]/.test(pw)) s++;
-      if (/[0-9]/.test(pw)) s++;
-      if (/[^A-Za-z0-9]/.test(pw)) s++;
-      return s;
-    }
-    sPw.addEventListener('input', () => {
-      const s = calcStr(sPw.value);
-      const lv = sLevels[s];
-      sFill.style.width = (s * 20) + '%';
-      sFill.style.background = lv.c;
-      sLabel.textContent = sPw.value ? lv.l : '';
-      sLabel.style.color = lv.c;
-    });
-
-    // Cookie consent
     const cBanner = document.getElementById('cookie-banner');
     if (!localStorage.getItem('heloxai_cookie_consent')) cBanner.classList.add('visible');
     document.getElementById('cookie-accept').addEventListener('click', () => {
@@ -736,62 +336,16 @@
       cBanner.classList.remove('visible');
     });
 
-    // Admin
+    /* ═══════════════════════════════════
+       Admin Redirect
+       ═══════════════════════════════════ */
     document.getElementById('admin-btn').addEventListener('click', () => {
       window.location.href = 'admin-login.html';
     });
 
-    // Prefill remembered email
-    const saved = localStorage.getItem('lastEmail');
-    if (saved) {
-      document.getElementById('login-email').value = saved;
-      document.getElementById('remember-me').checked = true;
-    }
-
-    /* ═══════════════════════════════════
-       Turnstile overlay helpers
-       ═══════════════════════════════════ */
-    const tsOverlay = document.getElementById('ts-overlay');
-    let tsOverlayTimer = null;
-    let isVerified = false;
-
-    // IMPORTANT: Returns a Promise that resolves after the UI has visually updated.
-    // This prevents the page from feeling "frozen" while async tasks queue up.
-    function showTSOverlay() {
-      return new Promise((resolve) => {
-        // Reset inner animation by forcing reflow
-        const inner = tsOverlay.querySelector('.ts-overlay-inner');
-        inner.style.animation = 'none';
-        inner.offsetHeight; // trigger reflow
-        inner.style.animation = '';
-        
-        tsOverlay.classList.add('visible');
-
-        // Force a browser paint tick. This ensures the overlay is fully visible
-        // before the JavaScript thread continues to heavy async operations.
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            resolve();
-          });
-        });
-      });
-    }
-
-    function hideTSOverlay() {
-      tsOverlay.classList.remove('visible');
-      if (tsOverlayTimer) { clearTimeout(tsOverlayTimer); tsOverlayTimer = null; }
-    }
-
     /* ═══════════════════════════════════
        Shared helpers
        ═══════════════════════════════════ */
-    const validEmail = e => /\S+@\S+\.\S+/.test(e);
-
-    function setSubmitLoading(btn, sp, on) {
-      btn.disabled = on;
-      sp.hidden = !on;
-    }
-
     function setSocialLoading(btn, on) {
       if (on) {
         btn.classList.add('is-loading');
@@ -802,13 +356,12 @@
       }
     }
 
-    function showMsg(type, panel, text) {
-      const el = document.getElementById(panel + '-' + type);
+    function showMsg(type, text) {
+      const el = document.getElementById('auth-' + type);
       if (el) el.textContent = text;
-    }
-    function clearMsgs(panel) {
-      showMsg('error', panel, '');
-      showMsg('success', panel, '');
+      // Clear opposite message
+      const other = document.getElementById('auth-' + (type === 'error' ? 'success' : 'error'));
+      if (other) other.textContent = '';
     }
 
     /* ═══════════════════════════════════
@@ -826,9 +379,6 @@
       }
     }
 
-    const ADMIN_DOMAIN = '@heloxai.xyz';
-    const TS_KEY = (ENV && ENV.TURNSTILE_SITE_KEY) ? ENV.TURNSTILE_SITE_KEY : null;
-
     if (!sb) {
       document.querySelectorAll('.social-btn').forEach(btn => {
         btn.disabled = true;
@@ -840,98 +390,40 @@
           btn.appendChild(b);
         }
       });
-      document.querySelectorAll('.submit-btn').forEach(b => b.disabled = true);
-      showMsg('error', 'login', 'Service is currently unavailable.');
-      showMsg('error', 'signup', 'Service is currently unavailable.');
-    }
-
-    /* ═══════════════════════════════════
-       Turnstile — lazy load
-       ═══════════════════════════════════ */
-    let tsLoaded = false, tsLoading = false;
-    let loginWid = null, signupWid = null, loginTok = null, signupTok = null;
-
-    function loadTSScript() {
-      return new Promise((resolve, reject) => {
-        if (window.turnstile) { resolve(); return; }
-        if (tsLoading) {
-          const w = setInterval(() => { if (window.turnstile) { clearInterval(w); resolve(); } }, 80);
-          return;
-        }
-        tsLoading = true;
-        const s = document.createElement('script');
-        s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
-        s.async = true;
-        s.onload = () => { tsLoading = false; resolve(); };
-        s.onerror = () => { tsLoading = false; reject(new Error('Security check failed to load')); };
-        document.head.appendChild(s);
-      });
-    }
-
-    function renderTS(containerId, setter) {
-      if (!window.turnstile || !TS_KEY) return null;
-      return window.turnstile.render('#' + containerId, {
-        sitekey: TS_KEY, theme: 'dark', size: 'normal',
-        callback: setter,
-        'expired-callback': () => setter(null)
-      });
-    }
-
-    async function ensureTS() {
-      if (tsLoaded) return;
-      try {
-        await loadTSScript();
-        loginWid = renderTS('login-turnstile', t => { loginTok = t; });
-        signupWid = renderTS('signup-turnstile', t => { signupTok = t; });
-        tsLoaded = true;
-      } catch (e) { console.warn('Turnstile unavailable:', e); }
-    }
-
-    let tsTriggered = false;
-    function triggerTS() { if (tsTriggered) return; tsTriggered = true; ensureTS(); }
-    ['login-email', 'login-password', 'signup-name', 'signup-email'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.addEventListener('focus', triggerTS, { once: true });
-    });
-
-    function resetTS(wid) {
-      if (window.turnstile && wid !== null) window.turnstile.reset(wid);
+      showMsg('error', 'Service is currently unavailable.');
     }
 
     /* ═══════════════════════════════════
        OAUTH helper
        ═══════════════════════════════════ */
-    function handleOAuth(provider, btnId, panel, redirectTo) {
+    function handleOAuth(provider, btnId) {
       document.getElementById(btnId).addEventListener('click', async function () {
         if (!sb) return;
-        clearMsgs(panel);
+        showMsg('error', ''); // clear errors
         setSocialLoading(this, true);
         try {
           const { error } = await sb.auth.signInWithOAuth({
             provider: provider,
-            options: { redirectTo: redirectTo }
+            options: { redirectTo: location.origin + '/callback.html' }
           });
           if (error) throw error;
         } catch (err) {
-          showMsg('error', panel, err.message || provider + ' login failed.');
+          showMsg('error', err.message || provider + ' login failed.');
           setSocialLoading(this, false);
         }
       });
     }
 
-    handleOAuth('google',  'login-google',  'login', location.origin + '/callback.html');
-    handleOAuth('github',  'login-github',  'login', location.origin + '/callback.html');
-    handleOAuth('discord', 'login-discord', 'login', location.origin + '/callback.html');
-    handleOAuth('google',  'signup-google',  'signup', location.origin + '/callback.html');
-    handleOAuth('github',  'signup-github',  'signup', location.origin + '/callback.html');
-    handleOAuth('discord', 'signup-discord', 'signup', location.origin + '/callback.html');
+    handleOAuth('google',  'btn-google');
+    handleOAuth('github',  'btn-github');
+    handleOAuth('discord', 'btn-discord');
 
     /* ═══════════════════════════════════
        Wallet — Login
        ═══════════════════════════════════ */
-    document.getElementById('login-wallet').addEventListener('click', async function () {
+    document.getElementById('btn-wallet').addEventListener('click', async function () {
       if (!sb) return;
-      clearMsgs('login');
+      showMsg('error', '');
       setSocialLoading(this, true);
       try {
         if (!window.ethereum) throw new Error('No wallet found. Please install MetaMask.');
@@ -941,336 +433,23 @@
         const prov = new ethers.BrowserProvider(window.ethereum);
         const signer = await prov.getSigner();
         const addr = await signer.getAddress();
+        
+        // Request signature
         const { data: sd, error: se } = await sb.auth.signInWithWeb3({ chainId: 1, address: addr });
         if (se) throw se;
+        
         const sig = await signer.signMessage(sd.message);
         const { error: ve } = await sb.auth.verifyWeb3({ message: sd.message, signature: sig });
+        
         if (ve) throw ve;
-        showMsg('success', 'login', 'Wallet login successful!');
-        setTimeout(() => { location.href = 'callback'; }, 800);
+        
+        showMsg('success', 'Wallet login successful!');
+        setTimeout(() => { location.href = 'callback.html'; }, 800);
       } catch (err) {
-        showMsg('error', 'login', err.message || 'Wallet login failed.');
+        showMsg('error', err.message || 'Wallet login failed.');
         setSocialLoading(this, false);
       }
     });
-
-    /* ═══════════════════════════════════
-       Wallet — Signup
-       ═══════════════════════════════════ */
-    document.getElementById('signup-wallet').addEventListener('click', async function () {
-      if (!sb) return;
-      clearMsgs('signup');
-      setSocialLoading(this, true);
-      try {
-        if (!window.ethereum) throw new Error('No wallet found. Please install MetaMask.');
-        if (typeof sb.auth.signInWithWeb3 !== 'function') {
-          throw new Error('Wallet authentication is not configured on this instance.');
-        }
-        const prov = new ethers.BrowserProvider(window.ethereum);
-        const signer = await prov.getSigner();
-        const addr = await signer.getAddress();
-        const { data: sd, error: se } = await sb.auth.signInWithWeb3({ chainId: 1, address: addr });
-        if (se) throw se;
-        const sig = await signer.signMessage(sd.message);
-        const { error: ve } = await sb.auth.verifyWeb3({ message: sd.message, signature: sig });
-        if (ve) throw ve;
-        showMsg('success', 'signup', 'Wallet connected!');
-        setTimeout(() => { location.href = 'callback'; }, 800);
-      } catch (err) {
-        showMsg('error', 'signup', err.message || 'Wallet signup failed.');
-        setSocialLoading(this, false);
-      }
-    });
-
-    /* ═══════════════════════════════════
-       Email Login
-       ═══════════════════════════════════ */
-    const loginForm = document.getElementById('login-form');
-    const loginBtn = document.getElementById('login-btn');
-    const loginSp = document.getElementById('login-spinner');
-
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      clearMsgs('login');
-      setSubmitLoading(loginBtn, loginSp, true);
-
-      const email = document.getElementById('login-email').value.trim();
-      const pw = document.getElementById('login-password').value;
-
-      if (!validEmail(email)) {
-        showMsg('error', 'login', 'Invalid email address.');
-        setSubmitLoading(loginBtn, loginSp, false);
-        return;
-      }
-      if (pw.length < 6) {
-        showMsg('error', 'login', 'Password must be at least 6 characters.');
-        setSubmitLoading(loginBtn, loginSp, false);
-        return;
-      }
-      if (!sb) {
-        showMsg('error', 'login', 'Service unavailable.');
-        setSubmitLoading(loginBtn, loginSp, false);
-        return;
-      }
-
-      try {
-        // 1. Show Overlay & Force Render Tick
-        // This is the primary fix: we wait for the overlay to be visible
-        // before starting the heavy async work.
-        await showTSOverlay();
-
-        // 2. Load Turnstile if needed
-        if (!tsLoaded) await ensureTS();
-
-        if (!loginTok) {
-          hideTSOverlay();
-          resetTS(loginWid);
-          loginTok = null;
-          throw new Error('Please complete the security check.');
-        }
-
-        // 3. Server Verification (Overlay stays visible)
-        const vRes = await fetch('/verify-turnstile', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: loginTok })
-        });
-        if (vRes.ok) {
-          const vData = await vRes.json();
-          if (!vData.success) {
-            hideTSOverlay();
-            resetTS(loginWid);
-            loginTok = null;
-            throw new Error('Security verification failed.');
-          }
-        }
-
-        if (document.getElementById('remember-me').checked) {
-          localStorage.setItem('lastEmail', email);
-        } else {
-          localStorage.removeItem('lastEmail');
-        }
-
-        const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
-        if (error) throw error;
-
-        if (data && data.user) {
-          const { data: ud } = await sb.from('users').select('is_banned').eq('id', data.user.id).single();
-          if (ud && ud.is_banned) {
-            await sb.auth.signOut();
-            throw new Error('Your account has been banned.');
-          }
-        }
-
-        hideTSOverlay();
-        showMsg('success', 'login', 'Login successful!');
-        setTimeout(() => { location.href = 'callback'; }, 800);
-
-      } catch (err) {
-        hideTSOverlay();
-        showMsg('error', 'login', err.message || 'An unexpected error occurred.');
-      } finally {
-        setSubmitLoading(loginBtn, loginSp, false);
-        resetTS(loginWid);
-        loginTok = null;
-      }
-    });
-
-    /* ═══════════════════════════════════
-       Email Signup
-       ═══════════════════════════════════ */
-    const signupForm = document.getElementById('signup-form');
-    const signupBtn = document.getElementById('signup-btn');
-    const signupSp = document.getElementById('signup-spinner');
-
-    async function createOrUpdateProfile(uid, uname, fullName) {
-      const { error } = await sb.from('users').upsert(
-        {
-          id: uid,
-          username: uname,
-          full_name: fullName || null,
-          role: 'user',
-          plan: 'free',
-          is_banned: false,
-          preferences: {},
-          last_active: new Date().toISOString()
-        },
-        { onConflict: 'id' }
-      );
-      if (error) {
-        console.error('Profile upsert failed:', error.message);
-      }
-    }
-
-    function validUsername(u) {
-      return /^[a-zA-Z0-9][a-zA-Z0-9_]{2,19}$/.test(u);
-    }
-
-    signupForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      clearMsgs('signup');
-      setSubmitLoading(signupBtn, signupSp, true);
-
-      const name = document.getElementById('signup-name').value.trim();
-      const uname = document.getElementById('signup-username').value.trim();
-      const email = document.getElementById('signup-email').value.trim().toLowerCase();
-      const pw = document.getElementById('signup-password').value;
-
-      if (!name || !uname || !email || !pw) {
-        showMsg('error', 'signup', 'Please fill out all fields.');
-        setSubmitLoading(signupBtn, signupSp, false);
-        return;
-      }
-      if (!validUsername(uname)) {
-        showMsg('error', 'signup', 'Username must be 3-20 characters (letters, numbers, underscores), and cannot start with an underscore.');
-        setSubmitLoading(signupBtn, signupSp, false);
-        return;
-      }
-      if (!validEmail(email)) {
-        showMsg('error', 'signup', 'Invalid email address.');
-        setSubmitLoading(signupBtn, signupSp, false);
-        return;
-      }
-      if (email.endsWith(ADMIN_DOMAIN)) {
-        showMsg('error', 'signup', 'This email domain is reserved for administrators.');
-        setSubmitLoading(signupBtn, signupSp, false);
-        return;
-      }
-      if (calcStr(pw) < 5) {
-        showMsg('error', 'signup', 'Password does not meet all requirements.');
-        setSubmitLoading(signupBtn, signupSp, false);
-        return;
-      }
-      if (!sb) {
-        showMsg('error', 'signup', 'Service unavailable.');
-        setSubmitLoading(signupBtn, signupSp, false);
-        return;
-      }
-
-      try {
-        // 1. Show Overlay & Force Render Tick
-        await showTSOverlay();
-
-        // 2. Load Turnstile if needed
-        if (!tsLoaded) await ensureTS();
-
-        if (!window.turnstile || signupWid === null) {
-          hideTSOverlay();
-          throw new Error('Security check is loading. Please wait.');
-        }
-        if (!signupTok) {
-          hideTSOverlay();
-          resetTS(signupWid);
-          signupTok = null;
-          throw new Error('Please complete the security check.');
-        }
-
-        // 3. Server Verification (Overlay stays visible)
-        const vRes = await fetch('/verify-turnstile', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: signupTok })
-        });
-        if (vRes.ok) {
-          const vData = await vRes.json();
-          if (!vData.success) {
-            hideTSOverlay();
-            resetTS(signupWid);
-            signupTok = null;
-            throw new Error('Security verification failed.');
-          }
-        }
-
-        const { data: existingUname, error: unameErr } = await sb
-          .from('users')
-          .select('id')
-          .eq('username', uname)
-          .maybeSingle();
-
-        if (unameErr) {
-          console.warn('Username check failed:', unameErr.message);
-        } else if (existingUname) {
-          hideTSOverlay();
-          throw new Error('This username is already taken. Please choose another.');
-        }
-
-        const { data, error } = await sb.auth.signUp({
-          email: email,
-          password: pw,
-          options: {
-            data: { full_name: name, username: uname },
-            emailRedirectTo: location.origin + '/confirm'
-          }
-        });
-        if (error) throw error;
-
-        if (data.user && data.user.identities && data.user.identities.length === 0) {
-          hideTSOverlay();
-          throw new Error(
-            'An account with this email already exists. ' +
-            'Please check your inbox for a confirmation email, or try logging in.'
-          );
-        }
-
-        if (data && data.user) {
-          await createOrUpdateProfile(data.user.id, uname, name);
-        }
-
-        hideTSOverlay();
-        showMsg('success', 'signup', 'Success! Check your email to confirm your account.');
-        signupForm.reset();
-        sFill.style.width = '0%';
-        sLabel.textContent = '';
-        resetTS(signupWid);
-
-      } catch (err) {
-        hideTSOverlay();
-        showMsg('error', 'signup', err.message || 'Signup failed.');
-      } finally {
-        setSubmitLoading(signupBtn, signupSp, false);
-      }
-    });
-
-    /* ═══════════════════════════════════
-       Forgot Password
-       ═══════════════════════════════════ */
-    document.getElementById('forgot-link').addEventListener('click', async (e) => {
-      e.preventDefault();
-      if (!sb) {
-        showMsg('error', 'login', 'Service unavailable.');
-        return;
-      }
-      const email = prompt('Enter your email address:');
-      if (!email) return;
-      if (!validEmail(email)) {
-        showMsg('error', 'login', 'Invalid email.');
-        return;
-      }
-      setSubmitLoading(loginBtn, loginSp, true);
-      try {
-        const { error } = await sb.auth.resetPasswordForEmail(email, {
-          redirectTo: location.origin + '/reset-complete'
-        });
-        if (error) throw error;
-        showMsg('success', 'login', 'Reset email sent!');
-      } catch (err) {
-        showMsg('error', 'login', err.message || 'Failed to send reset email.');
-      } finally {
-        setSubmitLoading(loginBtn, loginSp, false);
-      }
-    });
-
-    window.addEventListener('load', async () => {
-  await showTSOverlay();
-
-  // simulate / run security check
-  await ensureTS();
-
-  // OPTIONAL: fake delay to feel real (Railway does this)
-  await new Promise(r => setTimeout(r, 1200));
-
-  hideTSOverlay();
-});
   </script>
 </body>
 </html>
