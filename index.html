@@ -571,7 +571,7 @@ function initMarked() {
     marked.use({
       renderer: {
         code: function(token) {
-          // Marked v12 provides a token object: { text, lang, ... }
+          // Marked v12 passes a token object
           var text = token.text || '';
           var lang = token.lang || '';
           
@@ -611,7 +611,7 @@ function initMarked() {
         },
         
         link: function(token) {
-          // Marked v12 token: { href, title, text }
+          // Marked v12 token
           var href = token.href || '';
           var title = token.title || '';
           var text = token.text || '';
@@ -631,7 +631,7 @@ function initMarked() {
         },
         
         image: function(token) {
-          // Marked v12 token: { href, title, text }
+          // Marked v12 token
           var href = token.href || '';
           var title = token.title || '';
           var text = token.text || '';
@@ -649,7 +649,6 @@ function initMarked() {
     S._mdOk = false;
   }
 }
-
 function md(text) {
   if (!text) return '';
   
