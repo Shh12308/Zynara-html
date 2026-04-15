@@ -540,14 +540,6 @@
 <!-- TOAST CONTAINER -->
 <div id="toast-container"></div>
 
-<!-- MOCK ENV CONFIG (For demonstration if env.js is missing) -->
-<script>
-  window.__ENV__ = window.__ENV__ || {
-    SUPABASE_URL: "https://xyz.supabase.co",
-    SUPABASE_ANON_KEY: "xyz",
-    BACKEND_URL: "http://localhost:3000"
-  };
-</script>
 <script src="env.js" onerror="console.warn('env.js not found, using defaults if set or page will be read-only')"></script>
 
 <script type="module">
