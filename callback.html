@@ -34,6 +34,23 @@
 
     const supabase = createClient(ENV.SUPABASE_URL, ENV.SUPABASE_ANON_KEY);
 
+    async function handleHashSession() {
+  const hash = window.location.hash;
+
+  if (hash && hash.includes("access_token")) {
+    const { data, error } = await supabase.auth.getSession();
+
+    if (error) throw error;
+
+    // Clean URL (removes # tokens so it doesn't loop)
+    history.replaceState({}, document.title, "/callback");
+
+    return data.session;
+  }
+
+  return null;
+}
+    
     async function getSessionSafe() {
       const { data, error } = await supabase.auth.getSession();
       if (error) throw error;
@@ -61,37 +78,39 @@
       setTimeout(() => location.replace("/index.html"), 800);
     }
 
-    async function run() {
-      try {
-        const url = new URL(window.location.href);
-        const code = url.searchParams.get("code");
+ async function run() {
+  try {
+    const url = new URL(window.location.href);
+    const code = url.searchParams.get("code");
 
-        // 🟢 CASE 1: OAuth (Google, GitHub, etc.)
-        if (code) {
-          const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
-          if (error) throw error;
+    // 🟢 OAuth login
+    if (code) {
+      const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
+      if (error) throw error;
 
-          const session = await getSessionSafe();
-          return handleUser(session);
-        }
-
-        // 🟡 CASE 2: Email magic link / OTP (Supabase handles automatically)
-        // Session is already stored in URL fragment
-        const session = await getSessionSafe();
-
-        if (session) {
-          return handleUser(session);
-        }
-
-        // 🔴 CASE 3: Email/password login (should NOT hit callback normally)
-        // fallback if user manually lands here
-        fail("No authentication data found. Please log in again.");
-        
-      } catch (e) {
-        console.error(e);
-        fail(e.message || "Auth error");
-      }
+      const session = await getSessionSafe();
+      return handleUser(session);
     }
+
+    // 🟡 Magic link / hash session
+    const hashSession = await handleHashSession();
+    if (hashSession) {
+      return handleUser(hashSession);
+    }
+
+    // 🟢 Existing session (email/password)
+    const session = await getSessionSafe();
+    if (session) {
+      return handleUser(session);
+    }
+
+    fail("No authentication data found. Please log in again.");
+
+  } catch (e) {
+    console.error(e);
+    fail(e.message || "Auth error");
+  }
+}
 
     run();
   </script>
