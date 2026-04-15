@@ -488,13 +488,32 @@ function isVideo(t){var l=t.toLowerCase();for(var i=0;i<VIDEO_KW.length;i++)if(l
 
 function getEnvVar(key) { if (typeof window.__ENV__ !== 'undefined' && window.__ENV__[key]) return window.__ENV__[key]; if (typeof ENV !== 'undefined' && ENV[key]) return ENV[key]; return ''; }
 function getApiUrl(){ var baseUrl = getEnvVar('FREE_AI_URL'); if(S.user) { if(S.user.is_lifetime || S.user.is_premium) { var pUrl = getEnvVar('PREMIUM_AI_URL'); if (pUrl && pUrl.indexOf('your-premium') === -1 && pUrl.indexOf('http') === 0) baseUrl = pUrl; } } return baseUrl; }
-function authH(){ const h = { 'Content-Type': 'application/json' }; if (S.user && S.user.token) h['Authorization'] = `Bearer ${S.user.token}`; return h; }
+function authH(){
+  const h = { 'Content-Type': 'application/json' };
+
+  if (S.user && S.user.token) {
+    h['Authorization'] = `Bearer ${S.user.token}`;
+  } else {
+    h['x-guest-id'] = getGuestId(); // 🔥 ADD THIS
+  }
+
+  return h;
+}
 
 function isPremium(){return isAuthed()&&(S.user.is_premium||S.user.is_lifetime||S.user.plan!=='free')}
 function isAuthed(){return !!S.user;}
 function authSilent(){return !isAuthed();}
 function canGenMedia(){ if(!isAuthed()) return false; if(S.user.is_lifetime || S.user.is_premium) return true; return false; }
 
+  function getGuestId(){
+  let id = localStorage.getItem('helox_guest_id');
+  if(!id){
+    id = crypto.randomUUID();
+    localStorage.setItem('helox_guest_id', id);
+  }
+  return id;
+}
+  
 async function setUserFromSession(session){
   try {
     let profileData = null;
