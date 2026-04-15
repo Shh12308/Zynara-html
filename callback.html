@@ -15,14 +15,14 @@
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
     const status = document.getElementById("status");
-    const error = document.getElementById("error");
+    const errorEl = document.getElementById("error");
     const retry = document.getElementById("retry");
 
     retry.onclick = () => location.href = "/login.html";
 
     function fail(msg) {
       status.textContent = "Login failed";
-      error.textContent = msg;
+      errorEl.textContent = msg;
       retry.style.display = "block";
     }
 
@@ -34,40 +34,59 @@
 
     const supabase = createClient(ENV.SUPABASE_URL, ENV.SUPABASE_ANON_KEY);
 
+    async function getSessionSafe() {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) throw error;
+      return data.session;
+    }
+
+    async function handleUser(session) {
+      if (!session) throw new Error("No session");
+
+      // Check banned user
+      const { data, error } = await supabase
+        .from("users")
+        .select("is_banned")
+        .eq("id", session.user.id)
+        .single();
+
+      if (error && error.code !== "PGRST116") throw error;
+
+      if (data?.is_banned) {
+        await supabase.auth.signOut();
+        throw new Error("Account banned");
+      }
+
+      status.textContent = "Success! Redirecting...";
+      setTimeout(() => location.replace("/index.html"), 800);
+    }
+
     async function run() {
       try {
         const url = new URL(window.location.href);
         const code = url.searchParams.get("code");
 
-        if (!code) {
-          location.replace("/auth.html");
-          return;
+        // 🟢 CASE 1: OAuth (Google, GitHub, etc.)
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
+          if (error) throw error;
+
+          const session = await getSessionSafe();
+          return handleUser(session);
         }
 
-        const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
-        if (error) throw error;
+        // 🟡 CASE 2: Email magic link / OTP (Supabase handles automatically)
+        // Session is already stored in URL fragment
+        const session = await getSessionSafe();
 
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) throw new Error("No session");
-
-        // SAFE profile fetch (no recursion possible now)
-        const { data } = await supabase
-          .from("users")
-          .select("is_banned")
-          .eq("id", session.user.id)
-          .single();
-
-        if (data?.is_banned) {
-          await supabase.auth.signOut();
-          throw new Error("Account banned");
+        if (session) {
+          return handleUser(session);
         }
 
-        status.textContent = "Success! Redirecting...";
-
-        setTimeout(() => {
-          location.replace("/index.html");
-        }, 800);
-
+        // 🔴 CASE 3: Email/password login (should NOT hit callback normally)
+        // fallback if user manually lands here
+        fail("No authentication data found. Please log in again.");
+        
       } catch (e) {
         console.error(e);
         fail(e.message || "Auth error");
