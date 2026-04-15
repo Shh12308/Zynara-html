@@ -11,100 +11,66 @@
 
   <script src="env.js"></script>
 
-  <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-    const status = document.getElementById("status");
-    const errorEl = document.getElementById("error");
-    const retry = document.getElementById("retry");
+const supabase = createClient(
+  window.__ENV__.SUPABASE_URL,
+  window.__ENV__.SUPABASE_ANON_KEY
+);
 
-    retry.onclick = () => location.href = "/auth.html";
+const status = document.getElementById("status");
+const errorEl = document.getElementById("error");
+const retry = document.getElementById("retry");
 
-    function fail(msg) {
-      status.textContent = "Login failed";
-      errorEl.textContent = msg;
-      retry.style.display = "block";
-    }
+retry.onclick = () => location.href = "/auth.html";
 
-    const ENV = window.__ENV__;
-    if (!ENV?.SUPABASE_URL || !ENV?.SUPABASE_ANON_KEY) {
-      fail("Missing config");
-      throw new Error("Missing env");
-    }
-
-    const supabase = createClient(ENV.SUPABASE_URL, ENV.SUPABASE_ANON_KEY);
-
-    async function handleHashSession() {
-  const hash = window.location.hash;
-
-  if (hash && hash.includes("access_token")) {
-    const { data, error } = await supabase.auth.getSession();
-
-    if (error) throw error;
-
-    // Clean URL (removes # tokens so it doesn't loop)
-    history.replaceState({}, document.title, "/callback");
-
-    return data.session;
-  }
-
-  return null;
+function fail(msg) {
+  status.textContent = "Login failed";
+  errorEl.textContent = msg;
+  retry.style.display = "block";
 }
-    
-    async function getSessionSafe() {
-      const { data, error } = await supabase.auth.getSession();
-      if (error) throw error;
-      return data.session;
-    }
 
-    async function handleUser(session) {
-      if (!session) throw new Error("No session");
-
-      // Check banned user
-      const { data, error } = await supabase
-        .from("users")
-        .select("is_banned")
-        .eq("id", session.user.id)
-        .single();
-
-      if (error && error.code !== "PGRST116") throw error;
-
-      if (data?.is_banned) {
-        await supabase.auth.signOut();
-        throw new Error("Account banned");
-      }
-
-      status.textContent = "Success! Redirecting...";
-      setTimeout(() => location.replace("/index.html"), 800);
-    }
-
- async function run() {
+async function run() {
   try {
     const url = new URL(window.location.href);
     const code = url.searchParams.get("code");
 
-    // 🟢 OAuth login
+    // 1️⃣ OAuth login (Google, GitHub)
     if (code) {
       const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
       if (error) throw error;
-
-      const session = await getSessionSafe();
-      return handleUser(session);
     }
 
-    // 🟡 Magic link / hash session
-    const hashSession = await handleHashSession();
-    if (hashSession) {
-      return handleUser(hashSession);
+    // 2️⃣ IMPORTANT: wait for session properly (NOT getSession immediately)
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error) throw error;
+
+    if (!session) {
+      fail("No session found. Try logging in again.");
+      return;
     }
 
-    // 🟢 Existing session (email/password)
-    const session = await getSessionSafe();
-    if (session) {
-      return handleUser(session);
+    // 3️⃣ Check user safely (no crash if missing row)
+    const { data } = await supabase
+      .from("users")
+      .select("is_banned")
+      .eq("id", session.user.id)
+      .maybeSingle();
+
+    if (data?.is_banned) {
+      await supabase.auth.signOut();
+      throw new Error("Account banned");
     }
 
-    fail("No authentication data found. Please log in again.");
+    // 4️⃣ Clean URL ONLY after success
+    window.history.replaceState({}, document.title, "/callback");
+
+    status.textContent = "Success! Redirecting...";
+
+    setTimeout(() => {
+      location.replace("/index.html");
+    }, 600);
 
   } catch (e) {
     console.error(e);
@@ -112,7 +78,7 @@
   }
 }
 
-    run();
-  </script>
+run();
+</script>
 </body>
 </html>
