@@ -3,14 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>HeloxAi</title>
-<meta name="title" content="HeloxAi - Advanced AI Companion">
+<title>HeloxAi - Advanced AI Companion</title>
 <meta name="description" content="Your advanced AI companion — think, create, code, and explore with intelligence.">
-<meta name="author" content="HeloxAi">
-<link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
-<link rel="icon" type="image/x-icon" href="icons/favicon.ico">
-<link rel="apple-touch-icon" href="icons/icon-192-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
@@ -328,7 +322,6 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
   <button type="button" class="nc-btn" id="newChatBtn"><i class="fa-solid fa-plus"></i> New Chat <span class="nc-lock" id="ncLock" style="display:none"><i class="fa-solid fa-lock"></i></span></button>
   <div class="cl" id="chatList"><div class="cl-label">Recent</div><div id="chatListItems"><span style="color:var(--text-muted);font-size:12px;padding:4px 10px;display:block">No conversations yet</span></div></div>
   <nav class="s-nav">
-    <!-- FIXED: Redirects to auth.html when not logged in -->
     <a href="auth.html" id="signInLink"><i class="fa-brands fa-google"></i> Sign In</a>
     <a href="donate.html" target="_blank" style="color:#ef4444"><i class="fa-solid fa-heart"></i> Donate</a>
     <a href="settings.html"><i class="fa-solid fa-sliders"></i> Settings</a>
@@ -455,18 +448,50 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 </div>
 
 <div class="toast-ct" id="toastCt"></div>
-<script src="env.js"></script>
-<script type="module">
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-// ================= INITIALIZATION =================
+<script>
+// ==========================================
+// CONFIGURATION (Replace with real keys)
+// ==========================================
+window.__ENV__ = {
+    // Replace these placeholders with your actual Supabase project details
+    SUPABASE_URL: 'https://your-project.supabase.co',
+    SUPABASE_ANON_KEY: 'your-anon-key',
+    
+    // API Endpoints (Update these to match your backend)
+    FREE_AI_URL: 'https://api.example.com/v1/chat/completions',
+    PREMIUM_AI_URL: 'https://api.example.com/v1/premium/completions'
+};
+
+// Helper to safely get env vars
+function getEnvVar(key) { 
+    if (typeof window.__ENV__ !== 'undefined' && window.__ENV__[key]) return window.__ENV__[key]; 
+    return ''; 
+}
+
+// ==========================================
+// MAIN APPLICATION LOGIC
+// ==========================================
+(function() {
+'use strict';
+
 const ENV_VARS = window.__ENV__ || {};
 const SUPABASE_URL = ENV_VARS.SUPABASE_URL;
 const SUPABASE_ANON_KEY = ENV_VARS.SUPABASE_ANON_KEY;
 
 let sb = null;
+// Only init Supabase if valid keys are present to avoid errors in demo mode
 if (SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL.startsWith('http')) {
-  try { sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: window.localStorage } }); } catch (e) { console.error('Supabase init error:', e); }
+  try { 
+    sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { 
+      auth: { 
+        persistSession: true, 
+        autoRefreshToken: true, 
+        detectSessionInUrl: true, 
+        storage: window.localStorage 
+      } 
+    }); 
+  } catch (e) { console.error('Supabase init error:', e); }
 }
 
 function $(id){return document.getElementById(id)}
@@ -486,17 +511,14 @@ var VIDEO_KW=['generate video','create video','make video','render video'];
 function isImage(t){var l=t.toLowerCase();for(var i=0;i<IMAGE_KW.length;i++)if(l.indexOf(IMAGE_KW[i])!==-1)return true;return false}
 function isVideo(t){var l=t.toLowerCase();for(var i=0;i<VIDEO_KW.length;i++)if(l.indexOf(VIDEO_KW[i])!==-1)return true;return false}
 
-function getEnvVar(key) { if (typeof window.__ENV__ !== 'undefined' && window.__ENV__[key]) return window.__ENV__[key]; if (typeof ENV !== 'undefined' && ENV[key]) return ENV[key]; return ''; }
 function getApiUrl(){ var baseUrl = getEnvVar('FREE_AI_URL'); if(S.user) { if(S.user.is_lifetime || S.user.is_premium) { var pUrl = getEnvVar('PREMIUM_AI_URL'); if (pUrl && pUrl.indexOf('your-premium') === -1 && pUrl.indexOf('http') === 0) baseUrl = pUrl; } } return baseUrl; }
 function authH(){
   const h = { 'Content-Type': 'application/json' };
-
   if (S.user && S.user.token) {
     h['Authorization'] = `Bearer ${S.user.token}`;
   } else {
-    h['x-guest-id'] = getGuestId(); // 🔥 ADD THIS
+    h['x-guest-id'] = getGuestId(); 
   }
-
   return h;
 }
 
@@ -505,7 +527,7 @@ function isAuthed(){return !!S.user;}
 function authSilent(){return !isAuthed();}
 function canGenMedia(){ if(!isAuthed()) return false; if(S.user.is_lifetime || S.user.is_premium) return true; return false; }
 
-  function getGuestId(){
+function getGuestId(){
   let id = localStorage.getItem('helox_guest_id');
   if(!id){
     id = crypto.randomUUID();
@@ -513,7 +535,7 @@ function canGenMedia(){ if(!isAuthed()) return false; if(S.user.is_lifetime || S
   }
   return id;
 }
-  
+
 async function setUserFromSession(session){
   try {
     let profileData = null;
@@ -525,17 +547,35 @@ async function setUserFromSession(session){
   } catch(e){ S.user = { id: session.user.id, email: session.user.email, token: session.access_token, plan: 'free', is_premium: false, is_lifetime: false }; }
 }
 
-async function loadUser(){
-  if(!sb) { refreshUI(); return; }
-  try { const { data: { session } } = await sb.auth.getSession(); if (session && session.user) { await setUserFromSession(session); } else { S.user = null; } } catch(e){ S.user = null; }
-  finally { refreshUI(); loadChatList(); }
-}
-
+// ==========================================
+// FIX FOR "LOCK STOLEN" ERROR
+// ==========================================
+// We rely solely on onAuthStateChange to handle the initial session.
+// Calling getSession() separately often triggers a race condition with the internal token refresh lock.
 function setupAuthListener(){
-  if(!sb) return;
-  sb.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_OUT') { handleSignOut(); return; }
-    if (session && session.user) { await setUserFromSession(session); refreshUI(); loadChatList(); if(event === 'SIGNED_IN') toast('Signed in', 'ok'); }
+  if(!sb) {
+    // If no Supabase, trigger a refresh anyway to set Guest mode
+    refreshUI(); 
+    return;
+  }
+
+  const { data: { subscription } } = sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_OUT') { 
+      handleSignOut(); 
+      return; 
+    }
+    if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      if (session && session.user) { 
+        await setUserFromSession(session); 
+        refreshUI(); 
+        loadChatList(); 
+        if(event === 'SIGNED_IN') toast('Signed in', 'ok'); 
+      } else {
+        // If session is null, treat as guest
+        S.user = null;
+        refreshUI();
+      }
+    }
   });
 }
 
@@ -571,7 +611,6 @@ function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'da
 
 function autoLinkMarkdown(text){ if(!text) return ''; return text.replace(/(https?:\/\/[^\s]+)/g, function(url){ var label = url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0]; label = label.charAt(0).toUpperCase() + label.slice(1); return '[' + label + '](' + url + ')'; }); }
 
-// FIXED: initMarked for better code handling and highlight.js support
 function initMarked(){
   if (typeof marked === 'undefined' || typeof hljs === 'undefined') { S._mdOk = false; return; }
   try { 
@@ -589,7 +628,6 @@ function initMarked(){
            }
         } catch(e){ highlighted = hljs.highlightAuto(code).value; } 
       }
-      // IMPORTANT: data-action is used for event delegation
       return `<div class="code-blk"><div class="code-hd"><span>${esc(validLang)}</span><button type="button" class="cp-btn" data-action="copy-code"><i class="fa-regular fa-copy"></i> Copy</button></div><pre><code class="hljs language-${validLang}">${highlighted}</code></pre></div>`;
     };
     function safeUrl(url){ try { const u = new URL(url, location.origin); return ['http:', 'https:'].includes(u.protocol) ? url : '#'; } catch { return '#'; } }
@@ -600,14 +638,12 @@ function initMarked(){
   } catch(e) { S._mdOk = false; }
 }
 
-// FIXED: md function with proper DOMPurify config for code highlighting (///, **, etc.)
 function md(text){
   if(!text) return '';
   let html = '';
   try {
     if (S._mdOk && typeof marked !== 'undefined') { html = marked.parse(text); } 
     else { html = esc(text).replace(/\n/g, '<br>'); }
-    // ALLOW: span and class for hljs highlighting (needed for /// comments, ** bold, etc.)
     if (typeof DOMPurify !== 'undefined') { 
        html = DOMPurify.sanitize(html, { 
          ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'strong', 'em', 'a', 'code', 'pre', 'span', 'div', 'ul', 'ol', 'li', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr', 'img', 'button', 'i', 'sup', 'sub'],
@@ -625,7 +661,6 @@ function toast(msg,type){var icons={ok:'fa-circle-check',err:'fa-circle-xmark',i
 
 function toggleSB(open){S.sbOpen=typeof open==='boolean'?open:!S.sbOpen;$('sidebar').classList.toggle('open',S.sbOpen);$('sbOv').classList.toggle('on',S.sbOpen)}
 
-// FIXED: refreshUI handles Sign In redirect logic
 function refreshUI(){
   var u=$('sUser'),sl=$('signInLink'),hp=$('hdrPlan');if(!u||!sl||!hp)return;
   var signedIn=!!S.user,hasMedia=canGenMedia();
@@ -646,7 +681,7 @@ function refreshUI(){
   } else {
     u.classList.remove('show'); 
     sl.innerHTML='<i class="fa-brands fa-google"></i> Sign In';
-    sl.href='auth.html'; // Redirect to auth.html
+    sl.href='auth.html';
     sl.style.cursor='pointer';
     hp.textContent='FREE'; hp.className='hdr-plan ptag free';
   }
@@ -782,13 +817,11 @@ function initEvents(){
   $('sbOv').addEventListener('click',function(){toggleSB(false)});
   $('newChatBtn').addEventListener('click',function(e){ e.stopPropagation(); startNewChat(); });
   
-  // FIXED: Sign In Link - if logged in, sign out. If not, href="auth.html" works naturally.
   $('signInLink').addEventListener('click', function(e){ 
     if(S.user) { 
       e.preventDefault(); 
       signOut(); 
     } 
-    // else: the link redirects to auth.html
   });
   
   $('contactLink').addEventListener('click',function(e){e.stopPropagation(); toggleSB(false);$('contactModal').classList.add('on')});
@@ -855,9 +888,10 @@ function initEvents(){
   document.addEventListener('paste',function(e){if(S.streaming)return;var items=e.clipboardData&&e.clipboardData.items;if(!items)return;for(var i=0;i<items.length;i++){if(items[i].type.indexOf('image/')===0){e.preventDefault();var file=items[i].getAsFile();if(!file)continue;var name='pasted-image-'+Date.now()+'.'+(file.type.split('/')[1]||'png');(function(f,n){readFileAsDataUrl(f).then(function(dataUrl){S.pendingFiles.push({type:'image',dataUrl:dataUrl,name:n,size:f.size,file:new File([f],n,{type:f.type})});renderImgPreview();updateCB()})})(file,name);break}}});
 }
 
-async function init(){ initTheme(); initMarked(); initModel(); initEvents(); setupAuthListener(); renderAll(); updateCB(); await loadUser(); }
+async function init(){ initTheme(); initMarked(); initModel(); initEvents(); setupAuthListener(); renderAll(); updateCB(); }
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
 </script>
 </body>
 </html>
