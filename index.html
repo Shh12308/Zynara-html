@@ -31,7 +31,14 @@
 html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;-webkit-overflow-scrolling:touch;height:100dvh}
 body{font-family:var(--font-body);background:var(--bg-primary);color:var(--text-primary);transition:background var(--speed-slow),color var(--speed-slow);-webkit-font-smoothing:antialiased;display:flex;flex-direction:row;width:100vw;height:100vh;position:relative}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.4;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");background-repeat:repeat;background-size:200px}
-::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}::-webkit-scrollbar-thumb:hover{background:var(--text-muted)}
+
+/* SCROLLBAR IMPROVEMENT */
+::-webkit-scrollbar{width:8px; height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px;border:2px solid transparent;background-clip:content-box;transition:background .2s}
+::-webkit-scrollbar-thumb:hover{background:var(--text-muted);border:2px solid transparent;background-clip:content-box}
+/* Firefox Scrollbar */
+*{scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 
 /* Sidebar */
 .sb-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:90;opacity:0;pointer-events:none;transition:opacity .35s var(--ease);backdrop-filter:blur(4px)}.sb-overlay.on{opacity:1;pointer-events:all}
@@ -57,7 +64,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .nc-btn .nc-lock{margin-left:auto;font-size:10px;display:flex;align-items:center;gap:4px;opacity:.8}
 
 /* Chat List */
-.cl{flex:1;overflow-y:auto;padding:2px 8px;min-height:0}
+.cl{flex:1;overflow-y:auto;padding:2px 8px;min-height:0; touch-action: pan-y;}
 .cl-label{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;padding:10px 10px 6px}
 .cl-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:var(--radius-sm);cursor:pointer;transition:all var(--speed);color:var(--text-secondary);font-size:13px;border:none;background:none;width:100%;text-align:left;font-family:var(--font-body);position:relative;touch-action:manipulation}
 .cl-item:hover{background:var(--bg-hover);color:var(--text-primary)}
@@ -122,7 +129,7 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 .default-icon{background:var(--bg-quaternary);color:var(--accent)}
 
 /* Messages - SCROLL FIX */
-.msgs-wrap{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;display:flex;flex-direction:column;min-height:0;scroll-behavior:auto}
+.msgs-wrap{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;display:flex;flex-direction:column;min-height:0; touch-action: pan-y; scroll-padding-bottom: 100px;}
 .msgs-inner{max-width:var(--msg-max);margin:0 auto;padding:24px 24px 8px;width:100%;flex:1;min-height:0}
 
 /* Welcome Screen */
@@ -500,14 +507,14 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
       <button type="button" class="hp-close" id="closeHtmlPrev" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="hp-body">
-      <iframe id="htmlPreviewFrame" class="hp-frame" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
+      <iframe id="htmlPreviewFrame" class="hp-frame" sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-modals"></iframe>
     </div>
   </div>
 </div>
 
 <div class="toast-ct" id="toastCt"></div>
 <script src="env.js"></script>
-<script type="module">
+<script>
 /* ========== ENV FALLBACK ========== */
 if (typeof window.__ENV__ === 'undefined') {
   window.__ENV__ = { SUPABASE_URL:'', SUPABASE_ANON_KEY:'', FREE_AI_URL:'', PREMIUM_AI_URL:'' };
@@ -540,7 +547,7 @@ var S = {
   theme:'dark', sbOpen:false, asOpen:false, vdOpen:false, mdOpen:false,
   recording:false, recorder:null, chunks:[], audio:null, gallery:[], view:'chat',
   _mdOk:false, pendingFiles:[], model:'helox',
-  isAutoScrolling:true, scrollThreshold:300, selectedVoice:'alloy',
+  isAutoScrolling:true, scrollThreshold:200, selectedVoice:'alloy',
   activeLinkUrl:'', editingIndex:null, editingFiles:[]
 };
 
@@ -615,7 +622,7 @@ async function loadConv(cid){
 function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('data-theme',window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');else document.documentElement.setAttribute('data-theme',t)}catch(e){}S.theme=t;try{localStorage.setItem('helox-theme',t)}catch(e){}document.querySelectorAll('.t-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-t')===t)})}
 function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'dark'}catch(e){}setTheme(s);try{window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(S.theme==='system')setTheme('system')})}catch(e){}}
 
-/* ========== MARKDOWN (Fixed Function Signatures) ========== */
+/* ========== MARKDOWN (Improved Coloring & HTML Button) ========== */
 function initMarked() {
   if (typeof marked === 'undefined') {
     S._mdOk = false;
@@ -629,11 +636,10 @@ function initMarked() {
 
     marked.use({
       renderer: {
-        // FIX: Updated signature for Marked v12+ (code, infostring)
-        // and safer logic for highlight.js integration
+        // Marked v12+ signature
         code: function(code, infostring) {
           var text = code || '';
-          // Extract only the first word as the language (e.g., "js" from "js line-numbers")
+          // Extract language (first word), ignore attributes like "line-numbers"
           var langArr = (infostring || '').trim().split(/\s+/);
           var language = langArr[0] || '';
 
@@ -648,11 +654,14 @@ function initMarked() {
           try {
             if (typeof hljs !== 'undefined') {
               if (validLang) {
+                // Specific language highlighting
                 highlighted = hljs.highlight(text, { language: validLang, ignoreIllegals: true }).value;
               } else {
+                // Fallback to auto-detect to ensure coloring happens
                 var result = hljs.highlightAuto(text);
                 highlighted = result.value;
               }
+              // Double check result is a string
               if (!highlighted || typeof highlighted !== 'string') {
                   highlighted = esc(text);
               }
@@ -660,14 +669,14 @@ function initMarked() {
                 highlighted = esc(text);
             }
           } catch (e) {
-            // Catch internal hljs errors to prevent crash
             highlighted = esc(text);
           }
 
           var displayLang = validLang || 'plaintext';
 
           var btnsHtml = '';
-          if (validLang.toLowerCase() === 'html') {
+          // Add "Run HTML" button for HTML/XML blocks
+          if (validLang && (validLang.toLowerCase() === 'html' || validLang.toLowerCase() === 'xml' || validLang.toLowerCase() === 'htm')) {
              btnsHtml = '<button type="button" class="cp-btn" data-action="run-html" style="margin-right:5px;"><i class="fa-solid fa-play"></i> Run</button>';
           }
 
@@ -683,7 +692,7 @@ function initMarked() {
             '</code></pre></div>';
         },
 
-        // FIX: Updated signature for Marked v12+ (href, title, text)
+        // Marked v12+ signature
         link: function(href, title, text) {
           var safeUrl = '#';
           try {
@@ -698,7 +707,7 @@ function initMarked() {
             ' target="_blank" rel="noopener noreferrer">' + (text || esc(safeUrl)) + '</a>';
         },
 
-        // FIX: Updated signature for Marked v12+ (href, title, text)
+        // Marked v12+ signature
         image: function(href, title, text) {
           return '<div class="img-wrap">' +
             '<img src="' + esc(href) + '" alt="' + esc(text || title || 'Image') + '" loading="lazy">' +
@@ -729,11 +738,11 @@ function md(text) {
       html = DOMPurify.sanitize(html, {
         ALLOWED_TAGS: [
           'p', 'br', 'b', 'i', 'strong', 'em', 'a', 'code', 'pre', 'span',
-          'div', 'ul', 'ol', 'li', 'hljs', 'sup', 'sub', 'del', 's', 'button', 'iframe'
+          'div', 'ul', 'ol', 'li', 'hljs', 'sup', 'sub', 'del', 's', 'button', 'iframe', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'blockquote'
         ],
         ALLOWED_ATTR: [
           'href', 'target', 'rel', 'class', 'id', 'style', 'title',
-          'alt', 'data-action', 'src', 'loading', 'sandbox', 'srcdoc'
+          'alt', 'data-action', 'src', 'loading', 'sandbox', 'srcdoc', 'start'
         ],
         ALLOW_DATA_ATTR: true
       });
@@ -914,6 +923,7 @@ function updateLastAI(content){
   var w=$('msgsWrap');
   if(w){
     var dist = w.scrollHeight - w.scrollTop - w.clientHeight;
+    // If near bottom (200px), follow scroll. If user scrolled up significantly, don't force scroll.
     if(S.isAutoScrolling || dist < S.scrollThreshold){
       scrollBot(true);
     } else {
