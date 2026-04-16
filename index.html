@@ -37,7 +37,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px;border:2px solid transparent;background-clip:content-box;transition:background .2s}
 ::-webkit-scrollbar-thumb:hover{background:var(--text-muted);border:2px solid transparent;background-clip:content-box}
-/* Firefox Scrollbar */
 *{scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 
 /* Sidebar */
@@ -566,6 +565,7 @@ function apiUrl(){
 }
 function authH(){
   var h = {'Content-Type':'application/json'};
+  // Ensure token is fresh
   if(S.user && S.user.token) h['Authorization']='Bearer '+S.user.token;
   else h['x-guest-id']=guestId();
   return h;
@@ -574,27 +574,67 @@ function isAuthed(){ return !!S.user; }
 function canMedia(){ return isAuthed() && (S.user.is_lifetime||S.user.is_premium); }
 function guestId(){ var id=localStorage.getItem('helox_guest_id'); if(!id){id=crypto.randomUUID();localStorage.setItem('helox_guest_id',id);} return id; }
 
-/* ========== AUTH ========== */
+/* ========== AUTH (Fixed) ========== */
 async function setUserFromSess(sess){
   try{
     var prof=null;
-    if(sb){ var r=await sb.from('users').select('plan,is_premium,is_lifetime').eq('id',sess.user.id).single(); if(!r.error) prof=r.data; }
+    if(sb){
+        // Wrap in try/catch in case 'users' table doesn't exist yet
+        try{
+            var r=await sb.from('users').select('plan,is_premium,is_lifetime').eq('id',sess.user.id).single();
+            if(!r.error) prof=r.data;
+        } catch(dbErr){
+            // Table might not exist yet, that's ok, use defaults
+            console.log('Profile table missing or error, using defaults.', dbErr);
+        }
+    }
     var u={id:sess.user.id,email:sess.user.email,token:sess.access_token,plan:'free',is_premium:false,is_lifetime:false};
     if(prof){ u.plan=prof.plan||'free'; u.is_premium=!!prof.is_premium; u.is_lifetime=!!prof.is_lifetime; }
     S.user=u;
     try{localStorage.setItem('helox-last-login',Date.now())}catch(e){}
-  }catch(e){ S.user={id:sess.user.id,email:sess.user.email,token:sess.access_token,plan:'free',is_premium:false,is_lifetime:false}; }
+  }catch(e){ 
+    // Fallback if session structure is unexpected
+    S.user={id:sess.user.id,email:sess.user.email,token:sess.access_token,plan:'free',is_premium:false,is_lifetime:false}; 
+  }
 }
-function setupAuth(){
-  if(!sb){ refreshUI(); return; }
+
+async function setupAuth(){
+  if(!sb){
+    S.user = null;
+    refreshUI(); 
+    return; 
+  }
+
+  // 1. Check session immediately on load to prevent flicker
+  try {
+      var { data: { session } } = await sb.auth.getSession();
+      if (session && session.user) {
+          await setUserFromSess(session);
+          refreshUI();
+          loadChatList();
+      } else {
+          S.user = null;
+          refreshUI();
+      }
+  } catch(e) { console.error('Session check failed', e); }
+
+  // 2. Listen for changes
   sb.auth.onAuthStateChange(async function(ev,sess){
     if(ev==='SIGNED_OUT'){ doSignOut(); return; }
     if(ev==='INITIAL_SESSION'||ev==='SIGNED_IN'||ev==='TOKEN_REFRESHED'){
-      if(sess&&sess.user){ await setUserFromSess(sess); refreshUI(); loadChatList(); if(ev==='SIGNED_IN') toast('Signed in','ok'); }
-      else { S.user=null; refreshUI(); }
+      if(sess&&sess.user){
+        await setUserFromSess(sess);
+        refreshUI();
+        if(ev==='SIGNED_IN') loadChatList();
+        if(ev==='SIGNED_IN') toast('Signed in','ok');
+      } else {
+        S.user=null;
+        refreshUI();
+      }
     }
   });
 }
+
 function doSignOut(){ S.user=null; S.msgs=[]; S.chatId=null; S.chatListData=[]; S.gallery=[]; refreshUI(); renderAll(); renderChatList(); renderGallery(); toast('Signed out','inf'); }
 async function signOut(){ if(sb) try{await sb.auth.signOut()}catch(e){} doSignOut(); }
 
@@ -803,7 +843,8 @@ function refreshUI(){
   if(S.user){
     u.classList.add('show');$('uAv').textContent=(S.user.email||'U')[0].toUpperCase();$('uNm').textContent=S.user.email;$('uPl').textContent=bt.charAt(0)+bt.slice(1).toLowerCase()+' Plan';
     sl.innerHTML='<i class="fa-solid fa-right-from-bracket"></i> Log Out';sl.href='#';sl.style.cursor='pointer';
-    hp.textContent=bt;hp.className='hdr-plan ptag '+bc;updateLoginDisp();
+    hp.textContent=bt;hp.className='hdr-plan ptag '+bc;
+    // updateLoginDisp(); // REMOVED - causes crash, logic handled above
   }else{
     u.classList.remove('show');sl.innerHTML='<i class="fa-brands fa-google"></i> Sign In';sl.href='auth.html';sl.style.cursor='pointer';
     hp.textContent='FREE';hp.className='hdr-plan ptag free';
@@ -923,7 +964,6 @@ function updateLastAI(content){
   var w=$('msgsWrap');
   if(w){
     var dist = w.scrollHeight - w.scrollTop - w.clientHeight;
-    // If near bottom (200px), follow scroll. If user scrolled up significantly, don't force scroll.
     if(S.isAutoScrolling || dist < S.scrollThreshold){
       scrollBot(true);
     } else {
