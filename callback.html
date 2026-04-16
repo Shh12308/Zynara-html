@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Logging in...</title>
 <style>
   /* Consistent Dark Theme Styles */
@@ -48,8 +48,8 @@
     border: 1px solid var(--error); 
     color: #ff6b6b; 
     padding: 16px; 
-    border-radius: var(--radius);
-    font-size: 0.95rem;
+    border-radius: var(--radius); 
+    font-size: 0.95rem; 
     line-height: 1.5;
     margin-bottom: 20px;
   }
@@ -88,111 +88,114 @@
   <script src="env.js"></script>
   
   <script type="module">
-    // Import createClient from CDN just in case, though env.js might rely on the specific v2 path.
-    // We mainly use the sb instance created from env.js if available.
-    
+    // Import createClient from CDN just in case, though env.js might rely on specific v2 path.
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
 
-    // Access the env variables set by the script tag above
+    // Access env variables set by script tag above
     const supabaseUrl = window.__ENV__?.SUPABASE_URL || '';
     const supabaseKey = window.__ENV__?.SUPABASE_ANON_KEY || '';
 
-    const statusEl = document.getElementById('status');
+    // DOM Elements
+    const statusEl = document.getElementById("status");
     const errorEl = document.getElementById("error");
     const errorMsgEl = document.getElementById("error-message");
     const spinnerEl = document.getElementById("spinner");
     const retryBtn = document.getElementById("retry");
 
-    // 1. Initialize Supabase
-    let sb;
-    if (supabaseUrl && supabaseKey) {
-      try {
-        sb = createClient(supabaseUrl, supabaseKey, {
-          auth: {
-            storage: window.localStorage,
-            persistSession: true,
-            autoRefreshToken: true,
-            detectSessionInUrl: true // IMPORTANT: This tells Supabase to look for hash tokens automatically
-          }
-        });
-      } catch (e) {
-        showError("Failed to initialize auth client.", e);
-        return;
-      }
-    } else {
-      showError("Missing configuration. Please contact support.");
-      return;
-    }
+    retry.onclick = () => location.reload();
 
-    // 2. Error Handling Helper
+    // Error Handling Helper
     function showError(msg, errObj) {
       console.error(errObj || msg);
       spinnerEl.style.display = 'none';
       statusEl.style.display = 'none';
       errorEl.style.display = 'block';
       errorMsgEl.textContent = msg + (errObj ? ` (${errObj.message})` : '');
-      retryBtn.style.display = "inline-block";
-      retryBtn.onclick = () => window.location.reload();
+      retryBtn.style.display = 'inline-block';
     }
 
-    // 3. Main Auth Flow
+    // Initialize Supabase
+    let sb;
+    try {
+      if (supabaseUrl && supabaseKey) {
+        sb = createClient(supabaseUrl, supabaseKey, {
+          auth: {
+            storage: window.localStorage,
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true // CRITICAL: Must be true for OAuth callbacks
+          }
+        });
+      } else {
+        showError("Missing configuration (env.js or keys).", null);
+        return;
+      }
+    } catch (e) {
+      showError("Failed to initialize auth client.", e);
+      return;
+    }
+
+    // Main Auth Flow
     async function run() {
       try {
-        // Clean URL hash: Supabase sometimes gets confused by #access_token=... fragments in the URL
-        // We strip the hash before calling exchangeCodeForSession to force it to re-read the hash cleanly
-        if (window.location.hash) {
-           const cleanUrl = window.location.href.split('#')[0];
-           window.history.replaceState({}, document.title, cleanUrl);
-        }
+        // 1. Clean URL hash (force Supabase to ignore it for a moment so we can handle errors manually if needed)
+        // Note: exchangeCodeForSession usually handles this, but if we called it once and it failed, 
+        // reloading the page with the hash might loop if we aren't careful.
+        // Since we are in the callback, we assume the hash is correct and fresh.
 
         // Call Supabase
         const { data, error } = await sb.auth.exchangeCodeForSession(window.location.href);
 
         if (error) {
-          showError("Login failed.", error);
+          showError("Login failed (OAuth exchange error).", error);
           return;
         }
 
-        const { session, user } = data;
-        
+        const session = data.session;
+        const user = data.user;
+
         if (!session || !user) {
-          showError("No session data returned.", null);
+          showError("No session data returned. Did the link expire?", null);
           return;
         }
 
-        // 4. Check for bans (Optional but recommended)
+        // 2. Check for bans (Optional but recommended)
         // Ensure 'users' table exists and has 'is_banned' column
         statusEl.textContent = "Checking account...";
         
         try {
-            const { data: profile, error: profileError } = await sb
-                .from('users')
-                .select('id, is_banned, email') // Select id, is_banned, email to be safe
-                .eq('id', user.id)
-                .single();
+          // Select id, is_banned, email to be safe
+          const { data: profile, error: profileError } = await sb
+            .from('users')
+            .select('id, is_banned, email')
+            .eq('id', user.id)
+            .single();
 
-            if (profileError) {
-                // If table doesn't exist or error occurs, we might just skip ban check or log it.
-                // For now, we assume OK if table check fails to prevent locking users out erroneously.
-                console.warn('Could not verify user status, proceeding...');
-            } else if (profile?.is_banned) {
-                await sb.auth.signOut();
-                showError("This account has been suspended.", null);
-                return;
-            }
+          if (profileError) {
+            // Table might not exist yet (fresh DB). Safe to proceed.
+            console.warn('Profile table missing or error, proceeding:', profileError);
+          } else if (profile?.is_banned) {
+            await sb.auth.signOut();
+            showError("This account has been suspended.", null);
+            return;
+          }
         } catch (e) {
-            // Table probably doesn't exist yet (fresh DB). Safe to proceed.
-            console.warn('Profile check skipped:', e);
+          // Table probably doesn't exist. Safe to proceed.
+          console.warn('Profile check skipped:', e);
         }
 
-        // 5. Success
+        // 3. Success
         spinnerEl.style.display = 'none';
         statusEl.textContent = "Login successful! Redirecting...";
         
-        // Small delay to allow UI to update
+        // Clean the URL to prevent re-triggering the callback if browser keeps appending hash
+        // We replace state to preserve history but remove the sensitive hash fragment
+        window.history.replaceState({}, document.title, "/index.html");
+
+        // Redirect to main app
         setTimeout(() => {
-          window.location.href = "/index.html"; // Redirect to main app
-        }, 800);
+           window.location.href = "/index.html";
+        }, 600);
 
       } catch (e) {
         showError("An unexpected error occurred.", e);
