@@ -397,22 +397,29 @@
        OAUTH helper
        ═══════════════════════════════════ */
     function handleOAuth(provider, btnId) {
-      document.getElementById(btnId).addEventListener('click', async function () {
-        if (!sb) return;
-        showMsg('error', ''); // clear errors
-        setSocialLoading(this, true);
-        try {
-          const { error } = await sb.auth.signInWithOAuth({
-            provider: provider,
-            options: { redirectTo: location.origin + '/callback.html' }
-          });
-          if (error) throw error;
-        } catch (err) {
-          showMsg('error', err.message || provider + ' login failed.');
-          setSocialLoading(this, false);
+  document.getElementById(btnId).addEventListener('click', async function () {
+    if (!sb) return;
+
+    showMsg('error', '');
+    setSocialLoading(this, true);
+
+    try {
+      const { error } = await sb.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: window.location.origin + '/callback.html',
+          skipBrowserRedirect: false
         }
       });
+
+      if (error) throw error;
+
+    } catch (err) {
+      showMsg('error', err.message || `${provider} login failed.`);
+      setSocialLoading(this, false);
     }
+  });
+}
 
     handleOAuth('google',  'btn-google');
     handleOAuth('github',  'btn-github');
@@ -422,34 +429,41 @@
        Wallet — Login
        ═══════════════════════════════════ */
     document.getElementById('btn-wallet').addEventListener('click', async function () {
-      if (!sb) return;
-      showMsg('error', '');
-      setSocialLoading(this, true);
-      try {
-        if (!window.ethereum) throw new Error('No wallet found. Please install MetaMask.');
-        if (typeof sb.auth.signInWithWeb3 !== 'function') {
-          throw new Error('Wallet authentication is not configured on this instance.');
-        }
-        const prov = new ethers.BrowserProvider(window.ethereum);
-        const signer = await prov.getSigner();
-        const addr = await signer.getAddress();
-        
-        // Request signature
-        const { data: sd, error: se } = await sb.auth.signInWithWeb3({ chainId: 1, address: addr });
-        if (se) throw se;
-        
-        const sig = await signer.signMessage(sd.message);
-        const { error: ve } = await sb.auth.verifyWeb3({ message: sd.message, signature: sig });
-        
-        if (ve) throw ve;
-        
-        showMsg('success', 'Wallet login successful!');
-        setTimeout(() => { location.href = 'callback.html'; }, 800);
-      } catch (err) {
-        showMsg('error', err.message || 'Wallet login failed.');
-        setSocialLoading(this, false);
-      }
+  showMsg('error', '');
+  setSocialLoading(this, true);
+
+  try {
+    if (!window.ethereum) {
+      throw new Error('Install MetaMask to continue.');
+    }
+
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    const signer = await provider.getSigner();
+    const address = await signer.getAddress();
+
+    // You must implement your own backend auth OR use SIWE
+    const message = `Login to HeloxAi: ${address}`;
+
+    const signature = await signer.signMessage(message);
+
+    // Send to YOUR backend OR Supabase Edge Function
+    const res = await fetch('/api/wallet-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ address, message, signature })
     });
+
+    if (!res.ok) throw new Error('Wallet login failed');
+
+    showMsg('success', 'Wallet login successful!');
+    setTimeout(() => location.href = 'callback.html', 500);
+
+  } catch (err) {
+    showMsg('error', err.message);
+    setSocialLoading(this, false);
+  }
+});
   </script>
 </body>
 </html>
