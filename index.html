@@ -14,28 +14,14 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/atom-one-dark.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/core.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/javascript.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/typescript.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/python.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/css.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/xml.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/json.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/bash.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/cpp.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/csharp.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/java.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/sql.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/go.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/rust.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/php.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/ruby.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/yaml.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/markdown.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/diff.min.js"></script>
+
+<!-- HIGHLIGHT.JS: Using full bundle for 180+ language support -->
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/highlight.min.js"></script>
+<!-- Keep katex and dompurify -->
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
+
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--font-display:'Space Grotesk',sans-serif;--font-body:'DM Sans',sans-serif;--radius:14px;--radius-sm:10px;--radius-lg:18px;--radius-xl:24px;--speed:.25s;--speed-slow:.4s;--ease:cubic-bezier(.4,0,.2,1);--ease-out:cubic-bezier(0,0,.2,1);--ease-in:cubic-bezier(.4,0,1,1);--msg-max:680px;--sidebar-w:290px}
@@ -315,6 +301,13 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 @media(max-width:1024px){.sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-100%);width:280px;box-shadow:var(--shadow-lg)}.sidebar.open{transform:translateX(0)}.menu-btn{display:inline-flex!important}}
 @media(max-width:640px){.sidebar{width:100%;--sidebar-w:100%}.w-grid{grid-template-columns:1fr}.as-grid{grid-template-columns:1fr}.msgs-inner{padding:16px 14px 6px}.cb-container{padding:0 12px 14px}.msg-acts{opacity:1}.gal-grid{grid-template-columns:repeat(2,1fr);gap:8px}.msg.ai-msg{padding-right:16px}.msg.user-msg{padding-left:16px}.msg.user-msg .msg-inner{max-width:92%}.model-sel{display:none}.cb-foot{display:none}.w-logo{font-size:38px}.w-sub{font-size:14px;margin-bottom:32px}.sidebar{border-right:none}.msg-img-item.single{max-width:200px}.msg-img-item.single img{max-width:200px;max-height:240px}.msg-img-item.multi{width:96px;height:96px}.msg-img-item.multi img{width:96px;height:96px}.em-modal{width:100%}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+/* HTML Preview Modal Styles */
+.hp-modal{max-width:90vw;height:80vh;display:flex;flex-direction:column}
+.hp-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg-tertiary)}
+.hp-title{font-weight:700;font-size:14px;color:var(--text-primary)}
+.hp-close{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:18px;padding:4px 8px;border-radius:6px;transition:all .2s}.hp-close:hover{color:var(--text-primary);background:var(--bg-hover)}
+.hp-body{flex:1;position:relative;background:var(--bg-primary)}
+.hp-frame{width:100%;height:100%;border:none;background:transparent}
 </style>
 </head>
 <body>
@@ -409,8 +402,8 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
   <div class="as-grid">
     <button type="button" class="as-opt locked" data-prompt="Generate an image of " data-media="image" id="asImg"><i class="fa-solid fa-image"></i> Generate Image <span class="as-lock" id="asLockImg"><i class="fa-solid fa-lock"></i> Sign in</span></button>
     <button type="button" class="as-opt locked" data-prompt="Generate a video of " data-media="video" id="asVid"><i class="fa-solid fa-video"></i> Generate Video <span class="as-lock" id="asLockVid"><i class="fa-solid fa-lock"></i> Sign in</span></button>
-    <button type="button" class="as-opt" data-prompt="Search the web for "><i class="fa-solid fa-magnifying-glass"></i> Search the Web</button>
-    <button type="button" class="as-opt" data-prompt="Summarize the following:\n\n"><i class="fa-solid fa-file-lines"></i> Summarize</button>
+    <button type="button" class="as-opt" data-prompt="Search web for "><i class="fa-solid fa-magnifying-glass"></i> Search Web</button>
+    <button type="button" class="as-opt" data-prompt="Summarize following:\n\n"><i class="fa-solid fa-file-lines"></i> Summarize</button>
     <button type="button" class="as-opt" data-prompt="Write a professional email about "><i class="fa-solid fa-at"></i> Write Email</button>
     <button type="button" class="as-opt" data-prompt="Help me write code for "><i class="fa-solid fa-code"></i> Code Assistant</button>
     <button type="button" class="as-opt" data-prompt="Translate to English:\n\n"><i class="fa-solid fa-language"></i> Translate</button>
@@ -446,6 +439,19 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
   <div class="em-foot">
     <button type="button" class="em-btn em-btn-cancel" id="emCancel">Cancel</button>
     <button type="button" class="em-btn em-btn-save" id="emSave">Save & Submit</button>
+  </div>
+</div>
+
+<!-- HTML Preview Modal -->
+<div class="modal-ov" id="htmlPreviewModal">
+  <div class="modal hp-modal">
+    <div class="hp-header">
+      <span class="hp-title">HTML Preview</span>
+      <button type="button" class="hp-close" id="closeHtmlPrev" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="hp-body">
+      <iframe id="htmlPreviewFrame" class="hp-frame" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
+    </div>
   </div>
 </div>
 
@@ -559,49 +565,64 @@ async function loadConv(cid){
 function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('data-theme',window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');else document.documentElement.setAttribute('data-theme',t)}catch(e){}S.theme=t;try{localStorage.setItem('helox-theme',t)}catch(e){}document.querySelectorAll('.t-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-t')===t)})}
 function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'dark'}catch(e){}setTheme(s);try{window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(S.theme==='system')setTheme('system')})}catch(e){}}
 
-/* ========== MARKDOWN (Marked v12 Fix) ========== */
+/* ========== MARKDOWN (Marked v12+ Fix) ========== */
 function initMarked() {
+  // Ensure dependencies are loaded
   if (typeof marked === 'undefined' || typeof hljs === 'undefined') {
     S._mdOk = false;
+    console.warn('Marked or Highlight.js not loaded.');
     return;
   }
   try {
-    marked.setOptions({ breaks: true, gfm: true });
-    
+    // Configure Marked options using v12 API
+    marked.use({
+      breaks: true,  // Enable Github Flavored Markdown line breaks
+      gfm: true      // Enable Github Flavored Markdown
+    });
+
+    // Define custom renderers
     marked.use({
       renderer: {
-        code: function(token) {
-          // Marked v12 passes a token object
-          var text = token.text || '';
+        // Handle Code Blocks
+        code: function(token, options) {
+          // Marked v12 passes a token object: { text, lang, type, ... }
           var lang = token.lang || '';
-          
-          // Validate and highlight
-          var validLang = null;
-          if (lang && typeof hljs.getLanguage === 'function') {
-            try {
-              if (hljs.getLanguage(lang)) {
-                validLang = lang;
-              }
-            } catch (e) {}
+          var text = token.text || '';
+
+          // Validate language for Highlight.js
+          var validLang = '';
+          if (lang && typeof hljs.getLanguage === 'function' && hljs.getLanguage(lang)) {
+            validLang = lang;
           }
-          
-          var highlighted;
+
+          // Perform highlighting
+          var highlighted = '';
           try {
             if (validLang) {
               highlighted = hljs.highlight(text, { language: validLang, ignoreIllegals: true }).value;
             } else if (text.trim()) {
+              // Auto-detect if no specific language is valid
               highlighted = hljs.highlightAuto(text).value;
             } else {
-              highlighted = '';
+              highlighted = esc(text);
             }
           } catch (e) {
             highlighted = esc(text);
           }
-          
+
           var displayLang = validLang || 'plaintext';
+
+          // HTML Preview Button (Only for HTML)
+          var htmlBtn = '';
+          if (lang.toLowerCase() === 'html' || lang.toLowerCase() === 'htm') {
+             htmlBtn = '<button type="button" class="cp-btn" data-action="run-html"><i class="fa-solid fa-play"></i> Run HTML</button>';
+          }
+
+          // Return HTML structure for code block
           return '<div class="code-blk">' +
             '<div class="code-hd">' +
             '<span>' + esc(displayLang) + '</span>' +
+            htmlBtn +
             '<button type="button" class="cp-btn" data-action="copy-code">' +
             '<i class="fa-regular fa-copy"></i> Copy</button>' +
             '</div>' +
@@ -609,69 +630,73 @@ function initMarked() {
             highlighted +
             '</code></pre></div>';
         },
-        
+
+        // Handle Links
         link: function(token) {
-          // Marked v12 token
           var href = token.href || '';
-          var title = token.title || '';
           var text = token.text || '';
-          
-          // URL sanitization - only allow http/https
+          var title = token.title || '';
+
+          // Security: Only allow http/https protocols
           var safeUrl = '#';
           try {
-            var url = new URL(href, location.origin);
+            var url = new URL(href, window.location.origin);
             if (['http:', 'https:'].includes(url.protocol)) {
               safeUrl = href;
             }
-          } catch (e) {}
-          
+          } catch (e) {
+            // Invalid URL structure
+          }
+
           var titleAttr = title ? ' title="' + esc(title) + '"' : '';
-          return '<a href="' + safeUrl + '"' + titleAttr + 
+          return '<a href="' + esc(safeUrl) + '"' + titleAttr +
             ' target="_blank" rel="noopener noreferrer">' + text + '</a>';
         },
-        
+
+        // Handle Images
         image: function(token) {
-          // Marked v12 token
           var href = token.href || '';
           var title = token.title || '';
-          var text = token.text || '';
-          
+          var text = token.text || ''; // This acts as alt text
+
           return '<div class="img-wrap">' +
             '<img src="' + esc(href) + '" alt="' + esc(text || title || 'Image') + '" loading="lazy">' +
             '</div>';
         }
       }
     });
-    
+
     S._mdOk = true;
   } catch (e) {
     console.error('Marked init failed:', e);
     S._mdOk = false;
   }
 }
+
 function md(text) {
   if (!text) return '';
-  
+
   var html = '';
   try {
     if (S._mdOk && typeof marked !== 'undefined') {
       html = marked.parse(text);
     } else {
+      // Fallback if Marked failed to initialize
       html = esc(text).replace(/\n/g, '<br>');
     }
-    
-    // Sanitize with DOMPurify
+
+    // Sanitize HTML to prevent XSS attacks
     if (typeof DOMPurify !== 'undefined') {
       html = DOMPurify.sanitize(html, {
         ALLOWED_TAGS: [
           'p', 'br', 'b', 'i', 'strong', 'em', 'a', 'code', 'pre', 'span',
           'div', 'ul', 'ol', 'li', 'blockquote', 'h1', 'h2', 'h3', 'h4',
           'h5', 'h6', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr',
-          'img', 'button', 'sup', 'sub', 'del', 's'
+          'img', 'button', 'sup', 'sub', 'del', 's', 'iframe' // Added iframe for preview
         ],
         ALLOWED_ATTR: [
           'href', 'target', 'rel', 'class', 'id', 'style', 'title',
-          'alt', 'data-action', 'src', 'loading'
+          'alt', 'data-action', 'src', 'loading', 'sandbox', 'srcdoc'
         ],
         ALLOW_DATA_ATTR: true
       });
@@ -680,10 +705,26 @@ function md(text) {
     console.error('Markdown parse error:', e);
     html = esc(text).replace(/\n/g, '<br>');
   }
-  
+
   return html;
 }
-function applyMath(el){if(typeof renderMathInElement!=='undefined'){try{renderMathInElement(el,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false})}catch(e){}}}
+
+// Apply KaTeX/MathJax rendering to a DOM element
+function applyMath(el){
+  if(typeof renderMathInElement!=='undefined'){
+    try{
+      renderMathInElement(el,{
+        delimiters:[
+          {left:'$$',right:'$$',display:true},
+          {left:'$',right:'$',display:false},
+          {left:'\\(',right:'\\)',display:false},
+          {left:'\\[',right:'\\]',display:true}
+        ],
+        throwOnError:false
+      });
+    }catch(e){}
+  }
+}
 
 /* ========== UI HELPERS ========== */
 function toast(msg,type){
@@ -695,9 +736,18 @@ function toast(msg,type){
 function toggleSB(open){S.sbOpen=typeof open==='boolean'?open:!S.sbOpen;$('sidebar').classList.toggle('open',S.sbOpen);$('sbOv').classList.toggle('on',S.sbOpen);}
 function openLinkModal(url){S.activeLinkUrl=url;$('lmUrlText').textContent=url;$('lmOpenExternal').href=url;$('linkModal').classList.add('on');}
 function closeLinkModal(){$('linkModal').classList.remove('on');S.activeLinkUrl='';}
-function updateLoginDisp(){
-  var el=$('uLl');if(!el)return;if(!S.user){el.style.display='none';return;}
-  try{var ts=localStorage.getItem('helox-last-login');if(ts){var d=new Date(parseInt(ts));el.textContent='Last login: '+d.toLocaleDateString([],{month:'short',day:'numeric'})+', '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});el.style.display='block';}else el.style.display='none';}catch(e){el.style.display='none';}
+
+/* ========== HTML PREVIEW ========== */
+function openHtmlPreview(code){
+  var modal=$('htmlPreviewModal');
+  var frame=$('htmlPreviewFrame');
+  if(!modal||!frame)return;
+  modal.classList.add('on');
+  // Securely inject HTML into the iframe
+  var doc = frame.contentWindow.document;
+  doc.open();
+  doc.write(code);
+  doc.close();
 }
 
 /* ========== REFRESH ALL LOCK/BADGE STATES ========== */
@@ -827,7 +877,17 @@ function addTyping(){
 }
 function rmTyping(){var e=$('typMsg');if(e)e.remove();}
 function checkScrollBtn(){var w=$('msgsWrap');if(!w)return;var d=w.scrollHeight-w.scrollTop-w.clientHeight;if(d>S.scrollThreshold){$('scrollBot').classList.add('vis');S.isAutoScrolling=false;}else{$('scrollBot').classList.remove('vis');S.isAutoScrolling=true;}}
-function scrollBot(force){if(force||S.isAutoScrolling){requestAnimationFrame(function(){var w=$('msgsWrap');if(w){w.scrollTop=w.scrollHeight;S.isAutoScrolling=true;$('scrollBot').classList.remove('vis');}});}}
+function scrollBot(force){
+  if(force||S.isAutoScrolling){
+    requestAnimationFrame(function(){
+      var w=$('msgsWrap');if(w){
+        w.scrollTop=w.scrollHeight;
+        S.isAutoScrolling=true;
+        $('scrollBot').classList.remove('vis');
+      }
+    });
+  }
+}
 
 /* ========== FILE PREVIEW ========== */
 function renderImgPreview(){
@@ -1059,7 +1119,7 @@ function initEvents(){
     this.value='';
   });
 
-  /* ===== DELEGATED CLICKS (code copy, file remove, image preview) ===== */
+  /* ===== DELEGATED CLICKS (code copy, file remove, image preview, HTML Run) ===== */
   document.addEventListener('click',function(e){
     /* Code block copy button */
     var cpBtn=e.target.closest('[data-action="copy-code"]');
@@ -1073,6 +1133,20 @@ function initEvents(){
           cpBtn.classList.add('copied');
           setTimeout(function(){cpBtn.innerHTML='<i class="fa-regular fa-copy"></i> Copy';cpBtn.classList.remove('copied');},2000);
         }).catch(function(){toast('Copy failed','err');});
+      }
+      return;
+    }
+
+    /* Run HTML button */
+    var runBtn = e.target.closest('[data-action="run-html"]');
+    if(runBtn){
+      e.stopPropagation();
+      var blk = runBtn.closest('.code-blk');
+      var codeEl = blk ? blk.querySelector('code') : null;
+      if(codeEl){
+        // Unescape HTML content for preview (strip basic HTML entities if any, though innerText is usually safer from marked)
+        var codeText = codeEl.textContent;
+        openHtmlPreview(codeText);
       }
       return;
     }
@@ -1165,6 +1239,10 @@ function initEvents(){
   $('emOverlay').addEventListener('click',closeEdit);
   $('emSave').addEventListener('click',saveEdit);
 
+  /* HTML Preview Modal */
+  $('closeHtmlPrev').addEventListener('click',function(){$('htmlPreviewModal').classList.remove('on');});
+  $('htmlPreviewModal').addEventListener('click',function(e){if(e.target===$('htmlPreviewModal')){$('htmlPreviewModal').classList.remove('on');}});
+
   /* Chat list: click to load, delete button */
   $('chatList').addEventListener('click',function(e){
     var delBtn=e.target.closest('[data-del-cid]');
@@ -1206,6 +1284,7 @@ function initEvents(){
   document.addEventListener('keydown',function(e){
     if(e.key!=='Escape')return;
     if($('lightbox').classList.contains('on')){closeLB();return;}
+    if($('htmlPreviewModal').classList.contains('on')){$('htmlPreviewModal').classList.remove('on');return;}
     if(S.asOpen){toggleAS(false);return;}
     if(S.vdOpen){toggleVD(false);return;}
     if(S.sbOpen){toggleSB(false);return;}
