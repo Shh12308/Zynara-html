@@ -26,8 +26,40 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--font-display:'Space Grotesk',sans-serif;--font-body:'DM Sans',sans-serif;--radius:14px;--radius-sm:10px;--radius-lg:18px;--radius-xl:24px;--speed:.25s;--speed-slow:.4s;--ease:cubic-bezier(.4,0,.2,1);--ease-out:cubic-bezier(0,0,.2,1);--ease-in:cubic-bezier(.4,0,1,1);--msg-max:680px;--sidebar-w:290px}
+
+/* DEFAULT DARK THEME (Fallback) */
 [data-theme="dark"]{--bg-primary:#08080c;--bg-secondary:#111116;--bg-tertiary:#1a1a22;--bg-quaternary:#22222c;--bg-user-bubble:rgba(16,185,129,.08);--bg-user-bubble-border:rgba(16,185,129,.15);--bg-sidebar:#0c0c10;--bg-input:#14141a;--bg-hover:#1e1e28;--bg-code:#0d0d14;--bg-inline-code:rgba(255,255,255,.06);--text-primary:#eeeef2;--text-secondary:#9494a6;--text-muted:#55556a;--accent:#10b981;--accent-hover:#059669;--accent-dim:rgba(16,185,129,.06);--accent-soft:rgba(16,185,129,.1);--accent-glow:rgba(16,185,129,.15);--border:rgba(255,255,255,.06);--border-active:rgba(16,185,129,.3);--danger:#ef4444;--warning:#f59e0b;--success:#10b981;--shadow-sm:0 1px 3px rgba(0,0,0,.3);--shadow:0 4px 20px rgba(0,0,0,.4);--shadow-lg:0 8px 40px rgba(0,0,0,.5);--glow:0 0 60px rgba(16,185,129,.06)}
+
+/* LIGHT THEME */
 [data-theme="light"]{--bg-primary:#fafafa;--bg-secondary:#f0f0f2;--bg-tertiary:#e6e6ea;--bg-quaternary:#dddde2;--bg-user-bubble:rgba(5,150,105,.06);--bg-user-bubble-border:rgba(5,150,105,.15);--bg-sidebar:#f4f4f6;--bg-input:#f0f0f2;--bg-hover:#e4e4e8;--bg-code:#1e1e2e;--bg-inline-code:rgba(0,0,0,.06);--text-primary:#111114;--text-secondary:#555566;--text-muted:#999aaa;--accent:#059669;--accent-hover:#047857;--accent-dim:rgba(5,150,105,.04);--accent-soft:rgba(5,150,105,.08);--accent-glow:rgba(5,150,105,.1);--border:rgba(0,0,0,.07);--border-active:rgba(5,150,105,.3);--danger:#dc2626;--warning:#d97706;--success:#059669;--shadow-sm:0 1px 3px rgba(0,0,0,.04);--shadow:0 4px 20px rgba(0,0,0,.06);--shadow-lg:0 8px 40px rgba(0,0,0,.08);--glow:none}
+
+/* GOLD THEME */
+[data-theme="gold"]{--bg-primary:#1c1c14;--bg-secondary:#242419;--bg-tertiary:#2e2e23;--bg-quaternary:#3a3a2d;--bg-user-bubble:rgba(197,160,89,.15);--bg-user-bubble-border:rgba(197,160,89,.3);--bg-sidebar:#161610;--bg-input:#22221a;--bg-hover:#2e2e22;--bg-code:#12120e;--bg-inline-code:rgba(197,160,89,.1);--text-primary:#f0e6d2;--text-secondary:#b0a880;--text-muted:#7c7559;--accent:#c5a059;--accent-hover:#d48c2f;--accent-dim:rgba(197,160,89,.15);--accent-soft:rgba(197,160,89,.2);--accent-glow:rgba(197,160,89,.2);--border:rgba(197,160,89,.2);--border-active:rgba(197,160,89,.5);--danger:#e85d5d;--warning:#f59e0b;--success:#10b981}
+
+/* OCEAN THEME */
+[data-theme="ocean"]{--bg-primary:#002b36;--bg-secondary:#073642;--bg-tertiary:#0e4956;--bg-quaternary:#1a5c6e;--bg-user-bubble:rgba(38,139,210,.1);--bg-user-bubble-border:rgba(38,139,210,.2);--bg-sidebar:#00212b;--bg-input:#00334d;--bg-hover:#014256;--bg-code:#001e26;--bg-inline-code:rgba(38,139,210,.1);--text-primary:#839496;--text-secondary:#657b83;--text-muted:#4f5b66;--accent:#2aa198;--accent-hover:#586e75;--accent-dim:rgba(42,161,152,.15);--accent-soft:rgba(42,161,152,.2);--accent-glow:rgba(42,161,152,.2);--border:rgba(88,110,117,.3);--border-active:rgba(42,161,152,.6);--danger:#dc322f;--warning:#b58900;--success:#859900}
+
+/* MIDNIGHT THEME */
+[data-theme="midnight"]{--bg-primary:#0a0e27;--bg-secondary:#0f132f;--bg-tertiary:#181a3c;--bg-quaternary:#24264a;--bg-user-bubble:rgba(127,90,240,.1);--bg-user-bubble-border:rgba(127,90,240,.2);--bg-sidebar:#060816;--bg-input:#0d0f1d;--bg-hover:#161830;--bg-code:#030410;--bg-inline-code:rgba(127,90,240,.1);--text-primary:#b0b8d8;--text-secondary:#7f839c;--text-muted:#515569;--accent:#7f5af0;--accent-hover:#a66cff;--accent-dim:rgba(127,90,240,.15);--accent-soft:rgba(127,90,240,.2);--accent-glow:rgba(127,90,240,.2);--border:rgba(127,90,240,.2);--border-active:rgba(127,90,240,.5);--danger:#ff5555;--warning:#ffb86c;--success:#50fa7b}
+
+/* CYBER THEME */
+[data-theme="cyber"]{--bg-primary:#000000;--bg-secondary:#080808;--bg-tertiary:#101010;--bg-quaternary:#181818;--bg-user-bubble:rgba(0,255,65,.05);--bg-user-bubble-border:rgba(0,255,65,.2);--bg-sidebar:#000000;--bg-input:#050505;--bg-hover:#0a0a0a;--bg-code:#000000;--bg-inline-code:rgba(0,255,65,.1);--text-primary:#e0e0e0;--text-secondary:#909090;--text-muted:#606060;--accent:#00ff41;--accent-hover:#00cc33;--accent-dim:rgba(0,255,65,.15);--accent-soft:rgba(0,255,65,.2);--accent-glow:0 0 20px rgba(0,255,65,.2);--border:rgba(0,255,65,.2);--border-active:#00ff41;--danger:#ff3333;--warning:#ffaa00;--success:#00ff41}
+
+/* FOREST THEME */
+[data-theme="forest"]{--bg-primary:#0d1f12;--bg-secondary:#111c10;--bg-tertiary:#152619;--bg-quaternary:#1c3022;--bg-user-bubble:rgba(76,175,80,.1);--bg-user-bubble-border:rgba(76,175,80,.2);--bg-sidebar:#09140a;--bg-input:#0f2012;--bg-hover:#18261c;--bg-code:#060f09;--bg-inline-code:rgba(76,175,80,.1);--text-primary:#c3e6cb;--text-secondary:#8c9a85;--text-muted:#5e6c5e;--accent:#4caf50;--accent-hover:#66bb6a;--accent-dim:rgba(76,175,80,.15);--accent-soft:rgba(76,175,80,.2);--accent-glow:0 0 30px rgba(76,175,80,.1);--border:rgba(76,175,80,.2);--border-active:rgba(76,175,80,.5);--danger:#e57373;--warning:#f1c40f;--success:#2ecc71}
+
+/* SUNSET THEME */
+[data-theme="sunset"]{--bg-primary:#2d1b2e;--bg-secondary:#3e2739;--bg-tertiary:#4d3346;--bg-quaternary:#5f4359;--bg-user-bubble:rgba(251,133,0,.1);--bg-user-bubble-border:rgba(251,133,0,.2);--bg-sidebar:#220e20;--bg-input:#261c24;--bg-hover:#31262d;--bg-code:#180c12;--bg-inline-code:rgba(251,133,0,.1);--text-primary:#ffeaad;--text-secondary:#dcc5ac;--text-muted:#a89f91;--accent:#fb8500;--accent-hover:#ffa500;--accent-dim:rgba(251,133,0,.15);--accent-soft:rgba(251,133,0,.2);--accent-glow:0 0 30px rgba(251,133,0,.15);--border:rgba(251,133,0,.2);--border-active:rgba(251,133,0,.5);--danger:#ff6b6b;--warning:#ffd700;--success:#ffd700}
+
+/* ARCTIC THEME */
+[data-theme="arctic"]{--bg-primary:#f0f8ff;--bg-secondary:#e6f2ff;--bg-tertiary:#cce0ff;--bg-quaternary:#b3d1ff;--bg-user-bubble:rgba(0,119,190,.1);--bg-user-bubble-border:rgba(0,119,190,.2);--bg-sidebar:#e6efff;--bg-input:#ffffff;--bg-hover:#d8e8ff;--bg-code:#f8fbff;--bg-inline-code:rgba(0,119,190,.1);--text-primary:#1a1a1a;--text-secondary:#4a5568;--text-muted:#718096;--accent:#0077be;--accent-hover:#005a8e;--accent-dim:rgba(0,119,190,.1);--accent-soft:rgba(0,119,190,.15);--accent-glow:0 0 30px rgba(0,119,190,.15);--border:rgba(0,119,190,.2);--border-active:rgba(0,119,190,.5);--danger:#e53e3e;--warning:#f6ad55;--success:#38a169}
+
+/* LAVENDER THEME */
+[data-theme="lavender"]{--bg-primary:#1e1124;--bg-secondary:#25172b;--bg-tertiary:#2e1c36;--bg-quaternary:#3b2347;--bg-user-bubble:rgba(218,112,214,.1);--bg-user-bubble-border:rgba(218,112,214,.2);--bg-sidebar:#160a1c;--bg-input:#201023;--bg-hover:#2d1a31;--bg-code:#12081a;--bg-inline-code:rgba(218,112,214,.1);--text-primary:#ede0de;--text-secondary:#b589c2;--text-muted:#856e86;--accent:#da70d6;--accent-hover:#e890e8;--accent-dim:rgba(218,112,214,.15);--accent-soft:rgba(218,112,214,.2);--accent-glow:0 0 30px rgba(218,112,214,.2);--border:rgba(218,112,214,.2);--border-active:rgba(218,112,214,.5);--danger:#ff6b6b;--warning:#f4d03f;--success:#58d68d}
+
+/* ESPRESSO THEME */
+[data-theme="espresso"]{--bg-primary:#1c1206;--bg-secondary:#261809;--bg-tertiary:#311e0c;--bg-quaternary:#3c240f;--bg-user-bubble:rgba(212,163,104,.1);--bg-user-bubble-border:rgba(212,163,104,.2);--bg-sidebar:#110a04;--bg-input:#1d1208;--bg-hover:#2a1b0d;--bg-code:#0c0803;--bg-inline-code:rgba(212,163,104,.1);--text-primary:#eaddcf;--text-secondary:#c5a672;--text-muted:#8e6b42;--accent:#d4a373;--accent-hover:#e6b36a;--accent-dim:rgba(212,163,104,.15);--accent-soft:rgba(212,163,104,.2);--accent-glow:0 0 30px rgba(212,163,104,.15);--border:rgba(212,163,104,.2);--border-active:rgba(212,163,104,.5);--danger:#e74c3c;--warning:#f39c12;--success:#27ae60}
+
 html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;-webkit-overflow-scrolling:touch;height:100dvh}
 body{font-family:var(--font-body);background:var(--bg-primary);color:var(--text-primary);transition:background var(--speed-slow),color var(--speed-slow);-webkit-font-smoothing:antialiased;display:flex;flex-direction:row;width:100vw;height:100vh;position:relative}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.4;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");background-repeat:repeat;background-size:200px}
@@ -565,7 +597,6 @@ function apiUrl(){
 }
 function authH(){
   var h = {'Content-Type':'application/json'};
-  // Ensure token is fresh
   if(S.user && S.user.token) h['Authorization']='Bearer '+S.user.token;
   else h['x-guest-id']=guestId();
   return h;
@@ -658,7 +689,7 @@ async function loadConv(cid){
   try{var msgs=await loadMsgs(cid);if(msgs&&msgs.length){S.msgs=msgs.map(function(m){return{id:m.id,role:m.role,content:m.content,content_type:m.content_type||'text',media_url:m.media_url||null,images:[],time:new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),liked:false,disliked:false}});S.msgs.forEach(function(m){if(m.role==='assistant')addGal(m.content)});renderAll();}}catch(e){}
 }
 
-/* ========== THEME ========== */
+/* ========== THEME (Fixed CSS Variables) ========== */
 function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('data-theme',window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');else document.documentElement.setAttribute('data-theme',t)}catch(e){}S.theme=t;try{localStorage.setItem('helox-theme',t)}catch(e){}document.querySelectorAll('.t-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-t')===t)})}
 function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'dark'}catch(e){}setTheme(s);try{window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(S.theme==='system')setTheme('system')})}catch(e){}}
 
