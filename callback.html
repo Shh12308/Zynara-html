@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Logging in...</title>
 
 <style>
@@ -17,29 +17,26 @@
   }
 
   body {
-    background-color: var(--bg-primary);
+    background: var(--bg-primary);
     color: var(--text-primary);
-    font-family: 'DM Sans', sans-serif;
+    font-family: sans-serif;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
     height: 100vh;
     margin: 0;
-    overflow: hidden;
   }
 
-  .container {
+  .box {
     text-align: center;
-    max-width: 400px;
     width: 90%;
+    max-width: 420px;
   }
-
-  h1 { margin-bottom: 24px; font-weight: 700; }
 
   .spinner {
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
+    margin: 0 auto 20px;
     border: 4px solid var(--bg-secondary);
     border-top-color: var(--accent);
     border-radius: 50%;
@@ -47,166 +44,130 @@
   }
 
   @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    to { transform: rotate(360deg); }
   }
 
   #status {
-    font-size: 1.1rem;
     color: var(--text-secondary);
-    margin-bottom: 20px;
+    margin-bottom: 18px;
   }
 
   #error {
     display: none;
     background: var(--bg-secondary);
     border: 1px solid var(--error);
+    padding: 14px;
+    border-radius: var(--radius);
     color: #ff6b6b;
-    padding: 16px;
-    border-radius: var(--radius);
-    font-size: 0.95rem;
-    line-height: 1.5;
-    margin-bottom: 20px;
   }
 
-  button#retry {
-    background-color: var(--accent);
-    color: white;
+  button {
+    margin-top: 12px;
+    padding: 10px 18px;
     border: none;
-    padding: 12px 24px;
     border-radius: var(--radius);
-    font-weight: 600;
+    background: var(--accent);
+    color: white;
     cursor: pointer;
-  }
-
-  button#retry:hover {
-    opacity: 0.9;
   }
 </style>
 </head>
 
 <body>
-  <div class="container">
-    <h1>HeloxAi</h1>
 
-    <div class="spinner" id="spinner"></div>
-    <div id="status">Verifying your login...</div>
+<div class="box">
+  <div class="spinner" id="spinner"></div>
+  <div id="status">Completing login...</div>
 
-    <div id="error">
-      <strong>Authentication Failed</strong>
-      <p id="error-message">Something went wrong.</p>
-      <button id="retry">Try Again</button>
-    </div>
+  <div id="error">
+    <div id="error-msg">Login failed</div>
+    <button onclick="location.reload()">Try Again</button>
   </div>
+</div>
 
-  <script src="env.js"></script>
+<script src="env.js"></script>
 
-  <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-    const supabaseUrl = window.__ENV__?.SUPABASE_URL || "";
-    const supabaseKey = window.__ENV__?.SUPABASE_ANON_KEY || "";
+const statusEl = document.getElementById("status");
+const errorEl = document.getElementById("error");
+const errorMsg = document.getElementById("error-msg");
+const spinner = document.getElementById("spinner");
 
-    const statusEl = document.getElementById("status");
-    const errorEl = document.getElementById("error");
-    const errorMsgEl = document.getElementById("error-message");
-    const spinnerEl = document.getElementById("spinner");
-    const retryBtn = document.getElementById("retry");
+const supabaseUrl = window.__ENV__?.SUPABASE_URL;
+const supabaseKey = window.__ENV__?.SUPABASE_ANON_KEY;
 
-    retryBtn.onclick = () => location.reload();
+function showError(msg) {
+  spinner.style.display = "none";
+  statusEl.style.display = "none";
+  errorEl.style.display = "block";
+  errorMsg.textContent = msg;
+}
 
-    let safetyTimer = setTimeout(() => {
-      showError("Login timed out. Please try again.");
-    }, 8000);
+if (!supabaseUrl || !supabaseKey) {
+  showError("Missing Supabase environment config.");
+  throw new Error("Missing env");
+}
 
-    function stopTimer() {
-      clearTimeout(safetyTimer);
+const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storage: localStorage
+  }
+});
+
+async function run() {
+  try {
+    statusEl.textContent = "Checking session...";
+
+    // ✅ SAFE METHOD (no PKCE crash)
+    const { data, error } = await supabase.auth.getSession();
+
+    if (error) throw error;
+
+    const session = data?.session;
+    const user = session?.user;
+
+    if (!session || !user) {
+      showError("No active session found. Please log in again.");
+      return;
     }
 
-    function showError(msg, errObj) {
-      console.error(errObj || msg);
+    statusEl.textContent = "Checking account...";
 
-      spinnerEl.style.display = "none";
-      statusEl.style.display = "none"; // ✅ FIXED
-
-      errorEl.style.display = "block";
-      errorMsgEl.textContent = msg + (errObj?.message ? ` (${errObj.message})` : "");
-    }
-
-    let sb;
-
+    // Optional ban check (safe)
     try {
-      if (!supabaseUrl || !supabaseKey) {
-        throw new Error("Missing Supabase env variables");
+      const { data: profile } = await supabase
+        .from("users")
+        .select("is_banned")
+        .eq("id", user.id)
+        .single();
+
+      if (profile?.is_banned) {
+        showError("Account suspended.");
+        return;
       }
-
-      sb = createClient(supabaseUrl, supabaseKey, {
-        auth: {
-          storage: localStorage,
-          persistSession: true,
-          autoRefreshToken: true,
-          detectSessionInUrl: true
-        }
-      });
-
     } catch (e) {
-      showError("Failed to initialize auth client.", e);
+      console.warn("Ban check skipped:", e);
     }
 
-    async function run() {
-      try {
-        statusEl.textContent = "Completing login...";
+    statusEl.textContent = "Success! Redirecting...";
 
-        // ✅ Correct Supabase OAuth callback handling
-        const { data, error } = await sb.auth.exchangeCodeForSession(window.location.href);
+    setTimeout(() => {
+      window.location.href = "/index.html";
+    }, 700);
 
-        if (error) throw error;
+  } catch (e) {
+    console.error(e);
+    showError("Login failed. Please try again.");
+  }
+}
 
-        const session = data?.session;
-        const user = data?.user;
+run();
+</script>
 
-        if (!session || !user) {
-          showError("Session missing or expired.");
-          return;
-        }
-
-        statusEl.textContent = "Checking account...";
-
-        let isBanned = false;
-
-        try {
-          const { data: profile } = await sb
-            .from("users")
-            .select("is_banned")
-            .eq("id", user.id)
-            .single();
-
-          if (profile?.is_banned) isBanned = true;
-
-        } catch (err) {
-          console.warn("Ban check skipped:", err);
-        }
-
-        if (isBanned) {
-          throw new Error("Account suspended");
-        }
-
-        stopTimer();
-
-        spinnerEl.style.display = "none";
-        statusEl.textContent = "Success! Redirecting...";
-
-        setTimeout(() => {
-          window.location.href = "/index.html";
-        }, 600);
-
-      } catch (e) {
-        stopTimer();
-        showError("Login failed.", e);
-      }
-    }
-
-    run();
-  </script>
 </body>
 </html>
