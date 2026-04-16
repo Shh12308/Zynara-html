@@ -122,7 +122,7 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 .default-icon{background:var(--bg-quaternary);color:var(--accent)}
 
 /* Messages - SCROLL FIX */
-.msgs-wrap{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;display:flex;flex-direction:column;min-height:0;scroll-behavior:auto} /* Removed overscroll-behavior: contain */
+.msgs-wrap{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;display:flex;flex-direction:column;min-height:0;scroll-behavior:auto}
 .msgs-inner{max-width:var(--msg-max);margin:0 auto;padding:24px 24px 8px;width:100%;flex:1;min-height:0}
 
 /* Welcome Screen */
@@ -540,7 +540,7 @@ var S = {
   theme:'dark', sbOpen:false, asOpen:false, vdOpen:false, mdOpen:false,
   recording:false, recorder:null, chunks:[], audio:null, gallery:[], view:'chat',
   _mdOk:false, pendingFiles:[], model:'helox',
-  isAutoScrolling:true, scrollThreshold:300, selectedVoice:'alloy', // Increased threshold for smoother feel
+  isAutoScrolling:true, scrollThreshold:300, selectedVoice:'alloy',
   activeLinkUrl:'', editingIndex:null, editingFiles:[]
 };
 
@@ -619,7 +619,6 @@ function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'da
 function initMarked() {
   if (typeof marked === 'undefined') {
     S._mdOk = false;
-    console.warn('Marked not loaded.');
     return;
   }
   try {
@@ -630,28 +629,38 @@ function initMarked() {
 
     marked.use({
       renderer: {
-        // Correct signature: function(code, language)
-        code: function(code, lang) {
+        // FIX: Updated signature for Marked v12+ (code, infostring)
+        // and safer logic for highlight.js integration
+        code: function(code, infostring) {
           var text = code || '';
-          var language = lang || '';
+          // Extract only the first word as the language (e.g., "js" from "js line-numbers")
+          var langArr = (infostring || '').trim().split(/\s+/);
+          var language = langArr[0] || '';
 
           var validLang = '';
-          if (language && typeof hljs.getLanguage === 'function' && hljs.getLanguage(language)) {
-            validLang = language;
+          if (typeof hljs !== 'undefined' && typeof hljs.getLanguage === 'function') {
+            if (language && hljs.getLanguage(language)) {
+              validLang = language;
+            }
           }
 
           var highlighted = '';
           try {
-            if (validLang) {
-              highlighted = hljs.highlight(text, { language: validLang, ignoreIllegals: true }).value;
+            if (typeof hljs !== 'undefined') {
+              if (validLang) {
+                highlighted = hljs.highlight(text, { language: validLang, ignoreIllegals: true }).value;
+              } else {
+                var result = hljs.highlightAuto(text);
+                highlighted = result.value;
+              }
+              if (!highlighted || typeof highlighted !== 'string') {
+                  highlighted = esc(text);
+              }
             } else {
-              var result = hljs.highlightAuto(text);
-              highlighted = result.value;
-            }
-            if (!highlighted || typeof highlighted !== 'string' || highlighted.trim() === '') {
-                highlighted = hljs.highlight(text, { language: 'plaintext', ignoreIllegals: true }).value;
+                highlighted = esc(text);
             }
           } catch (e) {
+            // Catch internal hljs errors to prevent crash
             highlighted = esc(text);
           }
 
@@ -661,7 +670,7 @@ function initMarked() {
           if (validLang.toLowerCase() === 'html') {
              btnsHtml = '<button type="button" class="cp-btn" data-action="run-html" style="margin-right:5px;"><i class="fa-solid fa-play"></i> Run</button>';
           }
-          
+
           btnsHtml += '<button type="button" class="cp-btn" data-action="copy-code"><i class="fa-regular fa-copy"></i> Copy</button>';
 
           return '<div class="code-blk">' +
@@ -674,7 +683,7 @@ function initMarked() {
             '</code></pre></div>';
         },
 
-        // Correct signature: function(href, title, text)
+        // FIX: Updated signature for Marked v12+ (href, title, text)
         link: function(href, title, text) {
           var safeUrl = '#';
           try {
@@ -689,7 +698,7 @@ function initMarked() {
             ' target="_blank" rel="noopener noreferrer">' + (text || esc(safeUrl)) + '</a>';
         },
 
-        // Correct signature: function(href, title, text)
+        // FIX: Updated signature for Marked v12+ (href, title, text)
         image: function(href, title, text) {
           return '<div class="img-wrap">' +
             '<img src="' + esc(href) + '" alt="' + esc(text || title || 'Image') + '" loading="lazy">' +
@@ -905,7 +914,6 @@ function updateLastAI(content){
   var w=$('msgsWrap');
   if(w){
     var dist = w.scrollHeight - w.scrollTop - w.clientHeight;
-    // Auto scroll if user is near bottom (within 300px) or already auto-scrolling
     if(S.isAutoScrolling || dist < S.scrollThreshold){
       scrollBot(true);
     } else {
@@ -1040,7 +1048,6 @@ async function sendMsg(text){
   S.msgs.push(msg);saveMsg({role:'user',content:t||'[Image/File attached]',metadata:{has_images:imgs.length>0}});
   clearPending();$('cbInput').value='';autoH($('cbInput'));updateCB();
   
-  // Force scroll to bottom immediately
   S.isAutoScrolling = true;
   scrollBot(true);
   renderAll();
