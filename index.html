@@ -121,8 +121,8 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 .z-icon{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff}
 .default-icon{background:var(--bg-quaternary);color:var(--accent)}
 
-/* Messages */
-.msgs-wrap{flex:1;overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth;position:relative;display:flex;flex-direction:column;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;min-height:0}
+/* Messages - SCROLL FIX */
+.msgs-wrap{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;display:flex;flex-direction:column;min-height:0;scroll-behavior:auto} /* Removed overscroll-behavior: contain */
 .msgs-inner{max-width:var(--msg-max);margin:0 auto;padding:24px 24px 8px;width:100%;flex:1;min-height:0}
 
 /* Welcome Screen */
@@ -264,6 +264,7 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 .file-indicator .fi-rm{background:none;border:none;color:var(--text-muted);cursor:pointer;padding:2px 4px;border-radius:4px;font-size:11px;transition:color var(--speed);touch-action:manipulation}
 .file-indicator .fi-rm:hover{color:var(--danger)}
 
+/* Scroll Button */
 .scroll-bot{position:absolute;bottom:90px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--bg-secondary);border:1px solid var(--border);color:var(--text-secondary);width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;opacity:0;pointer-events:none;transition:all .3s var(--ease);box-shadow:var(--shadow);z-index:5;touch-action:manipulation}
 .scroll-bot.vis{opacity:1;pointer-events:all;transform:translateX(-50%) translateY(0)}
 .scroll-bot:hover{background:var(--bg-hover);color:var(--text-primary);border-color:var(--border-active)}
@@ -505,7 +506,7 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 </div>
 
 <div class="toast-ct" id="toastCt"></div>
-<script src="env.js"></script>
+
 <script>
 /* ========== ENV FALLBACK ========== */
 if (typeof window.__ENV__ === 'undefined') {
@@ -539,7 +540,7 @@ var S = {
   theme:'dark', sbOpen:false, asOpen:false, vdOpen:false, mdOpen:false,
   recording:false, recorder:null, chunks:[], audio:null, gallery:[], view:'chat',
   _mdOk:false, pendingFiles:[], model:'helox',
-  isAutoScrolling:true, scrollThreshold:100, selectedVoice:'alloy',
+  isAutoScrolling:true, scrollThreshold:300, selectedVoice:'alloy', // Increased threshold for smoother feel
   activeLinkUrl:'', editingIndex:null, editingFiles:[]
 };
 
@@ -614,11 +615,11 @@ async function loadConv(cid){
 function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('data-theme',window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');else document.documentElement.setAttribute('data-theme',t)}catch(e){}S.theme=t;try{localStorage.setItem('helox-theme',t)}catch(e){}document.querySelectorAll('.t-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-t')===t)})}
 function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'dark'}catch(e){}setTheme(s);try{window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(S.theme==='system')setTheme('system')})}catch(e){}}
 
-/* ========== MARKDOWN (Updated & Fixed) ========== */
+/* ========== MARKDOWN (Fixed Function Signatures) ========== */
 function initMarked() {
-  if (typeof marked === 'undefined' || typeof hljs === 'undefined') {
+  if (typeof marked === 'undefined') {
     S._mdOk = false;
-    console.warn('Marked or Highlight.js not loaded.');
+    console.warn('Marked not loaded.');
     return;
   }
   try {
@@ -629,17 +630,16 @@ function initMarked() {
 
     marked.use({
       renderer: {
-        code: function(token) {
-          var lang = token.lang || '';
-          var text = token.text || '';
+        // Correct signature: function(code, language)
+        code: function(code, lang) {
+          var text = code || '';
+          var language = lang || '';
 
-          // Validate language
           var validLang = '';
-          if (lang && typeof hljs.getLanguage === 'function' && hljs.getLanguage(lang)) {
-            validLang = lang;
+          if (language && typeof hljs.getLanguage === 'function' && hljs.getLanguage(language)) {
+            validLang = language;
           }
 
-          // Highlight
           var highlighted = '';
           try {
             if (validLang) {
@@ -657,15 +657,11 @@ function initMarked() {
 
           var displayLang = validLang || 'plaintext';
 
-          // Buttons HTML
           var btnsHtml = '';
-          
-          // Run HTML Button for HTML lang
           if (validLang.toLowerCase() === 'html') {
              btnsHtml = '<button type="button" class="cp-btn" data-action="run-html" style="margin-right:5px;"><i class="fa-solid fa-play"></i> Run</button>';
           }
           
-          // Copy Code Button
           btnsHtml += '<button type="button" class="cp-btn" data-action="copy-code"><i class="fa-regular fa-copy"></i> Copy</button>';
 
           return '<div class="code-blk">' +
@@ -678,11 +674,8 @@ function initMarked() {
             '</code></pre></div>';
         },
 
-        link: function(token) {
-          var href = token.href || '';
-          var text = token.text || '';
-          var title = token.title || '';
-
+        // Correct signature: function(href, title, text)
+        link: function(href, title, text) {
           var safeUrl = '#';
           try {
             var url = new URL(href, window.location.origin);
@@ -693,14 +686,11 @@ function initMarked() {
 
           var titleAttr = title ? ' title="' + esc(title) + '"' : '';
           return '<a href="' + esc(safeUrl) + '"' + titleAttr +
-            ' target="_blank" rel="noopener noreferrer">' + text + '</a>';
+            ' target="_blank" rel="noopener noreferrer">' + (text || esc(safeUrl)) + '</a>';
         },
 
-        image: function(token) {
-          var href = token.href || '';
-          var title = token.title || '';
-          var text = token.text || '';
-
+        // Correct signature: function(href, title, text)
+        image: function(href, title, text) {
           return '<div class="img-wrap">' +
             '<img src="' + esc(href) + '" alt="' + esc(text || title || 'Image') + '" loading="lazy">' +
             '</div>';
@@ -904,22 +894,46 @@ function renderAll(){
     }
   });
   
-  if(S.isAutoScrolling)scrollBot(false);
+  if(S.isAutoScrolling)scrollBot(true);
 }
 
 function updateLastAI(content){
   var i=S.msgs.length-1;if(i<0||S.msgs[i].role!=='assistant')return;
   S.msgs[i].content=content;var el=$('mc-'+i);
   if(el){el.innerHTML=md(content);applyMath(el);}
-  if(S.isAutoScrolling)scrollBot(false);else checkScrollBtn();
+  
+  var w=$('msgsWrap');
+  if(w){
+    var dist = w.scrollHeight - w.scrollTop - w.clientHeight;
+    // Auto scroll if user is near bottom (within 300px) or already auto-scrolling
+    if(S.isAutoScrolling || dist < S.scrollThreshold){
+      scrollBot(true);
+    } else {
+      checkScrollBtn();
+    }
+  }
 }
+
 function addTyping(){
   var d=document.createElement('div');d.className='msg ai-msg';d.id='typMsg';
   d.innerHTML='<div class="msg-inner"><div class="msg-label"><span class="ai-dot"></span> AI</div><div class="typing-wrap"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>';
-  $('msgsEl').appendChild(d);if(S.isAutoScrolling)scrollBot(false);
+  $('msgsEl').appendChild(d);if(S.isAutoScrolling)scrollBot(true);
 }
 function rmTyping(){var e=$('typMsg');if(e)e.remove();}
-function checkScrollBtn(){var w=$('msgsWrap');if(!w)return;var d=w.scrollHeight-w.scrollTop-w.clientHeight;if(d>S.scrollThreshold){$('scrollBot').classList.add('vis');S.isAutoScrolling=false;}else{$('scrollBot').classList.remove('vis');S.isAutoScrolling=true;}}
+
+function checkScrollBtn(){
+  var w=$('msgsWrap');
+  if(!w)return;
+  var dist = w.scrollHeight - w.scrollTop - w.clientHeight;
+  if(dist < S.scrollThreshold){
+    S.isAutoScrolling = true;
+    $('scrollBot').classList.remove('vis');
+  } else {
+    S.isAutoScrolling = false;
+    $('scrollBot').classList.add('vis');
+  }
+}
+
 function scrollBot(force){
   if(force||S.isAutoScrolling){
     requestAnimationFrame(function(){
@@ -1024,7 +1038,13 @@ async function sendMsg(text){
   var files=S.pendingFiles.filter(function(f){return f.type!=='image';});
   var msg={id:uid(),role:'user',content:t,images:imgs,time:now()};
   S.msgs.push(msg);saveMsg({role:'user',content:t||'[Image/File attached]',metadata:{has_images:imgs.length>0}});
-  clearPending();$('cbInput').value='';autoH($('cbInput'));updateCB();renderAll();
+  clearPending();$('cbInput').value='';autoH($('cbInput'));updateCB();
+  
+  // Force scroll to bottom immediately
+  S.isAutoScrolling = true;
+  scrollBot(true);
+  renderAll();
+  
   if(imgs.length||files.length){
     sendWithFiles(t,imgs.map(function(img){var f=dataUrlToFile(img.dataUrl,img.name);return f?{type:'image',dataUrl:img.dataUrl,name:img.name,file:f}:null;}).filter(Boolean),files);
   }else{sendToAI(t);}
