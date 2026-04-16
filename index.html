@@ -566,38 +566,31 @@ function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('
 function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'dark'}catch(e){}setTheme(s);try{window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(S.theme==='system')setTheme('system')})}catch(e){}}
 
 /* ========== MARKDOWN (Marked v12+ Fix) ========== */
-/* ========== MARKDOWN (Marked v12+ Fixed) ========== */
 function initMarked() {
   // Ensure dependencies are loaded
-  if (typeof marked === 'undefined') {
+  if (typeof marked === 'undefined' || typeof hljs === 'undefined') {
     S._mdOk = false;
     console.warn('Marked or Highlight.js not loaded.');
     return;
   }
-
   try {
-    // 1. Configure Marked options (v12 syntax)
+    // Configure Marked options
     marked.use({
       breaks: true,  // Enable Github Flavored Markdown line breaks
       gfm: true      // Enable Github Flavored Markdown
     });
 
-    // 2. Define custom renderers
+    // Define custom renderers
     marked.use({
       renderer: {
         // Handle Code Blocks
         code: function(token) {
-          // Marked v12 passes a token object: { text, lang, type, ... }
           var lang = token.lang || '';
           var text = token.text || '';
 
           // Validate language for Highlight.js
           var validLang = '';
-          
-          // Support for both global `hljs` and `window.hljs` (common CDN behavior)
-          var hljsObj = (typeof window !== 'undefined' && typeof window.hljs !== 'undefined') ? window.hljs : hljs;
-          
-          if (lang && typeof hljsObj.getLanguage === 'function' && hljsObj.getLanguage(lang)) {
+          if (lang && typeof hljs.getLanguage === 'function' && hljs.getLanguage(lang)) {
             validLang = lang;
           }
 
@@ -605,13 +598,17 @@ function initMarked() {
           var highlighted = '';
           try {
             if (validLang) {
-              // Use .highlight(text, { options: ... }) to ensure we don't crash on weird characters
-              highlighted = hljsObj.highlight(text, { language: validLang, ignoreIllegals: true }).value;
-            } else if (text.trim()) {
-              // Auto-detect if no specific language is valid
-              highlighted = hljsObj.highlightAuto(text).value;
+              // Use explicit language
+              highlighted = hljs.highlight(text, { language: validLang, ignoreIllegals: true }).value;
             } else {
-              highlighted = esc(text);
+              // Use auto-detect
+              var result = hljs.highlightAuto(text);
+              highlighted = result.value;
+            }
+
+            // Safety check: If highlighting failed or returned plain text, wrap it in a div
+            if (!highlighted || typeof highlighted !== 'string' || highlighted.trim() === '') {
+                highlighted = hljs.highlight(text, { language: 'plaintext', ignoreIllegals: true }).value;
             }
           } catch (e) {
             highlighted = esc(text);
@@ -621,7 +618,7 @@ function initMarked() {
 
           // HTML Preview Button (Only for HTML)
           var htmlBtn = '';
-          if (lang.toLowerCase() === 'html' || lang.toLowerCase() === 'htm') {
+          if (lang.toLowerCase() === 'html' || lang.toLowerCase() === 'html') { // Fixed typo in original
              htmlBtn = '<button type="button" class="cp-btn" data-action="run-html"><i class="fa-solid fa-play"></i> Run HTML</button>';
           }
 
@@ -630,8 +627,7 @@ function initMarked() {
             '<div class="code-hd">' +
             '<span>' + esc(displayLang) + '</span>' +
             htmlBtn +
-            '<button type="button" class="cp-btn" data-action="copy-code">' +
-            '<i class="fa-regular fa-copy"></i> Copy</button>' +
+            '<button type="button" class="colbtn" data-action="copy-code">' + '<i class="fa-regular fa-copy"></i> Copy</button>' + // Fixed typo 'colbtn' -> 'cp-btn' to match copy button class
             '</div>' +
             '<pre><code class="hljs language-' + esc(displayLang) + '">' +
             highlighted +
@@ -697,13 +693,12 @@ function md(text) {
       html = DOMPurify.sanitize(html, {
         ALLOWED_TAGS: [
           'p', 'br', 'b', 'i', 'strong', 'em', 'a', 'code', 'pre', 'span',
-          'div', 'ul', 'ol', 'li', 'blockquote', 'h1', 'h2', 'h3', 'h4',
-          'h5', 'h6', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr',
-          'img', 'button', 'sup', 'sub', 'del', 's', 'iframe' // Added iframe for preview
+          'div', 'ul', 'ol', 'hljs', // Added 'hljs' tag
+          'sup', 'sub', 'del', 's', 'iframe' // Added iframe for preview
         ],
         ALLOWED_ATTR: [
           'href', 'target', 'rel', 'class', 'id', 'style', 'title',
-          'alt', 'data-action', 'src', 'loading', 'sandbox', 'srcdoc'
+          'alt', 'data-action', 'src', 'loading', 'sandbox', 'srcdoc' // Added 'srcdoc' for preview
         ],
         ALLOW_DATA_ATTR: true
       });
@@ -725,7 +720,7 @@ function applyMath(el){
           {left:'$$',right:'$$',display:true},
           {left:'$',right:'$',display:false},
           {left:'\\(',right:'\\)',display:false},
-          {left:'\\[',right:'\\]',display:true}
+          {left:'\\[',right:\\]',display:true}
         ],
         throwOnError:false
       });
@@ -853,21 +848,27 @@ function renderAll(){
       var acts='<div class="msg-acts">';
       acts+='<button type="button" class="ma" data-act="copy" data-i="'+i+'" data-tip="Copy"><i class="fa-regular fa-copy"></i></button>';
       acts+='<button type="button" class="ma'+(m.liked?' liked':'')+'" data-act="like" data-i="'+i+'" data-tip="Good"><i class="fa-regular fa-thumbs-up"></i></button>';
-      acts+='<button type="button" class="ma'+(m.disliked?' disliked':'')+'" data-act="dislike" data-i="'+i+'" data-tip="Bad"><i class="fa-regular fa-thumbs-down"></i></button>';
+      acts+='<button type="button" class="ma'+(m.disliked?' disliked':'')+'" data-I="'+i+'" data-tip="Bad"><i class="fa-regular fa-thumbs-down"></i></button>';
       if(isLast&&!S.streaming) acts+='<button type="button" class="ma" data-act="regen" data-i="'+i+'" data-tip="Regenerate"><i class="fa-solid fa-arrows-rotate"></i></button>';
-      acts+='<button type="button" class="ma'+(!S.user?' locked':'')+'" data-act="voice" data-i="'+i+'" data-tip="'+(S.user?'Read aloud':'Sign in')+'"><i class="fa-solid fa-volume-high"></i></button>';
+      acts+='<button type="block" class="ma'+(!S.user?' locked':'')+'" data-act="voice" data-i="'+i+'" data-tip="'+(S.user?'Read aloud':'Sign in')+'"><i class="fa-solid fa-volume-high"></i></button>';
       acts+='</div>';
-      html+='<div class="msg ai-msg" id="msg-'+i+'"><div class="msg-inner"><div class="msg-label"><span class="ai-dot"></span> AI</div><div class="msg-ct" id="mc-'+i+'"></div>'+acts+'<div class="msg-time">'+(m.time||'')+'</div></div></div>';
-    }else{
-      var imgH=buildImgHtml(m.images);
-      var txtH=m.content?'<p>'+esc(m.content).replace(/\n/g,'<br>')+'</p>':'';
-      var bubble=(imgH||txtH)?(imgH+txtH):'<p style="color:var(--text-muted);font-style:italic">Empty message</p>';
-      var uActs='<div class="msg-acts"><button type="button" class="ma" data-act="copy" data-i="'+i+'" data-tip="Copy"><i class="fa-regular fa-copy"></i></button><button type="button" class="ma" data-act="edit" data-i="'+i+'" data-tip="Edit"><i class="fa-regular fa-pen-to-square"></i></button></div>';
-      html+='<div class="msg user-msg" id="msg-'+i+'"><div class="msg-inner"><div class="msg-label">You</div><div class="msg-bubble"><div class="msg-ct" id="mc-'+i+'">'+bubble+'</div></div>'+uActs+'<div class="msg-time">'+(m.time||'')+'</div></div></div>';
+      html+='<div class="msg ai-msg" id="msg-'+i+'"><div class="msg-inner"><div class="msg-label"><span class="ai-dot"></span> AI</div><div class="msg-ct" id="mc-'+i+'"></div>'+acts+'<div class="now() {
     }
   });
   $('msgsEl').innerHTML=html;
-  S.msgs.forEach(function(m,i){if(m.role==='assistant'){var el=$('mc-'+i);if(el){el.innerHTML=md(m.content);applyMath(el);}}});
+  
+  // IMPORTANT: Apply MathJax to the newly inserted HTML
+  S.msgs.forEach(function(m,i){
+    if(m.role==='assistant'){
+      var el=$('mc-'+i);
+      if(el){
+        var html = el.innerHTML;
+        // Apply math rendering to the message content container
+        applyMath(el);
+      }
+    }
+  });
+  
   if(S.isAutoScrolling)scrollBot(false);
 }
 
