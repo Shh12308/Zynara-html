@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Logging in...</title>
+
 <style>
   :root {
     --bg-primary: #08080c;
@@ -14,6 +15,7 @@
     --error: #ef4444;
     --radius: 12px;
   }
+
   body {
     background-color: var(--bg-primary);
     color: var(--text-primary);
@@ -26,32 +28,47 @@
     margin: 0;
     overflow: hidden;
   }
+
   .container {
     text-align: center;
     max-width: 400px;
     width: 90%;
   }
+
   h1 { margin-bottom: 24px; font-weight: 700; }
+
   .spinner {
-    width: 40px; height: 40px;
+    width: 40px;
+    height: 40px;
     border: 4px solid var(--bg-secondary);
     border-top-color: var(--accent);
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
-  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-  #status { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 20px; }
-  #error { 
-    display: none; 
-    background: var(--bg-secondary); 
-    border: 1px solid var(--error); 
-    color: #ff6b6b; 
-    padding: 16px; 
-    border-radius: var(--radius); 
-    font-size: 0.95rem; 
-    line-height:1.5;
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  #status {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
     margin-bottom: 20px;
   }
+
+  #error {
+    display: none;
+    background: var(--bg-secondary);
+    border: 1px solid var(--error);
+    color: #ff6b6b;
+    padding: 16px;
+    border-radius: var(--radius);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+
   button#retry {
     background-color: var(--accent);
     color: white;
@@ -60,20 +77,21 @@
     border-radius: var(--radius);
     font-weight: 600;
     cursor: pointer;
-    transition: opacity 0.2s;
   }
-  button#retry:hover { opacity: 0.9; }
+
+  button#retry:hover {
+    opacity: 0.9;
+  }
 </style>
 </head>
-<body>
 
+<body>
   <div class="container">
     <h1>HeloxAi</h1>
-    
+
     <div class="spinner" id="spinner"></div>
-    
     <div id="status">Verifying your login...</div>
-    
+
     <div id="error">
       <strong>Authentication Failed</strong>
       <p id="error-message">Something went wrong.</p>
@@ -81,136 +99,114 @@
     </div>
   </div>
 
-  <!-- PROVIDED ENV CONFIGURATION -->
   <script src="env.js"></script>
-  
+
   <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-    // Access env variables set by script tag above
-    const supabaseUrl = window.__ENV__?.SUPABASE_URL || '';
-    const supabaseKey = window.__ENV__?.SUPABASE_ANON_KEY || '';
+    const supabaseUrl = window.__ENV__?.SUPABASE_URL || "";
+    const supabaseKey = window.__ENV__?.SUPABASE_ANON_KEY || "";
 
-    // DOM Elements
     const statusEl = document.getElementById("status");
     const errorEl = document.getElementById("error");
     const errorMsgEl = document.getElementById("error-message");
     const spinnerEl = document.getElementById("spinner");
     const retryBtn = document.getElementById("retry");
 
-    // Initialize retry button
     retryBtn.onclick = () => location.reload();
 
-    // Safety Timeout: If we are still spinning after 5 seconds, force an error state
-    const safetyTimer = setTimeout(() => {
-      if (spinnerEl.style.display !== 'none') {
-        console.warn("Safety timeout triggered: Process took too long.");
-        showError("Login timed out. Please check your connection or try again.", null);
-      }
-    }, 5000);
+    let safetyTimer = setTimeout(() => {
+      showError("Login timed out. Please try again.");
+    }, 8000);
 
-    // Error Handling Helper
+    function stopTimer() {
+      clearTimeout(safetyTimer);
+    }
+
     function showError(msg, errObj) {
-      console.error(errObj || msg); // Log to console
-      spinnerEl.style.display = 'none';
-      statusEl.style.style.display = 'none';
-      errorEl.style.display = 'block';
-      errorMsgEl.textContent = msg + (errObj ? ` (${errObj.message})` : '');
-      retryBtn.style.display = 'inline-block';
+      console.error(errObj || msg);
+
+      spinnerEl.style.display = "none";
+      statusEl.style.display = "none"; // ✅ FIXED
+
+      errorEl.style.display = "block";
+      errorMsgEl.textContent = msg + (errObj?.message ? ` (${errObj.message})` : "");
     }
 
-    // Initialize Supabase
     let sb;
-    console.log("Initializing Supabase Client...");
+
     try {
-      if (supabaseUrl && supabaseKey) {
-        sb = createClient(supabaseUrl, supabaseKey, {
-          auth: {
-            storage: window.localStorage,
-            persistSession: true,
-            autoRefreshToken: true,
-            detectSessionInUrl: true // CRITICAL for OAuth callbacks
-          }
-        });
-        console.log("Supabase Client created successfully.");
-      } else {
-        console.error("Configuration missing (env.js or keys).", window.__ENV__);
-        showError("Missing configuration. Please ensure env.js is loaded correctly.", null);
-        return;
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error("Missing Supabase env variables");
       }
+
+      sb = createClient(supabaseUrl, supabaseKey, {
+        auth: {
+          storage: localStorage,
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true
+        }
+      });
+
     } catch (e) {
-      console.error("Failed to initialize Supabase:", e);
       showError("Failed to initialize auth client.", e);
-      return;
     }
 
-    // Main Auth Flow
     async function run() {
-      console.log("Starting auth process...");
       try {
-        // 1. Clean URL hash
-        // NOTE: exchangeCodeForSession handles the hash extraction internally, but cleaning the main URL is good practice
-        if (window.location.hash) {
-           const cleanUrl = window.location.href.split('#')[0];
-           // We don't replace state to avoid infinite loops if this page reloads with a hash
-           console.log("Detected hash, but relying on exchangeCodeForSession to process it.");
-        }
+        statusEl.textContent = "Completing login...";
 
-        // 2. Call Supabase
-        console.log("Calling exchangeCodeForSession...");
+        // ✅ Correct Supabase OAuth callback handling
         const { data, error } = await sb.auth.exchangeCodeForSession(window.location.href);
 
-        if (error) {
-          console.error("Supabase Error:", error);
-          throw new Error(error.message);
-        }
+        if (error) throw error;
 
-        const { session, user } = data;
-
-        console.log("Raw Session Data:", session);
-        console.log("Raw User Data:", user);
+        const session = data?.session;
+        const user = data?.user;
 
         if (!session || !user) {
-          console.warn("Session or User is missing.");
-          showError("Login incomplete. The session may have expired.", null);
+          showError("Session missing or expired.");
           return;
         }
 
-        // 3. Ban Check (Safe Wrapper)
-        // Even if table missing, we don't want to crash login for everyone.
         statusEl.textContent = "Checking account...";
+
         let isBanned = false;
+
         try {
-          const { data: profile } = await sb.from('users').select('id, is_banned').eq('id', user.id).single();
+          const { data: profile } = await sb
+            .from("users")
+            .select("is_banned")
+            .eq("id", user.id)
+            .single();
+
           if (profile?.is_banned) isBanned = true;
+
         } catch (err) {
-          console.warn("Ban check failed (likely table missing):", err);
-          // We proceed assuming user is not banned if table doesn't exist or query fails
+          console.warn("Ban check skipped:", err);
         }
 
         if (isBanned) {
           throw new Error("Account suspended");
         }
 
-        // 4. Success
-        console.log("Auth Success. Redirecting to /index.html...");
-        spinnerEl.style.display = 'none';
+        stopTimer();
+
+        spinnerEl.style.display = "none";
         statusEl.textContent = "Success! Redirecting...";
-        
-        // Small delay to ensure UI updates
+
         setTimeout(() => {
-          // Redirect to main app
           window.location.href = "/index.html";
         }, 600);
 
       } catch (e) {
-        showError("An error occurred during login.", e);
+        stopTimer();
+        showError("Login failed.", e);
       }
     }
 
-    // Start process
     run();
-
   </script>
 </body>
 </html>
