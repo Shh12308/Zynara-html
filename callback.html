@@ -1,84 +1,207 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Callback</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logging in...</title>
+<style>
+  /* Consistent Dark Theme Styles */
+  :root {
+    --bg-primary: #08080c;
+    --bg-secondary: #111116;
+    --text-primary: #eeeef2;
+    --text-secondary: #9494a6;
+    --accent: #10b981;
+    --error: #ef4444;
+    --radius: 12px;
+  }
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden;
+  }
+  .container {
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+  }
+  h1 { margin-bottom: 24px; font-weight: 700; }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 4px solid var(--bg-secondary);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  #status { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 20px; }
+  #error { 
+    display: none; 
+    background: var(--bg-secondary); 
+    border: 1px solid var(--error); 
+    color: #ff6b6b; 
+    padding: 16px; 
+    border-radius: var(--radius);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+  button#retry {
+    background-color: var(--accent);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: var(--radius);
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  button#retry:hover { opacity: 0.9; }
+</style>
 </head>
 <body>
-  <h3 id="status">Signing you in...</h3>
-  <p id="error"></p>
-  <button id="retry" style="display:none;">Retry</button>
 
+  <div class="container">
+    <h1>HeloxAi</h1>
+    
+    <div class="spinner" id="spinner"></div>
+    
+    <div id="status">Verifying your login...</div>
+    
+    <div id="error">
+      <strong>Authentication Error</strong>
+      <p id="error-message">Something went wrong.</p>
+      <button id="retry">Try Again</button>
+    </div>
+  </div>
+
+  <!-- 
+     PROVIDED ENV CONFIGURATION 
+  -->
   <script src="env.js"></script>
+  
+  <script type="module">
+    // Import createClient from CDN just in case, though env.js might rely on the specific v2 path.
+    // We mainly use the sb instance created from env.js if available.
+    
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
 
-<script type="module">
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+    // Access the env variables set by the script tag above
+    const supabaseUrl = window.__ENV__?.SUPABASE_URL || '';
+    const supabaseKey = window.__ENV__?.SUPABASE_ANON_KEY || '';
 
-const supabase = createClient(
-  window.__ENV__.SUPABASE_URL,
-  window.__ENV__.SUPABASE_ANON_KEY
-);
+    const statusEl = document.getElementById('status');
+    const errorEl = document.getElementById("error");
+    const errorMsgEl = document.getElementById("error-message");
+    const spinnerEl = document.getElementById("spinner");
+    const retryBtn = document.getElementById("retry");
 
-const status = document.getElementById("status");
-const errorEl = document.getElementById("error");
-const retry = document.getElementById("retry");
-
-retry.onclick = () => location.href = "/auth.html";
-
-function fail(msg) {
-  status.textContent = "Login failed";
-  errorEl.textContent = msg;
-  retry.style.display = "block";
-}
-
-async function run() {
-  try {
-    const url = new URL(window.location.href);
-    const code = url.searchParams.get("code");
-
-    // 1️⃣ OAuth login (Google, GitHub)
-    if (code) {
-      const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
-      if (error) throw error;
-    }
-
-    // 2️⃣ IMPORTANT: wait for session properly (NOT getSession immediately)
-    const { data: { session }, error } = await supabase.auth.getSession();
-    if (error) throw error;
-
-    if (!session) {
-      fail("No session found. Try logging in again.");
+    // 1. Initialize Supabase
+    let sb;
+    if (supabaseUrl && supabaseKey) {
+      try {
+        sb = createClient(supabaseUrl, supabaseKey, {
+          auth: {
+            storage: window.localStorage,
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true // IMPORTANT: This tells Supabase to look for hash tokens automatically
+          }
+        });
+      } catch (e) {
+        showError("Failed to initialize auth client.", e);
+        return;
+      }
+    } else {
+      showError("Missing configuration. Please contact support.");
       return;
     }
 
-    // 3️⃣ Check user safely (no crash if missing row)
-    const { data } = await supabase
-      .from("users")
-      .select("is_banned")
-      .eq("id", session.user.id)
-      .maybeSingle();
-
-    if (data?.is_banned) {
-      await supabase.auth.signOut();
-      throw new Error("Account banned");
+    // 2. Error Handling Helper
+    function showError(msg, errObj) {
+      console.error(errObj || msg);
+      spinnerEl.style.display = 'none';
+      statusEl.style.display = 'none';
+      errorEl.style.display = 'block';
+      errorMsgEl.textContent = msg + (errObj ? ` (${errObj.message})` : '');
+      retryBtn.style.display = "inline-block";
+      retryBtn.onclick = () => window.location.reload();
     }
 
-    // 4️⃣ Clean URL ONLY after success
-    window.history.replaceState({}, document.title, "/callback");
+    // 3. Main Auth Flow
+    async function run() {
+      try {
+        // Clean URL hash: Supabase sometimes gets confused by #access_token=... fragments in the URL
+        // We strip the hash before calling exchangeCodeForSession to force it to re-read the hash cleanly
+        if (window.location.hash) {
+           const cleanUrl = window.location.href.split('#')[0];
+           window.history.replaceState({}, document.title, cleanUrl);
+        }
 
-    status.textContent = "Success! Redirecting...";
+        // Call Supabase
+        const { data, error } = await sb.auth.exchangeCodeForSession(window.location.href);
 
-    setTimeout(() => {
-      location.replace("/index.html");
-    }, 600);
+        if (error) {
+          showError("Login failed.", error);
+          return;
+        }
 
-  } catch (e) {
-    console.error(e);
-    fail(e.message || "Auth error");
-  }
-}
+        const { session, user } = data;
+        
+        if (!session || !user) {
+          showError("No session data returned.", null);
+          return;
+        }
 
-run();
-</script>
+        // 4. Check for bans (Optional but recommended)
+        // Ensure 'users' table exists and has 'is_banned' column
+        statusEl.textContent = "Checking account...";
+        
+        try {
+            const { data: profile, error: profileError } = await sb
+                .from('users')
+                .select('id, is_banned, email') // Select id, is_banned, email to be safe
+                .eq('id', user.id)
+                .single();
+
+            if (profileError) {
+                // If table doesn't exist or error occurs, we might just skip ban check or log it.
+                // For now, we assume OK if table check fails to prevent locking users out erroneously.
+                console.warn('Could not verify user status, proceeding...');
+            } else if (profile?.is_banned) {
+                await sb.auth.signOut();
+                showError("This account has been suspended.", null);
+                return;
+            }
+        } catch (e) {
+            // Table probably doesn't exist yet (fresh DB). Safe to proceed.
+            console.warn('Profile check skipped:', e);
+        }
+
+        // 5. Success
+        spinnerEl.style.display = 'none';
+        statusEl.textContent = "Login successful! Redirecting...";
+        
+        // Small delay to allow UI to update
+        setTimeout(() => {
+          window.location.href = "/index.html"; // Redirect to main app
+        }, 800);
+
+      } catch (e) {
+        showError("An unexpected error occurred.", e);
+      }
+    }
+
+    // Start the process
+    run();
+
+  </script>
 </body>
 </html>
