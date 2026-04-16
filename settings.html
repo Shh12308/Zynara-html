@@ -852,34 +852,51 @@
   });
 
   // --- DELETE ACCOUNT ---
-  document.getElementById("delete-account-btn").addEventListener("click", async () => {
-    const btnId = "delete-account-btn";
-    if (!confirm("Are you sure? This cannot be undone.")) return;
-    if (!confirm("This will delete all your chats, media, and profile data. Continue?")) return;
-    setButtonLoading(btnId, true);
-    
-    try {
-        // FIX: Don't use admin API in browser. Call backend endpoint.
-        if (BACKEND_URL) {
-            await fetch(`${BACKEND_URL}/delete-account`, { 
-                method: "POST", 
-                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${currentUser.access_token}` },
-                body: JSON.stringify({ user_id: currentUser.id }) 
-            });
-        } else {
-            // Fallback if no backend: Just delete local row (Auth user will remain)
-            console.warn("No backend URL, attempting partial delete via client...");
-            await supabase.from('users').delete().eq('id', currentUser.id);
-        }
+document.getElementById("delete-account-btn").addEventListener("click", async () => {
+  const btnId = "delete-account-btn";
 
-        showToast("Account deletion initiated", "error");
-        await supabase.auth.signOut();
-        window.location.href = "auth.html";
-    } catch (err) { 
-        showToast("Error: " + err.message, "error"); 
-        setButtonLoading(btnId, false); 
+  if (!confirm("Are you sure? This cannot be undone.")) return;
+  if (!confirm("This will delete all your chats, media, and profile data. Continue?")) return;
+
+  setButtonLoading(btnId, true);
+
+  try {
+    // ✅ Get current Supabase session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError || !session) {
+      throw new Error("User not authenticated");
     }
-  });
+
+    // ✅ Call backend securely with JWT
+    const res = await fetch(`${BACKEND_URL}/delete-account`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${session.access_token}`
+      }
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Failed to delete account");
+    }
+
+    showToast("Account deleted successfully", "success");
+
+    // ✅ Sign out user
+    await supabase.auth.signOut();
+
+    // ✅ Redirect
+    window.location.href = "auth.html";
+
+  } catch (err) {
+    console.error(err);
+    showToast("Error: " + err.message, "error");
+    setButtonLoading(btnId, false);
+  }
+});
 
   // --- LOGOUT ---
   document.getElementById("logout-btn").addEventListener("click", async () => {
