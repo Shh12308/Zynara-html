@@ -326,9 +326,8 @@
   <div class="spinner"></div>
   <p id="loadingText">Processing...</p>
 </div>
-  <script src="env.js"></script>
 
-<script type="module">
+<script>
   /* -------------------------------------------------------------------------- */
   /*                          ⚙️ CONFIGURATION SECTION                          */
   /* -------------------------------------------------------------------------- */
@@ -336,16 +335,18 @@
   var SUPABASE_URL = null;
   var SUPABASE_ANON_KEY = null;
   var BACKEND_URL = null;
+  var STRIPE_PAYMENT_LINK = null; // Fallback from env.js
 
   // 1. Check if env.js loaded successfully
   if (window.__envLoadFailed) {
     console.error('env.js failed to load.');
   } 
-  // 2. Check if window.ENV exists (from env.js)
-  else if (window.ENV) {
-    SUPABASE_URL = window.ENV.SUPABASE_URL;
-    SUPABASE_ANON_KEY = window.ENV.SUPABASE_ANON_KEY;
-    BACKEND_URL = window.ENV.BACKEND_URL;
+  // 2. Check if window.__ENV__ exists (Double underscore as per your file)
+  else if (window.__ENV__) {
+    SUPABASE_URL = window.__ENV__.SUPABASE_URL;
+    SUPABASE_ANON_KEY = window.__ENV__.SUPABASE_ANON_KEY;
+    BACKEND_URL = window.__ENV__.BACKEND_URL;
+    STRIPE_PAYMENT_LINK = window.__ENV__.STRIPE_PAYMENT_LINK; // Storing fallback
   }
 
   /* -------------------------------------------------------------------------- */
@@ -370,7 +371,7 @@
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !BACKEND_URL) {
       var errors = [];
       if (window.__envLoadFailed) errors.push('env.js file not found or failed to load.');
-      if (!window.ENV && !window.__envLoadFailed) errors.push('env.js loaded but window.ENV is undefined.');
+      if (!window.__ENV__ && !window.__envLoadFailed) errors.push('env.js loaded but window.__ENV__ is undefined.');
       if (!SUPABASE_URL) errors.push('SUPABASE_URL is missing in env.js.');
       if (!SUPABASE_ANON_KEY) errors.push('SUPABASE_ANON_KEY is missing in env.js.');
       if (!BACKEND_URL) errors.push('BACKEND_URL is missing in env.js.');
@@ -574,8 +575,17 @@
 
     } catch (err) {
       console.error('Preorder failed:', err);
-      spinner.style.display = 'none';
-      alert('Something went wrong: ' + err.message);
+      
+      // FALLBACK LOGIC: If backend fails, offer the direct Stripe link from env.js
+      if (STRIPE_PAYMENT_LINK) {
+        loadingText.textContent = 'Redirecting via Direct Link...';
+        setTimeout(() => {
+          window.location.href = STRIPE_PAYMENT_LINK;
+        }, 1500);
+      } else {
+        spinner.style.display = 'none';
+        alert('Something went wrong: ' + err.message);
+      }
     }
   }
 
