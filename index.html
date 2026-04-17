@@ -27,37 +27,27 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--font-display:'Space Grotesk',sans-serif;--font-body:'DM Sans',sans-serif;--radius:14px;--radius-sm:10px;--radius-lg:18px;--radius-xl:24px;--speed:.25s;--speed-slow:.4s;--ease:cubic-bezier(.4,0,.2,1);--ease-out:cubic-bezier(0,0,.2,1);--ease-in:cubic-bezier(.4,0,1,1);--msg-max:680px;--sidebar-w:290px}
 
-/* DEFAULT DARK THEME (Fallback) */
+/* THEME VARIABLES */
 [data-theme="dark"]{--bg-primary:#08080c;--bg-secondary:#111116;--bg-tertiary:#1a1a22;--bg-quaternary:#22222c;--bg-user-bubble:rgba(16,185,129,.08);--bg-user-bubble-border:rgba(16,185,129,.15);--bg-sidebar:#0c0c10;--bg-input:#14141a;--bg-hover:#1e1e28;--bg-code:#0d0d14;--bg-inline-code:rgba(255,255,255,.06);--text-primary:#eeeef2;--text-secondary:#9494a6;--text-muted:#55556a;--accent:#10b981;--accent-hover:#059669;--accent-dim:rgba(16,185,129,.06);--accent-soft:rgba(16,185,129,.1);--accent-glow:rgba(16,185,129,.15);--border:rgba(255,255,255,.06);--border-active:rgba(16,185,129,.3);--danger:#ef4444;--warning:#f59e0b;--success:#10b981;--shadow-sm:0 1px 3px rgba(0,0,0,.3);--shadow:0 4px 20px rgba(0,0,0,.4);--shadow-lg:0 8px 40px rgba(0,0,0,.5);--glow:0 0 60px rgba(16,185,129,.06)}
 
-/* LIGHT THEME */
 [data-theme="light"]{--bg-primary:#fafafa;--bg-secondary:#f0f0f2;--bg-tertiary:#e6e6ea;--bg-quaternary:#dddde2;--bg-user-bubble:rgba(5,150,105,.06);--bg-user-bubble-border:rgba(5,150,105,.15);--bg-sidebar:#f4f4f6;--bg-input:#f0f0f2;--bg-hover:#e4e4e8;--bg-code:#1e1e2e;--bg-inline-code:rgba(0,0,0,.06);--text-primary:#111114;--text-secondary:#555566;--text-muted:#999aaa;--accent:#059669;--accent-hover:#047857;--accent-dim:rgba(5,150,105,.04);--accent-soft:rgba(5,150,105,.08);--accent-glow:rgba(5,150,105,.1);--border:rgba(0,0,0,.07);--border-active:rgba(5,150,105,.3);--danger:#dc2626;--warning:#d97706;--success:#059669;--shadow-sm:0 1px 3px rgba(0,0,0,.04);--shadow:0 4px 20px rgba(0,0,0,.06);--shadow-lg:0 8px 40px rgba(0,0,0,.08);--glow:none}
 
-/* GOLD THEME */
 [data-theme="gold"]{--bg-primary:#1c1c14;--bg-secondary:#242419;--bg-tertiary:#2e2e23;--bg-quaternary:#3a3a2d;--bg-user-bubble:rgba(197,160,89,.15);--bg-user-bubble-border:rgba(197,160,89,.3);--bg-sidebar:#161610;--bg-input:#22221a;--bg-hover:#2e2e22;--bg-code:#12120e;--bg-inline-code:rgba(197,160,89,.1);--text-primary:#f0e6d2;--text-secondary:#b0a880;--text-muted:#7c7559;--accent:#c5a059;--accent-hover:#d48c2f;--accent-dim:rgba(197,160,89,.15);--accent-soft:rgba(197,160,89,.2);--accent-glow:rgba(197,160,89,.2);--border:rgba(197,160,89,.2);--border-active:rgba(197,160,89,.5);--danger:#e85d5d;--warning:#f59e0b;--success:#10b981}
 
-/* OCEAN THEME */
 [data-theme="ocean"]{--bg-primary:#002b36;--bg-secondary:#073642;--bg-tertiary:#0e4956;--bg-quaternary:#1a5c6e;--bg-user-bubble:rgba(38,139,210,.1);--bg-user-bubble-border:rgba(38,139,210,.2);--bg-sidebar:#00212b;--bg-input:#00334d;--bg-hover:#014256;--bg-code:#001e26;--bg-inline-code:rgba(38,139,210,.1);--text-primary:#839496;--text-secondary:#657b83;--text-muted:#4f5b66;--accent:#2aa198;--accent-hover:#586e75;--accent-dim:rgba(42,161,152,.15);--accent-soft:rgba(42,161,152,.2);--accent-glow:rgba(42,161,152,.2);--border:rgba(88,110,117,.3);--border-active:rgba(42,161,152,.6);--danger:#dc322f;--warning:#b58900;--success:#859900}
 
-/* MIDNIGHT THEME */
 [data-theme="midnight"]{--bg-primary:#0a0e27;--bg-secondary:#0f132f;--bg-tertiary:#181a3c;--bg-quaternary:#24264a;--bg-user-bubble:rgba(127,90,240,.1);--bg-user-bubble-border:rgba(127,90,240,.2);--bg-sidebar:#060816;--bg-input:#0d0f1d;--bg-hover:#161830;--bg-code:#030410;--bg-inline-code:rgba(127,90,240,.1);--text-primary:#b0b8d8;--text-secondary:#7f839c;--text-muted:#515569;--accent:#7f5af0;--accent-hover:#a66cff;--accent-dim:rgba(127,90,240,.15);--accent-soft:rgba(127,90,240,.2);--accent-glow:rgba(127,90,240,.2);--border:rgba(127,90,240,.2);--border-active:rgba(127,90,240,.5);--danger:#ff5555;--warning:#ffb86c;--success:#50fa7b}
 
-/* CYBER THEME */
 [data-theme="cyber"]{--bg-primary:#000000;--bg-secondary:#080808;--bg-tertiary:#101010;--bg-quaternary:#181818;--bg-user-bubble:rgba(0,255,65,.05);--bg-user-bubble-border:rgba(0,255,65,.2);--bg-sidebar:#000000;--bg-input:#050505;--bg-hover:#0a0a0a;--bg-code:#000000;--bg-inline-code:rgba(0,255,65,.1);--text-primary:#e0e0e0;--text-secondary:#909090;--text-muted:#606060;--accent:#00ff41;--accent-hover:#00cc33;--accent-dim:rgba(0,255,65,.15);--accent-soft:rgba(0,255,65,.2);--accent-glow:0 0 20px rgba(0,255,65,.2);--border:rgba(0,255,65,.2);--border-active:#00ff41;--danger:#ff3333;--warning:#ffaa00;--success:#00ff41}
 
-/* FOREST THEME */
 [data-theme="forest"]{--bg-primary:#0d1f12;--bg-secondary:#111c10;--bg-tertiary:#152619;--bg-quaternary:#1c3022;--bg-user-bubble:rgba(76,175,80,.1);--bg-user-bubble-border:rgba(76,175,80,.2);--bg-sidebar:#09140a;--bg-input:#0f2012;--bg-hover:#18261c;--bg-code:#060f09;--bg-inline-code:rgba(76,175,80,.1);--text-primary:#c3e6cb;--text-secondary:#8c9a85;--text-muted:#5e6c5e;--accent:#4caf50;--accent-hover:#66bb6a;--accent-dim:rgba(76,175,80,.15);--accent-soft:rgba(76,175,80,.2);--accent-glow:0 0 30px rgba(76,175,80,.1);--border:rgba(76,175,80,.2);--border-active:rgba(76,175,80,.5);--danger:#e57373;--warning:#f1c40f;--success:#2ecc71}
 
-/* SUNSET THEME */
 [data-theme="sunset"]{--bg-primary:#2d1b2e;--bg-secondary:#3e2739;--bg-tertiary:#4d3346;--bg-quaternary:#5f4359;--bg-user-bubble:rgba(251,133,0,.1);--bg-user-bubble-border:rgba(251,133,0,.2);--bg-sidebar:#220e20;--bg-input:#261c24;--bg-hover:#31262d;--bg-code:#180c12;--bg-inline-code:rgba(251,133,0,.1);--text-primary:#ffeaad;--text-secondary:#dcc5ac;--text-muted:#a89f91;--accent:#fb8500;--accent-hover:#ffa500;--accent-dim:rgba(251,133,0,.15);--accent-soft:rgba(251,133,0,.2);--accent-glow:0 0 30px rgba(251,133,0,.15);--border:rgba(251,133,0,.2);--border-active:rgba(251,133,0,.5);--danger:#ff6b6b;--warning:#ffd700;--success:#ffd700}
 
-/* ARCTIC THEME */
 [data-theme="arctic"]{--bg-primary:#f0f8ff;--bg-secondary:#e6f2ff;--bg-tertiary:#cce0ff;--bg-quaternary:#b3d1ff;--bg-user-bubble:rgba(0,119,190,.1);--bg-user-bubble-border:rgba(0,119,190,.2);--bg-sidebar:#e6efff;--bg-input:#ffffff;--bg-hover:#d8e8ff;--bg-code:#f8fbff;--bg-inline-code:rgba(0,119,190,.1);--text-primary:#1a1a1a;--text-secondary:#4a5568;--text-muted:#718096;--accent:#0077be;--accent-hover:#005a8e;--accent-dim:rgba(0,119,190,.1);--accent-soft:rgba(0,119,190,.15);--accent-glow:0 0 30px rgba(0,119,190,.15);--border:rgba(0,119,190,.2);--border-active:rgba(0,119,190,.5);--danger:#e53e3e;--warning:#f6ad55;--success:#38a169}
 
-/* LAVENDER THEME */
 [data-theme="lavender"]{--bg-primary:#1e1124;--bg-secondary:#25172b;--bg-tertiary:#2e1c36;--bg-quaternary:#3b2347;--bg-user-bubble:rgba(218,112,214,.1);--bg-user-bubble-border:rgba(218,112,214,.2);--bg-sidebar:#160a1c;--bg-input:#201023;--bg-hover:#2d1a31;--bg-code:#12081a;--bg-inline-code:rgba(218,112,214,.1);--text-primary:#ede0de;--text-secondary:#b589c2;--text-muted:#856e86;--accent:#da70d6;--accent-hover:#e890e8;--accent-dim:rgba(218,112,214,.15);--accent-soft:rgba(218,112,214,.2);--accent-glow:0 0 30px rgba(218,112,214,.2);--border:rgba(218,112,214,.2);--border-active:rgba(218,112,214,.5);--danger:#ff6b6b;--warning:#f4d03f;--success:#58d68d}
 
-/* ESPRESSO THEME */
 [data-theme="espresso"]{--bg-primary:#1c1206;--bg-secondary:#261809;--bg-tertiary:#311e0c;--bg-quaternary:#3c240f;--bg-user-bubble:rgba(212,163,104,.1);--bg-user-bubble-border:rgba(212,163,104,.2);--bg-sidebar:#110a04;--bg-input:#1d1208;--bg-hover:#2a1b0d;--bg-code:#0c0803;--bg-inline-code:rgba(212,163,104,.1);--text-primary:#eaddcf;--text-secondary:#c5a672;--text-muted:#8e6b42;--accent:#d4a373;--accent-hover:#e6b36a;--accent-dim:rgba(212,163,104,.15);--accent-soft:rgba(212,163,104,.2);--accent-glow:0 0 30px rgba(212,163,104,.15);--border:rgba(212,163,104,.2);--border-active:rgba(212,163,104,.5);--danger:#e74c3c;--warning:#f39c12;--success:#27ae60}
 
 html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;-webkit-overflow-scrolling:touch;height:100dvh}
@@ -159,7 +149,7 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 .z-icon{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff}
 .default-icon{background:var(--bg-quaternary);color:var(--accent)}
 
-/* Messages - SCROLL FIX */
+/* Messages */
 .msgs-wrap{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;display:flex;flex-direction:column;min-height:0; touch-action: pan-y; scroll-padding-bottom: 100px;}
 .msgs-inner{max-width:var(--msg-max);margin:0 auto;padding:24px 24px 8px;width:100%;flex:1;min-height:0}
 
@@ -506,7 +496,7 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 <div class="modal-ov" id="linkModal">
   <div class="modal link-modal">
     <div class="lm-header"><div class="lm-icon"><i class="fa-solid fa-link"></i></div><div class="lm-info"><div class="lm-title">External Link</div><div class="lm-url" id="lmUrlText">https://example.com</div></div></div>
-    <div class="lm-body"><p><i class="fa-solid fa-info-circle"></i> This is an external resource. You can ask the AI to analyze or summarize it.</p></div>
+    <div class="lm-body"><p><i class="fa-solid fa-info-circle"></i> This is an external resource. You can ask AI to analyze or summarize it.</p></div>
     <div class="lm-footer">
       <button type="button" class="modal-close" data-close="linkModal">Close</button>
       <a href="#" class="btn-ext" id="lmOpenExternal" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-external-link-alt"></i> Open</a>
@@ -530,7 +520,6 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
   </div>
 </div>
 
-<!-- HTML Preview Modal -->
 <div class="modal-ov" id="htmlPreviewModal">
   <div class="modal hp-modal">
     <div class="hp-header">
@@ -579,13 +568,52 @@ var S = {
   recording:false, recorder:null, chunks:[], audio:null, gallery:[], view:'chat',
   _mdOk:false, pendingFiles:[], model:'helox',
   isAutoScrolling:true, scrollThreshold:200, selectedVoice:'alloy',
-  activeLinkUrl:'', editingIndex:null, editingFiles:[]
+  activeLinkUrl:'', editingIndex:null, editingFiles:[],
+  // Usage Limits
+  dailyImgLimit: 6,
+  dailyVidLimit: 3
 };
 
 var IMG_KW=['generate image','create image','make image','draw me','render image'];
 var VID_KW=['generate video','create video','make video','render video'];
+
 function isImgQ(t){ var l=t.toLowerCase(); for(var i=0;i<IMG_KW.length;i++) if(l.indexOf(IMG_KW[i])!==-1) return true; return false; }
 function isVidQ(t){ var l=t.toLowerCase(); for(var i=0;i<VID_KW.length;i++) if(l.indexOf(VID_KW[i])!==-1) return true; return false; }
+
+/* --- LIMITS LOGIC (Client Side Persistence) --- */
+function getDailyUsage(key) {
+    var today = new Date().toDateString();
+    var stored = localStorage.getItem('helox_usage_' + key);
+    if (stored) {
+        var data = JSON.parse(stored);
+        if (data.date === today) return data.count;
+    }
+    return 0;
+}
+
+function incrementUsage(key) {
+    var today = new Date().toDateString();
+    var count = getDailyUsage(key) + 1;
+    localStorage.setItem('helox_usage_' + key, JSON.stringify({ date: today, count: count }));
+    return count;
+}
+
+function checkLimits(text) {
+    if (!isAuthed()) return { allowed: true, msg: '' }; // Limits only for authed users usually, or global
+    
+    if (isImgQ(text)) {
+        var current = getDailyUsage('images');
+        if (current >= S.dailyImgLimit) {
+            return { allowed: false, msg: 'Daily image limit (6) reached.' };
+        }
+    } else if (isVidQ(text)) {
+        var current = getDailyUsage('videos');
+        if (current >= S.dailyVidLimit) {
+            return { allowed: false, msg: 'Daily video limit (3) reached.' };
+        }
+    }
+    return { allowed: true, msg: '' };
+}
 
 function apiUrl(){
   var base = getEnvVar('FREE_AI_URL');
@@ -605,22 +633,17 @@ function isAuthed(){ return !!S.user; }
 function canMedia(){ return isAuthed() && (S.user.is_lifetime||S.user.is_premium); }
 function guestId(){ var id=localStorage.getItem('helox_guest_id'); if(!id){id=crypto.randomUUID();localStorage.setItem('helox_guest_id',id);} return id; }
 
-/* ========== AUTH (Fixed & Robust) ========== */
+/* ========== AUTH ========== */
 async function setUserFromSess(sess){
   try{
     var prof=null;
     if(sb){
-        // Try to fetch user profile details (plan, lifetime status) from DB
         try{
             var r=await sb.from('users').select('plan,is_premium,is_lifetime').eq('id',sess.user.id).single();
             if(!r.error) prof=r.data;
-        } catch(dbErr){
-            // If table doesn't exist or permission denied, that's ok. We default to free.
-            console.log('Profile DB error or missing table. Using defaults.', dbErr.message);
-        }
+        } catch(dbErr){ console.log('Profile DB error or missing table. Using defaults.', dbErr.message); }
     }
     
-    // Construct User Object with safe defaults
     var u={
         id:sess.user.id,
         email:sess.user.email,
@@ -630,7 +653,6 @@ async function setUserFromSess(sess){
         is_lifetime:false
     };
     
-    // Override defaults if profile found
     if(prof){ 
         u.plan=prof.plan||'free'; 
         u.is_premium=!!prof.is_premium; 
@@ -640,34 +662,18 @@ async function setUserFromSess(sess){
     S.user=u;
     try{localStorage.setItem('helox-last-login',Date.now())}catch(e){}
   }catch(e){ 
-    // Fallback if session structure is unexpected
-    S.user={
-        id:sess.user.id,
-        email:sess.user.email,
-        token:sess.access_token,
-        plan:'free',
-        is_premium:false,
-        is_lifetime:false
-    }; 
+    S.user={ id:sess.user.id, email:sess.user.email, token:sess.access_token, plan:'free', is_premium:false, is_lifetime:false }; 
   }
 }
 
 async function setupAuth(){
-  if(!sb){
-    S.user = null;
-    refreshUI(); 
-    return; 
-  }
-
-  // 1. Check session immediately on load to prevent UI flicker
+  if(!sb){ S.user = null; refreshUI(); return; }
   try {
       var { data: { session } } = await sb.auth.getSession();
       if (session && session.user) {
           await setUserFromSess(session);
           refreshUI();
-          loadChatList();
-          
-          // Clean up URL hash if we just logged in via Magic Link/OAuth
+          loadChatList(); // Load chats on auth
           if(window.location.hash && window.location.hash.includes('access_token')){
               window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
           }
@@ -677,12 +683,8 @@ async function setupAuth(){
       }
   } catch(e) { console.error('Session check failed', e); }
 
-  // 2. Listen for changes (SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED)
   sb.auth.onAuthStateChange(async function(ev,sess){
-    if(ev==='SIGNED_OUT'){ 
-        doSignOut(); 
-        return; 
-    }
+    if(ev==='SIGNED_OUT'){ doSignOut(); return; }
     if(ev==='INITIAL_SESSION'||ev==='SIGNED_IN'||ev==='TOKEN_REFRESHED'){
       if(sess&&sess.user){
         await setUserFromSess(sess);
@@ -700,15 +702,8 @@ async function setupAuth(){
 }
 
 function doSignOut(){ 
-    S.user=null; 
-    S.msgs=[]; 
-    S.chatId=null; 
-    S.chatListData=[]; 
-    S.gallery=[]; 
-    refreshUI(); 
-    renderAll(); 
-    renderChatList(); 
-    renderGallery(); 
+    S.user=null; S.msgs=[]; S.chatId=null; S.chatListData=[]; S.gallery=[]; 
+    refreshUI(); renderAll(); renderChatList(); renderGallery(); 
     toast('Signed out','inf'); 
 }
 async function signOut(){ 
@@ -716,160 +711,158 @@ async function signOut(){
     doSignOut(); 
 }
 
-/* ========== DATA ========== */
+/* ========== DATA & CHAT HISTORY ========== */
 async function loadChatList(){
   if(!S.user){S.chatListData=[];renderChatList();return;}
-  try{var r=await fetch(apiUrl()+'/chats',{method:'GET',headers:authH(),credentials:'include'});if(r.ok){var d=await r.json();S.chatListData=Array.isArray(d)?d:(d.chats||[]);}}catch(e){S.chatListData=[];}
+  try{
+    var r=await fetch(apiUrl()+'/chats',{method:'GET',headers:authH(),credentials:'include'});
+    if(r.ok){
+        var d=await r.json();
+        S.chatListData=Array.isArray(d)?d:(d.chats||[]);
+    } else {
+        console.error('Failed to load chats', r.status);
+    }
+  }catch(e){
+      console.error(e);
+      S.chatListData=[];
+  }
   renderChatList();
 }
+
 async function startNewChat(){
   if(!S.user){toast('Please sign in','wrn');return;}
-  try{var r=await fetch(apiUrl()+'/newchat',{method:'POST',headers:authH(),credentials:'include',body:JSON.stringify({model:S.model})});if(r.ok){var d=await r.json();if(d&&d.conversation_id){S.chatId=d.conversation_id;$('hdrTitle').textContent='New Chat';loadChatList();}}}catch(e){S.chatId=uid();$('hdrTitle').textContent='New Chat';}
-  S.msgs=[];renderAll();if(S.sbOpen)toggleSB(false);
-}
-async function saveMsg(m){if(!sb||!S.user||!S.chatId)return;try{await sb.from('messages').insert({conversation_id:S.chatId,role:m.role,content:m.content,content_type:m.content_type||'text',media_url:m.media_url||null,metadata:m.metadata||{}})}catch(e){}}
-async function updateTs(cid){if(!sb||!cid)return;try{await sb.from('conversations').update({updated_at:new Date().toISOString()}).eq('id',cid)}catch(e){}}
-async function loadMsgs(cid){if(!sb||!cid)return[];try{var r=await sb.from('messages').select('*').eq('conversation_id',cid).order('created_at',{ascending:true});if(r.error)throw r.error;return r.data||[]}catch(e){return[]}}
-async function delConv(cid){try{await fetch(apiUrl()+'/chats/'+cid,{method:'DELETE',headers:authH(),credentials:'include'})}catch(e){}if(!sb||!cid)return;try{await sb.from('messages').delete().eq('conversation_id',cid);await sb.from('conversations').delete().eq('id',cid)}catch(e){}}
-async function loadConv(cid){
-  S.msgs=[];showWelcome();if(!sb||!cid)return;
-  try{var msgs=await loadMsgs(cid);if(msgs&&msgs.length){S.msgs=msgs.map(function(m){return{id:m.id,role:m.role,content:m.content,content_type:m.content_type||'text',media_url:m.media_url||null,images:[],time:new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),liked:false,disliked:false}});S.msgs.forEach(function(m){if(m.role==='assistant')addGal(m.content)});renderAll();}}catch(e){}
+  try{
+    var r=await fetch(apiUrl()+'/newchat',{method:'POST',headers:authH(),credentials:'include',body:JSON.stringify({model:S.model})});
+    if(r.ok){
+        var d=await r.json();
+        if(d&&d.conversation_id){
+            S.chatId=d.conversation_id;
+            $('hdrTitle').textContent='New Chat';
+            loadChatList();
+        }
+    }
+  }catch(e){
+      // Fallback for demo
+      S.chatId=uid(); $('hdrTitle').textContent='New Chat';
+  }
+  S.msgs=[]; renderAll(); if(S.sbOpen)toggleSB(false);
 }
 
-/* ========== THEME (Fixed CSS Variables) ========== */
+async function loadConv(cid){
+  // Logic to load specific conversation
+  S.msgs=[];
+  showWelcome(); // Clear view briefly
+  
+  // Try fetching messages from backend if available
+  if (sb && cid) {
+      try {
+          var msgs=await sb.from('messages').select('*').eq('conversation_id',cid).order('created_at',{ascending:true});
+          if(!msgs.error && msgs.data) {
+             S.msgs=msgs.data.map(function(m){
+                 return {
+                     id:m.id, role:m.role, content:m.content, 
+                     content_type:m.content_type||'text', media_url:m.media_url||null,
+                     images:[], time:new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}), 
+                     liked:false, disliked:false
+                 };
+             });
+             // Re-build gallery from loaded messages
+             S.gallery=[];
+             S.msgs.forEach(function(m){ if(m.role==='assistant') addGal(m.content); });
+          }
+      } catch(e) { console.error('Error loading conv from DB', e); }
+  }
+  
+  // Update UI
+  S.chatId=cid;
+  var conv=S.chatListData.find(function(c){return c.id===cid;});
+  if(conv)$('hdrTitle').textContent=conv.title||'Chat';
+  
+  renderAll();
+  switchView('chat');
+}
+
+async function saveMsg(m){if(!sb||!S.user||!S.chatId)return;try{await sb.from('messages').insert({conversation_id:S.chatId,role:m.role,content:m.content,content_type:m.content_type||'text',media_url:m.media_url||null,metadata:m.metadata||{}})}catch(e){}}
+async function updateTs(cid){if(!sb||!cid)return;try{await sb.from('conversations').update({updated_at:new Date().toISOString()}).eq('id',cid)}catch(e){}}
+async function delConv(cid){
+  if(!confirm('Delete this chat?')) return;
+  try{await fetch(apiUrl()+'/chats/'+cid,{method:'DELETE',headers:authH(),credentials:'include'})}catch(e){}
+  if(!sb||!cid)return;
+  try{
+      await sb.from('messages').delete().eq('conversation_id',cid);
+      await sb.from('conversations').delete().eq('id',cid);
+      if(S.chatId===cid){
+          S.msgs=[]; S.chatId=null; $('hdrTitle').textContent='HeloxAi'; renderAll();
+      }
+      loadChatList();
+      toast('Deleted','inf');
+  }catch(e){}
+}
+
+/* ========== THEME ========== */
 function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('data-theme',window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');else document.documentElement.setAttribute('data-theme',t)}catch(e){}S.theme=t;try{localStorage.setItem('helox-theme',t)}catch(e){}document.querySelectorAll('.t-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-t')===t)})}
 function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'dark'}catch(e){}setTheme(s);try{window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(S.theme==='system')setTheme('system')})}catch(e){}}
 
-/* ========== MARKDOWN (Improved Coloring & HTML Button) ========== */
+/* ========== MARKDOWN ========== */
 function initMarked() {
-  if (typeof marked === 'undefined') {
-    S._mdOk = false;
-    return;
-  }
+  if (typeof marked === 'undefined') { S._mdOk = false; return; }
   try {
-    marked.use({
-      breaks: true,
-      gfm: true
-    });
-
+    marked.use({ breaks: true, gfm: true });
     marked.use({
       renderer: {
-        // Marked v12+ signature
         code: function(code, infostring) {
           var text = code || '';
-          // Extract language (first word), ignore attributes like "line-numbers"
           var langArr = (infostring || '').trim().split(/\s+/);
           var language = langArr[0] || '';
-
           var validLang = '';
           if (typeof hljs !== 'undefined' && typeof hljs.getLanguage === 'function') {
-            if (language && hljs.getLanguage(language)) {
-              validLang = language;
-            }
+            if (language && hljs.getLanguage(language)) validLang = language;
           }
-
           var highlighted = '';
           try {
             if (typeof hljs !== 'undefined') {
-              if (validLang) {
-                // Specific language highlighting
-                highlighted = hljs.highlight(text, { language: validLang, ignoreIllegals: true }).value;
-              } else {
-                // Fallback to auto-detect to ensure coloring happens
-                var result = hljs.highlightAuto(text);
-                highlighted = result.value;
-              }
-              // Double check result is a string
-              if (!highlighted || typeof highlighted !== 'string') {
-                  highlighted = esc(text);
-              }
-            } else {
-                highlighted = esc(text);
-            }
-          } catch (e) {
-            highlighted = esc(text);
-          }
-
+              if (validLang) highlighted = hljs.highlight(text, { language: validLang, ignoreIllegals: true }).value;
+              else { var result = hljs.highlightAuto(text); highlighted = result.value; }
+              if (!highlighted || typeof highlighted !== 'string') highlighted = esc(text);
+            } else { highlighted = esc(text); }
+          } catch (e) { highlighted = esc(text); }
           var displayLang = validLang || 'plaintext';
-
           var btnsHtml = '';
-          // Add "Run HTML" button for HTML/XML blocks
           if (validLang && (validLang.toLowerCase() === 'html' || validLang.toLowerCase() === 'xml' || validLang.toLowerCase() === 'htm')) {
              btnsHtml = '<button type="button" class="cp-btn" data-action="run-html" style="margin-right:5px;"><i class="fa-solid fa-play"></i> Run</button>';
           }
-
           btnsHtml += '<button type="button" class="cp-btn" data-action="copy-code"><i class="fa-regular fa-copy"></i> Copy</button>';
-
-          return '<div class="code-blk">' +
-            '<div class="code-hd">' +
-            '<span>' + esc(displayLang) + '</span>' +
-            btnsHtml +
-            '</div>' +
-            '<pre><code class="hljs language-' + esc(displayLang) + '">' +
-            highlighted +
-            '</code></pre></div>';
+          return '<div class="code-blk"><div class="code-hd"><span>'+esc(displayLang)+'</span>'+btnsHtml+'</div><pre><code class="hljs language-'+esc(displayLang)+'">'+highlighted+'</code></pre></div>';
         },
-
-        // Marked v12+ signature
         link: function(href, title, text) {
           var safeUrl = '#';
-          try {
-            var url = new URL(href, window.location.origin);
-            if (['http:', 'https:'].includes(url.protocol)) {
-              safeUrl = href;
-            }
-          } catch (e) {}
-
-          var titleAttr = title ? ' title="' + esc(title) + '"' : '';
-          return '<a href="' + esc(safeUrl) + '"' + titleAttr +
-            ' target="_blank" rel="noopener noreferrer">' + (text || esc(safeUrl)) + '</a>';
+          try { var url = new URL(href, window.location.origin); if (['http:', 'https:'].includes(url.protocol)) safeUrl = href; } catch (e) {}
+          var titleAttr = title ? ' title="'+esc(title)+'"' : '';
+          return '<a href="'+esc(safeUrl)+'"'+titleAttr+' target="_blank" rel="noopener noreferrer">'+(text||esc(safeUrl))+'</a>';
         },
-
-        // Marked v12+ signature
         image: function(href, title, text) {
-          return '<div class="img-wrap">' +
-            '<img src="' + esc(href) + '" alt="' + esc(text || title || 'Image') + '" loading="lazy">' +
-            '</div>';
+          return '<div class="img-wrap"><img src="'+esc(href)+'" alt="'+esc(text||title||'Image')+'" loading="lazy"></div>';
         }
       }
     });
-
     S._mdOk = true;
-  } catch (e) {
-    console.error('Marked init failed:', e);
-    S._mdOk = false;
-  }
+  } catch (e) { console.error('Marked init failed:', e); S._mdOk = false; }
 }
 
 function md(text) {
   if (!text) return '';
-
   var html = '';
   try {
-    if (S._mdOk && typeof marked !== 'undefined') {
-      html = marked.parse(text);
-    } else {
-      html = esc(text).replace(/\n/g, '<br>');
-    }
-
+    if (S._mdOk && typeof marked !== 'undefined') html = marked.parse(text);
+    else html = esc(text).replace(/\n/g, '<br>');
     if (typeof DOMPurify !== 'undefined') {
       html = DOMPurify.sanitize(html, {
-        ALLOWED_TAGS: [
-          'p', 'br', 'b', 'i', 'strong', 'em', 'a', 'code', 'pre', 'span',
-          'div', 'ul', 'ol', 'li', 'hljs', 'sup', 'sub', 'del', 's', 'button', 'iframe', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'blockquote'
-        ],
-        ALLOWED_ATTR: [
-          'href', 'target', 'rel', 'class', 'id', 'style', 'title',
-          'alt', 'data-action', 'src', 'loading', 'sandbox', 'srcdoc', 'start'
-        ],
+        ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'strong', 'em', 'a', 'code', 'pre', 'span', 'div', 'ul', 'ol', 'li', 'hljs', 'sup', 'sub', 'del', 's', 'button', 'iframe', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'blockquote', 'video'],
+        ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'id', 'style', 'title', 'alt', 'data-action', 'src', 'loading', 'sandbox', 'srcdoc', 'start'],
         ALLOW_DATA_ATTR: true
       });
     }
-  } catch (e) {
-    console.error('Markdown parse error:', e);
-    html = esc(text).replace(/\n/g, '<br>');
-  }
-
+  } catch (e) { console.error('Markdown parse error:', e); html = esc(text).replace(/\n/g, '<br>'); }
   return html;
 }
 
@@ -877,12 +870,7 @@ function applyMath(el){
   if(typeof renderMathInElement!=='undefined'){
     try{
       renderMathInElement(el,{
-        delimiters:[
-          {left:'$$',right:'$$',display:true},
-          {left:'$',right:'$',display:false},
-          {left:'\\(',right:'\\)',display:false},
-          {left:'\\[',right:'\\]',display:true}
-        ],
+        delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],
         throwOnError:false
       });
     }catch(e){}
@@ -899,20 +887,13 @@ function toast(msg,type){
 function toggleSB(open){S.sbOpen=typeof open==='boolean'?open:!S.sbOpen;$('sidebar').classList.toggle('open',S.sbOpen);$('sbOv').classList.toggle('on',S.sbOpen);}
 function openLinkModal(url){S.activeLinkUrl=url;$('lmUrlText').textContent=url;$('lmOpenExternal').href=url;$('linkModal').classList.add('on');}
 function closeLinkModal(){$('linkModal').classList.remove('on');S.activeLinkUrl='';}
-
-/* ========== HTML PREVIEW ========== */
 function openHtmlPreview(code){
-  var modal=$('htmlPreviewModal');
-  var frame=$('htmlPreviewFrame');
-  if(!modal||!frame)return;
-  modal.classList.add('on');
-  var doc = frame.contentWindow.document;
-  doc.open();
-  doc.write(code);
-  doc.close();
+  var modal=$('htmlPreviewModal'); var frame=$('htmlPreviewFrame');
+  if(!modal||!frame)return; modal.classList.add('on');
+  var doc = frame.contentWindow.document; doc.open(); doc.write(code); doc.close();
 }
 
-/* ========== REFRESH ALL LOCK/BADGE STATES ========== */
+/* ========== REFRESH UI ========== */
 function refreshUI(){
   var u=$('sUser'),sl=$('signInLink'),hp=$('hdrPlan');if(!u||!sl||!hp)return;
   var signedIn=!!S.user,hasMedia=canMedia();
@@ -929,25 +910,6 @@ function refreshUI(){
   $('newChatBtn').classList.toggle('locked',!signedIn);$('ncLock').style.display=signedIn?'none':'flex';
   $('micBtn').classList.toggle('locked',!signedIn);$('micLock').style.display=signedIn?'none':'flex';
   $('voiceBtn').classList.toggle('locked',!signedIn);$('voiceLock').style.display=signedIn?'none':'flex';
-
-  function lockWCard(sel,lockEl){
-    var c=document.querySelector(sel),l=$(lockEl);
-    if(c&&l){c.classList.toggle('locked',!hasMedia);l.style.display=hasMedia?'none':'flex';
-      if(!signedIn){l.className='w-lock';l.innerHTML='<i class="fa-solid fa-lock"></i> Sign in';}
-      else if(!hasMedia){l.className='w-lock prem-lock';l.innerHTML='<i class="fa-solid fa-crown"></i> Upgrade';}}
-  }
-  lockWCard('.w-card[data-media="image"]','wLockImg');
-  lockWCard('.w-card[data-media="video"]','wLockVid');
-
-  function lockAsOpt(sel,lockEl){
-    var o=$(sel),l=$(lockEl);
-    if(o&&l){o.classList.toggle('locked',!hasMedia);l.style.display=hasMedia?'none':'flex';
-      if(!signedIn)l.innerHTML='<i class="fa-solid fa-lock"></i> Sign in';
-      else if(!hasMedia)l.innerHTML='<i class="fa-solid fa-crown"></i> Upgrade';}
-  }
-  lockAsOpt('asImg','asLockImg');
-  lockAsOpt('asVid','asLockVid');
-  updateModelUI();
 }
 
 /* ========== MODEL ========== */
@@ -955,8 +917,7 @@ function updateModelUI(){
   var icon=$('modelIcon'),name=$('modelName');
   var map={helox:{n:'HeloxAi',c:'default-icon',t:'H'},chatgpt:{n:'ChatGPT',c:'gpt-icon',t:'G'},chatz:{n:'Chat.Z',c:'z-icon',t:'Z'}};
   var m=map[S.model]||map.helox;
-  if(icon){icon.className='m-icon '+m.c;icon.textContent=m.t;}
-  if(name)name.textContent=m.n;
+  if(icon){icon.className='m-icon '+m.c;icon.textContent=m.t;} if(name)name.textContent=m.n;
   document.querySelectorAll('.model-item').forEach(function(i){i.classList.toggle('active',i.getAttribute('data-model')===S.model);});
 }
 function selectModel(m){S.model=m;try{localStorage.setItem('helox-model',m)}catch(e){}updateModelUI();toggleMD(false);toast('Switched to '+(m==='helox'?'HeloxAi':m),'ok');}
@@ -965,8 +926,27 @@ function initModel(){var s='helox';try{s=localStorage.getItem('helox-model')||'h
 
 /* ========== VIEW / GALLERY ========== */
 function switchView(v){S.view=v;$('chatView').style.display=v==='chat'?'block':'none';$('galleryView').style.display=v==='gallery'?'block':'none';$('cbContainer').style.display=v==='chat'?'block':'none';$('chatTab').classList.toggle('active',v==='chat');$('galleryTab').classList.toggle('active',v==='gallery');if(v==='gallery')renderGallery();}
-function extractMedia(c){var found=[],m,r=/!\[([^\]]*)\]\(([^)]+)\)/g;while((m=r.exec(c))!==null)found.push({type:/\.(mp4|webm|mov)/i.test(m[2])?'video':'image',url:m[2],prompt:m[1]||'',id:uid()});return found;}
-function addGal(c){extractMedia(c).forEach(function(i){if(!S.gallery.some(function(g){return g.url===i.url}))S.gallery.unshift(i);});}
+function extractMedia(c){
+  var found=[],m;
+  // Markdown images
+  var r=/!\[([^\]]*)\]\(([^)]+)\)/g;
+  while((m=r.exec(c))!==null)found.push({type:/\.(mp4|webm|mov)/i.test(m[2])?'video':'image',url:m[2],prompt:m[1]||'',id:uid()});
+  return found;
+}
+function addGal(c){
+  extractMedia(c).forEach(function(i){
+    if(!S.gallery.some(function(g){return g.url===i.url}))S.gallery.unshift(i);
+  });
+  // If this message contained generated media, increment usage locally
+  // Note: In a real app, the backend would confirm generation success. 
+  // Here we assume if the AI returned an image URL, it was generated.
+  if(c.indexOf('![') > -1 || c.indexOf('data:image') > -1) {
+      incrementUsage('images');
+  }
+  if(c.indexOf('video') > -1 || c.indexOf('.mp4') > -1) {
+      incrementUsage('videos');
+  }
+}
 function renderGallery(){
   var grid=$('galGrid'),empty=$('galEmpty'),count=$('galCount');if(!grid)return;
   count.textContent=S.gallery.length+' item'+(S.gallery.length!==1?'s':'');
@@ -1023,10 +1003,7 @@ function renderAll(){
   S.msgs.forEach(function(m,i){
     if(m.role==='assistant'){
       var el=$('mc-'+i);
-      if(el){
-        el.innerHTML=md(m.content);
-        applyMath(el);
-      }
+      if(el){el.innerHTML=md(m.content);applyMath(el);}
     }
   });
   
@@ -1099,7 +1076,7 @@ function renderFileInd(){
   fi.innerHTML=html;
 }
 
-/* ========== MESSAGE ACTIONS ========== */
+/* ========== ACTIONS ========== */
 function actCopy(i){var t=S.msgs[i]&&S.msgs[i].content;if(!t)return;navigator.clipboard.writeText(t).then(function(){toast('Copied','ok')}).catch(function(){toast('Copy failed','err')});}
 function actLike(i,type){if(type==='like'){S.msgs[i].liked=!S.msgs[i].liked;S.msgs[i].disliked=false;}else{S.msgs[i].disliked=!S.msgs[i].disliked;S.msgs[i].liked=false;}renderAll();}
 function actEdit(i){var m=S.msgs[i];if(!m||m.role!=='user')return;S.editingIndex=i;S.editingFiles=(m.images||[]).map(function(img){return{dataUrl:img.dataUrl,name:img.name}});$('emTextarea').value=m.content||'';renderEditAtt();$('emOverlay').classList.add('on');$('emModal').classList.add('on');}
@@ -1166,8 +1143,17 @@ function streamRes(res,onChunk,onDone){
 async function sendMsg(text){
   var t=text||$('cbInput').value.trim();
   if((!t&&!S.pendingFiles.length)||S.streaming)return;
+  
+  // Check Limits for media
+  var limitCheck = checkLimits(t);
+  if(!limitCheck.allowed) {
+      toast(limitCheck.msg, 'wrn');
+      return;
+  }
+
   if(isImgQ(t)&&!canMedia()){toast('Sign in to generate images','wrn');return;}
   if(isVidQ(t)&&!canMedia()){toast('Sign in to generate videos','wrn');return;}
+  
   if(!S.chatId&&S.user)await startNewChat();
   var imgs=S.pendingFiles.filter(function(f){return f.type==='image';}).map(function(f){return{dataUrl:f.dataUrl,name:f.name};});
   var files=S.pendingFiles.filter(function(f){return f.type!=='image';});
@@ -1262,9 +1248,33 @@ function updateCB(){
   }
 }
 
-/* ========== ACTION SHEET / VOICE DROPDOWN ========== */
-function toggleAS(open){S.asOpen=typeof open==='boolean'?open:!S.asOpen;$('asSheet').classList.toggle('open',S.asOpen);$('asOv').classList.toggle('on',S.asOpen);}
-function toggleVD(open){S.vdOpen=typeof open==='boolean'?open:!S.vdOpen;$('voiceDd').classList.toggle('on',S.vdOpen);}
+/* ========== VOICES ========== */
+async function loadVoices() {
+    var list=$('voiceList');
+    if(!list) return;
+    try {
+        var r=await fetch(apiUrl()+'/tts/voices');
+        if(r.ok){
+            var d=await r.json();
+            if(d.voices){
+                list.innerHTML='';
+                d.voices.forEach(function(v){
+                    var el=document.createElement('div');
+                    el.className='v-item'+(v.id===S.selectedVoice?' active':'');
+                    el.textContent=v.name;
+                    el.dataset.v=v.id;
+                    el.addEventListener('click',function(){
+                        S.selectedVoice=v.id;
+                        document.querySelectorAll('.v-item').forEach(function(i){i.classList.remove('active')});
+                        el.classList.add('active');
+                        toggleVD(false);
+                    });
+                    list.appendChild(el);
+                });
+            }
+        }
+    } catch(e) { console.error('Failed to load voices', e); }
+}
 
 /* ========== EVENT LISTENERS ========== */
 function initEvents(){
@@ -1293,7 +1303,8 @@ function initEvents(){
   $('asClose').addEventListener('click',function(e){e.stopPropagation();toggleAS(false);});
   $('asOv').addEventListener('click',function(){toggleAS(false);});
   $('asSheet').addEventListener('click',function(e){
-    var o=e.target.closest('.as-opt');if(!o)return;
+    var o=e.target.closest('.as-opt');
+    if(!o)return;
     if(o.classList.contains('locked'))return;
     e.stopPropagation();
     $('cbInput').value=o.getAttribute('data-prompt');
@@ -1446,19 +1457,15 @@ function initEvents(){
     if(delBtn){
       e.stopPropagation();
       var cid=delBtn.getAttribute('data-del-cid');
-      delConv(cid).then(function(){
-        if(S.chatId===cid){S.msgs=[];S.chatId=null;renderAll();$('hdrTitle').textContent='HeloxAi';}
-        loadChatList();toast('Deleted','inf');
-      });
+      delConv(cid);
       return;
     }
     var item=e.target.closest('.cl-item');
     if(item){
       var cid=item.getAttribute('data-cid');
-      S.chatId=cid;
-      var conv=S.chatListData.find(function(c){return c.id===cid;});
-      if(conv)$('hdrTitle').textContent=conv.title;
-      loadConv(cid);renderChatList();toggleSB(false);
+      loadConv(cid);
+      renderChatList();
+      toggleSB(false);
     }
   });
 
@@ -1510,7 +1517,7 @@ function initEvents(){
 
 /* ========== INIT ========== */
 async function init(){
-  initTheme();initMarked();initModel();initEvents();setupAuth();renderAll();updateCB();
+  initTheme();initMarked();initModel();initEvents();setupAuth();loadVoices();renderAll();updateCB();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 
