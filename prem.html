@@ -46,8 +46,7 @@
     }
     header h1 {
       font-size: 3.5rem; font-weight: 700; color: var(--primary-cyan);
-      margin-bottom: 15px; line-height: 1.2;
-      letter-spacing: -1px;
+      margin-bottom: 15px; line-height: 1.2; letter-spacing: -1px;
     }
     header p { font-size: 1.25rem; color: var(--text-secondary); max-width: 650px; margin: 0 auto; }
     .hero-badge {
@@ -68,7 +67,6 @@
     .section-padding { padding: 80px 0; }
     .bg-primary { background: var(--primary-bg); }
     .bg-secondary { background: var(--secondary-bg); }
-
     .section-title { font-size: 2.5rem; font-weight: 600; color: var(--text-primary); text-align: center; margin-bottom: 20px; }
     .section-subtitle { font-size: 1.1rem; color: var(--text-secondary); text-align: center; max-width: 700px; margin: 0 auto 50px; }
 
@@ -86,10 +84,7 @@
     /* FEATURES LIST */
     .feature { display: flex; align-items: flex-start; margin-bottom: 50px; text-align: left; }
     .feature:last-child { margin-bottom: 0; }
-    .feature-icon { 
-      font-size: 2.5rem; color: var(--primary-cyan); margin-right: 25px; min-width: 60px; 
-      text-align: center; filter: drop-shadow(0 0 10px rgba(0,224,255,0.3));
-    }
+    .feature-icon { font-size: 2.5rem; color: var(--primary-cyan); margin-right: 25px; min-width: 60px; text-align: center; filter: drop-shadow(0 0 10px rgba(0,224,255,0.3)); }
     .feature-content h3 { font-size: 1.5rem; color: var(--text-primary); margin-bottom: 12px; margin-top: 0; }
     .feature-content p { color: var(--text-secondary); font-size: 1.05rem; margin: 0; }
     .highlight { color: var(--primary-cyan); font-weight: 600; }
@@ -108,19 +103,13 @@
       border-radius: 20px; box-shadow: 0 20px 50px rgba(0, 224, 255, 0.1);
       border: 1px solid var(--card-bg); text-align: center; position: relative; overflow: hidden;
     }
-    .preorder-container::before {
-      content:''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
-      background: var(--accent-gradient);
-    }
+    .preorder-container::before { content:''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--accent-gradient); }
     .preorder-container h2 { font-size: 2.5rem; color: var(--primary-cyan); margin-bottom: 20px; margin-top: 0; }
     .price { font-size: 3.5rem; font-weight: 700; margin: 20px 0; color: var(--text-primary); line-height: 1; }
     .price .currency { font-size: 2.5rem; vertical-align: middle; }
     .subnote { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 30px; }
     
-    #countdownContainer { 
-      margin: 30px 0; background: var(--card-bg); padding: 20px; border-radius: 12px; 
-      border: 1px solid rgba(255,255,255,0.05); 
-    }
+    #countdownContainer { margin: 30px 0; background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
     #countdown { font-size: 1.8rem; font-weight: 600; color: var(--primary-cyan); font-family: monospace; letter-spacing: 2px; }
     
     .whats-included { text-align: left; background: rgba(255,255,255,0.03); padding: 30px; border-radius: 12px; margin: 30px 0; }
@@ -136,7 +125,7 @@
       transition: all 0.3s ease; width: 100%; margin-top: 20px; font-family: 'Poppins', sans-serif;
       box-shadow: 0 4px 15px rgba(0, 224, 255, 0.3);
     }
-    .preorder-button:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0, 224, 255, 0.5); }
+    .preorder-button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0, 224, 255, 0.5); }
     .preorder-button:disabled { background: var(--card-bg); color: var(--text-muted); cursor: not-allowed; transform: none; box-shadow: none; }
     .trust-text { font-size: 0.9rem; color: var(--text-muted); margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 10px; }
     .trust-text span { opacity: 0.7; }
@@ -144,8 +133,7 @@
     /* RESULT BANNER */
     .result-banner {
       padding: 40px; border-radius: 16px; margin-bottom: 30px;
-      text-align: center; animation: fadeSlideIn 0.6s ease both;
-      border: 1px solid transparent;
+      text-align: center; animation: fadeSlideIn 0.6s ease both; border: 1px solid transparent;
     }
     .result-banner.success { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); }
     .result-banner.success h3 { color: var(--success); font-size: 2rem; margin: 0 0 10px; }
@@ -156,12 +144,9 @@
     }
     .result-banner.success .go-home-btn:hover { background: rgba(0, 224, 255, 0.1); }
     
-    @keyframes fadeSlideIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* STATE MANAGEMENT CLASSES */
+    /* STATE MANAGEMENT */
     body.show-result .preorder-details { display: none; }
     body.show-result .preorder-container { display: none; }
     #resultContainer { display: none; }
@@ -186,14 +171,11 @@
     .faq-answer.show { padding: 0 25px 25px; max-height: 500px; transition: max-height 0.5s ease-in-out; }
 
     /* FOOTER */
-    footer {
-      margin-top: 0; padding: 40px 20px; font-size: 0.9rem; color: var(--text-muted);
-      background: var(--secondary-bg); border-top: 1px solid var(--card-bg);
-    }
+    footer { margin-top: 0; padding: 40px 20px; font-size: 0.9rem; color: var(--text-muted); background: var(--secondary-bg); border-top: 1px solid var(--card-bg); }
     footer a { color: var(--text-secondary); text-decoration: none; margin: 0 10px; }
     footer a:hover { color: var(--primary-cyan); }
 
-    /* SPINNER & MODAL */
+    /* SPINNER & DEBUG */
     #loadingSpinner {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(15,23,42,0.95); display: none; flex-direction: column;
@@ -207,30 +189,12 @@
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    /* AUTH MODAL */
-    .modal-overlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8); z-index: 10000; display: none;
-      align-items: center; justify-content: center; backdrop-filter: blur(5px);
+    #debugBanner {
+      display: none; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: 10px; padding: 16px 20px; margin: 20px auto; max-width: 900px;
+      font-family: monospace; font-size: 13px; color: var(--warning); line-height: 1.6; text-align: left;
     }
-    .modal-overlay.active { display: flex; animation: fadeIn 0.3s ease; }
-    .auth-modal {
-      background: var(--secondary-bg); width: 90%; max-width: 400px; padding: 40px;
-      border-radius: 16px; border: 1px solid var(--card-bg);
-      box-shadow: 0 20px 50px rgba(0,0,0,0.5); text-align: center;
-    }
-    .auth-modal h2 { margin-top: 0; color: var(--primary-cyan); }
-    .auth-input {
-      width: 100%; padding: 12px 15px; margin: 10px 0; background: var(--primary-bg);
-      border: 1px solid var(--card-bg); color: white; border-radius: 8px; font-family: inherit; box-sizing: border-box;
-    }
-    .auth-input:focus { outline: none; border-color: var(--primary-cyan); }
-    .auth-btn {
-      width: 100%; padding: 12px; background: var(--accent-gradient); border: none;
-      color: var(--primary-bg); font-weight: 700; border-radius: 8px; cursor: pointer; margin-top: 15px; font-family: inherit;
-    }
-    .auth-close { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    #debugBanner strong { color: var(--error); font-size: 14px; display: block; margin-bottom: 8px; }
 
     @media (max-width: 768px) {
       header h1 { font-size: 2.5rem; }
@@ -242,6 +206,12 @@
       .feature-content p { font-size: 1rem; }
     }
   </style>
+
+  <!-- 1. LOAD SUPABASE SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- 2. LOAD ENV.JS (The onerror handles missing files gracefully) -->
+  <script src="env.js" onerror="window.__envLoadFailed=true"></script>
 </head>
 <body>
 
@@ -254,7 +224,8 @@
 </header>
 
 <div class="container">
-  <a href="#" class="back-btn" onclick="window.location.reload()">&larr; Back to Home</a>
+  <div id="debugBanner"></div>
+  <a href="index.html" class="back-btn">&larr; Back to HeloxAi</a>
 </div>
 
 <main>
@@ -301,7 +272,7 @@
       </div>
     </section>
 
-    <!-- SINGLE LIFETIME CONTAINER -->
+    <!-- PREORDER CONTAINER -->
     <section class="section-padding bg-primary" id="pricing-section">
       <div class="container">
         <div class="preorder-container" id="preorderCTA">
@@ -317,26 +288,11 @@
           <div class="whats-included">
             <h4>What's Included:</h4>
             <ul>
-              <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                Lifetime access to HeloxAi Premium
-              </li>
-              <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                Access to all current and future core AI models
-              </li>
-              <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                Unlimited document uploads for RAG knowledge bases
-              </li>
-              <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                Priority support and direct line to the founding team
-              </li>
-              <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                Exclusive "Founder" badge on your account
-              </li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>Lifetime access to HeloxAi Premium</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>Access to all current and future core AI models</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>Unlimited document uploads for RAG knowledge bases</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>Priority support and direct line to the founding team</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>Exclusive "Founder" badge on your account</li>
             </ul>
           </div>
 
@@ -348,7 +304,7 @@
         </div>
       </div>
     </section>
-    <!-- END SINGLE CONTAINER -->
+    <!-- END CONTAINER -->
 
     <section class="section-padding bg-secondary faq-section">
       <div class="container">
@@ -366,220 +322,302 @@
   <div class="container">&copy; 2025 HeloxAI &#8212; All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></div>
 </footer>
 
-<!-- Loading Spinner Overlay -->
 <div id="loadingSpinner">
   <div class="spinner"></div>
   <p id="loadingText">Processing...</p>
 </div>
 
-<!-- Login Modal -->
-<div class="modal-overlay" id="loginModal">
-  <div class="auth-modal">
-    <span class="auth-close" onclick="closeModal()">&times;</span>
-    <h2>Welcome Back</h2>
-    <p style="color:var(--text-secondary); margin-bottom:20px;">Log in to secure your Founder status.</p>
-    <form onsubmit="handleLogin(event)">
-      <input type="email" class="auth-input" placeholder="Email Address" required value="demo@helox.ai">
-      <input type="password" class="auth-input" placeholder="Password" required value="password">
-      <button type="submit" class="auth-btn">Login & Continue</button>
-    </form>
-  </div>
-</div>
-
 <script>
   /* -------------------------------------------------------------------------- */
-  /*                                MOCK STATE SYSTEM                            */
+  /*                          ⚙️ CONFIGURATION SECTION                          */
   /* -------------------------------------------------------------------------- */
   
-  // Simulating environment variables and database
-  const MOCK_ENV = {
-    SUPABASE_URL: 'mock://',
-    SUPABASE_KEY: 'mock_key',
-    BACKEND_URL: 'mock://api'
-  };
+  var SUPABASE_URL = null;
+  var SUPABASE_ANON_KEY = null;
+  var BACKEND_URL = null;
 
-  const STATE = {
-    isLoggedIn: localStorage.getItem('helox_user') !== null,
-    isLifetime: localStorage.getItem('helox_lifetime') === 'true',
-    user: JSON.parse(localStorage.getItem('helox_user') || 'null')
-  };
+  // 1. Check if env.js loaded successfully
+  if (window.__envLoadFailed) {
+    console.error('env.js failed to load.');
+  } 
+  // 2. Check if window.ENV exists (from env.js)
+  else if (window.ENV) {
+    SUPABASE_URL = window.ENV.SUPABASE_URL;
+    SUPABASE_ANON_KEY = window.ENV.SUPABASE_ANON_KEY;
+    BACKEND_URL = window.ENV.BACKEND_URL;
+  }
 
   /* -------------------------------------------------------------------------- */
   /*                               DOM ELEMENTS                                  */
   /* -------------------------------------------------------------------------- */
-  
   var preorderBtn     = document.getElementById('preorderBtn');
   var spinner         = document.getElementById('loadingSpinner');
   var loadingText     = document.getElementById('loadingText');
   var preorderContent = document.getElementById('preorderContent');
   var resultContainer = document.getElementById('resultContainer');
   var resultBanner    = document.getElementById('resultBanner');
-  var loginModal      = document.getElementById('loginModal');
+  var debugBanner     = document.getElementById('debugBanner');
+  
+  var sb = null;
+
+  /* -------------------------------------------------------------------------- */
+  /*                            INITIALIZATION                                   */
+  /* -------------------------------------------------------------------------- */
+
+  function initApp() {
+    // Validate Config
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !BACKEND_URL) {
+      var errors = [];
+      if (window.__envLoadFailed) errors.push('env.js file not found or failed to load.');
+      if (!window.ENV && !window.__envLoadFailed) errors.push('env.js loaded but window.ENV is undefined.');
+      if (!SUPABASE_URL) errors.push('SUPABASE_URL is missing in env.js.');
+      if (!SUPABASE_ANON_KEY) errors.push('SUPABASE_ANON_KEY is missing in env.js.');
+      if (!BACKEND_URL) errors.push('BACKEND_URL is missing in env.js.');
+      
+      showDebug(errors);
+      preorderBtn.textContent = 'Config Error';
+      preorderBtn.disabled = true;
+      return;
+    }
+
+    // Initialize Supabase
+    try {
+      sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } catch (e) {
+      showDebug(['Supabase Init Failed:', e.message]);
+      preorderBtn.textContent = 'Init Error';
+      preorderBtn.disabled = true;
+      return;
+    }
+
+    // Start Logic
+    startPage();
+    startCountdown();
+    initFAQ();
+  }
 
   /* -------------------------------------------------------------------------- */
   /*                               LOGIC FUNCTIONS                               */
   /* -------------------------------------------------------------------------- */
 
-  function initApp() {
-    checkExistingLifetime();
-    refreshButton();
-    startCountdown();
-    initFAQ();
-  }
+  // 1. Handle Stripe Success Page (URL param check)
+  async function handleSuccessPage() {
+    var params = new URLSearchParams(window.location.search);
+    var sessionId = params.get('session_id');
+    if (!sessionId) return false;
 
-  // 1. Check if user already purchased (mocked via localStorage)
-  function checkExistingLifetime() {
-    if (STATE.isLifetime) {
-      preorderContent.style.display = 'none';
-      document.getElementById('pricing-section').style.display = 'none';
+    // Hide standard content
+    preorderContent.style.display = 'none';
+    var hdr = document.querySelector('header');
+    if (hdr) hdr.style.display = 'none';
+    var back = document.querySelector('.back-btn');
+    if (back && back.parentElement) back.parentElement.style.display = 'none';
+    debugBanner.style.display = 'none';
+    resultContainer.style.display = 'block';
 
-      resultContainer.style.display = 'block';
-      resultBanner.className = 'result-banner success';
-      resultBanner.innerHTML =
-        '<h3>&#128081; You are already a Founder</h3>' +
-        '<p>Your account already has Lifetime Premium. Thanks for your early support!</p>' +
-        '<a href="#" onclick="window.location.reload()" class="go-home-btn">Go to Dashboard &rarr;</a>';
+    // Show Loading State
+    resultBanner.className = 'result-banner success';
+    resultBanner.innerHTML = '<div class="spinner" style="margin:0 auto 15px;border-top-color:var(--success)"></div><h3>Verifying Payment...</h3><p>Please wait while we confirm your transaction.</p>';
 
-      document.body.classList.add('show-result');
-    }
-  }
-
-  // 2. Refresh Button State based on login status
-  function refreshButton() {
-    if (STATE.isLifetime) return; // Handled by checkExistingLifetime
-
-    if (STATE.isLoggedIn) {
-      preorderBtn.disabled = false;
-      preorderBtn.textContent = 'Pre-Order for \u00A3499';
-      preorderBtn.classList.remove('disabled-style');
-    } else {
-      preorderBtn.disabled = false; // We allow click to open login
-      preorderBtn.textContent = 'Login to Preorder';
-      // We style it slightly differently to indicate secondary action if needed, 
-      // but keeping gradient is better for conversion CTA.
-    }
-  }
-
-  // 3. Handle Button Click
-  preorderBtn.addEventListener('click', function() {
-    if (STATE.isLifetime) return;
-
-    if (!STATE.isLoggedIn) {
-      openModal();
-    } else {
-      handlePreorder();
-    }
-  });
-
-  // 4. Handle Preorder (Mock Backend + Stripe)
-  function handlePreorder() {
-    spinner.style.display = 'flex';
-    loadingText.textContent = 'Connecting to Secure Checkout...';
-
-    // Simulate network request to create checkout session
-    setTimeout(() => {
-      loadingText.textContent = 'Verifying Payment...';
+    try {
+      var response = await fetch(BACKEND_URL + '/verify-session?session_id=' + encodeURIComponent(sessionId));
       
-      // Simulate successful payment delay
-      setTimeout(() => {
-        // Update State
-        STATE.isLifetime = true;
-        localStorage.setItem('helox_lifetime', 'true');
-        
-        spinner.style.display = 'none';
-        
-        // Show Success UI
+      if (!response.ok) {
+        var errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'HTTP ' + response.status);
+      }
+
+      var data = await response.json();
+
+      if (data.upgraded || data.already_upgraded || data.pending) {
+        showSuccessResult(data);
+        return true;
+      }
+      throw new Error('Unexpected response from server');
+    } catch (err) {
+      console.error('Verify error:', err);
+      resultBanner.className = 'result-banner error';
+      resultBanner.innerHTML = '<h3>Verification Issue</h3><p>' + err.message + '</p><p style="font-size:0.85rem;margin-top:10px">Contact support if payment was deducted.</p>';
+      return true;
+    }
+  }
+
+  function showSuccessResult(data) {
+    var msg = data.upgraded ? 'Welcome, Founder!' : (data.already_upgraded ? 'Already Upgraded' : 'Payment Received');
+    var sub = data.upgraded ? 'Your lifetime premium access is now active.' : 'Your account is active.';
+    
+    resultBanner.className = 'result-banner success';
+    resultBanner.innerHTML = 
+      '<h3 style="font-size:2.5rem;margin-bottom:12px">&#127881; ' + msg + '</h3>' +
+      '<p style="font-size:1.1rem;color:var(--text-primary);margin-bottom:8px">' + sub + '</p>' +
+      '<p>You now have unlimited access to all HeloxAi Premium features.</p>' +
+      '<a href="index.html" class="go-home-btn">Go to Dashboard &rarr;</a>';
+    
+    document.body.classList.add('show-result');
+  }
+
+  // 2. Check if User is Already Lifetime
+  async function checkExistingLifetime() {
+    try {
+      // Get Session
+      const { data: sessionData, error: sessionError } = await sb.auth.getSession();
+      if (sessionError || !sessionData.session) {
+        refreshButton(); // Not logged in, show login button
+        return;
+      }
+
+      const user = sessionData.session.user;
+
+      // Check DB for lifetime status
+      // Note: Ensure RLS policies allow users to read their own 'plan' and 'is_lifetime' columns
+      const { data, error } = await sb
+        .from('users')
+        .select('plan, is_lifetime')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        console.warn("DB Check Warning:", error);
+        refreshButton();
+        return;
+      }
+
+      if (data && (data.is_lifetime === true || data.plan === 'lifetime')) {
+        // User is lifetime
         preorderContent.style.display = 'none';
         document.getElementById('pricing-section').style.display = 'none';
         resultContainer.style.display = 'block';
         
         resultBanner.className = 'result-banner success';
-        resultBanner.innerHTML = 
-          '<h3 style="font-size:2.5rem;margin-bottom:12px">\uD83C\uDF89 Welcome, Founder!</h3>' +
-          '<p style="font-size:1.1rem;color:var(--text-primary);margin-bottom:8px">Your lifetime premium access is now active.</p>' +
-          '<p>You now have unlimited access to all current and future HeloxAi Premium features.</p>' +
-          '<a href="#" onclick="window.location.reload()" class="go-home-btn">Start using HeloxAi Premium &rarr;</a>';
-          
+        resultBanner.innerHTML = '<h3>&#128081; You are already a Founder</h3><p>Your account already has Lifetime Premium.</p>';
         document.body.classList.add('show-result');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        refreshButton(); // Logged in but not lifetime
+      }
 
-      }, 2000);
-    }, 1500);
+    } catch (err) {
+      console.error("Auth Check Error:", err);
+      refreshButton();
+    }
   }
 
-  // 5. Modal Logic (Mock Auth)
-  function openModal() {
-    loginModal.classList.add('active');
+  // 3. Refresh Button State
+  async function refreshButton() {
+    // Don't change if already showing result
+    if (document.body.classList.contains('show-result')) return;
+
+    const { data: { session } } = await sb.auth.getSession();
+    
+    if (session) {
+      preorderBtn.disabled = false;
+      preorderBtn.textContent = 'Pre-Order for \u00A3499';
+    } else {
+      preorderBtn.disabled = false;
+      preorderBtn.textContent = 'Login to Preorder';
+    }
   }
-  function closeModal() {
-    loginModal.classList.remove('active');
-  }
-  // Close on outside click
-  loginModal.addEventListener('click', function(e) {
-    if (e.target === loginModal) closeModal();
+
+  // 4. Handle Preorder Button Click
+  preorderBtn.addEventListener('click', async function() {
+    if (preorderBtn.textContent.includes('Login')) {
+      // Redirect to Auth Page
+      window.location.href = 'auth.html'; 
+      return;
+    }
+    
+    if (!preorderBtn.disabled) {
+      handlePreorder();
+    }
   });
 
-  function handleLogin(e) {
-    e.preventDefault();
-    // Mock Login Success
-    const email = e.target.querySelector('input[type="email"]').value;
-    STATE.isLoggedIn = true;
-    STATE.user = { id: 'user_123', email: email };
-    localStorage.setItem('helox_user', JSON.stringify(STATE.user));
-    
-    closeModal();
-    refreshButton(); // Update button to "Preorder"
-    
-    // Optional: Show a small toast
-    const btn = document.querySelector('.auth-btn');
-    const originalText = btn.textContent;
-    btn.textContent = 'Logged In!';
-    setTimeout(() => btn.textContent = originalText, 1000);
+  // 5. Create Checkout Session
+  async function handlePreorder() {
+    spinner.style.display = 'flex';
+    loadingText.textContent = 'Initializing Secure Checkout...';
+
+    try {
+      const { data: { session }, error: sessionError } = await sb.auth.getSession();
+      
+      if (sessionError || !session || !session.user) {
+        spinner.style.display = 'none';
+        alert('Session expired. Please login again.');
+        window.location.href = 'auth.html';
+        return;
+      }
+
+      const user = session.user;
+
+      // Call Backend
+      const response = await fetch(BACKEND_URL + '/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          user_id: user.id, 
+          email: user.email,
+          plan: 'lifetime' 
+        })
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to connect to payment provider');
+      }
+
+      const data = await response.json();
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+
+    } catch (err) {
+      console.error('Preorder failed:', err);
+      spinner.style.display = 'none';
+      alert('Something went wrong: ' + err.message);
+    }
   }
 
-  // 6. Countdown Timer
+  /* -------------------------------------------------------------------------- */
+  /*                               HELPERS                                       */
+  /* -------------------------------------------------------------------------- */
+
+  function showDebug(errors) {
+    if (!errors || !errors.length) { debugBanner.style.display = 'none'; return; }
+    debugBanner.style.display = 'block';
+    var html = '<strong>System Debug Info:</strong>';
+    errors.forEach(function(e) { html += '<div>' + e + '</div>'; });
+    debugBanner.innerHTML = html;
+  }
+
   function startCountdown() {
-    // Set date to 7 days from now for demo purposes
+    // Set target date (Example: 7 days from now)
     var target = new Date();
     target.setDate(target.getDate() + 7); 
-    
+
     var el = document.getElementById('countdown');
     if (!el) return;
     
     function tick() {
       var d = target - new Date().getTime();
-      if (d <= 0) { el.textContent = 'Preorder offer ended!'; return; }
-      
-      var days = Math.floor(d/86400000);
-      var hours = Math.floor((d%86400000)/3600000);
-      var minutes = Math.floor((d%3600000)/60000);
-      var seconds = Math.floor((d%60000)/1000);
-      
-      // Add leading zeros
-      hours = hours < 10 ? "0" + hours : hours;
-      minutes = minutes < 10 ? "0" + minutes : minutes;
-      seconds = seconds < 10 ? "0" + seconds : seconds;
-
-      el.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+      if (d <= 0) { el.textContent = 'Offer Ended'; return; }
+      el.textContent = Math.floor(d/86400000) + 'd ' + Math.floor((d%86400000)/3600000) + 'h ' + Math.floor((d%3600000)/60000) + 'm ' + Math.floor((d%60000)/1000) + 's';
     }
     tick();
     setInterval(tick, 1000);
   }
 
-  // 7. FAQ Accordion
   function initFAQ() {
     document.querySelectorAll('.faq-question').forEach(function(q) {
       q.addEventListener('click', function() {
         var a = q.nextElementSibling;
         var isActive = q.classList.contains('active');
         
-        // Close all others
         document.querySelectorAll('.faq-question').forEach(function(o) {
           o.classList.remove('active'); 
           o.nextElementSibling.classList.remove('show');
         });
 
-        // Toggle current
         if (!isActive) {
           q.classList.add('active');
           a.classList.add('show');
@@ -588,7 +626,17 @@
     });
   }
 
-  // Initialize
+  async function startPage() {
+    // First check if returning from Stripe
+    const isReturning = await handleSuccessPage();
+    
+    // If not returning from stripe, check current status
+    if (!isReturning) {
+      await checkExistingLifetime();
+    }
+  }
+
+  // Run Init
   initApp();
 
 </script>
