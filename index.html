@@ -599,18 +599,13 @@ function incrementUsage(key) {
 }
 
 function checkLimits(text) {
-    if (!isAuthed()) return { allowed: true, msg: '' }; // Limits only for authed users usually, or global
-    
+    if (!isAuthed()) return { allowed: true, msg: '' };
     if (isImgQ(text)) {
         var current = getDailyUsage('images');
-        if (current >= S.dailyImgLimit) {
-            return { allowed: false, msg: 'Daily image limit (6) reached.' };
-        }
+        if (current >= S.dailyImgLimit) return { allowed: false, msg: 'Daily image limit (6) reached.' };
     } else if (isVidQ(text)) {
         var current = getDailyUsage('videos');
-        if (current >= S.dailyVidLimit) {
-            return { allowed: false, msg: 'Daily video limit (3) reached.' };
-        }
+        if (current >= S.dailyVidLimit) return { allowed: false, msg: 'Daily video limit (3) reached.' };
     }
     return { allowed: true, msg: '' };
 }
@@ -643,27 +638,11 @@ async function setUserFromSess(sess){
             if(!r.error) prof=r.data;
         } catch(dbErr){ console.log('Profile DB error or missing table. Using defaults.', dbErr.message); }
     }
-    
-    var u={
-        id:sess.user.id,
-        email:sess.user.email,
-        token:sess.access_token,
-        plan:'free',
-        is_premium:false,
-        is_lifetime:false
-    };
-    
-    if(prof){ 
-        u.plan=prof.plan||'free'; 
-        u.is_premium=!!prof.is_premium; 
-        u.is_lifetime=!!prof.is_lifetime; 
-    }
-    
+    var u={ id:sess.user.id, email:sess.user.email, token:sess.access_token, plan:'free', is_premium:false, is_lifetime:false };
+    if(prof){ u.plan=prof.plan||'free'; u.is_premium=!!prof.is_premium; u.is_lifetime=!!prof.is_lifetime; }
     S.user=u;
     try{localStorage.setItem('helox-last-login',Date.now())}catch(e){}
-  }catch(e){ 
-    S.user={ id:sess.user.id, email:sess.user.email, token:sess.access_token, plan:'free', is_premium:false, is_lifetime:false }; 
-  }
+  }catch(e){ S.user={ id:sess.user.id, email:sess.user.email, token:sess.access_token, plan:'free', is_premium:false, is_lifetime:false }; }
 }
 
 async function setupAuth(){
@@ -673,10 +652,8 @@ async function setupAuth(){
       if (session && session.user) {
           await setUserFromSess(session);
           refreshUI();
-          loadChatList(); // Load chats on auth
-          if(window.location.hash && window.location.hash.includes('access_token')){
-              window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
-          }
+          loadChatList();
+          if(window.location.hash && window.location.hash.includes('access_token')) window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
       } else {
           S.user = null;
           refreshUI();
@@ -689,10 +666,7 @@ async function setupAuth(){
       if(sess&&sess.user){
         await setUserFromSess(sess);
         refreshUI();
-        if(ev==='SIGNED_IN') {
-            loadChatList();
-            toast('Signed in','ok');
-        }
+        if(ev==='SIGNED_IN') { loadChatList(); toast('Signed in','ok'); }
       } else {
         S.user=null;
         refreshUI();
@@ -716,16 +690,9 @@ async function loadChatList(){
   if(!S.user){S.chatListData=[];renderChatList();return;}
   try{
     var r=await fetch(apiUrl()+'/chats',{method:'GET',headers:authH(),credentials:'include'});
-    if(r.ok){
-        var d=await r.json();
-        S.chatListData=Array.isArray(d)?d:(d.chats||[]);
-    } else {
-        console.error('Failed to load chats', r.status);
-    }
-  }catch(e){
-      console.error(e);
-      S.chatListData=[];
-  }
+    if(r.ok){ var d=await r.json(); S.chatListData=Array.isArray(d)?d:(d.chats||[]); }
+    else { console.error('Failed to load chats', r.status); }
+  }catch(e){ console.error(e); S.chatListData=[]; }
   renderChatList();
 }
 
@@ -735,49 +702,29 @@ async function startNewChat(){
     var r=await fetch(apiUrl()+'/newchat',{method:'POST',headers:authH(),credentials:'include',body:JSON.stringify({model:S.model})});
     if(r.ok){
         var d=await r.json();
-        if(d&&d.conversation_id){
-            S.chatId=d.conversation_id;
-            $('hdrTitle').textContent='New Chat';
-            loadChatList();
-        }
+        if(d&&d.conversation_id){ S.chatId=d.conversation_id; $('hdrTitle').textContent='New Chat'; loadChatList(); }
     }
-  }catch(e){
-      // Fallback for demo
-      S.chatId=uid(); $('hdrTitle').textContent='New Chat';
-  }
+  }catch(e){ S.chatId=uid(); $('hdrTitle').textContent='New Chat'; }
   S.msgs=[]; renderAll(); if(S.sbOpen)toggleSB(false);
 }
 
 async function loadConv(cid){
-  // Logic to load specific conversation
-  S.msgs=[];
-  showWelcome(); // Clear view briefly
-  
-  // Try fetching messages from backend if available
+  S.msgs=[]; showWelcome();
   if (sb && cid) {
       try {
           var msgs=await sb.from('messages').select('*').eq('conversation_id',cid).order('created_at',{ascending:true});
           if(!msgs.error && msgs.data) {
              S.msgs=msgs.data.map(function(m){
-                 return {
-                     id:m.id, role:m.role, content:m.content, 
-                     content_type:m.content_type||'text', media_url:m.media_url||null,
-                     images:[], time:new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}), 
-                     liked:false, disliked:false
-                 };
+                 return { id:m.id, role:m.role, content:m.content, content_type:m.content_type||'text', media_url:m.media_url||null, images:[], time:new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}), liked:false, disliked:false };
              });
-             // Re-build gallery from loaded messages
              S.gallery=[];
              S.msgs.forEach(function(m){ if(m.role==='assistant') addGal(m.content); });
           }
       } catch(e) { console.error('Error loading conv from DB', e); }
   }
-  
-  // Update UI
   S.chatId=cid;
   var conv=S.chatListData.find(function(c){return c.id===cid;});
   if(conv)$('hdrTitle').textContent=conv.title||'Chat';
-  
   renderAll();
   switchView('chat');
 }
@@ -926,26 +873,11 @@ function initModel(){var s='helox';try{s=localStorage.getItem('helox-model')||'h
 
 /* ========== VIEW / GALLERY ========== */
 function switchView(v){S.view=v;$('chatView').style.display=v==='chat'?'block':'none';$('galleryView').style.display=v==='gallery'?'block':'none';$('cbContainer').style.display=v==='chat'?'block':'none';$('chatTab').classList.toggle('active',v==='chat');$('galleryTab').classList.toggle('active',v==='gallery');if(v==='gallery')renderGallery();}
-function extractMedia(c){
-  var found=[],m;
-  // Markdown images
-  var r=/!\[([^\]]*)\]\(([^)]+)\)/g;
-  while((m=r.exec(c))!==null)found.push({type:/\.(mp4|webm|mov)/i.test(m[2])?'video':'image',url:m[2],prompt:m[1]||'',id:uid()});
-  return found;
-}
+function extractMedia(c){ var found=[],m,r=/!\[([^\]]*)\]\(([^)]+)\)/g;while((m=r.exec(c))!==null)found.push({type:/\.(mp4|webm|mov)/i.test(m[2])?'video':'image',url:m[2],prompt:m[1]||'',id:uid()});return found; }
 function addGal(c){
-  extractMedia(c).forEach(function(i){
-    if(!S.gallery.some(function(g){return g.url===i.url}))S.gallery.unshift(i);
-  });
-  // If this message contained generated media, increment usage locally
-  // Note: In a real app, the backend would confirm generation success. 
-  // Here we assume if the AI returned an image URL, it was generated.
-  if(c.indexOf('![') > -1 || c.indexOf('data:image') > -1) {
-      incrementUsage('images');
-  }
-  if(c.indexOf('video') > -1 || c.indexOf('.mp4') > -1) {
-      incrementUsage('videos');
-  }
+  extractMedia(c).forEach(function(i){ if(!S.gallery.some(function(g){return g.url===i.url}))S.gallery.unshift(i); });
+  if(c.indexOf('![') > -1 || c.indexOf('data:image') > -1) incrementUsage('images');
+  if(c.indexOf('video') > -1 || c.indexOf('.mp4') > -1) incrementUsage('videos');
 }
 function renderGallery(){
   var grid=$('galGrid'),empty=$('galEmpty'),count=$('galCount');if(!grid)return;
@@ -1125,18 +1057,83 @@ function doSTT(blob){
     .catch(function(){toast('STT failed','err');});
 }
 
-/* ========== STREAMING ========== */
-function streamRes(res,onChunk,onDone){
-  if(!res.body||typeof res.body.getReader!=='function'){return res.text().then(function(t){onChunk(t);onDone();});}
-  var reader=res.body.getReader(),dec=new TextDecoder(),buf='',done=false;
-  function finish(){if(done)return;done=true;if(buf.trim())tryParse(buf.trim());try{reader.cancel();}catch(e){}onDone();}
-  function tryParse(line){
-    if(!line)return;if(line.startsWith('data:'))line=line.slice(5).trim();
-    if(line==='[DONE]'){finish();return;}
-    try{var p=JSON.parse(line);var t=p.type==='token'?p.text:p.content||p.text||(p.delta&&p.delta.content)||'';if(t)onChunk(t);}catch(e){onChunk(line);}
-  }
-  function pump(){return reader.read().then(function(r){if(r.done){finish();return;}buf+=dec.decode(r.value,{stream:true});var lines=buf.split('\n');buf=lines.pop()||'';for(var i=0;i<lines.length;i++){tryParse(lines[i].trim());if(done)return;}if(!done)return pump();}).catch(function(){finish();});}
-  return pump();
+/* ========== STREAMING (FIXED) ========== */
+function streamRes(res, onChunk, onDone) {
+    // Handle non-streaming or non-body responses
+    if (!res.body || typeof res.body.getReader !== 'function') {
+        return res.text().then(function (t) {
+            onChunk(t);
+            onDone();
+        });
+    }
+
+    var reader = res.body.getReader();
+    var decoder = new TextDecoder('utf-8');
+    var buffer = '';
+    var finished = false;
+
+    function processChunk(line) {
+        line = line.trim();
+        if (!line) return;
+
+        // SSE prefix handling
+        if (line.startsWith('data:')) {
+            line = line.slice(5).trim();
+        }
+
+        // Done signal from backend
+        if (line === '[DONE]') {
+            onDone();
+            finished = true;
+            return;
+        }
+
+        try {
+            // Parse JSON
+            var json = JSON.parse(line);
+            
+            // Extract text from various possible keys
+            // Backend sends: {"type": "token", "text": "..."}
+            var text = json.token || json.text || json.content || (json.delta && json.delta.content) || '';
+
+            if (text) {
+                onChunk(text);
+            }
+        } catch (e) {
+            // If JSON parsing fails, it might be a partial chunk or garbage.
+            // We silently ignore to avoid breaking the stream.
+        }
+    }
+
+    function pump() {
+        return reader.read().then(function (result) {
+            if (result.done) {
+                // IMPORTANT: Process whatever is left in the buffer when stream closes.
+                // This fixes the "cut off at the end" issue.
+                if (buffer.trim() && !finished) {
+                    processChunk(buffer);
+                }
+                if (!finished) onDone();
+                return;
+            }
+
+            // Decode with stream flag for multi-byte character support
+            buffer += decoder.decode(result.value, { stream: true });
+
+            // SSE standard uses double newline \n\n to separate events
+            var parts = buffer.split('\n\n');
+            buffer = parts.pop(); // Keep the incomplete part (tail) in buffer
+
+            parts.forEach(processChunk);
+
+            return pump();
+        }).catch(function (err) {
+            console.error('Stream read error:', err);
+            if (!finished) onDone();
+        });
+    }
+
+    return pump();
 }
 
 /* ========== SEND MESSAGES ========== */
@@ -1144,7 +1141,6 @@ async function sendMsg(text){
   var t=text||$('cbInput').value.trim();
   if((!t&&!S.pendingFiles.length)||S.streaming)return;
   
-  // Check Limits for media
   var limitCheck = checkLimits(t);
   if(!limitCheck.allowed) {
       toast(limitCheck.msg, 'wrn');
