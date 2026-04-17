@@ -697,15 +697,32 @@ async function loadChatList(){
 }
 
 async function startNewChat(){
-  if(!S.user){toast('Please sign in','wrn');return;}
+  
   try{
-    var r=await fetch(apiUrl()+'/newchat',{method:'POST',headers:authH(),credentials:'include',body:JSON.stringify({model:S.model})});
+    var r=await fetch(apiUrl()+'/newchat',{
+      method:'POST',
+      headers:authH(), // For guests, this sends x-guest-id or nothing (relying on cookies)
+      credentials:'include', 
+      body:JSON.stringify({model:S.model})
+    });
     if(r.ok){
         var d=await r.json();
-        if(d&&d.conversation_id){ S.chatId=d.conversation_id; $('hdrTitle').textContent='New Chat'; loadChatList(); }
+        // Set the chatId regardless of whether user is logged in or not
+        if(d&&d.conversation_id){ 
+          S.chatId=d.conversation_id; 
+          $('hdrTitle').textContent='New Chat'; 
+          loadChatList(); // Optional: maybe only if S.user exists
+        }
     }
-  }catch(e){ S.chatId=uid(); $('hdrTitle').textContent='New Chat'; }
-  S.msgs=[]; renderAll(); if(S.sbOpen)toggleSB(false);
+  }catch(e){ 
+    // Fallback if API fails (e.g., network error)
+    console.error('New chat failed', e);
+    S.chatId=uid(); 
+    $('hdrTitle').textContent='New Chat'; 
+  }
+  S.msgs=[]; 
+  renderAll(); 
+  if(S.sbOpen)toggleSB(false);
 }
 
 async function loadConv(cid){
@@ -1150,11 +1167,20 @@ async function sendMsg(text){
   if(isImgQ(t)&&!canMedia()){toast('Sign in to generate images','wrn');return;}
   if(isVidQ(t)&&!canMedia()){toast('Sign in to generate videos','wrn');return;}
   
-  if(!S.chatId&&S.user)await startNewChat();
+  // FIX 1: Allow guests to get a Chat ID if they don't have one
+  if(!S.chatId) await startNewChat();
+  
   var imgs=S.pendingFiles.filter(function(f){return f.type==='image';}).map(function(f){return{dataUrl:f.dataUrl,name:f.name};});
   var files=S.pendingFiles.filter(function(f){return f.type!=='image';});
   var msg={id:uid(),role:'user',content:t,images:imgs,time:now()};
-  S.msgs.push(msg);saveMsg({role:'user',content:t||'[Image/File attached]',metadata:{has_images:imgs.length>0}});
+  S.msgs.push(msg);
+  
+  // FIX 2: Only save locally via Supabase Client if the user is Authenticated (JWT).
+  // Guests are handled by the Python Backend inside the fetch request.
+  if(S.user && S.chatId){
+      saveMsg({role:'user',content:t||'[Image/File attached]',metadata:{has_images:imgs.length>0}});
+  }
+  
   clearPending();$('cbInput').value='';autoH($('cbInput'));updateCB();
   
   S.isAutoScrolling = true;
@@ -1163,7 +1189,9 @@ async function sendMsg(text){
   
   if(imgs.length||files.length){
     sendWithFiles(t,imgs.map(function(img){var f=dataUrlToFile(img.dataUrl,img.name);return f?{type:'image',dataUrl:img.dataUrl,name:img.name,file:f}:null;}).filter(Boolean),files);
-  }else{sendToAI(t);}
+  }else{
+    sendToAI(t);
+  }
 }
 
 function sendWithFiles(text,imgs,files){
