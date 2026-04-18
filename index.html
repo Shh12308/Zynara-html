@@ -468,7 +468,7 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
   <button type="button" class="scroll-bot" id="scrollBot" aria-label="Scroll to bottom"><i class="fa-solid fa-chevron-down"></i></button>
   
   <div class="cb-container" id="cbContainer">
-    <!-- Moved image preview strip here to sit above the chatbar -->
+    <!-- Moved image preview strip here to sit above chatbar -->
     <div id="imgPreviewStrip" style="display:none"></div>
 
     <div class="cb-wrap">
@@ -883,6 +883,166 @@ function openHtmlPreview(code){
   var doc = frame.contentWindow.document; doc.open(); doc.write(code); doc.close();
 }
 
+/* ========== FILE HANDLING & RENDERING (MISSING FUNCTIONS ADDED) ========== */
+function renderImgPreview(){
+  var strip=$('imgPreviewStrip');
+  if(!strip) return;
+  var imgs=S.pendingFiles.filter(function(f){return f.type==='image';});
+  if(!imgs.length){strip.style.display='none';strip.innerHTML='';return;}
+  strip.style.display='flex';
+  var html='';
+  imgs.forEach(function(img,idx){
+    html+='<div class="msg-img-item single" style="width:60px;height:60px;position:relative;" data-rm-idx="'+idx+'"><img src="'+img.dataUrl+'" alt="'+esc(img.name)+'"><button type="button" style="position:absolute;top:0;right:0;background:rgba(0,0,0,.7);color:#fff;border:none;width:18px;height:18px;border-radius:0 6px 0 6px;cursor:pointer;font-size:10px;">×</button></div>';
+  });
+  strip.innerHTML=html;
+}
+
+function renderFileInd(){
+  var con=$('cbContainer');
+  if(!con) return;
+  var old=con.querySelectorAll('.file-indicator');
+  old.forEach(function(e){e.remove()});
+  var files=S.pendingFiles.filter(function(f){return f.type!=='image';});
+  files.forEach(function(f){
+    var d=document.createElement('div');d.className='file-indicator';
+    d.innerHTML='<span class="fi-name">'+esc(f.name)+'</span><span class="fi-size">'+fmtSize(f.size)+'</span><button type="button" class="fi-rm" data-rm-idx="'+S.pendingFiles.indexOf(f)+'"><i class="fa-solid fa-xmark"></i></button>';
+    con.insertBefore(d,con.firstChild);
+  });
+}
+
+function rmPendingFile(idx){
+  if(idx>=0&&idx<S.pendingFiles.length){
+    S.pendingFiles.splice(idx,1);
+    renderImgPreview();
+    renderFileInd();
+    updateCB();
+  }
+}
+
+function renderEditAtt(){
+  var box=$('emAttachBox');
+  if(!box) return;
+  if(!S.editingFiles.length){
+    box.innerHTML='<div class="em-attach-empty">No files attached</div>';
+    return;
+  }
+  var html='';
+  S.editingFiles.forEach(function(f,idx){
+    html+='<div class="em-attach-item"><img src="'+f.dataUrl+'"><button type="button" class="em-attach-remove" data-rm-edit-idx="'+idx+'">×</button></div>';
+  });
+  box.innerHTML=html;
+}
+
+function clearPending(){
+  S.pendingFiles=[];
+  renderImgPreview();
+  renderFileInd();
+  updateCB();
+  var fi=$('fileInput');
+  if(fi) fi.value='';
+}
+
+/* ========== EDIT MESSAGE LOGIC (MISSING FUNCTIONS ADDED) ========== */
+function openEdit(idx){
+  if(idx<0||idx>=S.msgs.length) return;
+  var m=S.msgs[idx];
+  S.editingIndex=idx;
+  S.editingFiles=m.images?m.images.map(function(i){return{name:i.name||'Image',dataUrl:i.dataUrl,type:'image'};}):[];
+  $('emTextarea').value=m.content;
+  renderEditAtt();
+  $('emModal').classList.add('on');
+  $('emOverlay').classList.add('on');
+}
+
+function closeEdit(){
+  $('emModal').classList.remove('on');
+  $('emOverlay').classList.remove('on');
+  S.editingIndex=null;
+  S.editingFiles=[];
+  $('emTextarea').value='';
+}
+
+function saveEdit(){
+  var idx=S.editingIndex;
+  var txt=$('emTextarea').value.trim();
+  if(idx===null||idx<0||idx>=S.msgs.length||(!txt&&!S.editingFiles.length)) return;
+  
+  // Logic to "edit" usually implies deleting subsequent messages and resending, 
+  // or just updating UI locally if no backend support for edit exists.
+  // For this scope, we'll replace message and clear subsequent (simple edit).
+  var newMsg={id:S.msgs[idx].id,role:S.msgs[idx].role,content:txt,images:S.editingFiles,time:now()};
+  S.msgs[idx]=newMsg;
+  // Remove all messages after this one
+  S.msgs= S.msgs.slice(0, idx+1);
+  
+  closeEdit();
+  renderAll();
+  // If it was a user message, we probably want to resend it to AI to get a new response
+  if(newMsg.role==='user'){
+      sendMsg(txt); 
+  }
+}
+
+/* ========== ACTION SHEET & VOICE DROPDOWN LOGIC (MISSING FUNCTIONS ADDED) ========== */
+function toggleAS(open){
+  S.asOpen=typeof open==='boolean'?open:!S.asOpen;
+  $('asSheet').classList.toggle('open',S.asOpen);
+  $('asOv').classList.toggle('on',S.asOpen);
+}
+
+function toggleVD(open){
+  S.vdOpen=typeof open==='boolean'?open:!S.vdOpen;
+  $('voiceDd').classList.toggle('on',S.vdOpen);
+}
+
+/* ========== MESSAGE ACTIONS (MISSING FUNCTIONS ADDED) ========== */
+function actCopy(idx){
+  var m=S.msgs[idx];
+  if(!m||!m.content) return;
+  var txt=m.content.replace(/<[^>]*>/g,'');
+  navigator.clipboard.writeText(txt).then(function(){toast('Copied','ok');});
+}
+
+function actLike(idx, type){
+  var m=S.msgs[idx];
+  if(!m) return;
+  if(type==='like'){m.liked=!m.liked;m.disliked=false;}
+  else{m.disliked=!m.disliked;m.liked=false;}
+  renderAll();
+}
+
+function actVoice(idx){
+  var m=S.msgs[idx];
+  if(!m||!m.content) return;
+  if(!isAuthed()){toast('Sign in','wrn');return;}
+  // Simple TTS using browser API if available, else request
+  if('speechSynthesis' in window){
+      var u=new SpeechSynthesisUtterance(m.content.replace(/<[^>]*>/g,''));
+      u.voice=S.selectedVoice?speechSynthesis.getVoices().find(function(v){return v.name===S.selectedVoice}):null;
+      window.speechSynthesis.speak(u);
+  } else {
+      toast('TTS not supported','err');
+  }
+}
+
+function actRegen(idx){
+  // Regenerate implies deleting the last AI message and asking again
+  // First check if we need to delete the last message if it's AI
+  var lastIdx = S.msgs.length-1;
+  if(lastIdx>=0 && S.msgs[lastIdx].role === 'assistant'){
+      // Remove last AI message
+      S.msgs.pop();
+      renderAll();
+  }
+  
+  // Find last user prompt to regenerate from
+  var lastUser = '';
+  for(var i=S.msgs.length-1;i>=0;i--){
+      if(S.msgs[i].role==='user'){ lastUser=S.msgs[i].content; break; }
+  }
+  if(lastUser) sendToAI(lastUser);
+}
+
 /* ========== REFRESH UI ========== */
 function refreshUI(){
   var u=$('sUser'),sl=$('signInLink'),hp=$('hdrPlan');if(!u||!sl||!hp)return;
@@ -970,7 +1130,7 @@ function renderAll(){
       var acts='<div class="msg-acts">';
       acts+='<button type="button" class="ma" data-act="copy" data-i="'+i+'" data-tip="Copy"><i class="fa-regular fa-copy"></i></button>';
       acts+='<button type="button" class="ma'+(m.liked?' liked':'')+'" data-act="like" data-i="'+i+'" data-tip="Good"><i class="fa-regular fa-thumbs-up"></i></button>';
-      acts+='<button type="button" class="ma'+(m.disliked?' disliked':'')+'" data-I="'+i+'" data-tip="Bad"><i class="fa-regular fa-thumbs-down"></i></button>';
+      acts+='<button type="button" class="ma'+(m.disliked?' disliked':'')+'" data-i="'+i+'" data-tip="Bad"><i class="fa-regular fa-thumbs-down"></i></button>';
       if(isLast&&!S.streaming) acts+='<button type="button" class="ma" data-act="regen" data-i="'+i+'" data-tip="Regenerate"><i class="fa-solid fa-arrows-rotate"></i></button>';
       acts+='<button type="button" class="ma'+(!S.user?' locked':'')+'" data-act="voice" data-i="'+i+'" data-tip="'+(S.user?'Read aloud':'Sign in')+'"><i class="fa-solid fa-volume-high"></i></button>';
       acts+='</div>';
@@ -1049,7 +1209,7 @@ function initMic() {
         // We don't start recording yet, just ensure permission is granted
         var tracks = stream.getTracks();
         if (tracks.length > 0) {
-          // Stop the stream to release mic immediately
+          // Stop stream to release mic immediately
           tracks.forEach(track => track.stop());
         }
         console.log('Mic permission granted');
@@ -1062,12 +1222,19 @@ function initMic() {
 
 function toggleMic(){
   if(!S.user){toast('Sign in to use voice input','wrn');return;}
-  if(S.recording){if(S.recorder)S.recorder.stop();S.recording=false;$('micBtn').classList.remove('mic-on');return;}
+  if(S.recording){
+    if(S.recorder)S.recorder.stop();
+    S.recording=false;$('micBtn').classList.remove('mic-on');
+    updateCB(); // Update UI state (Mic button might be hidden during streaming)
+    return;
+  }
   navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
     S.chunks=[];S.recorder=new MediaRecorder(stream);
     S.recorder.ondataavailable=function(e){if(e.data.size>0)S.chunks.push(e.data);};
     S.recorder.onstop=function(){stream.getTracks().forEach(function(t){t.stop();});doSTT(new Blob(S.chunks,{type:'audio/webm'}));};
-    S.recorder.start();S.recording=true;$('micBtn').classList.add('mic-on');toast('Listening...','inf');
+    S.recorder.start();
+    S.recording=true;$('micBtn').classList.add('mic-on');
+    toast('Listening...','inf');
   }).catch(function(){toast('Mic access denied','err');});
 }
 function doSTT(blob){
@@ -1162,8 +1329,7 @@ function streamRes(res, onChunk, onDone) {
 /* ========== SEND MESSAGES ========== */
 async function sendMsg(text){
   var t=text||$('cbInput').value.trim();
-  if((!t&&!S.pendingFiles.length)||S.streaming)return;
-  
+  if((!t&&!S.pendingFiles.length)||S.streaming)return;  
   var limitCheck = checkLimits(t);
   if(!limitCheck.allowed) {
       toast(limitCheck.msg, 'wrn');
@@ -1238,21 +1404,21 @@ function sendToAI(text){
 }
 
 function regenAI(){
-  S.streaming=true;S.abort=new AbortController();addTyping();updateCB();var full='',lastUser='';
-  for(var i=S.msgs.length-1;i>=0;i--){if(S.msgs[i].role==='user'){lastUser=S.msgs[i].content;break;}}
-  fetch(apiUrl()+'/ask/universal',{method:'POST',headers:authH(),credentials:'include',signal:S.abort.signal,body:JSON.stringify({prompt:lastUser,conversation_id:S.chatId})}).then(function(res){
-    if(!res.ok)throw new Error('HTTP '+res.status);rmTyping();
-    var ct=(res.headers.get('content-type')||'').toLowerCase();
-    if(ct.indexOf('application/json')!==-1){
-      return res.json().then(function(d){var c=d.response||d.content||d.result||d.message||JSON.stringify(d);var ai={id:uid(),role:'assistant',content:c,liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();addGal(c);saveMsg(ai);});
-    }
-    var ai={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();
-    return streamRes(res,function(chunk){full+=chunk;updateLastAI(full);},function(){S.msgs[S.msgs.length-1].content=full;addGal(full);saveMsg(S.msgs[S.msgs.length-1]);});
-  }).catch(function(e){
-    rmTyping();
-    if(e.name==='AbortError'){if(full){S.msgs[S.msgs.length-1].content=full;saveMsg(S.msgs[S.msgs.length-1]).catch(function(){});updateLastAI(full);}toast('Stopped','inf');}
-    else{S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});renderAll();toast('Failed','err');}
-  }).finally(function(){S.streaming=false;S.abort=null;updateCB();});
+  // Regenerate implies deleting the last AI message and asking again
+  // First check if to last message is AI
+  var lastIdx = S.msgs.length-1;
+  if(lastIdx>=0 && S.msgs[lastIdx].role === 'assistant'){
+      // Remove last AI message
+      S.msgs.pop();
+      renderAll();
+  }
+  
+  // Find last user prompt to regenerate from
+  var lastUser = '';
+  for(var i=S.msgs.length-1;i>=0;i--){
+      if(S.msgs[i].role==='user'){ lastUser=S.msgs[i].content; break; }
+  }
+  if(lastUser) sendToAI(lastUser);
 }
 function stopGen(){if(S.abort)S.abort.abort();}
 
@@ -1261,17 +1427,37 @@ function autoH(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeig
 function updateCB(){
   var hasText=$('cbInput').value.trim().length>0,hasFiles=S.pendingFiles.length>0;
   var mic=$('micBtn'),voice=$('voiceBtn'),ss=$('sendStopBtn');
+  
+  // Logic for showing/hiding and changing states of buttons
+  
   if(S.streaming){
-    mic.classList.add('hide');voice.classList.add('hide');
-    ss.classList.remove('hide','send');ss.classList.add('stop');
-    ss.innerHTML='<i class="fa-solid fa-stop"></i>';ss.setAttribute('aria-label','Stop generating');
+    // STATE: Streaming/Generating
+    mic.classList.add('hide');
+    voice.classList.add('hide');
+    ss.classList.remove('hide','send');
+    ss.classList.add('stop');
+    ss.innerHTML='<i class="fa-solid fa-stop"></i>';
+    ss.setAttribute('aria-label','Stop generating');
   }else if(hasText||hasFiles){
-    mic.classList.add('hide');voice.classList.add('hide');
-    ss.classList.remove('hide','send');ss.classList.add('send');
-    ss.innerHTML='<i class="fa-solid fa-arrow-up"></i>';ss.setAttribute('aria-label','Send message');
+    // STATE: Has text or files (Ready to send)
+    // Don't hide mic/voice if we are recording
+    if(!S.recording){
+       mic.classList.add('hide');
+       voice.classList.add('hide');
+    }
+    ss.classList.remove('hide','stop');
+    ss.classList.add('send');
+    ss.innerHTML='<i class="fa-solid fa-arrow-up"></i>';
+    ss.setAttribute('aria-label','Send message');
   }else{
-    mic.classList.remove('hide');voice.classList.remove('hide');
-    ss.classList.add('hide');ss.classList.remove('send','stop');
+    // STATE: Idle (No text, not streaming)
+    // Show Mic/Voice unless recording
+    if(!S.recording){
+        mic.classList.remove('hide');
+        voice.classList.remove('hide');
+    }
+    ss.classList.add('hide');
+    ss.classList.remove('send','stop');
   }
 }
 
