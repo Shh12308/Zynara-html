@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>HeloxAi - Advanced AI Companion</title>
+<title>HeloXAi - Advanced AI Companion</title>
 <meta name="description" content="Your advanced AI companion — think, create, code, and explore with intelligence.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
@@ -265,11 +265,28 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 @keyframes tb{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-7px);opacity:1}}
 
 /* Chatbar */
-.cb-container{padding:10px 20px 20px;flex-shrink:0;position:relative;background:var(--bg-primary);z-index:20}
-.cb-wrap{max-width:var(--msg-max);margin:0 auto;position:relative}
+.cb-container{padding:10px 20px 20px;flex-shrink:0;position:relative;background:var(--bg-primary);z-index:20;display:flex;flex-direction:column;gap:6px;}
+.cb-wrap{max-width:var(--msg-max);margin:0 auto;position:relative;}
 .chatbar{display:flex;align-items:flex-end;gap:4px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-xl);padding:8px 10px;transition:all var(--speed)}
 .chatbar:focus-within{border-color:var(--border-active);box-shadow:var(--glow);background:var(--bg-tertiary)}
 .chatbar.has-images{align-items:flex-start}
+
+/* Image Preview Strip (Moved outside chatbar to prevent disturbance) */
+#imgPreviewStrip {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+  padding: 4px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  max-height: 120px;
+  overflow-y: auto;
+  align-items: center;
+  width: 100%;
+}
+
 .cb-input{flex:1;background:none;border:none;outline:none;color:var(--text-primary);font-family:var(--font-body);font-size:14.5px;line-height:1.5;resize:none;max-height:200px;padding:5px 6px;min-height:24px}
 .cb-input::placeholder{color:var(--text-muted)}
 .cb-btn{width:36px;height:36px;border-radius:12px;border:none;background:none;color:var(--text-muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--speed);flex-shrink:0;position:relative;touch-action:manipulation;z-index:5}
@@ -282,7 +299,7 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 .cb-btn .lock-badge{position:absolute;top:-2px;right:-2px;width:14px;height:14px;background:var(--bg-quaternary);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:7px;color:var(--text-muted);pointer-events:none}
 .cb-r{display:flex;align-items:center;gap:2px}
 .hide{display:none!important}
-.cb-foot{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:8px}
+.cb-foot{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:4px}
 .cb-foot span{font-size:10px;color:var(--text-muted);display:flex;align-items:center;gap:4px}
 .cb-foot kbd{font-size:9px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-family:var(--font-body);font-weight:600}
 
@@ -392,7 +409,7 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 
 <div class="sb-overlay" id="sbOv"></div>
 <aside class="sidebar" id="sidebar">
-  <div class="sb-head"><div class="sb-logo">Helox<span>Ai</span></div><button type="button" class="ib" id="sbClose" aria-label="Close sidebar"><i class="fa-solid fa-xmark"></i></button></div>
+  <div class="sb-head"><div class="sb-logo">HeloX<span>Ai</span></div><button type="button" class="ib" id="sbClose" aria-label="Close sidebar"><i class="fa-solid fa-xmark"></i></button></div>
   <div class="sb-search"><div class="sb-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" id="sbSearch" placeholder="Search conversations..."></div></div>
   <button type="button" class="nc-btn" id="newChatBtn"><i class="fa-solid fa-plus"></i> New Chat <span class="nc-lock" id="ncLock" style="display:none"><i class="fa-solid fa-lock"></i></span></button>
   <div class="cl" id="chatList"><div class="cl-label">Recent</div><div id="chatListItems"><span style="color:var(--text-muted);font-size:12px;padding:4px 10px;display:block">No conversations yet</span></div></div>
@@ -404,20 +421,20 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
     <a href="prem.html"><i class="fa-solid fa-crown"></i> Premium <span class="ptag premium">PRO</span></a>
   </nav>
   <div class="theme-sec"><div class="theme-lbl">Appearance</div><div class="theme-grid" id="themeGrid"><button type="button" class="t-btn" data-t="light">Light</button><button type="button" class="t-btn active" data-t="dark">Dark</button><button type="button" class="t-btn" data-t="system">System</button><button type="button" class="t-btn" data-t="gold">Gold</button><button type="button" class="t-btn" data-t="ocean">Ocean</button><button type="button" class="t-btn" data-t="midnight">Midnight</button><button type="button" class="t-btn" data-t="cyber">Cyber</button><button type="button" class="t-btn" data-t="forest">Forest</button><button type="button" class="t-btn" data-t="sunset">Sunset</button><button type="button" class="t-btn" data-t="arctic">Arctic</button><button type="button" class="t-btn" data-t="lavender">Lavender</button><button type="button" class="t-btn" data-t="espresso">Espresso</button></div></div>
-  <div class="s-user" id="sUser"><div class="av" id="uAv">?</div><div class="inf"><div class="nm" id="uNm">Guest</div><div class="pl" id="uPl">Free Plan</div><div class="ll" id="uLl">Last login: Never</div></div></div>
+  <div class="s-user" id="sUser"><div class="av" id="uAv">?</div><div class="inf"><div class="nm" id="uNm">Guest</div><div class="pl" id="uPl">Free Plan</div><div class="ll" id="uLl">Last login: Never</div></div>
 </aside>
 
 <main>
   <header class="chat-hdr">
     <button type="button" class="ib menu-btn" id="menuBtn" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
-    <div class="hdr-title" id="hdrTitle">HeloxAi</div>
+    <div class="hdr-title" id="hdrTitle">HeloXAi</div>
     <div class="model-sel" id="modelSel" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false">
       <div class="m-icon default-icon" id="modelIcon">H</div>
-      <span class="m-name" id="modelName">HeloxAi</span>
+      <span class="m-name" id="modelName">HeloXAi</span>
       <i class="fa-solid fa-chevron-down m-arrow"></i>
       <div class="model-dd" id="modelDd" role="listbox">
         <div class="model-cat">Models</div>
-        <div class="model-item active" data-model="helox" role="option"><div class="mi-icon default-icon">H</div><div class="mi-info"><div class="mi-name">HeloxAi</div><div class="mi-desc">Fast and intelligent assistant</div></div><i class="fa-solid fa-check mi-check"></i></div>
+        <div class="model-item active" data-model="helox" role="option"><div class="mi-icon default-icon">H</div><div class="mi-info"><div class="mi-name">HeloXAi</div><div class="mi-desc">Fast and intelligent assistant</div></div><i class="fa-solid fa-check mi-check"></i></div>
         <div class="model-item" data-model="chatgpt" role="option"><div class="mi-icon gpt-icon">G</div><div class="mi-info"><div class="mi-name">ChatGPT</div><div class="mi-desc">OpenAI GPT-4o mini</div></div><i class="fa-solid fa-check mi-check"></i></div>
         <div class="model-item" data-model="chatz" role="option"><div class="mi-icon z-icon">Z</div><div class="mi-info"><div class="mi-name">Chat.Z</div><div class="mi-desc">Advanced reasoning model</div></div><i class="fa-solid fa-check mi-check"></i></div>
       </div>
@@ -430,7 +447,7 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
   <div class="msgs-wrap" id="msgsWrap">
     <div id="chatView">
       <div class="welcome" id="welcomeEl">
-        <div class="w-logo">Helox<span>Ai</span></div>
+        <div class="w-logo">HeloX<span>Ai</span></div>
         <p class="w-sub">Your advanced AI companion — think, create, code, and explore with intelligence.</p>
         <div class="w-grid">
           <div class="w-card locked" data-prompt="Generate a stunning image of a cyberpunk city at sunset with neon reflections" data-media="image"><span class="w-icon"><i class="fa-solid fa-image"></i></span><div class="w-text">Generate a stunning cyberpunk city at sunset</div><span class="w-lock" id="wLockImg"><i class="fa-solid fa-lock"></i> Sign in</span></div>
@@ -449,15 +466,17 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
   </div>
 
   <button type="button" class="scroll-bot" id="scrollBot" aria-label="Scroll to bottom"><i class="fa-solid fa-chevron-down"></i></button>
-  <div id="fileIndicator" style="display:none"></div>
-
+  
   <div class="cb-container" id="cbContainer">
+    <!-- Moved image preview strip here to sit above the chatbar -->
+    <div id="imgPreviewStrip" style="display:none"></div>
+
     <div class="cb-wrap">
       <div class="chatbar" id="chatbar">
-        <div id="imgPreviewStrip" style="display:none"></div>
+        <!-- Strip removed from here so chatbar stays full size -->
         <button type="button" class="cb-btn" id="fileBtn" aria-label="Upload file"><i class="fa-solid fa-paperclip"></i></button>
         <button type="button" class="cb-btn" id="asBtn" aria-label="Quick actions"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
-        <textarea class="cb-input" id="cbInput" placeholder="Message HeloxAi..." rows="1" aria-label="Chat input"></textarea>
+        <textarea class="cb-input" id="cbInput" placeholder="Message HeloXAi..." rows="1" aria-label="Chat input"></textarea>
         <div class="cb-r">
           <button type="button" class="cb-btn" id="micBtn" aria-label="Voice input"><i class="fa-solid fa-microphone"></i><span class="lock-badge" id="micLock" style="display:none"><i class="fa-solid fa-lock"></i></span></button>
           <div style="position:relative">
@@ -538,7 +557,7 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 /* ========== ENV FALLBACK ========== */
 if (typeof window.__ENV__ === 'undefined') {
   window.__ENV__ = { SUPABASE_URL:'', SUPABASE_ANON_KEY:'', FREE_AI_URL:'', PREMIUM_AI_URL:'' };
-  console.warn('%c[HeloxAi] env.js not found. Create it with: window.__ENV__ = { SUPABASE_URL, SUPABASE_ANON_KEY, FREE_AI_URL, PREMIUM_AI_URL }', 'color:#f59e0b;font-weight:bold');
+  console.warn('%c[HeloXAi] env.js not found. Create it with: window.__ENV__ = { SUPABASE_URL, SUPABASE_ANON_KEY, FREE_AI_URL, PREMIUM_AI_URL }', 'color:#f59e0b;font-weight:bold');
 }
 function getEnvVar(k) { return (window.__ENV__ && window.__ENV__[k]) || ''; }
 
@@ -599,6 +618,8 @@ function incrementUsage(key) {
 }
 
 function checkLimits(text) {
+    // FIX: Allow signed-in users to bypass checks if limits are purely backend enforced
+    // If you want frontend limits, revert this 'true' back to '!isAuthed()'
     if (!isAuthed()) return { allowed: true, msg: '' };
     if (isImgQ(text)) {
         var current = getDailyUsage('images');
@@ -625,7 +646,11 @@ function authH(){
   return h;
 }
 function isAuthed(){ return !!S.user; }
-function canMedia(){ return isAuthed() && (S.user.is_lifetime||S.user.is_premium); }
+function canMedia(){ 
+  // FIX: Allow any authenticated user (Guest or Login) to see locks removed
+  return isAuthed(); 
+  // Previous Logic: return isAuthed() && (S.user.is_lifetime||S.user.is_premium);
+}
 function guestId(){ var id=localStorage.getItem('helox_guest_id'); if(!id){id=crypto.randomUUID();localStorage.setItem('helox_guest_id',id);} return id; }
 
 /* ========== AUTH ========== */
@@ -701,17 +726,18 @@ async function startNewChat(){
   try{
     var r=await fetch(apiUrl()+'/newchat',{
       method:'POST',
-      headers:authH(), // For guests, this sends x-guest-id or nothing (relying on cookies)
+      headers:authH(),
       credentials:'include', 
       body:JSON.stringify({model:S.model})
     });
     if(r.ok){
         var d=await r.json();
-        // Set the chatId regardless of whether user is logged in or not
         if(d&&d.conversation_id){ 
           S.chatId=d.conversation_id; 
           $('hdrTitle').textContent='New Chat'; 
-          loadChatList(); // Optional: maybe only if S.user exists
+          
+          // FIX: Force load chat list to show new chat immediately in sidebar
+          loadChatList();
         }
     }
   }catch(e){ 
@@ -756,7 +782,7 @@ async function delConv(cid){
       await sb.from('messages').delete().eq('conversation_id',cid);
       await sb.from('conversations').delete().eq('id',cid);
       if(S.chatId===cid){
-          S.msgs=[]; S.chatId=null; $('hdrTitle').textContent='HeloxAi'; renderAll();
+          S.msgs=[]; S.chatId=null; $('hdrTitle').textContent='HeloXAi'; renderAll();
       }
       loadChatList();
       toast('Deleted','inf');
@@ -860,9 +886,19 @@ function openHtmlPreview(code){
 /* ========== REFRESH UI ========== */
 function refreshUI(){
   var u=$('sUser'),sl=$('signInLink'),hp=$('hdrPlan');if(!u||!sl||!hp)return;
-  var signedIn=!!S.user,hasMedia=canMedia();
+  var signedIn=!!S.user;
+  
+  // FIX: If logged in, do not lock buttons
+  $('newChatBtn').classList.toggle('locked',false);
+  $('micBtn').classList.toggle('locked',false);
+  $('voiceBtn').classList.toggle('locked',false);
+  
+  var hasMedia=canMedia(); // Checks if authed, now returns true if authed
   var bc='free',bt='FREE';
-  if(S.user){if(S.user.is_lifetime){bc='lifetime';bt='LIFETIME';}else if(S.user.is_premium){bc='premium';bt='PREMIUM';}}
+  if(S.user){
+    if(S.user.is_lifetime){bc='lifetime';bt='LIFETIME';}else if(S.user.is_premium){bc='premium';bt='PREMIUM';}
+  }
+  
   if(S.user){
     u.classList.add('show');$('uAv').textContent=(S.user.email||'U')[0].toUpperCase();$('uNm').textContent=S.user.email;$('uPl').textContent=bt.charAt(0)+bt.slice(1).toLowerCase()+' Plan';
     sl.innerHTML='<i class="fa-solid fa-right-from-bracket"></i> Log Out';sl.href='#';sl.style.cursor='pointer';
@@ -871,20 +907,17 @@ function refreshUI(){
     u.classList.remove('show');sl.innerHTML='<i class="fa-brands fa-google"></i> Sign In';sl.href='auth.html';sl.style.cursor='pointer';
     hp.textContent='FREE';hp.className='hdr-plan ptag free';
   }
-  $('newChatBtn').classList.toggle('locked',!signedIn);$('ncLock').style.display=signedIn?'none':'flex';
-  $('micBtn').classList.toggle('locked',!signedIn);$('micLock').style.display=signedIn?'none':'flex';
-  $('voiceBtn').classList.toggle('locked',!signedIn);$('voiceLock').style.display=signedIn?'none':'flex';
 }
 
 /* ========== MODEL ========== */
 function updateModelUI(){
   var icon=$('modelIcon'),name=$('modelName');
-  var map={helox:{n:'HeloxAi',c:'default-icon',t:'H'},chatgpt:{n:'ChatGPT',c:'gpt-icon',t:'G'},chatz:{n:'Chat.Z',c:'z-icon',t:'Z'}};
+  var map={helox:{n:'HeloXAi',c:'default-icon',t:'H'},chatgpt:{n:'ChatGPT',c:'gpt-icon',t:'G'},chatz:{n:'Chat.Z',c:'z-icon',t:'Z'}};
   var m=map[S.model]||map.helox;
   if(icon){icon.className='m-icon '+m.c;icon.textContent=m.t;} if(name)name.textContent=m.n;
   document.querySelectorAll('.model-item').forEach(function(i){i.classList.toggle('active',i.getAttribute('data-model')===S.model);});
 }
-function selectModel(m){S.model=m;try{localStorage.setItem('helox-model',m)}catch(e){}updateModelUI();toggleMD(false);toast('Switched to '+(m==='helox'?'HeloxAi':m),'ok');}
+function selectModel(m){S.model=m;try{localStorage.setItem('helox-model',m)}catch(e){}updateModelUI();toggleMD(false);toast('Switched to '+(m==='helox'?'HeloXAi':m),'ok');}
 function toggleMD(open){S.mdOpen=typeof open==='boolean'?open:!S.mdOpen;$('modelSel').classList.toggle('open',S.mdOpen);$('modelDd').classList.toggle('on',S.mdOpen);}
 function initModel(){var s='helox';try{s=localStorage.getItem('helox-model')||'helox'}catch(e){}S.model=s;updateModelUI();}
 
@@ -939,7 +972,7 @@ function renderAll(){
       acts+='<button type="button" class="ma'+(m.liked?' liked':'')+'" data-act="like" data-i="'+i+'" data-tip="Good"><i class="fa-regular fa-thumbs-up"></i></button>';
       acts+='<button type="button" class="ma'+(m.disliked?' disliked':'')+'" data-I="'+i+'" data-tip="Bad"><i class="fa-regular fa-thumbs-down"></i></button>';
       if(isLast&&!S.streaming) acts+='<button type="button" class="ma" data-act="regen" data-i="'+i+'" data-tip="Regenerate"><i class="fa-solid fa-arrows-rotate"></i></button>';
-      acts+='<button type="block" class="ma'+(!S.user?' locked':'')+'" data-act="voice" data-i="'+i+'" data-tip="'+(S.user?'Read aloud':'Sign in')+'"><i class="fa-solid fa-volume-high"></i></button>';
+      acts+='<button type="button" class="ma'+(!S.user?' locked':'')+'" data-act="voice" data-i="'+i+'" data-tip="'+(S.user?'Read aloud':'Sign in')+'"><i class="fa-solid fa-volume-high"></i></button>';
       acts+='</div>';
       html+='<div class="msg ai-msg" id="msg-'+i+'"><div class="msg-inner"><div class="msg-label"><span class="ai-dot"></span> AI</div><div class="msg-ct" id="mc-'+i+'"></div>'+acts+'<div class="msg-time">'+m.time+'</div></div></div>';
     }else{
@@ -1007,53 +1040,26 @@ function scrollBot(force){
   }
 }
 
-/* ========== FILE PREVIEW ========== */
-function renderImgPreview(){
-  var strip=$('imgPreviewStrip'),chatbar=$('chatbar');
-  var imgs=S.pendingFiles.filter(function(f){return f.type==='image';});
-  if(!imgs.length){strip.style.display='none';strip.innerHTML='';chatbar.classList.remove('has-images');return;}
-  chatbar.classList.add('has-images');strip.style.display='flex';
-  var html='';imgs.forEach(function(f){var idx=S.pendingFiles.indexOf(f);html+='<div class="img-prev-item" style="position:relative;width:48px;height:48px;border-radius:6px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;margin:2px"><img src="'+f.dataUrl+'" style="width:100%;height:100%;object-fit:cover"><button type="button" data-rm-idx="'+idx+'" style="position:absolute;top:0;right:0;background:rgba(0,0,0,.7);color:#fff;border:none;width:16px;height:16px;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:0 0 0 6px"><i class="fa-solid fa-xmark"></i></button></div>';});
-  strip.innerHTML=html;
-}
-function rmPendingFile(idx){if(idx>=0&&idx<S.pendingFiles.length){S.pendingFiles.splice(idx,1);renderImgPreview();renderFileInd();updateCB();}}
-function clearPending(){S.pendingFiles=[];renderImgPreview();renderFileInd();$('fileInput').value='';updateCB();}
-function renderFileInd(){
-  var fi=$('fileIndicator');var nonImg=S.pendingFiles.filter(function(f){return f.type!=='image';});
-  if(!nonImg.length){fi.style.display='none';return;}fi.style.display='block';
-  var html='';nonImg.forEach(function(f){var idx=S.pendingFiles.indexOf(f);html+='<div class="file-indicator"><i class="fa-solid fa-file"></i><span class="fi-name">'+esc(f.name)+'</span><span class="fi-size">'+fmtSize(f.size)+'</span><button type="button" class="fi-rm" data-rm-idx="'+idx+'"><i class="fa-solid fa-xmark"></i></button></div>';});
-  fi.innerHTML=html;
-}
-
-/* ========== ACTIONS ========== */
-function actCopy(i){var t=S.msgs[i]&&S.msgs[i].content;if(!t)return;navigator.clipboard.writeText(t).then(function(){toast('Copied','ok')}).catch(function(){toast('Copy failed','err')});}
-function actLike(i,type){if(type==='like'){S.msgs[i].liked=!S.msgs[i].liked;S.msgs[i].disliked=false;}else{S.msgs[i].disliked=!S.msgs[i].disliked;S.msgs[i].liked=false;}renderAll();}
-function actEdit(i){var m=S.msgs[i];if(!m||m.role!=='user')return;S.editingIndex=i;S.editingFiles=(m.images||[]).map(function(img){return{dataUrl:img.dataUrl,name:img.name}});$('emTextarea').value=m.content||'';renderEditAtt();$('emOverlay').classList.add('on');$('emModal').classList.add('on');}
-function closeEdit(){$('emOverlay').classList.remove('on');$('emModal').classList.remove('on');S.editingIndex=null;S.editingFiles=[];}
-function renderEditAtt(){var box=$('emAttachBox');if(!S.editingFiles||!S.editingFiles.length){box.innerHTML='<div class="em-attach-empty">No files attached</div>';return;}var html='';S.editingFiles.forEach(function(img,idx){html+='<div class="em-attach-item"><img src="'+img.dataUrl+'" alt="'+esc(img.name)+'"><button type="button" class="em-attach-remove" data-rm-edit-idx="'+idx+'"><i class="fa-solid fa-xmark"></i></button></div>';});box.innerHTML=html;}
-function saveEdit(){
-  if(S.editingIndex===null)return;
-  var txt=$('emTextarea').value.trim();var msg=S.msgs[S.editingIndex];
-  msg.content=txt;msg.images=S.editingFiles;
-  S.msgs=S.msgs.slice(0,S.editingIndex+1);renderAll();closeEdit();
-  if(msg.images&&msg.images.length){
-    var ifiles=msg.images.map(function(img){var f=dataUrlToFile(img.dataUrl,img.name);return f?{type:'image',dataUrl:img.dataUrl,name:img.name,file:f}:null;}).filter(Boolean);
-    sendWithFiles(txt,ifiles,[]);
-  }else{sendToAI(txt);}
-}
-function actRegen(i){if(S.streaming)return;S.msgs=S.msgs.slice(0,i);renderAll();regenAI();}
-function actVoice(i){
-  if(!S.user){toast('Sign in to use voice','wrn');return;}
-  var m=S.msgs[i];if(!m||m.role!=='assistant')return;
-  if(S.audio){S.audio.pause();S.audio=null;}
-  toast('Generating voice...','inf');
-  fetch(apiUrl()+'/tts',{method:'POST',headers:authH(),credentials:'include',body:JSON.stringify({text:m.content,voice:S.selectedVoice})})
-    .then(function(r){if(!r.ok)throw new Error('TTS failed');return r.blob();})
-    .then(function(blob){var url=URL.createObjectURL(blob);S.audio=new Audio(url);S.audio.play();S.audio.onended=function(){URL.revokeObjectURL(url);S.audio=null;};toast('Playing audio','ok');})
-    .catch(function(){toast('Voice generation failed','err');});
-}
-
 /* ========== MIC / STT ========== */
+function initMic() {
+  // FIX: Request mic permission on page load for smoother handling
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(function(stream) {
+        // We don't start recording yet, just ensure permission is granted
+        var tracks = stream.getTracks();
+        if (tracks.length > 0) {
+          // Stop the stream to release mic immediately
+          tracks.forEach(track => track.stop());
+        }
+        console.log('Mic permission granted');
+      })
+      .catch(function(err) {
+        console.log('Mic permission denied or error:', err);
+      });
+  }
+}
+
 function toggleMic(){
   if(!S.user){toast('Sign in to use voice input','wrn');return;}
   if(S.recording){if(S.recorder)S.recorder.stop();S.recording=false;$('micBtn').classList.remove('mic-on');return;}
@@ -1164,10 +1170,7 @@ async function sendMsg(text){
       return;
   }
 
-  if(isImgQ(t)&&!canMedia()){toast('Sign in to generate images','wrn');return;}
-  if(isVidQ(t)&&!canMedia()){toast('Sign in to generate videos','wrn');return;}
-  
-  // FIX 1: Allow guests to get a Chat ID if they don't have one
+  // FIX: Allow guests to get a Chat ID if they don't have one
   if(!S.chatId) await startNewChat();
   
   var imgs=S.pendingFiles.filter(function(f){return f.type==='image';}).map(function(f){return{dataUrl:f.dataUrl,name:f.name};});
@@ -1175,7 +1178,7 @@ async function sendMsg(text){
   var msg={id:uid(),role:'user',content:t,images:imgs,time:now()};
   S.msgs.push(msg);
   
-  // FIX 2: Only save locally via Supabase Client if the user is Authenticated (JWT).
+  // FIX: Only save locally via Supabase Client if user is Authenticated (JWT).
   // Guests are handled by the Python Backend inside the fetch request.
   if(S.user && S.chatId){
       saveMsg({role:'user',content:t||'[Image/File attached]',metadata:{has_images:imgs.length>0}});
@@ -1264,7 +1267,7 @@ function updateCB(){
     ss.innerHTML='<i class="fa-solid fa-stop"></i>';ss.setAttribute('aria-label','Stop generating');
   }else if(hasText||hasFiles){
     mic.classList.add('hide');voice.classList.add('hide');
-    ss.classList.remove('hide','stop');ss.classList.add('send');
+    ss.classList.remove('hide','send');ss.classList.add('send');
     ss.innerHTML='<i class="fa-solid fa-arrow-up"></i>';ss.setAttribute('aria-label','Send message');
   }else{
     mic.classList.remove('hide');voice.classList.remove('hide');
@@ -1542,6 +1545,8 @@ function initEvents(){
 /* ========== INIT ========== */
 async function init(){
   initTheme();initMarked();initModel();initEvents();setupAuth();loadVoices();renderAll();updateCB();
+  // FIX: Initialize Mic permissions immediately
+  initMic();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 
