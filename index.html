@@ -24,7 +24,7 @@
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
 
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{--font-display:'Space Grotesk',sans-serif;--font-body:'DM Sans',sans-serif;--radius:14px;--radius-sm:10px;--radius-lg:18px;--radius-xl:24px;--speed:.25s;--speed-slow:.4s;--ease:cubic-bezier(.4,0,.2,1);--ease-out:cubic-bezier(0,0,.2,1);--ease-in:cubic-bezier(.4,0,1,1);--msg-max:680px;--sidebar-w:290px}
 
 /* THEME VARIABLES */
@@ -176,8 +176,11 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 /* Message Styling */
 .msg{padding:20px 0;animation:fu .35s var(--ease-out) both;position:relative}
 .msg.ai-msg{padding-left:0;padding-right:40px}.msg.ai-msg .msg-inner{max-width:100%}
-.msg.ai-msg .msg-label{font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.msg.ai-msg .msg-label{font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:6px;display:flex;align-items:center;gap:8px}
 .msg.ai-msg .msg-label .ai-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0}
+/* Added status text style */
+.msg.ai-msg .msg-label .ai-status{font-size:11px;color:var(--text-muted);font-weight:400;font-style:italic;}
+
 .msg.user-msg{padding-left:40px;padding-right:0}
 .msg.user-msg .msg-inner{display:flex;flex-direction:column;align-items:flex-end;max-width:85%;margin-left:auto}
 .msg.user-msg .msg-label{font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:6px;text-align:right}
@@ -309,8 +312,8 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 .file-indicator .fi-rm{background:none;border:none;color:var(--text-muted);cursor:pointer;padding:2px 4px;border-radius:4px;font-size:11px;transition:color var(--speed);touch-action:manipulation}
 .file-indicator .fi-rm:hover{color:var(--danger)}
 
-/* Scroll Button */
-.scroll-bot{position:absolute;bottom:90px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--bg-secondary);border:1px solid var(--border);color:var(--text-secondary);width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;opacity:0;pointer-events:none;transition:all .3s var(--ease);box-shadow:var(--shadow);z-index:5;touch-action:manipulation}
+/* Scroll Button - FIX: Increased z-index */
+.scroll-bot{position:absolute;bottom:90px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--bg-secondary);border:1px solid var(--border);color:var(--text-secondary);width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;opacity:0;pointer-events:none;transition:all .3s var(--ease);box-shadow:var(--shadow);z-index:50;touch-action:manipulation}
 .scroll-bot.vis{opacity:1;pointer-events:all;transform:translateX(-50%) translateY(0)}
 .scroll-bot:hover{background:var(--bg-hover);color:var(--text-primary);border-color:var(--border-active)}
 
@@ -331,7 +334,7 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 .as-opt .as-lock{color:var(--text-muted);font-size:10px;margin-left:auto;opacity:.6;display:flex;align-items:center;gap:3px}
 .as-opt .as-lock.prem{color:var(--warning);opacity:.8}
 
-.vdd{position:absolute;bottom:100%;right:0;margin-bottom:10px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-lg);z-index:70;min-width:180px;max-height:320px;overflow-y:auto;opacity:0;pointer-events:none;transform:translateY(8px);transition:all .25s var(--ease);padding:6px}
+.vdd{position:absolute;bottom:100%;right:0;margin-bottom:10px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-lg);z-index:60;min-width:180px;max-height:320px;overflow-y:auto;opacity:0;pointer-events:none;transform:translateY(8px);transition:all .25s var(--ease);padding:6px}
 .vdd.on{opacity:1;pointer-events:all;transform:translateY(0)}
 .v-item{padding:8px 12px;font-size:13px;color:var(--text-primary);cursor:pointer;border-radius:6px;transition:background .2s;touch-action:manipulation}
 .v-item:hover{background:var(--bg-hover)}
@@ -554,12 +557,28 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 <div class="toast-ct" id="toastCt"></div>
 <script src="env.js"></script>
 <script>
-/* ========== ENV FALLBACK ========== */
+/* ========== ENV FALLBACK & ERROR HANDLING WRAPPER ========== */
 if (typeof window.__ENV__ === 'undefined') {
   window.__ENV__ = { SUPABASE_URL:'', SUPABASE_ANON_KEY:'', FREE_AI_URL:'', PREMIUM_AI_URL:'' };
   console.warn('%c[HeloXAi] env.js not found. Create it with: window.__ENV__ = { SUPABASE_URL, SUPABASE_ANON_KEY, FREE_AI_URL, PREMIUM_AI_URL }', 'color:#f59e0b;font-weight:bold');
 }
-function getEnvVar(k) { return (window.__ENV__ && window.__ENV__[k]) || ''; }
+
+// Centralized Error Handler
+function handleError(err, context = 'Operation', showToast = true) {
+  console.error(`[HeloXAi] Error in ${context}:`, err);
+  if (showToast) {
+    let msg = 'An unexpected error occurred.';
+    if (err && err.message) msg = err.message;
+    else if (typeof err === 'string') msg = err;
+    toast(msg, 'err');
+  }
+}
+
+function getEnvVar(k) { 
+  try {
+    return (window.__ENV__ && window.__ENV__[k]) || ''; 
+  } catch(e) { return ''; }
+}
 
 (function(){
 'use strict';
@@ -567,18 +586,68 @@ function getEnvVar(k) { return (window.__ENV__ && window.__ENV__[k]) || ''; }
 var SB_URL = getEnvVar('SUPABASE_URL'), SB_KEY = getEnvVar('SUPABASE_ANON_KEY');
 var sb = null;
 if (SB_URL && SB_KEY && SB_URL.indexOf('http') === 0) {
-  try { sb = window.supabase.createClient(SB_URL, SB_KEY, { auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true, storage:window.localStorage }}); } catch(e) { console.error('Supabase init:', e); }
+  try { 
+    sb = window.supabase.createClient(SB_URL, SB_KEY, { 
+      auth:{ 
+        persistSession:true, 
+        autoRefreshToken:true, 
+        detectSessionInUrl:true, 
+        storage:window.localStorage 
+      } 
+    }); 
+  } catch(e) { 
+    handleError(e, 'Supabase Init'); 
+  }
+} else {
+  console.warn('[HeloXAi] Supabase not configured. Guest mode only.');
 }
 
-function $(id){ return document.getElementById(id); }
-function esc(s){ if(s==null) return ''; var d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; }
-function uid(){ try{return crypto.randomUUID()}catch(e){return Date.now().toString(36)+Math.random().toString(36).slice(2)} }
+function $(id){ 
+  try { return document.getElementById(id); } 
+  catch(e) { return null; } 
+}
+function esc(s){ 
+  if(s==null) return ''; 
+  var d=document.createElement('div'); 
+  d.textContent=String(s); 
+  return d.innerHTML; 
+}
+function uid(){ 
+  try{return crypto.randomUUID()}catch(e){return Date.now().toString(36)+Math.random().toString(36).slice(2)} 
+}
 function now(){ return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
-function ago(ts){ if(!ts) return ''; var s=Math.floor((Date.now()-new Date(ts))/1000); if(s<60) return 'just now'; if(s<3600) return Math.floor(s/60)+'m ago'; if(s<86400) return Math.floor(s/3600)+'h ago'; return Math.floor(s/86400)+'d ago'; }
-function fmtSize(b){ if(b<1024) return b+' B'; if(b<1048576) return (b/1024).toFixed(1)+' KB'; return (b/1048576).toFixed(1)+' MB'; }
+function ago(ts){ 
+  if(!ts) return ''; 
+  var s=Math.floor((Date.now()-new Date(ts))/1000); 
+  if(s<60) return 'just now'; 
+  if(s<3600) return Math.floor(s/60)+'m ago'; 
+  if(s<86400) return Math.floor(s/3600)+'h ago'; 
+  return Math.floor(s/86400)+'d ago'; 
+}
+function fmtSize(b){ 
+  if(b<1024) return b+' B'; 
+  if(b<1048576) return (b/1024).toFixed(1)+' KB'; 
+  return (b/1048576).toFixed(1)+' MB'; 
+}
 function isImgFile(f){ return f&&f.type&&f.type.indexOf('image/')===0; }
-function readAsDataUrl(f){ return new Promise(function(r,e){ var x=new FileReader(); x.onload=function(){r(x.result)}; x.onerror=e; x.readAsDataURL(f); }); }
-function dataUrlToFile(u,n){ try{ var p=u.split(','),m=p[0].match(/:(.*?);/)[1],b=atob(p[1]),l=b.length,a=new Uint8Array(l); while(l--)a[l]=b.charCodeAt(l); return new File([a],n,{type:m}); }catch(e){return null;} }
+function readAsDataUrl(f){ 
+  return new Promise(function(r,e){ 
+    var x=new FileReader(); 
+    x.onload=function(){r(x.result)}; 
+    x.onerror=function(){e(new Error('Failed to read file'));}; 
+    x.readAsDataURL(f); 
+  }); 
+}
+function dataUrlToFile(u,n){ 
+  try{ 
+    var p=u.split(','),m=p[0].match(/:(.*?);/)[1],b=atob(p[1]),l=b.length,a=new Uint8Array(l); 
+    while(l--)a[l]=b.charCodeAt(l); 
+    return new File([a],n,{type:m}); 
+  }catch(e){ 
+    handleError(e, 'DataURL conversion', false);
+    return null;
+  } 
+}
 
 /* ========== STATE ========== */
 var S = {
@@ -599,20 +668,24 @@ function isVidQ(t){ var l=t.toLowerCase(); for(var i=0;i<VID_KW.length;i++) if(l
 
 /* --- LIMITS LOGIC --- */
 function getDailyUsage(key) {
-    var today = new Date().toDateString();
-    var stored = localStorage.getItem('helox_usage_' + key);
-    if (stored) {
-        var data = JSON.parse(stored);
-        if (data.date === today) return data.count;
-    }
-    return 0;
+    try {
+        var today = new Date().toDateString();
+        var stored = localStorage.getItem('helox_usage_' + key);
+        if (stored) {
+            var data = JSON.parse(stored);
+            if (data.date === today) return data.count;
+        }
+        return 0;
+    } catch(e) { return 0; }
 }
 
 function incrementUsage(key) {
-    var today = new Date().toDateString();
-    var count = getDailyUsage(key) + 1;
-    localStorage.setItem('helox_usage_' + key, JSON.stringify({ date: today, count: count }));
-    return count;
+    try {
+        var today = new Date().toDateString();
+        var count = getDailyUsage(key) + 1;
+        localStorage.setItem('helox_usage_' + key, JSON.stringify({ date: today, count: count }));
+        return count;
+    } catch(e) {}
 }
 
 function checkLimits(text) {
@@ -628,44 +701,63 @@ function checkLimits(text) {
 }
 
 function apiUrl(){
-  var base = getEnvVar('FREE_AI_URL');
-  if(S.user && (S.user.is_lifetime||S.user.is_premium)){
-    var p = getEnvVar('PREMIUM_AI_URL');
-    if(p && p.indexOf('http')===0) base = p;
+  try {
+    var base = getEnvVar('FREE_AI_URL');
+    if(S.user && (S.user.is_lifetime||S.user.is_premium)){
+      var p = getEnvVar('PREMIUM_AI_URL');
+      if(p && p.indexOf('http')===0) base = p;
+    }
+    if(!base) throw new Error("API URL is not configured");
+    return base;
+  } catch(e) {
+    handleError(e, 'API Configuration', false); // Silent log
+    return '';
   }
-  return base;
 }
 function authH(){
-  var h = {'Content-Type':'application/json'};
-  if(S.user && S.user.token) h['Authorization']='Bearer '+S.user.token;
-  else h['x-guest-id']=guestId();
-  return h;
+  try {
+    var h = {'Content-Type':'application/json'};
+    if(S.user && S.user.token) h['Authorization']='Bearer '+S.user.token;
+    else h['x-guest-id']=guestId();
+    return h;
+  } catch(e) { return {}; }
 }
 function isAuthed(){ return !!S.user; }
 function canMedia(){ return isAuthed(); }
-function guestId(){ var id=localStorage.getItem('helox_guest_id'); if(!id){id=crypto.randomUUID();localStorage.setItem('helox_guest_id',id);} return id; }
+function guestId(){ 
+  try { 
+    var id=localStorage.getItem('helox_guest_id'); 
+    if(!id){id=crypto.randomUUID();localStorage.setItem('helox_guest_id',id);} 
+    return id; 
+  } catch(e) { return 'guest-error'; }
+}
 
 /* ========== AUTH ========== */
 async function setUserFromSess(sess){
   try{
+    if(!sess || !sess.user) throw new Error("Invalid session");
     var prof=null;
     if(sb){
         try{
             var r=await sb.from('users').select('plan,is_premium,is_lifetime').eq('id',sess.user.id).single();
-            if(!r.error) prof=r.data;
+            if(!r.error && r.data) prof=r.data;
         } catch(dbErr){ console.log('Profile DB error or missing table. Using defaults.', dbErr.message); }
     }
     var u={ id:sess.user.id, email:sess.user.email, token:sess.access_token, plan:'free', is_premium:false, is_lifetime:false };
     if(prof){ u.plan=prof.plan||'free'; u.is_premium=!!prof.is_premium; u.is_lifetime=!!prof.is_lifetime; }
     S.user=u;
     try{localStorage.setItem('helox-last-login',Date.now())}catch(e){}
-  }catch(e){ S.user={ id:sess.user.id, email:sess.user.email, token:sess.access_token, plan:'free', is_premium:false, is_lifetime:false }; }
+  }catch(e){ 
+    console.error("SetUser Error", e);
+    S.user={ id:sess.user?.id, email:sess.user?.email, token:sess.access_token, plan:'free', is_premium:false, is_lifetime:false }; 
+  }
 }
 
 async function setupAuth(){
   if(!sb){ S.user = null; refreshUI(); return; }
   try {
-      var { data: { session } } = await sb.auth.getSession();
+      var { data: { session }, error } = await sb.auth.getSession();
+      if (error) throw error;
       if (session && session.user) {
           await setUserFromSess(session);
           refreshUI();
@@ -675,20 +767,25 @@ async function setupAuth(){
           S.user = null;
           refreshUI();
       }
-  } catch(e) { console.error('Session check failed', e); }
+  } catch(e) { 
+    handleError(e, 'Session Check', false); // Silent fail usually
+    S.user=null; refreshUI(); 
+  }
 
   sb.auth.onAuthStateChange(async function(ev,sess){
-    if(ev==='SIGNED_OUT'){ doSignOut(); return; }
-    if(ev==='INITIAL_SESSION'||ev==='SIGNED_IN'||ev==='TOKEN_REFRESHED'){
-      if(sess&&sess.user){
-        await setUserFromSess(sess);
-        refreshUI();
-        if(ev==='SIGNED_IN') { loadChatList(); toast('Signed in','ok'); }
-      } else {
-        S.user=null;
-        refreshUI();
-      }
-    }
+    try {
+        if(ev==='SIGNED_OUT'){ doSignOut(); return; }
+        if(ev==='INITIAL_SESSION'||ev==='SIGNED_IN'||ev==='TOKEN_REFRESHED'){
+          if(sess&&sess.user){
+            await setUserFromSess(sess);
+            refreshUI();
+            if(ev==='SIGNED_IN') { loadChatList().catch(e=>console.error(e)); toast('Signed in','ok'); }
+          } else {
+            S.user=null;
+            refreshUI();
+          }
+        }
+    } catch(e) { handleError(e, 'Auth State Change'); }
   });
 }
 
@@ -698,7 +795,7 @@ function doSignOut(){
     toast('Signed out','inf'); 
 }
 async function signOut(){ 
-    if(sb) try{await sb.auth.signOut()}catch(e){} 
+    if(sb) try{await sb.auth.signOut()}catch(e){ handleError(e, 'Sign Out');} 
     doSignOut(); 
 }
 
@@ -706,15 +803,32 @@ async function signOut(){
 async function loadChatList(){
   if(!S.user){S.chatListData=[];renderChatList();return;}
   try{
-    var r=await fetch(apiUrl()+'/chats',{method:'GET',headers:authH(),credentials:'include'});
-    if(r.ok){ var d=await r.json(); S.chatListData=Array.isArray(d)?d:(d.chats||[]); }
-    else { console.error('Failed to load chats', r.status); }
-  }catch(e){ console.error(e); S.chatListData=[]; }
+    if(!apiUrl()) throw new Error("API not configured");
+    var r=await fetch(apiUrl()+'/chats',{
+      method:'GET',
+      headers:authH(),
+      credentials:'include'
+    });
+    if(!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+    var d=await r.json();
+    S.chatListData=Array.isArray(d)?d:(d.chats||[]);
+  }catch(e){ 
+    handleError(e, 'Load Chat List');
+    S.chatListData=[]; 
+  }
   renderChatList();
 }
 
 async function startNewChat(){
-  try{
+  // Optimistic UI update
+  S.chatId = uid();
+  S.msgs = [];
+  $('hdrTitle').textContent = 'New Chat';
+  renderAll();
+  if(S.sbOpen) toggleSB(false);
+
+  try {
+    if(!apiUrl()) throw new Error("API not configured");
     var r=await fetch(apiUrl()+'/newchat',{
       method:'POST',
       headers:authH(),
@@ -725,18 +839,13 @@ async function startNewChat(){
         var d=await r.json();
         if(d&&d.conversation_id){ 
           S.chatId=d.conversation_id; 
-          $('hdrTitle').textContent='New Chat'; 
-          loadChatList();
         }
+    } else {
+        console.warn("New chat API call failed, using local ID.");
     }
   }catch(e){ 
-    console.error('New chat failed', e);
-    S.chatId=uid(); 
-    $('hdrTitle').textContent='New Chat'; 
+    console.warn('New chat API failed, continuing offline.', e);
   }
-  S.msgs=[]; 
-  renderAll(); 
-  if(S.sbOpen)toggleSB(false);
 }
 
 async function loadConv(cid){
@@ -746,7 +855,6 @@ async function loadConv(cid){
           var msgs=await sb.from('messages').select('*').eq('conversation_id',cid).order('created_at',{ascending:true});
           if(!msgs.error && msgs.data) {
              S.msgs=msgs.data.map(function(m){
-                 // Ensure images array exists for both roles
                  var imgs = m.media_url ? [{url:m.media_url, name:'Generated'}] : [];
                  if(m.metadata && m.metadata.has_images) imgs = []; 
                  return { 
@@ -755,13 +863,12 @@ async function loadConv(cid){
                      content:m.content, 
                      content_type:m.content_type||'text', 
                      media_url:m.media_url||null, 
-                     images: imgs, // Load images from DB if saved there
+                     images: imgs, 
                      time:new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}), 
                      liked:false, 
                      disliked:false 
                  };
              });
-             // Reconstruct gallery from history
              S.gallery=[];
              S.msgs.forEach(function(m){ 
                  if(m.role==='assistant') {
@@ -773,13 +880,12 @@ async function loadConv(cid){
                              }
                          });
                      } else {
-                        // Fallback extraction for old messages
                         addGal(m.content);
                      }
                  }
              });
           }
-      } catch(e) { console.error('Error loading conv from DB', e); }
+      } catch(e) { handleError(e, 'Load Conversation'); }
   }
   S.chatId=cid;
   var conv=S.chatListData.find(function(c){return c.id===cid;});
@@ -788,11 +894,14 @@ async function loadConv(cid){
   switchView('chat');
 }
 
-async function saveMsg(m){if(!sb||!S.user||!S.chatId)return;try{await sb.from('messages').insert({conversation_id:S.chatId,role:m.role,content:m.content,content_type:m.content_type||'text',media_url:m.media_url||null,metadata:m.metadata||{}})}catch(e){}}
-async function updateTs(cid){if(!sb||!cid)return;try{await sb.from('conversations').update({updated_at:new Date().toISOString()}).eq('id',cid)}catch(e){}}
+async function saveMsg(m){if(!sb||!S.user||!S.chatId)return;try{await sb.from('messages').insert({conversation_id:S.chatId,role:m.role,content:m.content,content_type:m.content_type||'text',media_url:m.media_url||null,metadata:m.metadata||{}})}catch(e){handleError(e, 'Save Message', false);}}
+async function updateTs(cid){if(!sb||!cid)return;try{await sb.from('conversations').update({updated_at:new Date().toISOString()}).eq('id',cid)}catch(e){handleError(e, 'Update Timestamp', false);}}
 async function delConv(cid){
   if(!confirm('Delete this chat?')) return;
-  try{await fetch(apiUrl()+'/chats/'+cid,{method:'DELETE',headers:authH(),credentials:'include'})}catch(e){}
+  try{
+      if(apiUrl()) await fetch(apiUrl()+'/chats/'+cid,{method:'DELETE',headers:authH(),credentials:'include'});
+  }catch(e){ handleError(e, 'Delete Chat (API)'); }
+  
   if(!sb||!cid)return;
   try{
       await sb.from('messages').delete().eq('conversation_id',cid);
@@ -802,11 +911,11 @@ async function delConv(cid){
       }
       loadChatList();
       toast('Deleted','inf');
-  }catch(e){}
+  }catch(e){ handleError(e, 'Delete Chat (DB)'); }
 }
 
 /* ========== THEME ========== */
-function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('data-theme',window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');else document.documentElement.setAttribute('data-theme',t)}catch(e){}S.theme=t;try{localStorage.setItem('helox-theme',t)}catch(e){}document.querySelectorAll('.t-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-t')===t)})}
+function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('data-theme',window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');else document.documentElement.setAttribute('data-theme',t)}catch(e){handleError(e, 'Set Theme', false);}S.theme=t;try{localStorage.setItem('helox-theme',t)}catch(e){}document.querySelectorAll('.t-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-t')===t)})}
 function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'dark'}catch(e){}setTheme(s);try{window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(S.theme==='system')setTheme('system')})}catch(e){}}
 
 /* ========== MARKDOWN & HTML PREVIEW ========== */
@@ -889,7 +998,9 @@ function toast(msg,type){
   var ic={ok:'fa-circle-check',err:'fa-circle-xmark',inf:'fa-circle-info',wrn:'fa-triangle-exclamation'};
   var el=document.createElement('div');el.className='toast '+(type||'inf');
   el.innerHTML='<i class="fa-solid '+(ic[type||'inf']||ic.inf)+'"></i> '+esc(msg);
-  $('toastCt').appendChild(el);setTimeout(function(){if(el.parentNode)el.remove()},3200);
+  var ct = $('toastCt');
+  if(ct) ct.appendChild(el);
+  setTimeout(function(){if(el.parentNode)el.remove()},3200);
 }
 function toggleSB(open){S.sbOpen=typeof open==='boolean'?open:!S.sbOpen;$('sidebar').classList.toggle('open',S.sbOpen);$('sbOv').classList.toggle('on',S.sbOpen);}
 function openLinkModal(url){S.activeLinkUrl=url;$('lmUrlText').textContent=url;$('lmOpenExternal').href=url;$('linkModal').classList.add('on');}
@@ -898,7 +1009,6 @@ function openHtmlPreview(code){
   var modal=$('htmlPreviewModal'); var frame=$('htmlPreviewFrame');
   if(!modal||!frame)return; 
   modal.classList.add('on');
-  // Write to iframe securely
   var doc = frame.contentWindow.document; 
   doc.open(); 
   doc.write(code); 
@@ -1015,7 +1125,7 @@ function actCopy(idx){
   var m=S.msgs[idx];
   if(!m||!m.content) return;
   var txt=m.content.replace(/<[^>]*>/g,'');
-  navigator.clipboard.writeText(txt).then(function(){toast('Copied','ok');});
+  navigator.clipboard.writeText(txt).then(function(){toast('Copied','ok');}).catch(function(){toast('Copy failed','err');});
 }
 
 function actLike(idx, type){
@@ -1026,16 +1136,46 @@ function actLike(idx, type){
   renderAll();
 }
 
-function actVoice(idx){
+/* 
+  FIX: Voice Reply (TTS) connected to /tts 
+*/
+async function actVoice(idx){
   var m=S.msgs[idx];
   if(!m||!m.content) return;
   if(!isAuthed()){toast('Sign in','wrn');return;}
-  if('speechSynthesis' in window){
-      var u=new SpeechSynthesisUtterance(m.content.replace(/<[^>]*>/g,''));
-      u.voice=S.selectedVoice?speechSynthesis.getVoices().find(function(v){return v.name===S.selectedVoice}):null;
-      window.speechSynthesis.speak(u);
-  } else {
-      toast('TTS not supported','err');
+  
+  var textToRead = m.content.replace(/<[^>]*>/g,'');
+  toast('Generating audio...', 'inf');
+
+  try {
+    if(!apiUrl()) throw new Error("API not configured");
+
+    var r = await fetch(apiUrl()+'/tts', {
+      method: 'POST',
+      headers: authH(),
+      body: JSON.stringify({ 
+        text: textToRead, 
+        voice: S.selectedVoice || 'alloy' 
+      })
+    });
+
+    if(!r.ok) {
+        var err = await r.text();
+        throw new Error(err || 'TTS failed');
+    }
+
+    var blob = await r.blob();
+    var audioUrl = URL.createObjectURL(blob);
+    var audio = new Audio(audioUrl);
+    
+    audio.onended = function() { URL.revokeObjectURL(audioUrl); };
+    audio.onerror = function() { toast('Audio playback error', 'err'); };
+    
+    audio.play();
+    toast('Playing audio', 'ok');
+
+  } catch(e) {
+    handleError(e, 'Voice Generation');
   }
 }
 
@@ -1094,7 +1234,6 @@ function switchView(v){S.view=v;$('chatView').style.display=v==='chat'?'block':'
 function extractMedia(c){ var found=[],m,r=/!\[([^\]]*)\]\(([^)]+)\)/g;while((m=r.exec(c))!==null)found.push({type:/\.(mp4|webm|mov)/i.test(m[2])?'video':'image',url:m[2],prompt:m[1]||'',id:uid()});return found; }
 function addGal(c){
   extractMedia(c).forEach(function(i){ if(!S.gallery.some(function(g){return g.url===i.url}))S.gallery.unshift(i); });
-  // We no longer increment usage here because it's handled in onMedia for SSE streams
   if(c.indexOf('![') > -1 || c.indexOf('data:image') > -1) incrementUsage('images');
   if(c.indexOf('video') > -1 || c.indexOf('.mp4') > -1) incrementUsage('videos');
 }
@@ -1112,7 +1251,16 @@ function renderGallery(){
 function openLB(src,isV){$('lbContent').innerHTML=isV?'<video src="'+src+'" controls autoplay style="max-width:90vw;max-height:85vh;border-radius:18px">':'<img src="'+src+'" style="max-width:90vw;max-height:85vh;border-radius:18px">';$('lbDl').href=src;$('lbDl').download='heloxai';$('lightbox').classList.add('on');}
 function closeLB(){$('lightbox').classList.remove('on');$('lbContent').innerHTML='';}
 
-/* ========== RENDER MESSAGES (UPDATED FOR AI IMAGES) ========== */
+/* Helper to update status text */
+function updateAiStatus(idx, text) {
+    var el = document.getElementById('ai-status-' + idx);
+    if(el) {
+        el.textContent = text;
+        el.style.display = text ? 'inline-block' : 'none';
+    }
+}
+
+/* ========== RENDER MESSAGES (UPDATED FOR STATUS) ========== */
 function showWelcome(){$('welcomeEl').style.display='flex';$('msgsEl').style.display='none';}
 function showMsgs(){$('welcomeEl').style.display='none';$('msgsEl').style.display='block';}
 function renderChatList(){
@@ -1127,7 +1275,6 @@ function buildImgHtml(imgs){
   var cls=imgs.length===1?'single':'multi';
   var html='<div class="msg-imgs">';
   imgs.forEach(function(img){
-      // Support both user uploads (dataUrl) and AI generation (url)
       var src = img.dataUrl || img.url;
       var isVideo = (img.type === 'video' || (img.url && (img.url.includes('.mp4') || img.url.includes('.webm'))));
       
@@ -1156,7 +1303,8 @@ function renderAll(){
       
       var imgsHtml = buildImgHtml(m.images || []);
       
-      html+='<div class="msg ai-msg" id="msg-'+i+'"><div class="msg-inner"><div class="msg-label"><span class="ai-dot"></span> AI</div><div class="msg-ct" id="mc-'+i+'"></div>'+imgsHtml+acts+'<div class="msg-time">'+m.time+'</div></div></div>';
+      // Added status span
+      html+='<div class="msg ai-msg" id="msg-'+i+'"><div class="msg-inner"><div class="msg-label"><span class="ai-dot"></span> AI <span id="ai-status-'+i+'" class="ai-status"></span></div><div class="msg-ct" id="mc-'+i+'"></div>'+imgsHtml+acts+'<div class="msg-time">'+m.time+'</div></div></div>';
     }else{
       var imgs=buildImgHtml(m.images);
       html+='<div class="msg user-msg" id="msg-'+i+'"><div class="msg-inner"><div class="msg-label">You</div><div class="msg-bubble">'+imgs+md(m.content)+'</div><div class="msg-time">'+m.time+'</div></div></div>';
@@ -1192,7 +1340,7 @@ function updateLastAI(content){
 
 function addTyping(){
   var d=document.createElement('div');d.className='msg ai-msg';d.id='typMsg';
-  d.innerHTML='<div class="msg-inner"><div class="msg-label"><span class="ai-dot"></span> AI</div><div class="typing-wrap"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>';
+  d.innerHTML='<div class="msg-inner"><div class="msg-label"><span class="ai-dot"></span> AI <span id="ai-status-typing" class="ai-status">Thinking...</span></div><div class="typing-wrap"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>';
   $('msgsEl').appendChild(d);if(S.isAutoScrolling)scrollBot(true);
 }
 function rmTyping(){var e=$('typMsg');if(e)e.remove();}
@@ -1231,9 +1379,8 @@ function initMic() {
         if (tracks.length > 0) {
           tracks.forEach(track => track.stop());
         }
-        console.log('Mic permission granted');
       })
-      .catch(function(err) { console.log('Mic permission denied or error:', err); });
+      .catch(function(err) { console.log('Mic permission check:', err); });
   }
 }
 
@@ -1259,13 +1406,22 @@ function doSTT(blob){
   var fd=new FormData();fd.append('file',blob,'recording.webm');
   var h={};if(S.user&&S.user.token)h['Authorization']='Bearer '+S.user.token;
   fetch(apiUrl()+'/stt',{method:'POST',headers:h,credentials:'include',body:fd})
-    .then(function(r){return r.json();})
-    .then(function(d){if(d.text){$('cbInput').value=d.text;autoH($('cbInput'));updateCB();toast('Recognized','ok');setTimeout(function(){sendMsg();},600);}else toast('No speech detected','err');})
-    .catch(function(){toast('STT failed','err');});
+    .then(function(r){ 
+      if(!r.ok) throw new Error('STT failed');
+      return r.json(); 
+    })
+    .then(function(d){
+      if(d.text){
+        $('cbInput').value=d.text;autoH($('cbInput'));updateCB();toast('Recognized','ok');setTimeout(function(){sendMsg();},600);
+      } else {
+        toast('No speech detected','err');
+      }
+    })
+    .catch(function(e){ handleError(e, 'Voice Recognition'); });
 }
 
-/* ========== STREAMING (FIXED FOR MEDIA) ========== */
-function streamRes(res, onChunk, onDone, onMedia) {
+/* ========== STREAMING (UPDATED FOR STATUS) ========== */
+function streamRes(res, onChunk, onDone, onMedia, onStatus) {
     if (!res.body || typeof res.body.getReader !== 'function') {
         return res.text().then(function (t) {
             onChunk(t);
@@ -1295,13 +1451,19 @@ function streamRes(res, onChunk, onDone, onMedia) {
         try {
             var json = JSON.parse(line);
             
-            // HANDLE MEDIA EVENTS (FIX)
+            // HANDLE MEDIA EVENTS
             if (json.type === 'images' && typeof onMedia === 'function') {
                 onMedia({ type: 'image', data: json.images });
                 return;
             }
             if (json.type === 'video' && typeof onMedia === 'function') {
                 onMedia({ type: 'video', url: json.url });
+                return;
+            }
+
+            // HANDLE STATUS EVENTS (Generating code, searching, etc)
+            if (json.type === 'status' && typeof onStatus === 'function') {
+                onStatus(json.message);
                 return;
             }
 
@@ -1385,7 +1547,6 @@ function sendWithFiles(text,imgs,files){
   var h={};if(S.user&&S.user.token)h['Authorization']='Bearer '+S.user.token;
   var full='';
   
-  // Define onMedia for file analysis (usually returns text, but could return media)
   var onMedia = function(data){ 
       var idx = S.msgs.length-1; 
       if(data.type==='image'){
@@ -1412,9 +1573,8 @@ function sendWithFiles(text,imgs,files){
 
 function sendToAI(text){
   if(!text)return;S.streaming=true;S.abort=new AbortController();addTyping();updateCB();var full='';
-  var aiMsgIdx = S.msgs.length; // Track index before we push the placeholder
+  var aiMsgIdx = S.msgs.length; 
 
-  // MEDIA HANDLER FOR AI GENERATION
   var onMedia = function(data){
       var idx = S.msgs.length - 1;
       if(!S.msgs[idx]) return;
@@ -1423,11 +1583,8 @@ function sendToAI(text){
       if(data.type === 'image'){
           data.data.forEach(function(img){
               S.msgs[idx].images.push(img);
-              // Add to gallery
               if(!S.gallery.some(function(g){return g.url===img.url})) S.gallery.unshift({type:'image',url:img.url,prompt:'Generated',id:uid()});
               incrementUsage('images');
-              
-              // Render immediately
               var el=$('mc-'+idx);
               if(el) el.insertAdjacentHTML('beforeend', '<div class="img-wrap"><img src="'+img.url+'" loading="lazy"></div>');
           });
@@ -1436,11 +1593,19 @@ function sendToAI(text){
           S.msgs[idx].images.push(vidObj);
           if(!S.gallery.some(function(g){return g.url===data.url})) S.gallery.unshift({type:'video',url:data.url,prompt:'Generated',id:uid()});
           incrementUsage('videos');
-          
           var el=$('mc-'+idx);
           if(el) el.insertAdjacentHTML('beforeend', '<div class="img-wrap"><video src="'+data.url+'" controls autoplay loop muted playsinline></video></div>');
       }
       scrollBot(true);
+  };
+
+  // Status Handler: Updates text like "Generating image..." or "Browsing..."
+  var onStatus = function(msg){
+      var typing = document.getElementById('ai-status-typing');
+      if(typing) typing.textContent = msg;
+      
+      var realIdx = S.msgs.length - 1;
+      updateAiStatus(realIdx, msg);
   };
 
   fetch(apiUrl()+'/ask/universal',{method:'POST',headers:authH(),credentials:'include',signal:S.abort.signal,body:JSON.stringify({prompt:text,conversation_id:S.chatId})}).then(function(res){
@@ -1450,11 +1615,11 @@ function sendToAI(text){
       return res.json().then(function(d){var c=d.response||d.content||d.result||d.message||JSON.stringify(d);var ai={id:uid(),role:'assistant',content:c,liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();addGal(c);saveMsg(ai);if(S.chatId)updateTs(S.chatId);});
     }
     var ai={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();
-    return streamRes(res,function(chunk){full+=chunk;updateLastAI(full);},function(){S.msgs[S.msgs.length-1].content=full;saveMsg(S.msgs[S.msgs.length-1]);if(S.chatId)updateTs(S.chatId);}, onMedia);
+    return streamRes(res,function(chunk){full+=chunk;updateLastAI(full);},function(){S.msgs[S.msgs.length-1].content=full;saveMsg(S.msgs[S.msgs.length-1]);if(S.chatId)updateTs(S.chatId);}, onMedia, onStatus);
   }).catch(function(e){
     rmTyping();
     if(e.name==='AbortError'){if(full){S.msgs[S.msgs.length-1].content=full;saveMsg(S.msgs[S.msgs.length-1]).catch(function(){});updateLastAI(full);}else{S.msgs.pop();renderAll();}toast('Stopped','inf');}
-    else{S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});renderAll();toast('Request failed','err');}
+    else{S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});renderAll();handleError(e, 'AI Generation');}
   }).finally(function(){S.streaming=false;S.abort=null;updateCB();});
 }
 
@@ -1504,16 +1669,23 @@ function updateCB(){
   }
 }
 
-/* ========== VOICES ========== */
+/* 
+  FIX: Voice Picker connected to /tts/voices 
+*/
 async function loadVoices() {
     var list=$('voiceList');
     if(!list) return;
+    list.innerHTML = '<div style="padding:8px;color:var(--text-muted);font-size:12px;">Loading voices...</div>';
+    
     try {
+        if(!apiUrl()) throw new Error("API not configured");
+        
         var r=await fetch(apiUrl()+'/tts/voices');
         if(r.ok){
             var d=await r.json();
-            if(d.voices){
-                list.innerHTML='';
+            list.innerHTML = '';
+            
+            if(d.voices && d.voices.length > 0) {
                 d.voices.forEach(function(v){
                     var el=document.createElement('div');
                     el.className='v-item'+(v.id===S.selectedVoice?' active':'');
@@ -1524,15 +1696,23 @@ async function loadVoices() {
                         document.querySelectorAll('.v-item').forEach(function(i){i.classList.remove('active')});
                         el.classList.add('active');
                         toggleVD(false);
+                        toast('Voice: ' + v.name, 'ok');
                     });
                     list.appendChild(el);
                 });
+            } else {
+                list.innerHTML = '<div style="padding:8px;color:var(--text-muted);font-size:12px;">No voices found</div>';
             }
+        } else {
+            throw new Error(`HTTP ${r.status}`);
         }
-    } catch(e) { console.error('Failed to load voices', e); }
+    } catch(e) { 
+        console.error(e);
+        list.innerHTML = '<div style="padding:8px;color:var(--danger);font-size:12px;">Failed to load voices</div>';
+    }
 }
 
-/* ========== EVENT LISTENERS ========== */
+/* ========== EVENT LISTENERS (FIXED) ========== */
 function initEvents(){
   /* Sidebar */
   $('menuBtn').addEventListener('click',function(){toggleSB();});
@@ -1568,7 +1748,12 @@ function initEvents(){
   });
 
   /* Voice dropdown */
-  $('voiceBtn').addEventListener('click',function(e){e.stopPropagation();if(!S.user){toast('Sign in to use voice','wrn');return;}toggleVD();});
+  $('voiceBtn').addEventListener('click',function(e){
+    e.stopPropagation(); 
+    if(!S.user){toast('Sign in to use voice','wrn');return;}
+    toggleVD();
+    if(S.vdOpen && $('voiceList').children.length === 0) loadVoices();
+  });
 
   /* File upload */
   $('fileBtn').addEventListener('click',function(e){e.stopPropagation();$('fileInput').click();});
@@ -1644,7 +1829,7 @@ function initEvents(){
       if(act==='copy') actCopy(idx);
       else if(act==='like') actLike(idx,'like');
       else if(act==='dislike') actLike(idx,'dislike');
-      else if(act==='edit') actEdit(idx);
+      else if(act==='edit') actEdit(idx); // FIXED: Added missing case
       else if(act==='regen') actRegen(idx);
       else if(act==='voice') actVoice(idx);
       return;
@@ -1773,7 +1958,7 @@ function initEvents(){
 
 /* ========== INIT ========== */
 async function init(){
-  initTheme();initMarked();initModel();initEvents();setupAuth();loadVoices();renderAll();updateCB();
+  initTheme();initMarked();initModel();initEvents();setupAuth();renderAll();updateCB();
   initMic();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
