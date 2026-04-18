@@ -177,7 +177,7 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 .w-icon{font-size:18px;color:var(--accent);margin-bottom:8px;position:relative;z-index:1;display:block}
 .w-text{font-size:13px;color:var(--text-secondary);line-height:1.55;position:relative;z-index:1}
 .w-lock{position:absolute;top:10px;right:10px;background:var(--bg-tertiary);border:1px solid var(--border);color:var(--text-muted);font-size:9px;padding:2px 7px;border-radius:5px;display:flex;align-items:center;gap:3px;z-index:2;font-weight:600}
-.w-lock.prem-lock{color:var(--warning);border-color:rgba(245,158,11,.2);background:rgba(245,158,11,.06)}
+.w-lock.prem-lock{color:var(--warning);border-color:rgba(245,158, 11,.2);background:rgba(245,158, 11,.06)}
 
 /* Message Styling */
 .msg{padding:20px 0;animation:fu .35s var(--ease-out) both;position:relative}
@@ -424,7 +424,7 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
   <div class="sb-head"><div class="sb-logo">HeloX<span>Ai</span></div><button type="button" class="ib" id="sbClose" aria-label="Close sidebar"><i class="fa-solid fa-xmark"></i></button></div>
   <div class="sb-search"><div class="sb-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" id="sbSearch" placeholder="Search conversations..."></div></div>
   <button type="button" class="nc-btn" id="newChatBtn"><i class="fa-solid fa-plus"></i> New Chat <span class="nc-lock" id="ncLock" style="display:none"><i class="fa-solid fa-lock"></i></span></button>
-  <div class="cl" id="chatList"><div class="cl-label">Recent</div><div id="chatListItems"><span style="color:var(--text-muted);font-size:12px;padding:4px 10px;display:block">No conversations yet</span></div></div>
+  <div class="cl" id="chatList"><div class="cl-label">Recent</div><div id="chatListItems"><span style="color:var(--text-muted);font-size:12px;padding:4px 10px;display:block">Loading chats...</span></div></div>
   <nav class="s-nav">
     <a href="auth.html" id="signInLink"><i class="fa-brands fa-google"></i> Sign In</a>
     <a href="donate.html" target="_blank" style="color:#ef4444"><i class="fa-solid fa-heart"></i> Donate</a>
@@ -677,7 +677,8 @@ var S = {
   activeLinkUrl:'', editingIndex:null, editingFiles:[],
   dailyImgLimit: 6, dailyVidLimit: 3,
   mode: 'general', // NEW: General, Search, Code, Finance
-  currentAudio: null // NEW: To stop voice playback
+  currentAudio: null, // To stop voice playback
+  micPermission: 'unknown' // NEW: 'unknown', 'granted', 'denied'
 };
 
 var IMG_KW=['generate image','create image','make image','draw me','render image'];
@@ -685,6 +686,41 @@ var VID_KW=['generate video','create video','make video','render video'];
 
 function isImgQ(t){ var l=t.toLowerCase(); for(var i=0;i<IMG_KW.length;i++) if(l.indexOf(IMG_KW[i])!==-1) return true; return false; }
 function isVidQ(t){ var l=t.toLowerCase(); for(var i=0;i<VID_KW.length;i++) if(l.indexOf(VID_KW[i])!==-1) return true; return false; }
+
+/* --- LOCAL STORAGE HELPERS (NEW) --- */
+function saveLocalChats() {
+    try {
+        // Only store metadata to save space
+        var meta = S.chatListData.map(function(c){ return { id: c.id, title: c.title, updated_at: c.updated_at }; });
+        localStorage.setItem('helox_chats', JSON.stringify(meta));
+    } catch(e) {}
+}
+
+function loadLocalChats() {
+    try {
+        var raw = localStorage.getItem('helox_chats');
+        if (raw) {
+            var meta = JSON.parse(raw);
+            // Merge if API response contains more data, but this populates the UI immediately
+            if(Array.isArray(meta) && meta.length > 0) {
+                // We don't have full messages, but we can show the list
+                // We'll fetch full messages on click
+                return meta;
+            }
+        }
+    } catch(e) { console.error('Error loading local chats', e); }
+    return [];
+}
+
+function saveMicPermission(status) {
+    localStorage.setItem('mic_permission', status);
+}
+
+function loadMicPermission() {
+    var status = localStorage.getItem('mic_permission') || 'unknown';
+    S.micPermission = status;
+    return status;
+}
 
 /* --- LIMITS LOGIC --- */
 function getDailyUsage(key) {
@@ -702,7 +738,7 @@ function getDailyUsage(key) {
 function incrementUsage(key) {
     try {
         var today = new Date().toDateString();
-        var count = getDailyUsage(key) + 1;
+        var count = getDailyUsage(key) +1;
         localStorage.setItem('helox_usage_' + key, JSON.stringify({ date: today, count: count }));
         return count;
     } catch(e) {}
@@ -781,7 +817,7 @@ async function setupAuth(){
       if (session && session.user) {
           await setUserFromSess(session);
           refreshUI();
-          loadChatList();
+          loadChatList(); // This now tries API then falls back to local
           if(window.location.hash && window.location.hash.includes('access_token')) window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
       } else {
           S.user = null;
@@ -821,20 +857,32 @@ async function signOut(){
 
 /* ========== DATA & CHAT HISTORY ========== */
 async function loadChatList(){
-  if(!S.user){S.chatListData=[];renderChatList();return;}
-  try{
-    if(!apiUrl()) throw new Error("API not configured");
-    var r=await fetch(apiUrl()+'/chats',{
-      method:'GET',
-      headers:authH(),
-      credentials:'include'
-    });
-    if(!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
-    var d=await r.json();
-    S.chatListData=Array.isArray(d)?d:(d.chats||[]);
-  }catch(e){ 
-    handleError(e, 'Load Chat List');
-    S.chatListData=[]; 
+  S.chatListData = loadLocalChats(); // Load local immediately so UI isn't empty
+  
+  // If logged in, try to fetch from DB for fresh data
+  if(S.user){
+    try{
+        if(!apiUrl()) throw new Error("API not configured");
+        var r=await fetch(apiUrl()+'/chats',{
+          method:'GET',
+          headers:authH(),
+          credentials:'include'
+        });
+        if(r.ok){
+            var d=await r.json();
+            var freshData = Array.isArray(d)?d:(d.chats||[]);
+            // Merge fresh data
+            // We can overwrite local list with remote list if we want strict sync, 
+            // but for this, let's use remote as source of truth but keep local as backup.
+            S.chatListData = freshData;
+            saveLocalChats(); // Save to local immediately
+        } else {
+            // Keep local data if API fails
+            console.log("Failed to fetch chats, using local cache.");
+        }
+    }catch(e){ 
+        handleError(e, 'Load Chat List'); // Show error toast, but keep local data
+    }
   }
   renderChatList();
 }
@@ -869,7 +917,15 @@ async function startNewChat(){
 }
 
 async function loadConv(cid){
+  // UI Update
   S.msgs=[]; showWelcome();
+  $('hdrTitle').textContent = 'Loading...';
+  
+  // Find title locally
+  var localChat = S.chatListData.find(function(c){return c.id===cid;});
+  if(localChat) $('hdrTitle').textContent = localChat.title || 'Chat';
+
+  // Fetch full messages from Supabase
   if (sb && cid) {
       try {
           var msgs=await sb.from('messages').select('*').eq('conversation_id',cid).order('created_at',{ascending:true});
@@ -908,8 +964,9 @@ async function loadConv(cid){
       } catch(e) { handleError(e, 'Load Conversation'); }
   }
   S.chatId=cid;
-  var conv=S.chatListData.find(function(c){return c.id===cid;});
-  if(conv)$('hdrTitle').textContent=conv.title||'Chat';
+  
+  // Update Sidebar Highlight
+  renderChatList();
   renderAll();
   switchView('chat');
 }
@@ -920,6 +977,9 @@ async function delConv(cid){
   if(!confirm('Delete this chat?')) return;
   try{
       if(apiUrl()) await fetch(apiUrl()+'/chats/'+cid,{method:'DELETE',headers:authH(),credentials:'include'});
+      // Remove from local cache immediately
+      S.chatListData = S.chatListData.filter(function(c){ return c.id !== cid; });
+      saveLocalChats();
   }catch(e){ handleError(e, 'Delete Chat (API)'); }
   
   if(!sb||!cid)return;
@@ -929,7 +989,7 @@ async function delConv(cid){
       if(S.chatId===cid){
           S.msgs=[]; S.chatId=null; $('hdrTitle').textContent='HeloXAi'; renderAll();
       }
-      loadChatList();
+      loadChatList(); // Reload list from local after DB delete
       toast('Deleted','inf');
   }catch(e){ handleError(e, 'Delete Chat (DB)'); }
 }
@@ -1409,8 +1469,12 @@ function scrollBot(force){
   }
 }
 
-/* ========== MIC / STT ========== */
+/* ========== MIC / STT (UPDATED WITH PERMISSION MEMORY) ========== */
 function initMic() {
+  // Check local permission state
+  S.micPermission = loadMicPermission();
+  
+  // If granted, do a silent check to confirm
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     navigator.mediaDevices.getUserMedia({ audio: true })
       .then(function(stream) {
@@ -1418,8 +1482,13 @@ function initMic() {
         if (tracks.length > 0) {
           tracks.forEach(track => track.stop());
         }
+        // Ensure we save "granted" if this succeeded
+        saveMicPermission('granted');
       })
-      .catch(function(err) { console.log('Mic permission check:', err); });
+      .catch(function(err) {
+        console.log('Mic permission check failed:', err);
+        // Don't save error here on init, only on explicit user action
+      });
   }
 }
 
@@ -1431,14 +1500,25 @@ function toggleMic(){
     updateCB();
     return;
   }
+  
+  // Check permission status first
+  if (S.micPermission === 'denied') {
+      toast('Microphone access denied. Reset in browser settings.', 'wrn');
+      return;
+  }
+
   navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+    saveMicPermission('granted');
     S.chunks=[];S.recorder=new MediaRecorder(stream);
     S.recorder.ondataavailable=function(e){if(e.data.size>0)S.chunks.push(e.data);};
     S.recorder.onstop=function(){stream.getTracks().forEach(function(t){t.stop();});doSTT(new Blob(S.chunks,{type:'audio/webm'}));};
     S.recorder.start();
     S.recording=true;$('micBtn').classList.add('mic-on');
     toast('Listening...','inf');
-  }).catch(function(){toast('Mic access denied','err');});
+  }).catch(function(e){
+    saveMicPermission('denied');
+    toast('Mic access denied','err');
+  });
 }
 function doSTT(blob){
   toast('Processing voice...','inf');
@@ -1980,6 +2060,7 @@ function initEvents(){
     if(item){
       var cid=item.getAttribute('data-cid');
       loadConv(cid);
+      // Ensure list re-renders to show active state
       renderChatList();
       toggleSB(false);
     }
@@ -2036,11 +2117,8 @@ async function init(){
   initTheme();initMarked();initModel();initEvents();setupAuth();renderAll();updateCB();
   initMic();
   
-  // Init Mode
-  try{
-    var savedMode = localStorage.getItem('helox-mode') || 'general';
-    selectMode(savedMode);
-  }catch(e){}
+  // Load Mic Permission Status
+  loadMicPermission();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 
