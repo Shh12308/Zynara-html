@@ -3,916 +3,653 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HeloxAi Premium | Upgrade Your Intelligence</title>
-  <meta name="description" content="Unlock HeloxAi Super Intelligence. Choose from free, monthly, or yearly plans." />
-  
-  <!-- Fonts -->
+  <title>HeloxAi Premium Founder Preorder | The Universal AI Gateway</title>
+  <meta name="description" content="Become HeloxAi Premium Founder. Get lifetime early access to a universal AI that can reason, create, and connect to your data." />
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      --bg-dark: #0f172a;
-      --bg-card: rgba(30, 41, 59, 0.7);
-      --bg-card-hover: rgba(51, 65, 85, 0.8);
-      --primary: #00e0ff;
-      --primary-glow: rgba(0, 224, 255, 0.4);
-      --secondary: #38bdf8;
-      --text-main: #f1f5f9;
-      --text-muted: #94a3b8;
-      --danger: #ef4444;
-      --danger-hover: #dc2626;
-      --border: rgba(255, 255, 255, 0.1);
-      --font-family: 'Outfit', sans-serif;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+      --primary-bg: #0f172a;
+      --secondary-bg: #1e293b;
+      --card-bg: #334155;
+      --primary-cyan: #00e0ff;
+      --secondary-blue: #38bdf8;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-gradient: linear-gradient(to right, #00e0ff, #38bdf8);
+      --success: #10b981;
+      --error: #ef4444;
+      --warning: #f59e0b;
     }
 
     body {
-      background-color: var(--bg-dark);
-      font-family: var(--font-family);
-      color: var(--text-main);
-      min-height: 100vh;
-      overflow-x: hidden;
-      position: relative;
+      background: var(--primary-bg);
+      font-family: 'Poppins', sans-serif;
+      color: var(--text-primary);
+      margin: 0;
+      padding: 0;
       line-height: 1.6;
+      overflow-x: hidden;
     }
 
-    /* Animated Background */
-    .bg-gradient {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: -1;
-      background: 
-        radial-gradient(circle at 15% 50%, rgba(0, 224, 255, 0.08), transparent 25%),
-        radial-gradient(circle at 85% 30%, rgba(56, 189, 248, 0.08), transparent 25%);
-      animation: pulseBackground 10s ease-in-out infinite alternate;
-    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
 
-    @keyframes pulseBackground {
-      0% { transform: scale(1); }
-      100% { transform: scale(1.1); }
-    }
-
-    /* Layout */
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 20px;
-      position: relative;
-      z-index: 1;
-    }
-
-    /* Header */
     header {
       padding: 80px 20px 60px;
+      background: linear-gradient(135deg, var(--secondary-bg), var(--card-bg));
       text-align: center;
-      position: relative;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    header h1 {
+      font-size: 3.5rem; font-weight: 700; color: var(--primary-cyan);
+      margin-bottom: 15px; line-height: 1.2; letter-spacing: -1px;
+    }
+    header p { font-size: 1.25rem; color: var(--text-secondary); max-width: 650px; margin: 0 auto; }
+    .hero-badge {
+      display: inline-block; background: var(--accent-gradient); color: var(--primary-bg);
+      padding: 8px 20px; border-radius: 50px; font-size: 0.9rem; font-weight: 600; margin-top: 25px;
+      text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 0 20px rgba(0, 224, 255, 0.3);
     }
 
-    h1 {
-      font-size: 3.5rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, #fff 0%, var(--primary) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 16px;
-      letter-spacing: -1px;
+    .back-btn {
+      display: inline-block; background: rgba(255,255,255,0.05); color: var(--text-secondary);
+      border: 1px solid var(--card-bg); padding: 12px 24px; border-radius: 8px;
+      text-decoration: none; font-family: 'Poppins', sans-serif; font-size: 0.9rem;
+      margin: 20px 0; cursor: pointer; transition: all 0.3s ease;
     }
+    .back-btn:hover { color: var(--primary-cyan); border-color: var(--primary-cyan); background: rgba(0, 224, 255, 0.05); }
 
-    .subtitle {
-      color: var(--text-muted);
-      font-size: 1.25rem;
-      max-width: 600px;
-      margin: 0 auto;
-      font-weight: 300;
-    }
+    /* SECTIONS */
+    .section-padding { padding: 80px 0; }
+    .bg-primary { background: var(--primary-bg); }
+    .bg-secondary { background: var(--secondary-bg); }
+    .section-title { font-size: 2.5rem; font-weight: 600; color: var(--text-primary); text-align: center; margin-bottom: 20px; }
+    .section-subtitle { font-size: 1.1rem; color: var(--text-secondary); text-align: center; max-width: 700px; margin: 0 auto 50px; }
 
-    .close-button {
-      position: absolute;
-      top: 30px;
-      right: 30px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    /* BENEFITS GRID */
+    .benefits-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+    .benefit-card {
+      background: var(--secondary-bg); padding: 35px; border-radius: 16px;
+      border-left: 4px solid var(--primary-cyan); transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
+    .benefit-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0, 224, 255, 0.1); }
+    .benefit-card h3 { font-size: 1.4rem; color: var(--secondary-blue); margin-bottom: 15px; margin-top: 0; }
+    .benefit-card p { color: var(--text-secondary); font-size: 0.95rem; margin: 0; }
 
-    .close-button:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: var(--text-main);
-      transform: rotate(90deg);
-    }
+    /* FEATURES LIST */
+    .feature { display: flex; align-items: flex-start; margin-bottom: 50px; text-align: left; }
+    .feature:last-child { margin-bottom: 0; }
+    .feature-icon { font-size: 2.5rem; color: var(--primary-cyan); margin-right: 25px; min-width: 60px; text-align: center; filter: drop-shadow(0 0 10px rgba(0,224,255,0.3)); }
+    .feature-content h3 { font-size: 1.5rem; color: var(--text-primary); margin-bottom: 12px; margin-top: 0; }
+    .feature-content p { color: var(--text-secondary); font-size: 1.05rem; margin: 0; }
+    .highlight { color: var(--primary-cyan); font-weight: 600; }
 
-    /* Platform Badge */
-    .platform-badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 6px 12px;
-      background: rgba(0, 224, 255, 0.1);
-      border: 1px solid rgba(0, 224, 255, 0.2);
-      border-radius: 20px;
-      font-size: 0.8rem;
-      color: var(--primary);
-      margin-bottom: 20px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
+    /* AUDIENCE GRID */
+    .audience-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; margin-top: 40px; }
+    .audience-card { background: var(--secondary-bg); padding: 30px 20px; border-radius: 16px; text-align: center; border: 1px solid var(--card-bg); transition: 0.3s; }
+    .audience-card:hover { border-color: var(--primary-cyan); transform: translateY(-5px); }
+    .audience-card .icon { font-size: 3rem; margin-bottom: 20px; display: block; }
+    .audience-card h4 { font-size: 1.2rem; color: var(--secondary-blue); margin-bottom: 10px; margin-top: 0; }
+    .audience-card p { color: var(--text-secondary); font-size: 0.9rem; margin: 0; }
 
-    /* Pricing Grid */
-    .pricing-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 30px;
-      margin-bottom: 80px;
-      align-items: start;
+    /* PREORDER CONTAINER */
+    .preorder-container {
+      max-width: 700px; margin: 0 auto; background: var(--secondary-bg); padding: 60px;
+      border-radius: 20px; box-shadow: 0 20px 50px rgba(0, 224, 255, 0.1);
+      border: 1px solid var(--card-bg); text-align: center; position: relative; overflow: hidden;
     }
-
-    /* Cards */
-    .plan-card {
-      background: var(--bg-card);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 40px 30px;
-      display: flex;
-      flex-direction: column;
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .plan-card:hover {
-      transform: translateY(-10px);
-      background: var(--bg-card-hover);
-      border-color: rgba(0, 224, 255, 0.3);
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-    }
-
-    /* Highlighted Card (Ultimate) */
-    .plan-card.featured {
-      border: 1px solid var(--primary);
-      box-shadow: 0 0 30px rgba(0, 224, 255, 0.15);
-    }
-
-    .plan-card.featured::before {
-      content: "MOST POPULAR";
-      position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--primary);
-      color: #000;
-      font-size: 0.75rem;
-      font-weight: 700;
-      padding: 6px 20px;
-      border-bottom-left-radius: 12px;
-      border-bottom-right-radius: 12px;
-    }
-
-    .plan-header h2 {
-      font-size: 1.5rem;
-      color: var(--text-main);
-      margin-bottom: 10px;
-    }
-
-    .price {
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: var(--text-main);
-      margin: 20px 0;
-      display: flex;
-      align-items: baseline;
-    }
-
-    .price span {
-      font-size: 1rem;
-      color: var(--text-muted);
-      font-weight: 400;
-      margin-left: 5px;
-    }
-
-    /* Features List */
-    .features {
-      list-style: none;
-      margin: 0 0 30px;
-      flex-grow: 1;
-      text-align: left;
-    }
-
-    .features li {
-      padding: 10px 0;
-      color: var(--text-muted);
-      font-size: 0.95rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-    }
-
-    .features li:last-child {
-      border-bottom: none;
-    }
-
-    .features li strong {
-      color: var(--text-main);
-    }
-
-    .check-icon {
-      color: var(--primary);
-      flex-shrink: 0;
-      margin-top: 4px;
-    }
-
-    /* Buttons */
-    .btn {
-      width: 100%;
-      padding: 16px;
-      border-radius: 12px;
-      border: none;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-      font-family: var(--font-family);
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      color: #0f172a;
-    }
-
-    .btn-primary:hover {
-      opacity: 0.9;
-      transform: scale(1.02);
-      box-shadow: 0 10px 20px var(--primary-glow);
-    }
-
-    .btn-secondary {
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--text-main);
-      border: 1px solid var(--border);
-    }
-
-    .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    .btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none !important;
-      box-shadow: none !important;
-    }
-
-    /* Cancel Mode Button */
-    .btn-cancel {
-      background: var(--danger);
-      color: white;
-      border: 1px solid var(--danger);
-    }
-
-    .btn-cancel:hover {
-      background: var(--danger-hover);
-      box-shadow: 0 10px 20px rgba(239, 68, 68, 0.3);
-    }
-
-    /* Loading Spinner */
-    .spinner {
-      display: none;
-      width: 20px;
-      height: 20px;
-      border: 3px solid rgba(0,0,0,0.3);
-      border-radius: 50%;
-      border-top-color: #000;
-      animation: spin 1s ease-in-out infinite;
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-    }
-
-    .btn-loading .spinner {
-      display: block;
-    }
+    .preorder-container::before { content:''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--accent-gradient); }
+    .preorder-container h2 { font-size: 2.5rem; color: var(--primary-cyan); margin-bottom: 20px; margin-top: 0; }
+    .price { font-size: 3.5rem; font-weight: 700; margin: 20px 0; color: var(--text-primary); line-height: 1; }
+    .price .currency { font-size: 2.5rem; vertical-align: middle; }
+    .subnote { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 30px; }
     
-    .btn-loading span {
-      visibility: hidden;
+    #countdownContainer { margin: 30px 0; background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
+    #countdown { font-size: 1.8rem; font-weight: 600; color: var(--primary-cyan); font-family: monospace; letter-spacing: 2px; }
+    
+    .whats-included { text-align: left; background: rgba(255,255,255,0.03); padding: 30px; border-radius: 12px; margin: 30px 0; }
+    .whats-included h4 { color: var(--text-primary); margin-bottom: 20px; margin-top: 0; font-size: 1.2rem; }
+    .whats-included ul { list-style: none; padding: 0; margin: 0; }
+    .whats-included li { padding: 10px 0; color: var(--text-secondary); border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; }
+    .whats-included li:last-child { border-bottom: none; }
+    .whats-included li svg { width: 20px; height: 20px; margin-right: 15px; flex-shrink: 0; color: var(--primary-cyan); }
+
+    .preorder-button {
+      background: var(--accent-gradient); color: var(--primary-bg); padding: 20px 40px;
+      border: none; font-size: 1.2rem; font-weight: 600; border-radius: 12px; cursor: pointer;
+      transition: all 0.3s ease; width: 100%; margin-top: 20px; font-family: 'Poppins', sans-serif;
+      box-shadow: 0 4px 15px rgba(0, 224, 255, 0.3);
     }
+    .preorder-button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0, 224, 255, 0.5); }
+    .preorder-button:disabled { background: var(--card-bg); color: var(--text-muted); cursor: not-allowed; transform: none; box-shadow: none; }
+    .trust-text { font-size: 0.9rem; color: var(--text-muted); margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .trust-text span { opacity: 0.7; }
 
-    @keyframes spin {
-      to { transform: translate(-50%, -50%) rotate(360deg); }
+    /* RESULT BANNER */
+    .result-banner {
+      padding: 40px; border-radius: 16px; margin-bottom: 30px;
+      text-align: center; animation: fadeSlideIn 0.6s ease both; border: 1px solid transparent;
     }
-
-    /* Stripe Badge */
-    .secure-badge {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 8px;
-      margin-top: 15px;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      opacity: 0.7;
+    .result-banner.success { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); }
+    .result-banner.success h3 { color: var(--success); font-size: 2rem; margin: 0 0 10px; }
+    .result-banner.success p { color: var(--text-secondary); margin: 0; font-size: 1.1rem; }
+    .result-banner.success .go-home-btn {
+      display: inline-block; margin-top: 25px; color: var(--primary-cyan);
+      text-decoration: none; font-weight: 600; font-size: 1rem; padding: 10px 20px; border: 1px solid var(--primary-cyan); border-radius: 8px; transition: 0.3s;
     }
+    .result-banner.success .go-home-btn:hover { background: rgba(0, 224, 255, 0.1); }
+    
+    @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* Toast Notifications */
-    #toast-container {
-      position: fixed;
-      bottom: 30px;
-      right: 30px;
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+    /* STATE MANAGEMENT */
+    body.show-result .preorder-details { display: none; }
+    body.show-result .preorder-container { display: none; }
+    #resultContainer { display: none; }
+
+    /* FAQ */
+    .faq-section { padding-bottom: 100px; }
+    .faq-item { background: var(--card-bg); margin-bottom: 15px; border-radius: 12px; overflow: hidden; border: 1px solid transparent; transition: 0.3s; }
+    .faq-item:hover { border-color: rgba(255,255,255,0.1); }
+    .faq-question {
+      width: 100%; padding: 25px; background: none; border: none; color: var(--text-primary);
+      font-size: 1.1rem; font-family: 'Poppins', sans-serif; text-align: left; cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center; transition: background 0.3s ease; margin: 0;
     }
-
-    .toast {
-      background: rgba(15, 23, 42, 0.95);
-      backdrop-filter: blur(10px);
-      color: white;
-      padding: 16px 24px;
-      border-radius: 12px;
-      border-left: 4px solid var(--primary);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      transform: translateX(120%);
-      transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-      min-width: 300px;
+    .faq-question:hover { background: rgba(0, 224, 255, 0.05); }
+    .faq-question::after { content: '+'; font-size: 1.8rem; color: var(--primary-cyan); font-weight: 300; transition: transform 0.3s; }
+    .faq-question.active { font-weight: 600; }
+    .faq-question.active::after { content: '\2212'; transform: scale(1.1); }
+    .faq-answer {
+      padding: 0 25px; max-height: 0; overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0,1,0,1), padding 0.4s ease; color: var(--text-secondary);
     }
+    .faq-answer.show { padding: 0 25px 25px; max-height: 500px; transition: max-height 0.5s ease-in-out; }
 
-    .toast.visible {
-      transform: translateX(0);
+    /* FOOTER */
+    footer { margin-top: 0; padding: 40px 20px; font-size: 0.9rem; color: var(--text-muted); background: var(--secondary-bg); border-top: 1px solid var(--card-bg); }
+    footer a { color: var(--text-secondary); text-decoration: none; margin: 0 10px; }
+    footer a:hover { color: var(--primary-cyan); }
+
+    /* SPINNER & DEBUG */
+    #loadingSpinner {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15,23,42,0.95); display: none; flex-direction: column;
+      align-items: center; justify-content: center; color: var(--primary-cyan);
+      font-size: 1.2rem; z-index: 9999; backdrop-filter: blur(5px);
     }
-
-    .toast.error { border-left-color: var(--danger); }
-    .toast.success { border-left-color: #10b981; }
-
-    /* Restore Section */
-    .restore-section {
-      text-align: center;
-      margin-bottom: 60px;
+    .spinner {
+      border: 6px solid var(--card-bg); border-top: 6px solid var(--primary-cyan);
+      border-radius: 50%; width: 60px; height: 60px;
+      animation: spin 1s linear infinite; margin-bottom: 20px;
     }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    .restore-link {
-      color: var(--text-muted);
-      text-decoration: underline;
-      cursor: pointer;
-      font-size: 0.9rem;
-      background: none;
-      border: none;
+    #debugBanner {
+      display: none; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: 10px; padding: 16px 20px; margin: 20px auto; max-width: 900px;
+      font-family: monospace; font-size: 13px; color: var(--warning); line-height: 1.6; text-align: left;
     }
+    #debugBanner strong { color: var(--error); font-size: 14px; display: block; margin-bottom: 8px; }
 
-    /* Footer */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 60px 0;
-      background: rgba(15, 23, 42, 0.5);
-    }
-
-    .footer-content {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 40px;
-    }
-
-    .footer-col h4 {
-      color: var(--text-main);
-      margin-bottom: 20px;
-      font-size: 1.1rem;
-    }
-
-    .footer-col ul {
-      list-style: none;
-    }
-
-    .footer-col li {
-      margin-bottom: 10px;
-    }
-
-    .footer-col a {
-      color: var(--text-muted);
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-
-    .footer-col a:hover {
-      color: var(--primary);
-    }
-
-    .footer-bottom {
-      margin-top: 50px;
-      padding-top: 20px;
-      border-top: 1px solid var(--border);
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
-
-    /* Responsive */
     @media (max-width: 768px) {
-      h1 { font-size: 2.5rem; }
-      .pricing-grid { grid-template-columns: 1fr; }
-      .plan-card.featured { transform: scale(1); }
+      header h1 { font-size: 2.5rem; }
+      .section-title { font-size: 2rem; }
+      .price { font-size: 2.8rem; }
+      .preorder-container { padding: 30px 20px; }
+      .feature { flex-direction: column; text-align: center; }
+      .feature-icon { margin: 0 auto 15px; }
+      .feature-content p { font-size: 1rem; }
     }
   </style>
+
+  <!-- 1. LOAD SUPABASE SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- 2. LOAD ENV.JS (The onerror handles missing files gracefully) -->
+  <script src="env.js" onerror="window.__envLoadFailed=true"></script>
 </head>
 <body>
-  <div class="bg-gradient"></div>
 
-  <!-- Toast Container -->
-  <div id="toast-container"></div>
-
+<header>
   <div class="container">
-    <header>
-      <button class="close-button" onclick="window.location.href='index.html'" aria-label="Close">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-      </button>
-      
-      <div id="platformIndicator" class="platform-badge">Web</div>
-      
-      <h1>HeloxAi Premium</h1>
-      <p class="subtitle">Unlock Super Intelligence, multimodal creation, and unlimited processing power.</p>
-    </header>
+    <h1>HeloxAi Premium Founder</h1>
+    <p>Be part of the AI revolution. Get early access to a universal gateway that reasons, creates, and automates. Your support helps us deploy our dedicated GPU infrastructure.</p>
+    <div class="hero-badge">Limited Founder Slots Available</div>
+  </div>
+</header>
 
-    <main class="pricing-grid">
-      <!-- Free Plan -->
-      <article class="plan-card">
-        <div class="plan-header">
-          <h2>Free Plan</h2>
-          <div class="price">$0<span>/month</span></div>
-        </div>
-        <ul class="features">
-          <li><span class="check-icon">✓</span> HeloxAi Lite (Text-only)</li>
-          <li><span class="check-icon">✓</span> Standard speed models</li>
-          <li><span class="check-icon">✓</span> Basic chat & Q/A</li>
-          <li><span class="check-icon">✓</span> Limited history</li>
-        </ul>
-        <button class="btn btn-secondary" id="freeBtn">
-          <span>Use Free Plan</span>
-          <div class="spinner"></div>
-        </button>
-      </article>
+<div class="container">
+  <div id="debugBanner"></div>
+  <a href="index.html" class="back-btn">&larr; Back to HeloxAi</a>
+</div>
 
-      <!-- Ultimate Monthly -->
-      <article class="plan-card featured">
-        <div class="plan-header">
-          <h2>Ultimate Monthly</h2>
-          <div class="price">£4.99<span>/month</span></div>
-        </div>
-        <ul class="features">
-          <li><strong>Full Super Intelligence Access</strong></li>
-          <li><span class="check-icon">✓</span> Text, Vision, Audio & Code</li>
-          <li><span class="check-icon">✓</span> Sora 2-level Video Gen</li>
-          <li><span class="check-icon">✓</span> ElevenLabs Voice Cloning</li>
-          <li><span class="check-icon">✓</span> 3D Modeling Tools</li>
-          <li><span class="check-icon">✓</span> Advanced OCR & Docs</li>
-          <li><span class="check-icon">✓</span> Priority Processing</li>
-        </ul>
-        <button class="btn btn-primary" id="ultimateMonthlyBtn">
-          <span>Go Ultimate Monthly</span>
-          <div class="spinner"></div>
-        </button>
-        <div class="secure-badge">
-          <svg width="30" height="15" viewBox="0 0 60 25" fill="none">
-             <!-- Simplified Stripe Logo Path -->
-             <path d="M59.64 14.28h-8.06c.19 1.93 1.6 2.55 3.2 2.55 1.64 0 2.96-.37 4.05-.95v3.32a12.3 12.3 0 01-4.56.88c-4.15 0-6.87-2.35-6.87-7.3 0-4.17 2.36-7.32 6.3-7.32 3.95 0 6.05 3.08 6.05 7.1 0 .5-.04 1.12-.11 1.72zm-4.18-5.62c-1.02 0-2.15.73-2.15 2.62h4.15c0-1.89-1.02-2.62-2-2.62z" transform="translate(1,2)" fill="#94a3b8"/>
-          </svg>
-          Secure Stripe Checkout
-        </div>
-      </article>
-
-      <!-- Ultimate Yearly -->
-      <article class="plan-card">
-        <div class="plan-header">
-          <h2>Ultimate Yearly</h2>
-          <div class="price">£115<span>/year</span></div>
-          <div style="color: var(--primary); font-size: 0.85rem; margin-top: -15px; margin-bottom: 15px; font-weight: 600;">Save 20%</div>
-        </div>
-        <ul class="features">
-          <li><strong>Everything in Monthly, plus:</strong></li>
-          <li><span class="check-icon">✓</span> Instant GPU Cloud Hosting</li>
-          <li><span class="check-icon">✓</span> Private API Access</li>
-          <li><span class="check-icon">✓</span> Custom Model Fine-tuning</li>
-          <li><span class="check-icon">✓</span> Offline Mode Support</li>
-          <li><span class="check-icon">✓</span> 24/7 Compute Uptime</li>
-          <li><span class="check-icon">✓</span> Early Access Features</li>
-        </ul>
-        <button class="btn btn-primary" id="ultimateYearlyBtn">
-          <span>Go Ultimate Yearly</span>
-          <div class="spinner"></div>
-        </button>
-        <div class="secure-badge">
-          <svg width="30" height="15" viewBox="0 0 60 25" fill="none">
-             <path d="M59.64 14.28h-8.06c.19 1.93 1.6 2.55 3.2 2.55 1.64 0 2.96-.37 4.05-.95v3.32a12.3 12.3 0 01-4.56.88c-4.15 0-6.87-2.35-6.87-7.3 0-4.17 2.36-7.32 6.3-7.32 3.95 0 6.05 3.08 6.05 7.1 0 .5-.04 1.12-.11 1.72zm-4.18-5.62c-1.02 0-2.15.73-2.15 2.62h4.15c0-1.89-1.02-2.62-2-2.62z" transform="translate(1,2)" fill="#94a3b8"/>
-          </svg>
-          Secure Stripe Checkout
-        </div>
-      </article>
-    </main>
-
-    <div class="restore-section">
-      <button id="restoreBtn" class="restore-link" style="display: none;">Restore Purchases</button>
+<main>
+  <div class="container">
+    <div class="preorder-container" id="resultContainer">
+      <div id="resultBanner" class="result-banner"></div>
     </div>
-
-    <footer>
-      <div class="container footer-content">
-        <div class="footer-col">
-          <h4 style="color: var(--primary);">HeloxAI</h4>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">The next-generation AI platform for creators, powered by Hugging Face, ElevenLabs, and OpenAI.</p>
-        </div>
-        <div class="footer-col">
-          <h4>Company</h4>
-          <ul>
-            <li><a href="about.html">About</a></li>
-            <li><a href="career.html">Careers</a></li>
-            <li><a href="contact.html">Contact</a></li>
-          </ul>
-        </div>
-        <div class="footer-col">
-          <h4>Legal</h4>
-          <ul>
-            <li><a href="terms.html">Terms</a></li>
-            <li><a href="priv.html">Privacy</a></li>
-          </ul>
-        </div>
-      </div>
-      <div class="container footer-bottom">
-        &copy; 2025 HeloxAI — All rights reserved.
-      </div>
-    </footer>
   </div>
 
-<!-- Logic -->
-<script src="env.js"></script>
-<script type="module">
-// ===========================
-// ⚡ Dependencies & Setup
-// ===========================
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+  <div class="preorder-details" id="preorderContent">
+    <section class="section-padding bg-primary">
+      <div class="container">
+        <h2 class="section-title">Why Become a Founder?</h2>
+        <p class="section-subtitle">This isn't just early access. It's a partnership to build the future of AI.</p>
+        <div class="benefits-grid">
+          <div class="benefit-card"><h3>Shape the Future</h3><p>Your feedback will directly influence our roadmap. Help us prioritize the features you need most.</p></div>
+          <div class="benefit-card"><h3>Unbeatable Value</h3><p>A one-time payment for lifetime access. Lock in your premium status now before we move to a monthly subscription model.</p></div>
+          <div class="benefit-card"><h3>Fuel the Infrastructure</h3><p>Your preorder directly funds the deployment of our high-performance GPU cluster, ensuring a fast, private, and scalable service.</p></div>
+        </div>
+      </div>
+    </section>
 
-// 1. Verify Environment
-if (!window.__ENV__) {
-  console.error("❌ env.js not loaded correctly.");
-  showToast("Configuration Error: env.js missing.", "error");
-  // Disable buttons to prevent errors
-  document.querySelectorAll('.btn').forEach(b => b.disabled = true);
-} else {
-  console.log("✅ Environment loaded:", window.__ENV__);
-}
+    <section class="section-padding bg-secondary">
+      <div class="container">
+        <h2 class="section-title">What You Can Achieve</h2>
+        <p class="section-subtitle">One AI, limitless possibilities. We handle the complexity so you can focus on the outcome.</p>
+        <div class="feature"><div class="feature-icon">&#129504;</div><div class="feature-content"><h3>Talk to an Expert on Anything</h3><p>From solving complex multi-step problems to writing code and generating creative stories, HeloxAi's <span class="highlight">intelligent reasoning engine</span> delivers expert-level answers.</p></div></div>
+        <div class="feature"><div class="feature-icon">&#128218;</div><div class="feature-content"><h3>Turn Documents into Experts</h3><p>Instantly chat with your PDFs, reports, and notes. Our <span class="highlight">Retrieval-Augmented Generation (RAG)</span> provides precise, sourced answers from your own data.</p></div></div>
+        <div class="feature"><div class="feature-icon">&#128444;&#65039;</div><div class="feature-content"><h3>Analyze Media Like a Pro</h3><p>Upload images, audio, or video. HeloxAi can <span class="highlight">see, hear, and understand</span> your media to provide detailed analysis.</p></div></div>
+        <div class="feature"><div class="feature-icon">&#9881;&#65039;</div><div class="feature-content"><h3>Automate Your Workflows</h3><p>Let the AI take action. Connect to real-time data APIs for daily briefings, monitor social media trends, check stock prices.</p></div></div>
+      </div>
+    </section>
 
-// Extract variables safely
-const { SUPABASE_URL, SUPABASE_ANON_KEY, BACKEND_URL } = window.__ENV__ || {};
-let supabase;
+    <section class="section-padding bg-primary">
+      <div class="container">
+        <h2 class="section-title">Who is HeloxAi For?</h2>
+        <p class="section-subtitle">Whether you're a creator, a developer, or a strategist, HeloxAi is built for you.</p>
+        <div class="audience-grid">
+          <div class="audience-card"><span class="icon">&#128104;&#8205;&#128187;</span><h4>Developers</h4><p>Build powerful AI applications with our unified API, real-time streaming, and cost-optimized routing.</p></div>
+          <div class="audience-card"><span class="icon">&#128300;</span><h4>Researchers</h4><p>Analyze vast amounts of data, synthesize information from papers, and accelerate your discoveries.</p></div>
+          <div class="audience-card"><span class="icon">&#9997;&#65039;</span><h4>Content Creators</h4><p>Generate ideas, draft content, analyze media, and automate your creative process.</p></div>
+          <div class="audience-card"><span class="icon">&#128188;</span><h4>Businesses</h4><p>Gain insights from internal documents, automate reports, and build intelligent customer support tools.</p></div>
+        </div>
+      </div>
+    </section>
 
-if (SUPABASE_URL && SUPABASE_ANON_KEY) {
-  supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-}
+    <!-- PREORDER CONTAINER -->
+    <section class="section-padding bg-primary" id="pricing-section">
+      <div class="container">
+        <div class="preorder-container" id="preorderCTA">
+          <h2>Secure Your Founder Access</h2>
+          <p class="price"><span class="currency">&#163;</span>499 <span style="font-size:1.2rem; color: var(--text-secondary); font-weight: 400;">one-time</span></p>
+          <p class="subnote">One-time payment for a lifetime premium subscription. The price will increase significantly for future members.</p>
 
-// ===========================
-// 📱 Platform Detection
-// ===========================
-function getPlatform() {
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  const isAndroid = /Android/.test(navigator.userAgent);
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
-                       window.navigator.standalone ||
-                       document.referrer.includes('android-app://');
-  const isNativeApp = window.heloxaiNativeApp ||
-                      navigator.userAgent.includes("HeloxAiApp");
+          <div id="countdownContainer">
+            <p style="font-size:0.9rem; color: var(--text-secondary); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">Preorder offer ends in:</p>
+            <div id="countdown">Loading...</div>
+          </div>
 
-  if (isNativeApp) return isIOS ? 'ios' : 'android';
-  if (isStandalone) return isIOS ? 'ios-pwa' : 'android-pwa';
-  return 'web';
-}
+          <div class="whats-included">
+            <h4>What's Included:</h4>
+            <ul>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>Lifetime access to HeloxAi Premium</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>Access to all current and future core AI models</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>Unlimited document uploads for RAG knowledge bases</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>Priority support and direct line to the founding team</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>Exclusive "Founder" badge on your account</li>
+            </ul>
+          </div>
 
-// ===========================
-// 🧠 Supabase Data
-// ===========================
-async function getUserPlan() {
-  if (!supabase) return null;
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
+          <button id="preorderBtn" class="preorder-button">Loading...</button>
+          <p class="trust-text">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            Secure checkout powered by Stripe. 7-day money-back guarantee.
+          </p>
+        </div>
+      </div>
+    </section>
+    <!-- END CONTAINER -->
 
-    const { data, error } = await supabase
-      .from("users")
-      .select("plan")
-      .eq("id", user.id)
-      .single();
+    <section class="section-padding bg-secondary faq-section">
+      <div class="container">
+        <h2 class="section-title">Frequently Asked Questions</h2>
+        <div class="faq-item"><button class="faq-question">What happens after I preorder?</button><div class="faq-answer">You'll receive an immediate confirmation from Stripe. Your account is upgraded instantly to Lifetime Premium.</div></div>
+        <div class="faq-item"><button class="faq-question">How is this different from ChatGPT or Claude?</button><div class="faq-answer">HeloxAi is a universal gateway with access to multiple models, RAG on your data, multi-modal analysis, and workflow automation.</div></div>
+        <div class="faq-item"><button class="faq-question">Is my payment secure?</button><div class="faq-answer">Absolutely. We use Stripe, the industry-leading payment processor. Your card details are encrypted and never stored by us.</div></div>
+        <div class="faq-item"><button class="faq-question">What does "lifetime access" mean?</button><div class="faq-answer">You will never pay a monthly or annual fee. You receive all future core feature updates for the Premium tier as long as the service exists.</div></div>
+      </div>
+    </section>
+  </div>
+</main>
 
-    if (error) throw error;
-    return data?.plan || null;
-  } catch (e) {
-    console.error("Error fetching plan:", e);
-    return null;
-  }
-}
+<footer>
+  <div class="container">&copy; 2025 HeloxAI &#8212; All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></div>
+</footer>
 
-async function updateSupabasePlan(plan, provider = "stripe", extraData = {}) {
-  if (!supabase) throw new Error("Supabase not initialized");
+<div id="loadingSpinner">
+  <div class="spinner"></div>
+  <p id="loadingText">Processing...</p>
+</div>
+
+<script>
+  /* -------------------------------------------------------------------------- */
+  /*                          ⚙️ CONFIGURATION SECTION                          */
+  /* -------------------------------------------------------------------------- */
   
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("User not authenticated");
+  var SUPABASE_URL = null;
+  var SUPABASE_ANON_KEY = null;
+  var BACKEND_URL = null;
+  var STRIPE_PAYMENT_LINK = null; // Fallback from env.js
 
-  // We invoke the edge function which handles the database update securely
-  const { data, error } = await supabase.functions.invoke('update-plan', {
-    body: {
-      userId: user.id,
-      email: user.email,
-      plan,
-      provider,
-      platform: getPlatform(),
-      ...extraData
-    },
-  });
-
-  if (error) throw error;
-  return data;
-}
-
-// ===========================
-// 💳 Stripe Checkout Logic
-// ===========================
-async function createStripeCheckoutSession(planType) {
-  if (!BACKEND_URL) throw new Error("Backend URL is not defined in env.js");
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    // If user is not logged in, maybe redirect to login or handle guest
-    // Assuming authenticated flow for premium
-    throw new Error("Please log in to subscribe."); 
-  }
-
-  const planMap = {
-    ultimate_monthly: "monthly",
-    ultimate_yearly: "yearly",
-  };
-
-  const plan = planMap[planType];
-  if (!plan) throw new Error("Invalid plan selection");
-
-  try {
-    const res = await fetch(`${BACKEND_URL}/create-checkout-session`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id: user.id,
-        email: user.email,
-        plan: plan,
-        success_url: window.location.href + '?session_id={CHECKOUT_SESSION_ID}',
-        cancel_url: window.location.href + '?cancelled=true'
-      }),
-    });
-
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to create session");
-    
-    if (data.url) {
-      window.location.href = data.url;
-    } else {
-      throw new Error("No checkout URL returned");
-    }
-  } catch (err) {
-    console.error("Checkout Error:", err);
-    throw err; // Re-throw to handle in UI
-  }
-}
-
-// ===========================
-// 💳 In-App Purchase Placeholders
-// ===========================
-function handleNativePayment(planType) {
-  const platform = getPlatform();
-  if (platform.includes('ios')) {
-    alert("iOS App Store Payment Flow (Placeholder)");
-    return { receipt: `IOS_FAKE_${Date.now()}` };
-  } else {
-    alert("Android Play Store Payment Flow (Placeholder)");
-    return { token: `ANDROID_FAKE_${Date.now()}` };
-  }
-}
-
-// ===========================
-// 🎨 UI Components & Helpers
-// ===========================
-function showToast(message, type = 'success') {
-  const container = document.getElementById('toast-container');
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  
-  let icon = type === 'success' ? '✓' : '✕';
-  
-  toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
-  container.appendChild(toast);
-
-  // Animate in
-  requestAnimationFrame(() => toast.classList.add('visible'));
-
-  // Remove after 4s
-  setTimeout(() => {
-    toast.classList.remove('visible');
-    setTimeout(() => toast.remove(), 400);
-  }, 4000);
-}
-
-function setButtonLoading(btn, isLoading) {
-  if (!btn) return;
-  if (isLoading) {
-    btn.classList.add('btn-loading');
-    btn.disabled = true;
-  } else {
-    btn.classList.remove('btn-loading');
-    btn.disabled = false;
-  }
-}
-
-// ===========================
-// 🔄 Subscription Handler
-// ===========================
-async function handleSubscription(planType, btnElement) {
-  setButtonLoading(btnElement, true);
-
-  try {
-    const platform = getPlatform();
-    
-    // Native or PWA flows
-    if (platform !== 'web') {
-      const receiptData = handleNativePayment(planType);
-      await updateSupabasePlan(planType, platform.includes('ios') ? 'ios_store' : 'android_play', receiptData);
-      showToast(`Welcome to the ${planType.replace('_', ' ')} plan!`);
-    } 
-    // Web flow (Stripe)
-    else {
-      await createStripeCheckoutSession(planType);
-      // Note: Redirect happens inside createStripeCheckoutSession
-      // UI won't update here, it updates when user returns
-    }
-    
-    updatePlanButtons();
-  } catch (err) {
-    console.error(err);
-    showToast(err.message || "Something went wrong", "error");
-  } finally {
-    setButtonLoading(btnElement, false);
-  }
-}
-
-// ===========================
-// 💡 UI State Management
-// ===========================
-async function updatePlanButtons() {
-  const currentPlan = await getUserPlan();
-  const buttons = {
-    free: document.getElementById("freeBtn"),
-    ultimate_monthly: document.getElementById("ultimateMonthlyBtn"),
-    ultimate_yearly: document.getElementById("ultimateYearlyBtn"),
-  };
-
-  // Reset all
-  Object.values(buttons).forEach(btn => {
-    if (!btn) return;
-    setButtonLoading(btn, false);
-    btn.classList.remove('btn-cancel', 'btn-primary', 'btn-secondary');
-    // Add base class
-    if (btn.id !== 'freeBtn') btn.classList.add('btn-primary');
-    else btn.classList.add('btn-secondary');
-  });
-
-  if (!currentPlan) return; // Default state
-
-  // User is on a paid plan
-  if (currentPlan.includes('ultimate')) {
-    // Disable the active paid plan button
-    if (buttons[currentPlan]) {
-      buttons[currentPlan].disabled = true;
-      buttons[currentPlan].querySelector('span').textContent = "Current Plan";
-      buttons[currentPlan].style.opacity = "0.7";
-    }
-
-    // Convert Free button to Cancel button
-    if (buttons.free) {
-      buttons.free.disabled = false;
-      buttons.free.classList.remove('btn-secondary');
-      buttons.free.classList.add('btn-cancel');
-      buttons.free.querySelector('span').textContent = "Cancel Subscription";
-      buttons.free.dataset.isCancel = "true";
-    }
+  // 1. Check if env.js loaded successfully
+  if (window.__envLoadFailed) {
+    console.error('env.js failed to load.');
   } 
-  // User is on Free plan
-  else if (currentPlan === 'free') {
-    buttons.free.disabled = true;
-    buttons.free.querySelector('span').textContent = "Current Plan";
-  }
-}
-
-// ===========================
-// ⚙️ Initialization
-// ===========================
-document.addEventListener("DOMContentLoaded", async () => {
-  const platform = getPlatform();
-  const platformIndicator = document.getElementById('platformIndicator');
-  if (platformIndicator) platformIndicator.textContent = platform;
-
-  const restoreBtn = document.getElementById('restoreBtn');
-  if (platform !== 'web' && restoreBtn) {
-    restoreBtn.style.display = 'inline-block';
+  // 2. Check if window.__ENV__ exists (Double underscore as per your file)
+  else if (window.__ENV__) {
+    SUPABASE_URL = window.__ENV__.SUPABASE_URL;
+    SUPABASE_ANON_KEY = window.__ENV__.SUPABASE_ANON_KEY;
+    BACKEND_URL = window.__ENV__.BACKEND_URL;
+    STRIPE_PAYMENT_LINK = window.__ENV__.STRIPE_PAYMENT_LINK; // Storing fallback
   }
 
-  // 1. Update Buttons based on DB state
-  await updatePlanButtons();
+  /* -------------------------------------------------------------------------- */
+  /*                               DOM ELEMENTS                                  */
+  /* -------------------------------------------------------------------------- */
+  var preorderBtn     = document.getElementById('preorderBtn');
+  var spinner         = document.getElementById('loadingSpinner');
+  var loadingText     = document.getElementById('loadingText');
+  var preorderContent = document.getElementById('preorderContent');
+  var resultContainer = document.getElementById('resultContainer');
+  var resultBanner    = document.getElementById('resultBanner');
+  var debugBanner     = document.getElementById('debugBanner');
+  
+  var sb = null;
 
-  // 2. Attach Event Listeners
-  const freeBtn = document.getElementById("freeBtn");
-  const monthlyBtn = document.getElementById("ultimateMonthlyBtn");
-  const yearlyBtn = document.getElementById("ultimateYearlyBtn");
+  /* -------------------------------------------------------------------------- */
+  /*                            INITIALIZATION                                   */
+  /* -------------------------------------------------------------------------- */
 
-  // Free Button Logic (Select or Cancel)
-  freeBtn.addEventListener("click", async () => {
-    const isCancelling = freeBtn.dataset.isCancel === "true";
-    
-    if (isCancelling) {
-      const confirm = window.confirm("Are you sure you want to cancel? Premium features will end immediately.");
-      if (!confirm) return;
-    }
-
-    setButtonLoading(freeBtn, true);
-    try {
-      await updateSupabasePlan("free", "manual");
-      showToast(isCancelling ? "Subscription cancelled." : "Switched to Free Plan.");
-      updatePlanButtons();
-    } catch (e) {
-      showToast("Failed to update plan", "error");
-    } finally {
-      setButtonLoading(freeBtn, false);
-    }
-  });
-
-  monthlyBtn.addEventListener("click", () => handleSubscription("ultimate_monthly", monthlyBtn));
-  yearlyBtn.addEventListener("click", () => handleSubscription("ultimate_yearly", yearlyBtn));
-
-  restoreBtn?.addEventListener("click", () => {
-    showToast("Restoring purchases...", "success");
-    setTimeout(() => updatePlanButtons(), 2000);
-  });
-
-  // 3. Check for Stripe Redirect Return
-  const params = new URLSearchParams(window.location.search);
-  const sessionId = params.get('session_id');
-  const cancelled = params.get('cancelled');
-
-  if (sessionId) {
-    // Verify session with backend
-    try {
-      if (!BACKEND_URL) throw new Error("No backend URL");
+  function initApp() {
+    // Validate Config
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !BACKEND_URL) {
+      var errors = [];
+      if (window.__envLoadFailed) errors.push('env.js file not found or failed to load.');
+      if (!window.__ENV__ && !window.__envLoadFailed) errors.push('env.js loaded but window.__ENV__ is undefined.');
+      if (!SUPABASE_URL) errors.push('SUPABASE_URL is missing in env.js.');
+      if (!SUPABASE_ANON_KEY) errors.push('SUPABASE_ANON_KEY is missing in env.js.');
+      if (!BACKEND_URL) errors.push('BACKEND_URL is missing in env.js.');
       
-      showToast("Verifying payment...", "success");
-      const res = await fetch(`${BACKEND_URL}/verify-session?session_id=${sessionId}`);
-      const data = await res.json();
+      showDebug(errors);
+      preorderBtn.textContent = 'Config Error';
+      preorderBtn.disabled = true;
+      return;
+    }
 
-      if (data.upgraded || data.already_upgraded) {
-        showToast("Payment successful! Plan upgraded.");
-      } else {
-        showToast("Payment verification failed.", "error");
-      }
+    // Initialize Supabase
+    try {
+      sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     } catch (e) {
-      console.error(e);
-      showToast("Could not verify payment with server.", "error");
-    } finally {
-      // Clean URL
-      window.history.replaceState({}, document.title, window.location.pathname);
-      // Refresh UI
-      await updatePlanButtons();
+      showDebug(['Supabase Init Failed:', e.message]);
+      preorderBtn.textContent = 'Init Error';
+      preorderBtn.disabled = true;
+      return;
+    }
+
+    // Start Logic
+    startPage();
+    startCountdown();
+    initFAQ();
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                               LOGIC FUNCTIONS                               */
+  /* -------------------------------------------------------------------------- */
+
+  // 1. Handle Stripe Success Page (URL param check)
+  async function handleSuccessPage() {
+    var params = new URLSearchParams(window.location.search);
+    var sessionId = params.get('session_id');
+    if (!sessionId) return false;
+
+    // Hide standard content
+    preorderContent.style.display = 'none';
+    var hdr = document.querySelector('header');
+    if (hdr) hdr.style.display = 'none';
+    var back = document.querySelector('.back-btn');
+    if (back && back.parentElement) back.parentElement.style.display = 'none';
+    debugBanner.style.display = 'none';
+    resultContainer.style.display = 'block';
+
+    // Show Loading State
+    resultBanner.className = 'result-banner success';
+    resultBanner.innerHTML = '<div class="spinner" style="margin:0 auto 15px;border-top-color:var(--success)"></div><h3>Verifying Payment...</h3><p>Please wait while we confirm your transaction.</p>';
+
+    try {
+      var response = await fetch(BACKEND_URL + '/verify-session?session_id=' + encodeURIComponent(sessionId));
+      
+      if (!response.ok) {
+        var errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'HTTP ' + response.status);
+      }
+
+      var data = await response.json();
+
+      if (data.upgraded || data.already_upgraded || data.pending) {
+        showSuccessResult(data);
+        return true;
+      }
+      throw new Error('Unexpected response from server');
+    } catch (err) {
+      console.error('Verify error:', err);
+      resultBanner.className = 'result-banner error';
+      resultBanner.innerHTML = '<h3>Verification Issue</h3><p>' + err.message + '</p><p style="font-size:0.85rem;margin-top:10px">Contact support if payment was deducted.</p>';
+      return true;
     }
   }
 
-  if (cancelled === 'true') {
-    showToast("Checkout cancelled.", "error");
-    window.history.replaceState({}, document.title, window.location.pathname);
+  function showSuccessResult(data) {
+    var msg = data.upgraded ? 'Welcome, Founder!' : (data.already_upgraded ? 'Already Upgraded' : 'Payment Received');
+    var sub = data.upgraded ? 'Your lifetime premium access is now active.' : 'Your account is active.';
+    
+    resultBanner.className = 'result-banner success';
+    resultBanner.innerHTML = 
+      '<h3 style="font-size:2.5rem;margin-bottom:12px">&#127881; ' + msg + '</h3>' +
+      '<p style="font-size:1.1rem;color:var(--text-primary);margin-bottom:8px">' + sub + '</p>' +
+      '<p>You now have unlimited access to all HeloxAi Premium features.</p>' +
+      '<a href="index.html" class="go-home-btn">Go to Dashboard &rarr;</a>';
+    
+    document.body.classList.add('show-result');
   }
-});
+
+  // 2. Check if User is Already Lifetime
+  async function checkExistingLifetime() {
+    try {
+      // Get Session
+      const { data: sessionData, error: sessionError } = await sb.auth.getSession();
+      if (sessionError || !sessionData.session) {
+        refreshButton(); // Not logged in, show login button
+        return;
+      }
+
+      const user = sessionData.session.user;
+
+      // Check DB for lifetime status
+      // Note: Ensure RLS policies allow users to read their own 'plan' and 'is_lifetime' columns
+      const { data, error } = await sb
+        .from('users')
+        .select('plan, is_lifetime')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        console.warn("DB Check Warning:", error);
+        refreshButton();
+        return;
+      }
+
+      if (data && (data.is_lifetime === true || data.plan === 'lifetime')) {
+        // User is lifetime
+        preorderContent.style.display = 'none';
+        document.getElementById('pricing-section').style.display = 'none';
+        resultContainer.style.display = 'block';
+        
+        resultBanner.className = 'result-banner success';
+        resultBanner.innerHTML = '<h3>&#128081; You are already a Founder</h3><p>Your account already has Lifetime Premium.</p>';
+        document.body.classList.add('show-result');
+      } else {
+        refreshButton(); // Logged in but not lifetime
+      }
+
+    } catch (err) {
+      console.error("Auth Check Error:", err);
+      refreshButton();
+    }
+  }
+
+  // 3. Refresh Button State
+  async function refreshButton() {
+    // Don't change if already showing result
+    if (document.body.classList.contains('show-result')) return;
+
+    const { data: { session } } = await sb.auth.getSession();
+    
+    if (session) {
+      preorderBtn.disabled = false;
+      preorderBtn.textContent = 'Pre-Order for \u00A3499';
+    } else {
+      preorderBtn.disabled = false;
+      preorderBtn.textContent = 'Login to Preorder';
+    }
+  }
+
+  // 4. Handle Preorder Button Click
+  preorderBtn.addEventListener('click', async function() {
+    if (preorderBtn.textContent.includes('Login')) {
+      // Redirect to Auth Page
+      window.location.href = 'auth.html'; 
+      return;
+    }
+    
+    if (!preorderBtn.disabled) {
+      handlePreorder();
+    }
+  });
+
+  // 5. Create Checkout Session
+  async function handlePreorder() {
+    spinner.style.display = 'flex';
+    loadingText.textContent = 'Initializing Secure Checkout...';
+
+    try {
+      const { data: { session }, error: sessionError } = await sb.auth.getSession();
+      
+      if (sessionError || !session || !session.user) {
+        spinner.style.display = 'none';
+        alert('Session expired. Please login again.');
+        window.location.href = 'auth.html';
+        return;
+      }
+
+      const user = session.user;
+
+      // Call Backend
+      const response = await fetch(BACKEND_URL + '/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          user_id: user.id, 
+          email: user.email,
+          plan: 'lifetime' 
+        })
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to connect to payment provider');
+      }
+
+      const data = await response.json();
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+
+    } catch (err) {
+      console.error('Preorder failed:', err);
+      
+      // FALLBACK LOGIC: If backend fails, offer the direct Stripe link from env.js
+      if (STRIPE_PAYMENT_LINK) {
+        loadingText.textContent = 'Redirecting via Direct Link...';
+        setTimeout(() => {
+          window.location.href = STRIPE_PAYMENT_LINK;
+        }, 1500);
+      } else {
+        spinner.style.display = 'none';
+        alert('Something went wrong: ' + err.message);
+      }
+    }
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                               HELPERS                                       */
+  /* -------------------------------------------------------------------------- */
+
+  function showDebug(errors) {
+    if (!errors || !errors.length) { debugBanner.style.display = 'none'; return; }
+    debugBanner.style.display = 'block';
+    var html = '<strong>System Debug Info:</strong>';
+    errors.forEach(function(e) { html += '<div>' + e + '</div>'; });
+    debugBanner.innerHTML = html;
+  }
+
+  function startCountdown() {
+    // Set target date (Example: 7 days from now)
+    var target = new Date();
+    target.setDate(target.getDate() + 7); 
+
+    var el = document.getElementById('countdown');
+    if (!el) return;
+    
+    function tick() {
+      var d = target - new Date().getTime();
+      if (d <= 0) { el.textContent = 'Offer Ended'; return; }
+      el.textContent = Math.floor(d/86400000) + 'd ' + Math.floor((d%86400000)/3600000) + 'h ' + Math.floor((d%3600000)/60000) + 'm ' + Math.floor((d%60000)/1000) + 's';
+    }
+    tick();
+    setInterval(tick, 1000);
+  }
+
+  function initFAQ() {
+    document.querySelectorAll('.faq-question').forEach(function(q) {
+      q.addEventListener('click', function() {
+        var a = q.nextElementSibling;
+        var isActive = q.classList.contains('active');
+        
+        document.querySelectorAll('.faq-question').forEach(function(o) {
+          o.classList.remove('active'); 
+          o.nextElementSibling.classList.remove('show');
+        });
+
+        if (!isActive) {
+          q.classList.add('active');
+          a.classList.add('show');
+        }
+      });
+    });
+  }
+
+  async function startPage() {
+    // First check if returning from Stripe
+    const isReturning = await handleSuccessPage();
+    
+    // If not returning from stripe, check current status
+    if (!isReturning) {
+      await checkExistingLifetime();
+    }
+  }
+
+  // Run Init
+  initApp();
+
 </script>
 </body>
 </html>
