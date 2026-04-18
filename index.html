@@ -121,13 +121,19 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 
 /* Main Chat Area */
 main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:relative;background:var(--bg-primary);overflow:hidden}
-.chat-hdr{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg-primary);z-index:10;flex-shrink:0;height:60px}
+.chat-hdr{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg-primary);z-index:10;flex-shrink:0;min-height:60px;flex-wrap:wrap;}
 .hdr-title{font-family:var(--font-display);font-size:15px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.2px}
 .hdr-plan{font-size:9px;padding:3px 8px;border-radius:5px;font-weight:800;flex-shrink:0;letter-spacing:.5px}
 .htab{padding:6px 14px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;border:none;background:none;color:var(--text-muted);font-family:var(--font-body);transition:all var(--speed);display:flex;align-items:center;gap:5px;flex-shrink:0;position:relative;touch-action:manipulation}
 .htab:hover{color:var(--text-primary);background:var(--bg-hover)}
 .htab.active{color:var(--accent);background:var(--accent-dim)}
 .htab.active::after{content:'';position:absolute;bottom:-1px;left:12px;right:12px;height:2px;background:var(--accent);border-radius:2px}
+
+/* MODES SECTION */
+.modes-container{display:flex;align-items:center;gap:6px;padding:4px 0;order:2;}
+.mode-btn{background:none;border:1px solid var(--border);color:var(--text-secondary);padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:5px;white-space:nowrap;}
+.mode-btn:hover{color:var(--text-primary);background:var(--bg-hover);border-color:var(--border-active)}
+.mode-btn.active{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
 
 /* Model Selector */
 .model-sel{display:flex;align-items:center;gap:6px;padding:5px 10px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all var(--speed);position:relative;touch-action:manipulation}
@@ -312,7 +318,7 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 .file-indicator .fi-rm{background:none;border:none;color:var(--text-muted);cursor:pointer;padding:2px 4px;border-radius:4px;font-size:11px;transition:color var(--speed);touch-action:manipulation}
 .file-indicator .fi-rm:hover{color:var(--danger)}
 
-/* Scroll Button - FIX: Increased z-index */
+/* Scroll Button */
 .scroll-bot{position:absolute;bottom:90px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--bg-secondary);border:1px solid var(--border);color:var(--text-secondary);width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;opacity:0;pointer-events:none;transition:all .3s var(--ease);box-shadow:var(--shadow);z-index:50;touch-action:manipulation}
 .scroll-bot.vis{opacity:1;pointer-events:all;transform:translateX(-50%) translateY(0)}
 .scroll-bot:hover{background:var(--bg-hover);color:var(--text-primary);border-color:var(--border-active)}
@@ -404,6 +410,9 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 /* Responsive */
 @media(min-width:1025px){.sidebar{position:relative;transform:translateX(0)!important}.sb-overlay{display:none!important}.menu-btn{display:none!important}}
 @media(max-width:1024px){.sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-100%);width:280px;box-shadow:var(--shadow-lg)}.sidebar.open{transform:translateX(0)}.menu-btn{display:inline-flex!important}}
+@media(max-width:768px){
+  .modes-container{display:none; /* Hide modes on very small screens or move to dropdown, here simplifying to hide */}
+}
 @media(max-width:640px){.sidebar{width:100%;--sidebar-w:100%}.w-grid{grid-template-columns:1fr}.as-grid{grid-template-columns:1fr}.msgs-inner{padding:16px 14px 6px}.cb-container{padding:0 12px 14px}.msg-acts{opacity:1}.gal-grid{grid-template-columns:repeat(2,1fr);gap:8px}.msg.ai-msg{padding-right:16px}.msg.user-msg{padding-left:16px}.msg.user-msg .msg-inner{max-width:92%}.model-sel{display:none}.cb-foot{display:none}.w-logo{font-size:38px}.w-sub{font-size:14px;margin-bottom:32px}.sidebar{border-right:none}.msg-img-item.single{max-width:200px}.msg-img-item.single img{max-width:200px;max-height:240px}.msg-img-item.multi{width:96px;height:96px}.msg-img-item.multi img{width:96px;height:96px}.em-modal{width:100%}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
@@ -431,6 +440,15 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
   <header class="chat-hdr">
     <button type="button" class="ib menu-btn" id="menuBtn" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
     <div class="hdr-title" id="hdrTitle">HeloXAi</div>
+    
+    <!-- MODES SECTION -->
+    <div class="modes-container" id="modesContainer">
+      <button type="button" class="mode-btn active" data-mode="general"><i class="fa-regular fa-comment"></i> General</button>
+      <button type="button" class="mode-btn" data-mode="search"><i class="fa-solid fa-globe"></i> Web Search</button>
+      <button type="button" class="mode-btn" data-mode="code"><i class="fa-solid fa-code"></i> Code</button>
+      <button type="button" class="mode-btn" data-mode="finance"><i class="fa-solid fa-chart-line"></i> Finance</button>
+    </div>
+
     <div class="model-sel" id="modelSel" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false">
       <div class="m-icon default-icon" id="modelIcon">H</div>
       <span class="m-name" id="modelName">HeloXAi</span>
@@ -503,11 +521,11 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
     <button type="button" class="as-opt locked" data-prompt="Generate an image of " data-media="image" id="asImg"><i class="fa-solid fa-image"></i> Generate Image <span class="as-lock" id="asLockImg"><i class="fa-solid fa-lock"></i> Sign in</span></button>
     <button type="button" class="as-opt locked" data-prompt="Generate a video of " data-media="video" id="asVid"><i class="fa-solid fa-video"></i> Generate Video <span class="as-lock" id="asLockVid"><i class="fa-solid fa-lock"></i> Sign in</span></button>
     <button type="button" class="as-opt" data-prompt="Search web for "><i class="fa-solid fa-magnifying-glass"></i> Search Web</button>
-    <button type="button" class="as-opt" data-prompt="Summarize following:\n\n"><i class="fa-solid fa-file-lines"></i> Summarize</button>
+    <button type="button" class="as-opt" data-prompt="Summarize following:"><i class="fa-solid fa-file-lines"></i> Summarize</button>
     <button type="button" class="as-opt" data-prompt="Write a professional email about "><i class="fa-solid fa-at"></i> Write Email</button>
     <button type="button" class="as-opt" data-prompt="Help me write code for "><i class="fa-solid fa-code"></i> Code Assistant</button>
-    <button type="button" class="as-opt" data-prompt="Translate to English:\n\n"><i class="fa-solid fa-language"></i> Translate</button>
-    <button type="button" class="as-opt" data-prompt="Analyze this data:\n\n"><i class="fa-solid fa-chart-bar"></i> Analyze Data</button>
+    <button type="button" class="as-opt" data-prompt="Translate to English:"><i class="fa-solid fa-language"></i> Translate</button>
+    <button type="button" class="as-opt" data-prompt="Analyze this data:"><i class="fa-solid fa-chart-bar"></i> Analyze Data</button>
   </div>
 </div>
 
@@ -657,7 +675,9 @@ var S = {
   _mdOk:false, pendingFiles:[], model:'helox',
   isAutoScrolling:true, scrollThreshold:200, selectedVoice:'alloy',
   activeLinkUrl:'', editingIndex:null, editingFiles:[],
-  dailyImgLimit: 6, dailyVidLimit: 3
+  dailyImgLimit: 6, dailyVidLimit: 3,
+  mode: 'general', // NEW: General, Search, Code, Finance
+  currentAudio: null // NEW: To stop voice playback
 };
 
 var IMG_KW=['generate image','create image','make image','draw me','render image'];
@@ -1015,6 +1035,17 @@ function openHtmlPreview(code){
   doc.close();
 }
 
+/* ========== MODES LOGIC ========== */
+function selectMode(m){
+    S.mode = m;
+    try{localStorage.setItem('helox-mode', m);}catch(e){}
+    document.querySelectorAll('.mode-btn').forEach(function(btn){
+        btn.classList.toggle('active', btn.getAttribute('data-mode') === m);
+    });
+    var map = {general:'General', search:'Web Search', code:'Code', finance:'Finance'};
+    if(map[m]) toast('Mode: ' + map[m], 'ok');
+}
+
 /* ========== FILE HANDLING ========== */
 function renderImgPreview(){
   var strip=$('imgPreviewStrip');
@@ -1168,8 +1199,17 @@ async function actVoice(idx){
     var audioUrl = URL.createObjectURL(blob);
     var audio = new Audio(audioUrl);
     
-    audio.onended = function() { URL.revokeObjectURL(audioUrl); };
-    audio.onerror = function() { toast('Audio playback error', 'err'); };
+    // Save to state so we can stop it
+    S.currentAudio = audio;
+
+    audio.onended = function() { 
+        URL.revokeObjectURL(audioUrl); 
+        S.currentAudio = null;
+    };
+    audio.onerror = function() { 
+        toast('Audio playback error', 'err'); 
+        S.currentAudio = null;
+    };
     
     audio.play();
     toast('Playing audio', 'ok');
@@ -1303,7 +1343,6 @@ function renderAll(){
       
       var imgsHtml = buildImgHtml(m.images || []);
       
-      // Added status span
       html+='<div class="msg ai-msg" id="msg-'+i+'"><div class="msg-inner"><div class="msg-label"><span class="ai-dot"></span> AI <span id="ai-status-'+i+'" class="ai-status"></span></div><div class="msg-ct" id="mc-'+i+'"></div>'+imgsHtml+acts+'<div class="msg-time">'+m.time+'</div></div></div>';
     }else{
       var imgs=buildImgHtml(m.images);
@@ -1608,7 +1647,18 @@ function sendToAI(text){
       updateAiStatus(realIdx, msg);
   };
 
-  fetch(apiUrl()+'/ask/universal',{method:'POST',headers:authH(),credentials:'include',signal:S.abort.signal,body:JSON.stringify({prompt:text,conversation_id:S.chatId})}).then(function(res){
+  fetch(apiUrl()+'/ask/universal',{
+      method:'POST',
+      headers:authH(),
+      credentials:'include',
+      signal:S.abort.signal,
+      body:JSON.stringify({
+          prompt:text,
+          conversation_id:S.chatId,
+          mode: S.mode, // Include Mode
+          model: S.model
+      })
+  }).then(function(res){
     if(!res.ok)throw new Error('HTTP '+res.status);rmTyping();
     var ct=(res.headers.get('content-type')||'').toLowerCase();
     if(ct.indexOf('application/json')!==-1){
@@ -1635,7 +1685,20 @@ function regenAI(){
   }
   if(lastUser) sendToAI(lastUser);
 }
-function stopGen(){if(S.abort)S.abort.abort();}
+
+function stopGen(){
+    // Stop Stream
+    if(S.abort) S.abort.abort();
+    
+    // Stop Audio if playing
+    if(S.currentAudio) {
+        try {
+            S.currentAudio.pause();
+            S.currentAudio.currentTime = 0;
+        } catch(e) {}
+        S.currentAudio = null;
+    }
+}
 
 /* ========== CHATBAR STATE ========== */
 function autoH(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,200)+'px';}
@@ -1709,6 +1772,7 @@ async function loadVoices() {
     } catch(e) { 
         console.error(e);
         list.innerHTML = '<div style="padding:8px;color:var(--danger);font-size:12px;">Failed to load voices</div>';
+        // handleError(e, 'Load Voices'); // Optional: Don't toast immediately on load
     }
 }
 
@@ -1730,6 +1794,14 @@ function initEvents(){
   $('modelSel').addEventListener('click',function(e){e.stopPropagation();toggleMD();});
   $('modelDd').addEventListener('click',function(e){e.stopPropagation();var item=e.target.closest('.model-item');if(item)selectModel(item.getAttribute('data-model'));});
 
+  /* Modes Selector */
+  $('modesContainer').addEventListener('click',function(e){
+    var btn = e.target.closest('.mode-btn');
+    if(btn) {
+        selectMode(btn.getAttribute('data-mode'));
+    }
+  });
+
   /* Header tabs */
   $('chatTab').addEventListener('click',function(){switchView('chat');});
   $('galleryTab').addEventListener('click',function(){switchView('gallery');});
@@ -1743,7 +1815,10 @@ function initEvents(){
     if(!o)return;
     if(o.classList.contains('locked'))return;
     e.stopPropagation();
-    $('cbInput').value=o.getAttribute('data-prompt');
+    // FIX: Remove double newlines from prompt
+    var rawPrompt = o.getAttribute('data-prompt');
+    var cleanPrompt = rawPrompt.replace(/\\n\\n/g, '').replace(/\n\n/g, ''); 
+    $('cbInput').value=cleanPrompt;
     $('cbInput').focus();autoH($('cbInput'));updateCB();toggleAS(false);
   });
 
@@ -1829,7 +1904,7 @@ function initEvents(){
       if(act==='copy') actCopy(idx);
       else if(act==='like') actLike(idx,'like');
       else if(act==='dislike') actLike(idx,'dislike');
-      else if(act==='edit') actEdit(idx); // FIXED: Added missing case
+      else if(act==='edit') actEdit(idx); 
       else if(act==='regen') actRegen(idx);
       else if(act==='voice') actVoice(idx);
       return;
@@ -1960,6 +2035,12 @@ function initEvents(){
 async function init(){
   initTheme();initMarked();initModel();initEvents();setupAuth();renderAll();updateCB();
   initMic();
+  
+  // Init Mode
+  try{
+    var savedMode = localStorage.getItem('helox-mode') || 'general';
+    selectMode(savedMode);
+  }catch(e){}
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 
