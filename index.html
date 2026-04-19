@@ -62,12 +62,11 @@
 /* LAYOUT - PWA OPTIMIZED */
 html, body {
   width: 100%;
-  /* Fix for PWA and Mobile browsers to handle address bar hiding/showing */
   height: 100vh; 
   height: 100dvh;
   margin: 0;
   padding: 0;
-  overflow: hidden; /* Prevent full page scroll */
+  overflow: hidden; 
   -webkit-overflow-scrolling: touch;
   background: var(--bg-primary);
 }
@@ -80,7 +79,6 @@ body {
   display: flex;
   flex-direction: row;
   position: relative;
-  /* PWA Splash Screen / Loading background */
   background-color: var(--bg-primary); 
 }
 
@@ -102,25 +100,24 @@ body::before {
   display:flex;flex-direction:column;overflow:hidden;
   width:var(--sidebar-w);
   height: 100vh;
-  height: 100dvh; /* Ensure sidebar fits full screen */
+  height: 100dvh; 
   flex-shrink:0;
   transition:transform .35s var(--ease);
-  /* Safe Area for landscape mode iPad / iPhone */
   padding-top: env(safe-area-inset-top);
 }
-.sb-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
-.sb-logo{font-family:var(--font-display);font-size:22px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--text-primary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-.6px}
+.sb-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 8px;border-bottom:1px solid var(--border);flex-shrink:0} /* Reduced padding */
+.sb-logo{font-family:var(--font-display);font-size:20px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--text-primary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-.6px}
 .sb-logo span{font-weight:400;opacity:.7}
-.ib{background:none;border:none;color:var(--text-muted);font-size:17px;cursor:pointer;padding:7px;border-radius:8px;transition:all var(--speed);display:inline-flex;align-items:center;justify-content:center;touch-action:manipulation}
+.ib{background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:6px;border-radius:8px;transition:all var(--speed);display:inline-flex;align-items:center;justify-content:center;touch-action:manipulation}
 .ib:hover{color:var(--text-primary);background:var(--bg-hover)}.ib:active{transform:scale(.95)}.ib:focus{outline:2px solid var(--accent);outline-offset:2px}
-.sb-search{padding:10px 14px;flex-shrink:0}
-.sb-search input{width:100%;padding:8px 12px 8px 34px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:var(--font-body);font-size:12px;outline:none;transition:all var(--speed)}
+.sb-search{padding:6px 12px;flex-shrink:0} /* Reduced padding */
+.sb-search input{width:100%;padding:6px 10px 6px 28px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:var(--font-body);font-size:12px;outline:none;transition:all var(--speed)}
 .sb-search input:focus{border-color:var(--border-active);background:var(--bg-quaternary)}
 .sb-search input::placeholder{color:var(--text-muted)}
-.sb-search-wrap{position:relative}.sb-search-wrap i{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--text-muted);pointer-events:none}
+.sb-search-wrap{position:relative}.sb-search-wrap i{position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-muted);pointer-events:none}
 
 /* Buttons */
-.nc-btn{margin:0 14px 8px;padding:10px 14px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-family:var(--font-body);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all var(--speed);width:calc(100% - 28px);position:relative;overflow:hidden;touch-action:manipulation}
+.nc-btn{margin:0 12px 6px;padding:8px 12px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-family:var(--font-body);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all var(--speed);width:calc(100% - 24px);position:relative;overflow:hidden;touch-action:manipulation} /* Reduced margin/padding/font-size */
 .nc-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);opacity:0;transition:opacity var(--speed)}
 .nc-btn:hover::before{opacity:1}.nc-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(16,185,129,.25)}
 .nc-btn:active{transform:translateY(0)}.nc-btn:focus{outline:2px solid var(--accent);outline-offset:2px}
@@ -130,8 +127,8 @@ body::before {
 
 /* Chat List */
 .cl{flex:1;overflow-y:auto;padding:2px 8px;min-height:0; touch-action: pan-y;}
-.cl-label{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;padding:10px 10px 6px}
-.cl-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:var(--radius-sm);cursor:pointer;transition:all var(--speed);color:var(--text-secondary);font-size:13px;border:none;background:none;width:100%;text-align:left;font-family:var(--font-body);position:relative;touch-action:manipulation}
+.cl-label{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;padding:8px 10px 4px} /* Reduced padding */
+.cl-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius-sm);cursor:pointer;transition:all var(--speed);color:var(--text-secondary);font-size:13px;border:none;background:none;width:100%;text-align:left;font-family:var(--font-body);position:relative;touch-action:manipulation}
 .cl-item:hover{background:var(--bg-hover);color:var(--text-primary)}
 .cl-item.active{background:var(--accent-dim);color:var(--accent)}
 .cl-item.active::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:3px;background:var(--accent);border-radius:0 3px 3px 0}
@@ -143,21 +140,21 @@ body::before {
 .cl-item:hover .cl-del{opacity:.6}.cl-del:hover{color:var(--danger)!important;background:rgba(239,44,68,.1)!important;opacity:1!important}
 
 /* Navigation & Footer */
-.s-nav{padding:4px 8px;border-top:1px solid var(--border);flex-shrink:0}
-.s-nav a,.s-nav button{display:flex;align-items:center;gap:12px;padding:9px 12px;color:var(--text-secondary);text-decoration:none;font-size:13px;border-radius:var(--radius-sm);cursor:pointer;border:none;background:none;width:100%;font-family:var(--font-body);transition:all var(--speed);text-align:left;touch-action:manipulation}
+.s-nav{padding:2px 12px;border-top:1px solid var(--border);flex-shrink:0} /* Reduced padding */
+.s-nav a,.s-nav button{display:flex;align-items:center;gap:10px;padding:8px 10px;color:var(--text-secondary);text-decoration:none;font-size:12px;border-radius:var(--radius-sm);cursor:pointer;border:none;background:none;width:100%;font-family:var(--font-body);transition:all var(--speed);text-align:left;touch-action:manipulation} /* Reduced padding/font-size */
 .s-nav a:hover,.s-nav button:hover{background:var(--bg-hover);color:var(--text-primary)}
-.ptag{font-size:9px;font-weight:800;text-transform:uppercase;padding:2px 7px;border-radius:5px;margin-left:auto;flex-shrink:0;letter-spacing:.3px}
+.ptag{font-size:8px;font-weight:800;text-transform:uppercase;padding:2px 6px;border-radius:5px;margin-left:auto;flex-shrink:0;letter-spacing:.3px}
 .ptag.free{background:var(--bg-tertiary);color:var(--text-muted)}.ptag.premium{background:var(--accent-soft);color:var(--accent)}.ptag.lifetime{background:rgba(245,158,11,.1);color:var(--warning)}
 
-.theme-sec{padding:12px 18px;border-top:1px solid var(--border);flex-shrink:0; padding-bottom: max(12px, env(safe-area-inset-bottom));}
-.theme-lbl{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
-.theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
-.t-btn{padding:7px 4px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:7px;color:var(--text-secondary);font-size:10px;font-weight:600;cursor:pointer;transition:all var(--speed);font-family:var(--font-body);text-align:center;touch-action:manipulation}
+.theme-sec{padding:8px 12px;border-top:1px solid var(--border);flex-shrink:0; padding-bottom: max(8px, env(safe-area-inset-bottom));} /* Reduced padding */
+.theme-lbl{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.theme-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px} /* Changed to 4 columns to save space */
+.t-btn{padding:4px 2px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:6px;color:var(--text-secondary);font-size:9px;font-weight:600;cursor:pointer;transition:all var(--speed);font-family:var(--font-body);text-align:center;touch-action:manipulation} /* Smaller buttons */
 .t-btn:hover{border-color:var(--text-muted);color:var(--text-primary);background:var(--bg-quaternary)}
 .t-btn:focus{outline:2px solid var(--accent);outline-offset:2px}
 .t-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);box-shadow:0 0 12px var(--accent-dim)}
 
-.s-user{padding:12px 18px;border-top:1px solid var(--border);display:none;align-items:center;gap:10px;flex-shrink:0}
+.s-user{padding:8px 12px;border-top:1px solid var(--border);display:none;align-items:center;gap:10px;flex-shrink:0} /* Reduced padding */
 .s-user.show{display:flex}
 .s-user .av{width:32px;height:32px;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
 .s-user .inf{flex:1;min-width:0}.s-user .nm{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.s-user .pl{font-size:10px;color:var(--text-muted);margin-top:1px}
@@ -171,12 +168,10 @@ main{
   position:relative;
   background:var(--bg-primary);
   overflow:hidden;
-  /* Fix for mobile address bar behavior */
   height: 100vh;
   height: 100dvh;
 }
 .chat-hdr{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg-primary);z-index:10;flex-shrink:0;min-height:60px;flex-wrap:wrap;
-  /* PWA Safe Area Top */
   padding-top: max(10px, env(safe-area-inset-top));
 }
 .hdr-title{font-family:var(--font-display);font-size:15px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.2px}
@@ -219,10 +214,9 @@ main{
   overflow-x:hidden;
   position:relative;
   display:flex;flex-direction:column;
-  /* Crucial Fix: Forces flex child to respect height, preventing push */
   min-height:0;
   touch-action: pan-y; 
-  scroll-padding-bottom: 120px; /* Extra padding for chatbar + safe area */
+  scroll-padding-bottom: 120px; 
 }
 .msgs-inner{max-width:var(--msg-max);margin:0 auto;padding:24px 24px 8px;width:100%;flex:1;min-height:0}
 
@@ -347,7 +341,6 @@ main{
   background:var(--bg-primary);
   z-index:20;
   display:flex;flex-direction:column;gap:6px;
-  /* PWA Safe Area Bottom for the home bar */
   padding-bottom: max(20px, env(safe-area-inset-bottom));
 }
 .cb-wrap{max-width:var(--msg-max);margin:0 auto;position:relative;}
@@ -490,7 +483,6 @@ main{
 }
 @media(max-width:640px){
   .sidebar{width:100%;--sidebar-w:100%}.w-grid{grid-template-columns:1fr}.as-grid{grid-template-columns:1fr}.msgs-inner{padding:16px 14px 6px}.msg-acts{opacity:1}.gal-grid{grid-template-columns:repeat(2,1fr);gap:8px}.msg.ai-msg{padding-right:16px}.msg.user-msg{padding-left:16px}.msg.user-msg .msg-inner{max-width:92%}.model-sel{display:none}.cb-foot{display:none}.w-logo{font-size:38px}.w-sub{font-size:14px;margin-bottom:32px}.sidebar{border-right:none}.msg-img-item.single{max-width:200px}.msg-img-item.single img{max-width:200px;max-height:240px}.msg-img-item.multi{width:96px;height:96px}.msg-img-item.multi img{width:96px;height:96px}.em-modal{width:100%}
-  /* Adjust padding for smaller screens */
   .chat-hdr { padding: 8px 12px; }
   .cb-container { padding-left: 12px; padding-right: 12px; }
 }
@@ -756,9 +748,9 @@ var S = {
   isAutoScrolling:true, scrollThreshold:200, selectedVoice:'alloy',
   activeLinkUrl:'', editingIndex:null, editingFiles:[],
   dailyImgLimit: 6, dailyVidLimit: 3,
-  mode: 'general', // NEW: General, Search, Code, Finance
-  currentAudio: null, // To stop voice playback
-  micPermission: 'unknown' // NEW: 'unknown', 'granted', 'denied'
+  mode: 'general', 
+  currentAudio: null, 
+  micPermissionKey: 'helox_mic_perm_status' // NEW: Cookie-like storage key
 };
 
 var IMG_KW=['generate image','create image','make image','draw me','render image'];
@@ -783,7 +775,6 @@ function getActiveChat() {
 
 function saveLocalChats() {
     try {
-        // Sort by updated_at desc
         S.chatListData.sort(function(a,b){ return new Date(b.updated_at) - new Date(a.updated_at); });
         var meta = S.chatListData.map(function(c){ return { id: c.id, title: c.title, updated_at: c.updated_at }; });
         localStorage.setItem('helox_chats', JSON.stringify(meta));
@@ -803,12 +794,10 @@ function loadLocalChats() {
     return [];
 }
 
-// Save full message history for a specific chat
 function saveChatHistory(id, msgs) {
     try {
-        var toSave = msgs.slice(-100); // Limit history to save space
+        var toSave = msgs.slice(-100); 
         localStorage.setItem('helox_history_' + id, JSON.stringify(toSave));
-        // Update timestamp in list
         var c = S.chatListData.find(function(x){ return x.id === id; });
         if(c) {
             c.updated_at = new Date().toISOString();
@@ -826,16 +815,6 @@ function loadChatHistory(id) {
         }
     } catch(e) { console.error('Error loading history', e); }
     return [];
-}
-
-function saveMicPermission(status) {
-    localStorage.setItem('mic_permission', status);
-}
-
-function loadMicPermission() {
-    var status = localStorage.getItem('mic_permission') || 'unknown';
-    S.micPermission = status;
-    return status;
 }
 
 /* --- LIMITS LOGIC --- */
@@ -882,7 +861,7 @@ function apiUrl(){
     if(!base) throw new Error("API URL is not configured");
     return base;
   } catch(e) {
-    handleError(e, 'API Configuration', false); // Silent log
+    handleError(e, 'API Configuration', false); 
     return '';
   }
 }
@@ -939,7 +918,7 @@ async function setupAuth(){
           refreshUI();
       }
   } catch(e) { 
-    handleError(e, 'Session Check', false); // Silent fail usually
+    handleError(e, 'Session Check', false); 
     S.user=null; refreshUI(); 
   }
 
@@ -972,7 +951,6 @@ async function signOut(){
 
 /* ========== DATA & CHAT HISTORY (ROBUST LOCAL STORAGE) ========== */
 async function loadChatList(){
-  // Load from LocalStorage primarily
   S.chatListData = loadLocalChats(); 
   renderChatList();
 }
@@ -982,24 +960,19 @@ async function startNewChat(){
   S.msgs = [];
   var newTitle = 'New Chat ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   
-  // Create metadata
   var newMeta = { id: S.chatId, title: newTitle, updated_at: new Date().toISOString() };
   
-  // Add to list
   S.chatListData.unshift(newMeta);
   saveLocalChats();
   
-  // Save active ID
   saveActiveChat(S.chatId);
 
-  // Save empty history so it exists
   saveChatHistory(S.chatId, S.msgs);
 
   $('hdrTitle').textContent = newTitle;
   renderAll();
   if(S.sbOpen) toggleSB(false);
 
-  // API call optional now
   try {
     if(!apiUrl()) throw new Error("API not configured");
     var r=await fetch(apiUrl()+'/newchat',{
@@ -1011,9 +984,8 @@ async function startNewChat(){
     if(r.ok){
         var d=await r.json();
         if(d&&d.conversation_id){ 
-          // If server returned a different ID, update local
           if(d.conversation_id !== S.chatId) {
-             localStorage.removeItem('helox_history_' + S.chatId); // Remove temp history
+             localStorage.removeItem('helox_history_' + S.chatId); 
              S.chatId = d.conversation_id;
              newMeta.id = S.chatId;
              saveActiveChat(S.chatId);
@@ -1030,14 +1002,12 @@ async function loadConv(cid){
   S.msgs=[]; showWelcome();
   $('hdrTitle').textContent = 'Loading...';
   
-  // Load from LocalStorage
   var msgs = loadChatHistory(cid);
   if(msgs.length > 0) {
       S.msgs = msgs;
       var chat = S.chatListData.find(c=>c.id===cid);
       if(chat) $('hdrTitle').textContent = chat.title;
   } else {
-      // Fallback to DB if local empty (migration path)
       if (sb && cid) {
           try {
               var res=await sb.from('messages').select('*').eq('conversation_id',cid).order('created_at',{ascending:true});
@@ -1056,14 +1026,12 @@ async function loadConv(cid){
                          disliked:false 
                      };
                  });
-                 // Save to local now that we fetched it
                  saveChatHistory(cid, S.msgs);
               }
           } catch(e) { handleError(e, 'Load Conversation from DB'); }
       }
   }
 
-  // Rebuild gallery from loaded messages
   S.gallery=[];
   S.msgs.forEach(function(m){ 
       if(m.role==='assistant') {
@@ -1081,17 +1049,15 @@ async function loadConv(cid){
   });
   
   S.chatId=cid;
-  saveActiveChat(cid); // Persist active ID
+  saveActiveChat(cid); 
   renderChatList();
   renderAll();
   switchView('chat');
 }
 
 async function saveMsg(m){
-  // Save to LocalStorage immediately
   saveChatHistory(S.chatId, S.msgs);
 
-  // Try DB, but don't crash if fails
   if(!sb||!S.user||!S.chatId)return;
   try{
     await sb.from('messages').insert({
@@ -1108,7 +1074,6 @@ async function saveMsg(m){
 }
 
 async function updateTs(cid){
-  // Handled by saveChatHistory mostly, but we call it to be sure
   saveChatHistory(cid, S.msgs);
   
   if(!sb||!cid)return;
@@ -1120,19 +1085,16 @@ async function updateTs(cid){
 async function delConv(cid){
   if(!confirm('Delete this chat?')) return;
   
-  // Remove from LocalStorage
   try {
       localStorage.removeItem('helox_history_' + cid);
       S.chatListData = S.chatListData.filter(function(c){ return c.id !== cid; });
       saveLocalChats();
   } catch(e) { handleError(e, 'Delete Local'); }
 
-  // If deleting active chat, clear active ID
   if(S.chatId === cid) {
       saveActiveChat(null);
   }
 
-  // Try API/DB
   try{
       if(apiUrl()) await fetch(apiUrl()+'/chats/'+cid,{method:'DELETE',headers:authH(),credentials:'include'});
   }catch(e){ handleError(e, 'Delete Chat (API)', false); }
@@ -1179,7 +1141,6 @@ function initMarked() {
           } catch (e) { highlighted = esc(text); }
           var displayLang = validLang || 'plaintext';
           var btnsHtml = '';
-          // ADD RUN BUTTON FOR HTML/XML
           if (validLang && (validLang.toLowerCase() === 'html' || validLang.toLowerCase() === 'xml' || validLang.toLowerCase() === 'htm')) {
              btnsHtml = '<button type="button" class="cp-btn" data-action="run-html" style="margin-right:5px;"><i class="fa-solid fa-play"></i> Run</button>';
           }
@@ -1350,7 +1311,7 @@ function saveEdit(){
   S.msgs= S.msgs.slice(0, idx+1);
   closeEdit();
   renderAll();
-  saveChatHistory(S.chatId, S.msgs); // Save local
+  saveChatHistory(S.chatId, S.msgs); 
   if(newMsg.role==='user'){
       sendMsg(txt); 
   }
@@ -1384,9 +1345,6 @@ function actLike(idx, type){
   renderAll();
 }
 
-/* 
-  FIX: Voice Reply (TTS) connected to /tts 
-*/
 async function actVoice(idx){
   var m=S.msgs[idx];
   if(!m||!m.content) return;
@@ -1416,7 +1374,6 @@ async function actVoice(idx){
     var audioUrl = URL.createObjectURL(blob);
     var audio = new Audio(audioUrl);
     
-    // Save to state so we can stop it
     S.currentAudio = audio;
 
     audio.onended = function() { 
@@ -1508,7 +1465,6 @@ function renderGallery(){
 function openLB(src,isV){$('lbContent').innerHTML=isV?'<video src="'+src+'" controls autoplay style="max-width:90vw;max-height:85vh;border-radius:18px">':'<img src="'+src+'" style="max-width:90vw;max-height:85vh;border-radius:18px">';$('lbDl').href=src;$('lbDl').download='heloxai';$('lightbox').classList.add('on');}
 function closeLB(){$('lightbox').classList.remove('on');$('lbContent').innerHTML='';}
 
-/* Helper to update status text */
 function updateAiStatus(idx, text) {
     var el = document.getElementById('ai-status-' + idx);
     if(el) {
@@ -1517,7 +1473,7 @@ function updateAiStatus(idx, text) {
     }
 }
 
-/* ========== RENDER MESSAGES (UPDATED FOR STATUS) ========== */
+/* ========== RENDER MESSAGES ========== */
 function showWelcome(){$('welcomeEl').style.display='flex';$('msgsEl').style.display='none';}
 function showMsgs(){$('welcomeEl').style.display='none';$('msgsEl').style.display='block';}
 function renderChatList(){
@@ -1626,41 +1582,38 @@ function scrollBot(force){
   }
 }
 
-/* ========== MIC / STT (UPDATED WITH PERMISSION MEMORY) ========== */
+/* ========== MIC / STT (UPDATED FOR COOKIE LOGIC) ========== */
 function initMic() {
-  S.micPermission = loadMicPermission();
-  
-  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(function(stream) {
-        var tracks = stream.getTracks();
-        if (tracks.length > 0) {
-          tracks.forEach(track => track.stop());
-        }
-        saveMicPermission('granted');
-      })
-      .catch(function(err) {
-        console.log('Mic permission check failed:', err);
-      });
+  // Check if we already have a decision stored
+  var storedPerm = localStorage.getItem(S.micPermissionKey);
+  if (storedPerm === 'denied') {
+      // Visually indicate locked/Unavailable if desired, 
+      // but mainly we just prevent the toast/error loop in toggleMic
   }
 }
 
 function toggleMic(){
   if(!S.user){toast('Sign in to use voice input','wrn');return;}
+
+  // 1. Check if previously denied (Cookie Logic)
+  var storedPerm = localStorage.getItem(S.micPermissionKey);
+  if (storedPerm === 'denied') {
+      // User already said "Block" forever. Do nothing.
+      // Optionally, show a silent tooltip or just return.
+      return; 
+  }
+
   if(S.recording){
     if(S.recorder)S.recorder.stop();
     S.recording=false;$('micBtn').classList.remove('mic-on');
     updateCB();
     return;
   }
-  
-  if (S.micPermission === 'denied') {
-      toast('Microphone access denied. Reset in browser settings.', 'wrn');
-      return;
-  }
 
   navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
-    saveMicPermission('granted');
+    // Success! Save "granted" (optional, but good for hygiene)
+    localStorage.setItem(S.micPermissionKey, 'granted');
+    
     S.chunks=[];S.recorder=new MediaRecorder(stream);
     S.recorder.ondataavailable=function(e){if(e.data.size>0)S.chunks.push(e.data);};
     S.recorder.onstop=function(){stream.getTracks().forEach(function(t){t.stop();});doSTT(new Blob(S.chunks,{type:'audio/webm'}));};
@@ -1668,10 +1621,13 @@ function toggleMic(){
     S.recording=true;$('micBtn').classList.add('mic-on');
     toast('Listening...','inf');
   }).catch(function(e){
-    saveMicPermission('denied');
-    toast('Mic access denied','err');
+    // Error! Save "denied" so it doesn't bug the user again.
+    localStorage.setItem(S.micPermissionKey, 'denied');
+    // Show toast ONLY this first time
+    toast('Microphone access denied. Enable it in browser settings to use voice.', 'wrn');
   });
 }
+
 function doSTT(blob){
   toast('Processing voice...','inf');
   var fd=new FormData();fd.append('file',blob,'recording.webm');
@@ -1691,7 +1647,7 @@ function doSTT(blob){
     .catch(function(e){ handleError(e, 'Voice Recognition'); });
 }
 
-/* ========== STREAMING (UPDATED FOR STATUS) ========== */
+/* ========== STREAMING ========== */
 function streamRes(res, onChunk, onDone, onMedia, onStatus) {
     if (!res.body || typeof res.body.getReader !== 'function') {
         return res.text().then(function (t) {
@@ -1722,7 +1678,6 @@ function streamRes(res, onChunk, onDone, onMedia, onStatus) {
         try {
             var json = JSON.parse(line);
             
-            // HANDLE MEDIA EVENTS
             if (json.type === 'images' && typeof onMedia === 'function') {
                 onMedia({ type: 'image', data: json.images });
                 return;
@@ -1732,7 +1687,6 @@ function streamRes(res, onChunk, onDone, onMedia, onStatus) {
                 return;
             }
 
-            // HANDLE STATUS EVENTS (Generating code, searching, etc)
             if (json.type === 'status' && typeof onStatus === 'function') {
                 onStatus(json.message);
                 return;
@@ -1743,9 +1697,7 @@ function streamRes(res, onChunk, onDone, onMedia, onStatus) {
             if (text) {
                 onChunk(text);
             }
-        } catch (e) {
-            // Ignore parse errors for partial lines
-        }
+        } catch (e) {}
     }
 
     function pump() {
@@ -1792,10 +1744,8 @@ async function sendMsg(text){
   var msg={id:uid(),role:'user',content:t,images:imgs,time:now()};
   S.msgs.push(msg);
   
-  // Save local immediately (Like Chat.Z)
   saveChatHistory(S.chatId, S.msgs);
 
-  // Update sidebar title based on first message
   if(S.msgs.length === 1) {
      var newTitle = (t || 'Image/File Chat').substring(0, 30) + (t && t.length>30 ? '...' : '');
      var c = S.chatListData.find(x => x.id === S.chatId);
@@ -1886,7 +1836,6 @@ function sendToAI(text){
       scrollBot(true);
   };
 
-  // Status Handler: Updates text like "Generating image..." or "Browsing..."
   var onStatus = function(msg){
       var typing = document.getElementById('ai-status-typing');
       if(typing) typing.textContent = msg;
@@ -1903,7 +1852,7 @@ function sendToAI(text){
       body:JSON.stringify({
           prompt:text,
           conversation_id:S.chatId,
-          mode: S.mode, // Include Mode
+          mode: S.mode, 
           model: S.model
       })
   }).then(function(res){
@@ -1977,9 +1926,6 @@ function updateCB(){
   }
 }
 
-/* 
-  FIX: Voice Picker connected to /tts/voices 
-*/
 async function loadVoices() {
     var list=$('voiceList');
     if(!list) return;
@@ -2020,7 +1966,7 @@ async function loadVoices() {
     }
 }
 
-/* ========== EVENT LISTENERS (FIXED) ========== */
+/* ========== EVENT LISTENERS ========== */
 function initEvents(){
   /* Sidebar */
   $('menuBtn').addEventListener('click',function(){toggleSB();});
@@ -2059,7 +2005,6 @@ function initEvents(){
     if(!o)return;
     if(o.classList.contains('locked'))return;
     e.stopPropagation();
-    // FIX: Remove double newlines from prompt
     var rawPrompt = o.getAttribute('data-prompt');
     var cleanPrompt = rawPrompt.replace(/\\n\\n/g, '').replace(/\n\n/g, ''); 
     $('cbInput').value=cleanPrompt;
@@ -2089,7 +2034,6 @@ function initEvents(){
 
   /* ===== DELEGATED CLICKS ===== */
   document.addEventListener('click',function(e){
-    /* Code block copy button */
     var cpBtn=e.target.closest('[data-action="copy-code"]');
     if(cpBtn){
       e.stopPropagation();
@@ -2106,7 +2050,6 @@ function initEvents(){
       return;
     }
 
-    /* Run HTML button */
     var runBtn = e.target.closest('[data-action="run-html"]');
     if(runBtn){
       e.stopPropagation();
@@ -2119,14 +2062,12 @@ function initEvents(){
       return;
     }
 
-    /* Remove pending file */
     var rmBtn=e.target.closest('[data-rm-idx]');
     if(rmBtn){
       var idx=parseInt(rmBtn.getAttribute('data-rm-idx'),10);
       rmPendingFile(idx);return;
     }
 
-    /* Remove edit attachment */
     var rmEdit=e.target.closest('[data-rm-edit-idx]');
     if(rmEdit){
       var eidx=parseInt(rmEdit.getAttribute('data-rm-edit-idx'),10);
@@ -2134,11 +2075,9 @@ function initEvents(){
       return;
     }
 
-    /* Click on message image to lightbox */
     var msgImg=e.target.closest('[data-msg-img]');
     if(msgImg){openLB(msgImg.getAttribute('data-msg-img'),false);return;}
 
-    /* ===== MESSAGE ACTION BUTTONS ===== */
     var ab=e.target.closest('.ma');
     if(ab){
       if(ab.classList.contains('locked'))return;
@@ -2154,14 +2093,12 @@ function initEvents(){
       return;
     }
 
-    /* ===== WELCOME CARDS ===== */
     var wCard=e.target.closest('.w-card');
     if(wCard){
       if(wCard.classList.contains('locked'))return;
       sendMsg(wCard.getAttribute('data-prompt'));return;
     }
 
-    /* ===== GALLERY ITEMS ===== */
     var galItem=e.target.closest('.gal-item');
     if(galItem){
       var gid=galItem.getAttribute('data-gid');
@@ -2170,48 +2107,39 @@ function initEvents(){
     }
   });
 
-  /* Chat input */
   var inp=$('cbInput');
   inp.addEventListener('input',function(){autoH(inp);updateCB();});
   inp.addEventListener('keydown',function(e){
     if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}
   });
 
-  /* Mic button */
   $('micBtn').addEventListener('click',function(e){
     e.stopPropagation();
     if(!this.classList.contains('locked')) toggleMic();
   });
 
-  /* Send / Stop button */
   $('sendStopBtn').addEventListener('click',function(e){
     e.stopPropagation();
     if(S.streaming) stopGen();
     else sendMsg();
   });
 
-  /* Scroll */
   $('msgsWrap').addEventListener('scroll',checkScrollBtn);
   $('scrollBot').addEventListener('click',function(e){e.stopPropagation();scrollBot(true);});
 
-  /* Lightbox */
   $('lbClose').addEventListener('click',function(e){e.stopPropagation();closeLB();});
   $('lightbox').addEventListener('click',function(e){if(e.target===$('lightbox'))closeLB();});
 
-  /* Link modal */
   $('lmFollowUp').addEventListener('click',function(e){e.stopPropagation();if(S.activeLinkUrl){sendMsg('Tell me more about this link: '+S.activeLinkUrl);closeLinkModal();}});
 
-  /* Edit modal */
   $('emClose').addEventListener('click',closeEdit);
   $('emCancel').addEventListener('click',closeEdit);
   $('emOverlay').addEventListener('click',closeEdit);
   $('emSave').addEventListener('click',saveEdit);
 
-  /* HTML Preview Modal */
   $('closeHtmlPrev').addEventListener('click',function(){$('htmlPreviewModal').classList.remove('on');});
   $('htmlPreviewModal').addEventListener('click',function(e){if(e.target===$('htmlPreviewModal')){$('htmlPreviewModal').classList.remove('on');}});
 
-  /* Chat list: click to load, delete button */
   $('chatList').addEventListener('click',function(e){
     var delBtn=e.target.closest('[data-del-cid]');
     if(delBtn){
@@ -2229,7 +2157,6 @@ function initEvents(){
     }
   });
 
-  /* ===== GLOBAL CLICK: close dropdowns/modals ===== */
   document.addEventListener('click',function(e){
     var cb=e.target.closest('[data-close]');
     if(cb){e.stopPropagation();var target=$(cb.getAttribute('data-close'));if(target)target.classList.remove('on');return;}
@@ -2241,7 +2168,6 @@ function initEvents(){
     if(S.mdOpen&&!e.target.closest('#modelSel')&&!e.target.closest('#modelDd'))toggleMD(false);
   });
 
-  /* ===== ESCAPE KEY ===== */
   document.addEventListener('keydown',function(e){
     if(e.key!=='Escape')return;
     if($('lightbox').classList.contains('on')){closeLB();return;}
@@ -2254,7 +2180,6 @@ function initEvents(){
     document.querySelectorAll('.modal-ov.on').forEach(function(m){m.classList.remove('on');});
   });
 
-  /* ===== PASTE IMAGES ===== */
   document.addEventListener('paste',function(e){
     if(S.streaming)return;
     var items=e.clipboardData&&e.clipboardData.items;if(!items)return;
@@ -2275,19 +2200,15 @@ function initEvents(){
   });
 }
 
-/* ========== INIT (RESTORE SESSION) ========== */
+/* ========== INIT ========== */
 async function init(){
   initTheme();initMarked();initModel();initEvents();setupAuth();renderAll();updateCB();
-  initMic();
-  loadMicPermission();
-
-  // 1. Load Chat List (Sidebar)
+  initMic(); // Inits the mic check
+  
   await loadChatList();
 
-  // 2. Restore Last Active Chat (Session Persistence)
   var lastActiveId = getActiveChat();
   if(lastActiveId && S.chatListData.find(function(c){ return c.id === lastActiveId; })) {
-      // If a chat was open, load it
       await loadConv(lastActiveId);
   } else {
       showWelcome();
