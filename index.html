@@ -23,6 +23,7 @@
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
 
+  <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{--font-display:'Space Grotesk',sans-serif;--font-body:'DM Sans',sans-serif;--radius:14px;--radius-sm:10px;--radius-lg:18px;--radius-xl:24px;--speed:.25s;--speed-slow:.4s;--ease:cubic-bezier(.4,0,.2,1);--ease-out:cubic-bezier(0,0,.2,1);--ease-in:cubic-bezier(.4,0,1,1);--msg-max:680px;--sidebar-w:290px}
@@ -2240,6 +2241,22 @@ async function init(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 
 })();
+</script>
+
+
+    <script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker
+        .register("/sw.js")
+        .then((registration) => {
+          console.log("Service Worker registered:", registration.scope);
+        })
+        .catch((error) => {
+          console.log("Service Worker registration failed:", error);
+        });
+    });
+  }
 </script>
 </body>
 </html>
