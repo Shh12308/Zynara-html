@@ -105,19 +105,19 @@ body::before {
   transition:transform .35s var(--ease);
   padding-top: env(safe-area-inset-top);
 }
-.sb-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 8px;border-bottom:1px solid var(--border);flex-shrink:0} /* Reduced padding */
+.sb-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 8px;border-bottom:1px solid var(--border);flex-shrink:0} 
 .sb-logo{font-family:var(--font-display);font-size:20px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--text-primary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-.6px}
 .sb-logo span{font-weight:400;opacity:.7}
 .ib{background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:6px;border-radius:8px;transition:all var(--speed);display:inline-flex;align-items:center;justify-content:center;touch-action:manipulation}
 .ib:hover{color:var(--text-primary);background:var(--bg-hover)}.ib:active{transform:scale(.95)}.ib:focus{outline:2px solid var(--accent);outline-offset:2px}
-.sb-search{padding:6px 12px;flex-shrink:0} /* Reduced padding */
+.sb-search{padding:6px 12px;flex-shrink:0} 
 .sb-search input{width:100%;padding:6px 10px 6px 28px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:var(--font-body);font-size:12px;outline:none;transition:all var(--speed)}
 .sb-search input:focus{border-color:var(--border-active);background:var(--bg-quaternary)}
 .sb-search input::placeholder{color:var(--text-muted)}
 .sb-search-wrap{position:relative}.sb-search-wrap i{position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-muted);pointer-events:none}
 
 /* Buttons */
-.nc-btn{margin:0 12px 6px;padding:8px 12px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-family:var(--font-body);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all var(--speed);width:calc(100% - 24px);position:relative;overflow:hidden;touch-action:manipulation} /* Reduced margin/padding/font-size */
+.nc-btn{margin:0 12px 6px;padding:8px 12px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-family:var(--font-body);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all var(--speed);width:calc(100% - 24px);position:relative;overflow:hidden;touch-action:manipulation} 
 .nc-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);opacity:0;transition:opacity var(--speed)}
 .nc-btn:hover::before{opacity:1}.nc-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(16,185,129,.25)}
 .nc-btn:active{transform:translateY(0)}.nc-btn:focus{outline:2px solid var(--accent);outline-offset:2px}
@@ -127,7 +127,7 @@ body::before {
 
 /* Chat List */
 .cl{flex:1;overflow-y:auto;padding:2px 8px;min-height:0; touch-action: pan-y;}
-.cl-label{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;padding:8px 10px 4px} /* Reduced padding */
+.cl-label{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;padding:8px 10px 4px} 
 .cl-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius-sm);cursor:pointer;transition:all var(--speed);color:var(--text-secondary);font-size:13px;border:none;background:none;width:100%;text-align:left;font-family:var(--font-body);position:relative;touch-action:manipulation}
 .cl-item:hover{background:var(--bg-hover);color:var(--text-primary)}
 .cl-item.active{background:var(--accent-dim);color:var(--accent)}
@@ -140,21 +140,21 @@ body::before {
 .cl-item:hover .cl-del{opacity:.6}.cl-del:hover{color:var(--danger)!important;background:rgba(239,44,68,.1)!important;opacity:1!important}
 
 /* Navigation & Footer */
-.s-nav{padding:2px 12px;border-top:1px solid var(--border);flex-shrink:0} /* Reduced padding */
-.s-nav a,.s-nav button{display:flex;align-items:center;gap:10px;padding:8px 10px;color:var(--text-secondary);text-decoration:none;font-size:12px;border-radius:var(--radius-sm);cursor:pointer;border:none;background:none;width:100%;font-family:var(--font-body);transition:all var(--speed);text-align:left;touch-action:manipulation} /* Reduced padding/font-size */
+.s-nav{padding:2px 12px;border-top:1px solid var(--border);flex-shrink:0} 
+.s-nav a,.s-nav button{display:flex;align-items:center;gap:10px;padding:8px 10px;color:var(--text-secondary);text-decoration:none;font-size:12px;border-radius:var(--radius-sm);cursor:pointer;border:none;background:none;width:100%;font-family:var(--font-body);transition:all var(--speed);text-align:left;touch-action:manipulation} 
 .s-nav a:hover,.s-nav button:hover{background:var(--bg-hover);color:var(--text-primary)}
 .ptag{font-size:8px;font-weight:800;text-transform:uppercase;padding:2px 6px;border-radius:5px;margin-left:auto;flex-shrink:0;letter-spacing:.3px}
 .ptag.free{background:var(--bg-tertiary);color:var(--text-muted)}.ptag.premium{background:var(--accent-soft);color:var(--accent)}.ptag.lifetime{background:rgba(245,158,11,.1);color:var(--warning)}
 
-.theme-sec{padding:8px 12px;border-top:1px solid var(--border);flex-shrink:0; padding-bottom: max(8px, env(safe-area-inset-bottom));} /* Reduced padding */
+.theme-sec{padding:8px 12px;border-top:1px solid var(--border);flex-shrink:0; padding-bottom: max(8px, env(safe-area-inset-bottom));} 
 .theme-lbl{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
-.theme-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px} /* Changed to 4 columns to save space */
-.t-btn{padding:4px 2px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:6px;color:var(--text-secondary);font-size:9px;font-weight:600;cursor:pointer;transition:all var(--speed);font-family:var(--font-body);text-align:center;touch-action:manipulation} /* Smaller buttons */
+.theme-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px} 
+.t-btn{padding:4px 2px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:6px;color:var(--text-secondary);font-size:9px;font-weight:600;cursor:pointer;transition:all var(--speed);font-family:var(--font-body);text-align:center;touch-action:manipulation} 
 .t-btn:hover{border-color:var(--text-muted);color:var(--text-primary);background:var(--bg-quaternary)}
 .t-btn:focus{outline:2px solid var(--accent);outline-offset:2px}
 .t-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);box-shadow:0 0 12px var(--accent-dim)}
 
-.s-user{padding:8px 12px;border-top:1px solid var(--border);display:none;align-items:center;gap:10px;flex-shrink:0} /* Reduced padding */
+.s-user{padding:8px 12px;border-top:1px solid var(--border);display:none;align-items:center;gap:10px;flex-shrink:0} 
 .s-user.show{display:flex}
 .s-user .av{width:32px;height:32px;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
 .s-user .inf{flex:1;min-width:0}.s-user .nm{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.s-user .pl{font-size:10px;color:var(--text-muted);margin-top:1px}
@@ -617,6 +617,7 @@ main{
   </div>
 </div>
 
+<!-- EDIT MESSAGE MODAL -->
 <div class="em-overlay" id="emOverlay"></div>
 <div class="em-modal" id="emModal">
   <div class="em-head"><h3>Edit Message</h3><button type="button" class="em-close" id="emClose"><i class="fa-solid fa-xmark"></i></button></div>
@@ -750,7 +751,7 @@ var S = {
   dailyImgLimit: 6, dailyVidLimit: 3,
   mode: 'general', 
   currentAudio: null, 
-  micPermissionKey: 'helox_mic_perm_status' // NEW: Cookie-like storage key
+  micPermissionKey: 'helox_mic_perm_status' 
 };
 
 var IMG_KW=['generate image','create image','make image','draw me','render image'];
@@ -759,7 +760,7 @@ var VID_KW=['generate video','create video','make video','render video'];
 function isImgQ(t){ var l=t.toLowerCase(); for(var i=0;i<IMG_KW.length;i++) if(l.indexOf(IMG_KW[i])!==-1) return true; return false; }
 function isVidQ(t){ var l=t.toLowerCase(); for(var i=0;i<VID_KW.length;i++) if(l.indexOf(VID_KW[i])!==-1) return true; return false; }
 
-/* --- LOCAL STORAGE HELPERS (ROBUST PERSISTENCE) --- */
+/* --- LOCAL STORAGE HELPERS --- */
 function saveActiveChat(id) {
     try {
         if(id) localStorage.setItem('helox_active_chat', id);
@@ -949,7 +950,7 @@ async function signOut(){
     doSignOut(); 
 }
 
-/* ========== DATA & CHAT HISTORY (ROBUST LOCAL STORAGE) ========== */
+/* ========== DATA & CHAT HISTORY ========== */
 async function loadChatList(){
   S.chatListData = loadLocalChats(); 
   renderChatList();
@@ -1282,12 +1283,14 @@ function clearPending(){
   if(fi) fi.value='';
 }
 
-/* ========== EDIT MESSAGE ========== */
+/* ========== EDIT MESSAGE (UPDATED FOR CHATGPT STYLE) ========== */
 function openEdit(idx){
   if(idx<0||idx>=S.msgs.length) return;
   var m=S.msgs[idx];
   S.editingIndex=idx;
-  S.editingFiles=m.images?m.images.map(function(i){return{name:i.name||'Image',dataUrl:i.dataUrl||i.url,type:'image'};}):[];
+  // Deep copy images so editing them doesn't affect history until saved
+  S.editingFiles = m.images ? m.images.map(function(i){return{name:i.name||'Image',dataUrl:i.dataUrl||i.url,type:'image'};}):[];
+  
   $('emTextarea').value=m.content;
   renderEditAtt();
   $('emModal').classList.add('on');
@@ -1305,16 +1308,51 @@ function closeEdit(){
 function saveEdit(){
   var idx=S.editingIndex;
   var txt=$('emTextarea').value.trim();
+  
+  // Validation: If editing an existing message, ensure we have something
   if(idx===null||idx<0||idx>=S.msgs.length||(!txt&&!S.editingFiles.length)) return;
-  var newMsg={id:S.msgs[idx].id,role:S.msgs[idx].role,content:txt,images:S.editingFiles,time:now()};
-  S.msgs[idx]=newMsg;
-  S.msgs= S.msgs.slice(0, idx+1);
-  closeEdit();
-  renderAll();
-  saveChatHistory(S.chatId, S.msgs); 
-  if(newMsg.role==='user'){
-      sendMsg(txt); 
-  }
+  
+  // ChatGPT Behavior: 
+  // 1. Truncate history from the edited message onwards (including the message itself).
+  // 2. Update pending files with the new files from the editor.
+  // 3. Send the updated message as if it were new.
+  
+  // Cut off the old message and everything after it
+  S.msgs = S.msgs.slice(0, idx);
+  
+  // Prepare files for sending (convert back to format expected by sendMsg)
+  // S.editingFiles contains {name, dataUrl, type}. 
+  // sendMsg expects S.pendingFiles to have {name, dataUrl, type, file, size}.
+  // We create File objects from the dataUrls.
+  var filePromises = S.editingFiles.map(function(f) {
+      return dataUrlToFile(f.dataUrl, f.name).then(function(fileObj) {
+          return {
+              name: f.name,
+              dataUrl: f.dataUrl,
+              type: f.type,
+              file: fileObj,
+              size: fileObj ? fileObj.size : 0
+          };
+      });
+  });
+  
+  Promise.all(filePromises).then(function(processedFiles){
+      // Set these as pending files
+      S.pendingFiles = processedFiles;
+      
+      // Close modal
+      closeEdit();
+      
+      // Resend logic: The sendMsg function handles adding the user message to S.msgs
+      // and then generating the AI response. This effectively "regenerates" the conversation branch.
+      sendMsg(txt);
+  }).catch(function(e){
+      handleError(e, 'File Processing');
+      // Fallback: just send text if file processing fails
+      S.pendingFiles = [];
+      closeEdit();
+      sendMsg(txt);
+  });
 }
 
 /* ========== ACTION SHEET & VOICE ========== */
@@ -1473,7 +1511,7 @@ function updateAiStatus(idx, text) {
     }
 }
 
-/* ========== RENDER MESSAGES ========== */
+/* ========== RENDER MESSAGES (UPDATED FOR USER ACTIONS) ========== */
 function showWelcome(){$('welcomeEl').style.display='flex';$('msgsEl').style.display='none';}
 function showMsgs(){$('welcomeEl').style.display='none';$('msgsEl').style.display='block';}
 function renderChatList(){
@@ -1518,8 +1556,14 @@ function renderAll(){
       
       html+='<div class="msg ai-msg" id="msg-'+i+'"><div class="msg-inner"><div class="msg-label"><span class="ai-dot"></span> AI <span id="ai-status-'+i+'" class="ai-status"></span></div><div class="msg-ct" id="mc-'+i+'"></div>'+imgsHtml+acts+'<div class="msg-time">'+m.time+'</div></div></div>';
     }else{
+      // USER MESSAGE - ADDED MENU ACTIONS
       var imgs=buildImgHtml(m.images);
-      html+='<div class="msg user-msg" id="msg-'+i+'"><div class="msg-inner"><div class="msg-label">You</div><div class="msg-bubble">'+imgs+md(m.content)+'</div><div class="msg-time">'+m.time+'</div></div></div>';
+      var uActs='<div class="msg-acts">';
+      uActs+='<button type="button" class="ma" data-act="copy" data-i="'+i+'" data-tip="Copy"><i class="fa-regular fa-copy"></i></button>';
+      uActs+='<button type="button" class="ma" data-act="edit" data-i="'+i+'" data-tip="Edit"><i class="fa-solid fa-pencil"></i></button>';
+      uActs+='</div>';
+
+      html+='<div class="msg user-msg" id="msg-'+i+'"><div class="msg-inner"><div class="msg-label">You</div><div class="msg-bubble">'+imgs+md(m.content)+'</div><div class="msg-time">'+m.time+'</div></div>'+uActs+'</div>';
     }
   });
   $('msgsEl').innerHTML=html;
@@ -1582,26 +1626,16 @@ function scrollBot(force){
   }
 }
 
-/* ========== MIC / STT (UPDATED FOR COOKIE LOGIC) ========== */
+/* ========== MIC / STT ========== */
 function initMic() {
-  // Check if we already have a decision stored
   var storedPerm = localStorage.getItem(S.micPermissionKey);
-  if (storedPerm === 'denied') {
-      // Visually indicate locked/Unavailable if desired, 
-      // but mainly we just prevent the toast/error loop in toggleMic
-  }
+  if (storedPerm === 'denied') {  }
 }
 
 function toggleMic(){
   if(!S.user){toast('Sign in to use voice input','wrn');return;}
-
-  // 1. Check if previously denied (Cookie Logic)
   var storedPerm = localStorage.getItem(S.micPermissionKey);
-  if (storedPerm === 'denied') {
-      // User already said "Block" forever. Do nothing.
-      // Optionally, show a silent tooltip or just return.
-      return; 
-  }
+  if (storedPerm === 'denied') { return; }
 
   if(S.recording){
     if(S.recorder)S.recorder.stop();
@@ -1611,9 +1645,7 @@ function toggleMic(){
   }
 
   navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
-    // Success! Save "granted" (optional, but good for hygiene)
     localStorage.setItem(S.micPermissionKey, 'granted');
-    
     S.chunks=[];S.recorder=new MediaRecorder(stream);
     S.recorder.ondataavailable=function(e){if(e.data.size>0)S.chunks.push(e.data);};
     S.recorder.onstop=function(){stream.getTracks().forEach(function(t){t.stop();});doSTT(new Blob(S.chunks,{type:'audio/webm'}));};
@@ -1621,9 +1653,7 @@ function toggleMic(){
     S.recording=true;$('micBtn').classList.add('mic-on');
     toast('Listening...','inf');
   }).catch(function(e){
-    // Error! Save "denied" so it doesn't bug the user again.
     localStorage.setItem(S.micPermissionKey, 'denied');
-    // Show toast ONLY this first time
     toast('Microphone access denied. Enable it in browser settings to use voice.', 'wrn');
   });
 }
@@ -2087,7 +2117,7 @@ function initEvents(){
       if(act==='copy') actCopy(idx);
       else if(act==='like') actLike(idx,'like');
       else if(act==='dislike') actLike(idx,'dislike');
-      else if(act==='edit') actEdit(idx); 
+      else if(act==='edit') openEdit(idx); 
       else if(act==='regen') actRegen(idx);
       else if(act==='voice') actVoice(idx);
       return;
@@ -2203,7 +2233,7 @@ function initEvents(){
 /* ========== INIT ========== */
 async function init(){
   initTheme();initMarked();initModel();initEvents();setupAuth();renderAll();updateCB();
-  initMic(); // Inits the mic check
+  initMic();
   
   await loadChatList();
 
