@@ -184,7 +184,6 @@ main{flex:1;display:flex;flex-direction:column;height:100vh;width:100%;position:
 .msg.ai-msg{padding-left:0;padding-right:40px}.msg.ai-msg .msg-inner{max-width:100%}
 .msg.ai-msg .msg-label{font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:6px;display:flex;align-items:center;gap:8px}
 .msg.ai-msg .msg-label .ai-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0}
-/* Added status text style */
 .msg.ai-msg .msg-label .ai-status{font-size:11px;color:var(--text-muted);font-weight:400;font-style:italic;}
 
 .msg.user-msg{padding-left:40px;padding-right:0}
@@ -687,13 +686,27 @@ var VID_KW=['generate video','create video','make video','render video'];
 function isImgQ(t){ var l=t.toLowerCase(); for(var i=0;i<IMG_KW.length;i++) if(l.indexOf(IMG_KW[i])!==-1) return true; return false; }
 function isVidQ(t){ var l=t.toLowerCase(); for(var i=0;i<VID_KW.length;i++) if(l.indexOf(VID_KW[i])!==-1) return true; return false; }
 
-/* --- LOCAL STORAGE HELPERS (NEW & PRIMARY) --- */
+/* --- LOCAL STORAGE HELPERS (ROBUST PERSISTENCE) --- */
+function saveActiveChat(id) {
+    try {
+        if(id) localStorage.setItem('helox_active_chat', id);
+        else localStorage.removeItem('helox_active_chat');
+    } catch(e) {}
+}
+
+function getActiveChat() {
+    try {
+        return localStorage.getItem('helox_active_chat');
+    } catch(e) { return null; }
+}
+
 function saveLocalChats() {
     try {
-        // Only store metadata to save space
+        // Sort by updated_at desc
+        S.chatListData.sort(function(a,b){ return new Date(b.updated_at) - new Date(a.updated_at); });
         var meta = S.chatListData.map(function(c){ return { id: c.id, title: c.title, updated_at: c.updated_at }; });
         localStorage.setItem('helox_chats', JSON.stringify(meta));
-    } catch(e) { console.warn("Local Storage full or disabled", e); }
+    } catch(e) { console.warn("Local Storage full", e); }
 }
 
 function loadLocalChats() {
@@ -712,9 +725,15 @@ function loadLocalChats() {
 // Save full message history for a specific chat
 function saveChatHistory(id, msgs) {
     try {
-        // We limit history to last 100 messages per chat to save space
-        var toSave = msgs.slice(-100); 
+        var toSave = msgs.slice(-100); // Limit history to save space
         localStorage.setItem('helox_history_' + id, JSON.stringify(toSave));
+        // Update timestamp in list
+        var c = S.chatListData.find(function(x){ return x.id === id; });
+        if(c) {
+            c.updated_at = new Date().toISOString();
+            saveLocalChats();
+            renderChatList();
+        }
     } catch(e) { console.warn("Could not save chat history", e); }
 }
 
@@ -833,7 +852,6 @@ async function setupAuth(){
       if (session && session.user) {
           await setUserFromSess(session);
           refreshUI();
-          loadChatList(); 
           if(window.location.hash && window.location.hash.includes('access_token')) window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
       } else {
           S.user = null;
@@ -851,7 +869,7 @@ async function setupAuth(){
           if(sess&&sess.user){
             await setUserFromSess(sess);
             refreshUI();
-            if(ev==='SIGNED_IN') { loadChatList().catch(e=>console.error(e)); toast('Signed in','ok'); }
+            if(ev==='SIGNED_IN') { loadChatList(); toast('Signed in','ok'); }
           } else {
             S.user=null;
             refreshUI();
@@ -871,7 +889,7 @@ async function signOut(){
     doSignOut(); 
 }
 
-/* ========== DATA & CHAT HISTORY (UPDATED FOR LOCAL STORAGE) ========== */
+/* ========== DATA & CHAT HISTORY (ROBUST LOCAL STORAGE) ========== */
 async function loadChatList(){
   // Load from LocalStorage primarily
   S.chatListData = loadLocalChats(); 
@@ -879,21 +897,28 @@ async function loadChatList(){
 }
 
 async function startNewChat(){
-  // Optimistic UI update
   S.chatId = uid();
   S.msgs = [];
   var newTitle = 'New Chat ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   
-  // Update sidebar immediately
-  S.chatListData.unshift({ id: S.chatId, title: newTitle, updated_at: new Date().toISOString() });
+  // Create metadata
+  var newMeta = { id: S.chatId, title: newTitle, updated_at: new Date().toISOString() };
+  
+  // Add to list
+  S.chatListData.unshift(newMeta);
   saveLocalChats();
-  renderChatList();
+  
+  // Save active ID
+  saveActiveChat(S.chatId);
+
+  // Save empty history so it exists
+  saveChatHistory(S.chatId, S.msgs);
 
   $('hdrTitle').textContent = newTitle;
   renderAll();
   if(S.sbOpen) toggleSB(false);
 
-  // API call optional now, mostly for logging if backend exists
+  // API call optional now
   try {
     if(!apiUrl()) throw new Error("API not configured");
     var r=await fetch(apiUrl()+'/newchat',{
@@ -905,11 +930,14 @@ async function startNewChat(){
     if(r.ok){
         var d=await r.json();
         if(d&&d.conversation_id){ 
-          S.chatId=d.conversation_id;
-          // Update ID in local list if changed
-          S.chatListData[0].id = S.chatId;
-          saveLocalChats();
-          renderChatList();
+          // If server returned a different ID, update local
+          if(d.conversation_id !== S.chatId) {
+             localStorage.removeItem('helox_history_' + S.chatId); // Remove temp history
+             S.chatId = d.conversation_id;
+             newMeta.id = S.chatId;
+             saveActiveChat(S.chatId);
+             saveLocalChats();
+          }
         }
     }
   }catch(e){ 
@@ -918,7 +946,6 @@ async function startNewChat(){
 }
 
 async function loadConv(cid){
-  // UI Update
   S.msgs=[]; showWelcome();
   $('hdrTitle').textContent = 'Loading...';
   
@@ -926,7 +953,8 @@ async function loadConv(cid){
   var msgs = loadChatHistory(cid);
   if(msgs.length > 0) {
       S.msgs = msgs;
-      $('hdrTitle').textContent = S.chatListData.find(c=>c.id===cid)?.title || 'Chat';
+      var chat = S.chatListData.find(c=>c.id===cid);
+      if(chat) $('hdrTitle').textContent = chat.title;
   } else {
       // Fallback to DB if local empty (migration path)
       if (sb && cid) {
@@ -954,7 +982,7 @@ async function loadConv(cid){
       }
   }
 
-  // Build gallery from messages
+  // Rebuild gallery from loaded messages
   S.gallery=[];
   S.msgs.forEach(function(m){ 
       if(m.role==='assistant') {
@@ -972,16 +1000,17 @@ async function loadConv(cid){
   });
   
   S.chatId=cid;
+  saveActiveChat(cid); // Persist active ID
   renderChatList();
   renderAll();
   switchView('chat');
 }
 
 async function saveMsg(m){
-  // Save to LocalStorage primarily
+  // Save to LocalStorage immediately
   saveChatHistory(S.chatId, S.msgs);
 
-  // Try DB, but don't crash if fails (prevents DOMException)
+  // Try DB, but don't crash if fails
   if(!sb||!S.user||!S.chatId)return;
   try{
     await sb.from('messages').insert({
@@ -998,18 +1027,9 @@ async function saveMsg(m){
 }
 
 async function updateTs(cid){
-  // Update LocalStorage metadata
-  var chat = S.chatListData.find(function(c){ return c.id === cid; });
-  if(chat) {
-      chat.updated_at = new Date().toISOString();
-      // Move to top
-      S.chatListData = S.chatListData.filter(function(c){ return c.id !== cid; });
-      S.chatListData.unshift(chat);
-      saveLocalChats();
-      renderChatList();
-  }
+  // Handled by saveChatHistory mostly, but we call it to be sure
+  saveChatHistory(cid, S.msgs);
   
-  // Try DB
   if(!sb||!cid)return;
   try{
       await sb.from('conversations').update({updated_at:new Date().toISOString()}).eq('id',cid);
@@ -1025,6 +1045,11 @@ async function delConv(cid){
       S.chatListData = S.chatListData.filter(function(c){ return c.id !== cid; });
       saveLocalChats();
   } catch(e) { handleError(e, 'Delete Local'); }
+
+  // If deleting active chat, clear active ID
+  if(S.chatId === cid) {
+      saveActiveChat(null);
+  }
 
   // Try API/DB
   try{
@@ -1048,7 +1073,7 @@ async function delConv(cid){
 function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('data-theme',window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');else document.documentElement.setAttribute('data-theme',t)}catch(e){handleError(e, 'Set Theme', false);}S.theme=t;try{localStorage.setItem('helox-theme',t)}catch(e){}document.querySelectorAll('.t-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-t')===t)})}
 function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'dark'}catch(e){}setTheme(s);try{window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(S.theme==='system')setTheme('system')})}catch(e){}}
 
-/* ========== MARKDOWN & HTML PREVIEW (FIXED COLORS) ========== */
+/* ========== MARKDOWN & HTML PREVIEW ========== */
 function initMarked() {
   if (typeof marked === 'undefined') { S._mdOk = false; return; }
   try {
@@ -1078,8 +1103,6 @@ function initMarked() {
              btnsHtml = '<button type="button" class="cp-btn" data-action="run-html" style="margin-right:5px;"><i class="fa-solid fa-play"></i> Run</button>';
           }
           btnsHtml += '<button type="button" class="cp-btn" data-action="copy-code"><i class="fa-regular fa-copy"></i> Copy</button>';
-          // Note: hljs language class is added automatically by the CSS if we use hljs.highlight
-          // We explicitly add class for safety
           return '<div class="code-blk"><div class="code-hd"><span>'+esc(displayLang)+'</span>'+btnsHtml+'</div><pre><code class="hljs language-'+esc(displayLang)+'">'+highlighted+'</code></pre></div>';
         },
         link: function(href, title, text) {
@@ -1688,7 +1711,7 @@ async function sendMsg(text){
   var msg={id:uid(),role:'user',content:t,images:imgs,time:now()};
   S.msgs.push(msg);
   
-  // Save local immediately
+  // Save local immediately (Like Chat.Z)
   saveChatHistory(S.chatId, S.msgs);
 
   // Update sidebar title based on first message
@@ -2171,11 +2194,23 @@ function initEvents(){
   });
 }
 
-/* ========== INIT ========== */
+/* ========== INIT (RESTORE SESSION) ========== */
 async function init(){
   initTheme();initMarked();initModel();initEvents();setupAuth();renderAll();updateCB();
   initMic();
   loadMicPermission();
+
+  // 1. Load Chat List (Sidebar)
+  await loadChatList();
+
+  // 2. Restore Last Active Chat (Session Persistence)
+  var lastActiveId = getActiveChat();
+  if(lastActiveId && S.chatListData.find(function(c){ return c.id === lastActiveId; })) {
+      // If a chat was open, load it
+      await loadConv(lastActiveId);
+  } else {
+      showWelcome();
+  }
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 
