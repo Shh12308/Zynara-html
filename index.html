@@ -8,11 +8,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
-<!-- Supabase -->
+<!-- Supabase (Library kept, but usage minimized to prevent crashes) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<!-- Syntax Highlighting -->
+<!-- Syntax Highlighting (Markdown Color) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/atom-one-dark.min.css">
 <!-- Math -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
@@ -687,13 +687,13 @@ var VID_KW=['generate video','create video','make video','render video'];
 function isImgQ(t){ var l=t.toLowerCase(); for(var i=0;i<IMG_KW.length;i++) if(l.indexOf(IMG_KW[i])!==-1) return true; return false; }
 function isVidQ(t){ var l=t.toLowerCase(); for(var i=0;i<VID_KW.length;i++) if(l.indexOf(VID_KW[i])!==-1) return true; return false; }
 
-/* --- LOCAL STORAGE HELPERS (NEW) --- */
+/* --- LOCAL STORAGE HELPERS (NEW & PRIMARY) --- */
 function saveLocalChats() {
     try {
         // Only store metadata to save space
         var meta = S.chatListData.map(function(c){ return { id: c.id, title: c.title, updated_at: c.updated_at }; });
         localStorage.setItem('helox_chats', JSON.stringify(meta));
-    } catch(e) {}
+    } catch(e) { console.warn("Local Storage full or disabled", e); }
 }
 
 function loadLocalChats() {
@@ -701,14 +701,30 @@ function loadLocalChats() {
         var raw = localStorage.getItem('helox_chats');
         if (raw) {
             var meta = JSON.parse(raw);
-            // Merge if API response contains more data, but this populates the UI immediately
             if(Array.isArray(meta) && meta.length > 0) {
-                // We don't have full messages, but we can show the list
-                // We'll fetch full messages on click
                 return meta;
             }
         }
     } catch(e) { console.error('Error loading local chats', e); }
+    return [];
+}
+
+// Save full message history for a specific chat
+function saveChatHistory(id, msgs) {
+    try {
+        // We limit history to last 100 messages per chat to save space
+        var toSave = msgs.slice(-100); 
+        localStorage.setItem('helox_history_' + id, JSON.stringify(toSave));
+    } catch(e) { console.warn("Could not save chat history", e); }
+}
+
+function loadChatHistory(id) {
+    try {
+        var raw = localStorage.getItem('helox_history_' + id);
+        if (raw) {
+            return JSON.parse(raw);
+        }
+    } catch(e) { console.error('Error loading history', e); }
     return [];
 }
 
@@ -817,7 +833,7 @@ async function setupAuth(){
       if (session && session.user) {
           await setUserFromSess(session);
           refreshUI();
-          loadChatList(); // This now tries API then falls back to local
+          loadChatList(); 
           if(window.location.hash && window.location.hash.includes('access_token')) window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
       } else {
           S.user = null;
@@ -855,35 +871,10 @@ async function signOut(){
     doSignOut(); 
 }
 
-/* ========== DATA & CHAT HISTORY ========== */
+/* ========== DATA & CHAT HISTORY (UPDATED FOR LOCAL STORAGE) ========== */
 async function loadChatList(){
-  S.chatListData = loadLocalChats(); // Load local immediately so UI isn't empty
-  
-  // If logged in, try to fetch from DB for fresh data
-  if(S.user){
-    try{
-        if(!apiUrl()) throw new Error("API not configured");
-        var r=await fetch(apiUrl()+'/chats',{
-          method:'GET',
-          headers:authH(),
-          credentials:'include'
-        });
-        if(r.ok){
-            var d=await r.json();
-            var freshData = Array.isArray(d)?d:(d.chats||[]);
-            // Merge fresh data
-            // We can overwrite local list with remote list if we want strict sync, 
-            // but for this, let's use remote as source of truth but keep local as backup.
-            S.chatListData = freshData;
-            saveLocalChats(); // Save to local immediately
-        } else {
-            // Keep local data if API fails
-            console.log("Failed to fetch chats, using local cache.");
-        }
-    }catch(e){ 
-        handleError(e, 'Load Chat List'); // Show error toast, but keep local data
-    }
-  }
+  // Load from LocalStorage primarily
+  S.chatListData = loadLocalChats(); 
   renderChatList();
 }
 
@@ -891,10 +882,18 @@ async function startNewChat(){
   // Optimistic UI update
   S.chatId = uid();
   S.msgs = [];
-  $('hdrTitle').textContent = 'New Chat';
+  var newTitle = 'New Chat ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  
+  // Update sidebar immediately
+  S.chatListData.unshift({ id: S.chatId, title: newTitle, updated_at: new Date().toISOString() });
+  saveLocalChats();
+  renderChatList();
+
+  $('hdrTitle').textContent = newTitle;
   renderAll();
   if(S.sbOpen) toggleSB(false);
 
+  // API call optional now, mostly for logging if backend exists
   try {
     if(!apiUrl()) throw new Error("API not configured");
     var r=await fetch(apiUrl()+'/newchat',{
@@ -906,10 +905,12 @@ async function startNewChat(){
     if(r.ok){
         var d=await r.json();
         if(d&&d.conversation_id){ 
-          S.chatId=d.conversation_id; 
+          S.chatId=d.conversation_id;
+          // Update ID in local list if changed
+          S.chatListData[0].id = S.chatId;
+          saveLocalChats();
+          renderChatList();
         }
-    } else {
-        console.warn("New chat API call failed, using local ID.");
     }
   }catch(e){ 
     console.warn('New chat API failed, continuing offline.', e);
@@ -921,84 +922,133 @@ async function loadConv(cid){
   S.msgs=[]; showWelcome();
   $('hdrTitle').textContent = 'Loading...';
   
-  // Find title locally
-  var localChat = S.chatListData.find(function(c){return c.id===cid;});
-  if(localChat) $('hdrTitle').textContent = localChat.title || 'Chat';
-
-  // Fetch full messages from Supabase
-  if (sb && cid) {
-      try {
-          var msgs=await sb.from('messages').select('*').eq('conversation_id',cid).order('created_at',{ascending:true});
-          if(!msgs.error && msgs.data) {
-             S.msgs=msgs.data.map(function(m){
-                 var imgs = m.media_url ? [{url:m.media_url, name:'Generated'}] : [];
-                 if(m.metadata && m.metadata.has_images) imgs = []; 
-                 return { 
-                     id:m.id, 
-                     role:m.role, 
-                     content:m.content, 
-                     content_type:m.content_type||'text', 
-                     media_url:m.media_url||null, 
-                     images: imgs, 
-                     time:new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}), 
-                     liked:false, 
-                     disliked:false 
-                 };
-             });
-             S.gallery=[];
-             S.msgs.forEach(function(m){ 
-                 if(m.role==='assistant') {
-                     if(m.images && m.images.length) {
-                         m.images.forEach(function(i){
-                             var type = (i.url && (i.url.includes('.mp4') || i.url.includes('.webm'))) ? 'video' : 'image';
-                             if(!S.gallery.some(function(g){return g.url===i.url})) {
-                                 S.gallery.unshift({type:type,url:i.url,prompt:'Generated',id:uid()});
-                             }
-                         });
-                     } else {
-                        addGal(m.content);
-                     }
-                 }
-             });
-          }
-      } catch(e) { handleError(e, 'Load Conversation'); }
+  // Load from LocalStorage
+  var msgs = loadChatHistory(cid);
+  if(msgs.length > 0) {
+      S.msgs = msgs;
+      $('hdrTitle').textContent = S.chatListData.find(c=>c.id===cid)?.title || 'Chat';
+  } else {
+      // Fallback to DB if local empty (migration path)
+      if (sb && cid) {
+          try {
+              var res=await sb.from('messages').select('*').eq('conversation_id',cid).order('created_at',{ascending:true});
+              if(!res.error && res.data) {
+                 S.msgs=res.data.map(function(m){
+                     var imgs = m.media_url ? [{url:m.media_url, name:'Generated'}] : [];
+                     return { 
+                         id:m.id, 
+                         role:m.role, 
+                         content:m.content, 
+                         content_type:m.content_type||'text', 
+                         media_url:m.media_url||null, 
+                         images: imgs, 
+                         time:new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}), 
+                         liked:false, 
+                         disliked:false 
+                     };
+                 });
+                 // Save to local now that we fetched it
+                 saveChatHistory(cid, S.msgs);
+              }
+          } catch(e) { handleError(e, 'Load Conversation from DB'); }
+      }
   }
-  S.chatId=cid;
+
+  // Build gallery from messages
+  S.gallery=[];
+  S.msgs.forEach(function(m){ 
+      if(m.role==='assistant') {
+          if(m.images && m.images.length) {
+              m.images.forEach(function(i){
+                  var type = (i.url && (i.url.includes('.mp4') || i.url.includes('.webm'))) ? 'video' : 'image';
+                  if(!S.gallery.some(function(g){return g.url===i.url})) {
+                      S.gallery.unshift({type:type,url:i.url,prompt:'Generated',id:uid()});
+                  }
+              });
+          } else {
+             addGal(m.content);
+          }
+      }
+  });
   
-  // Update Sidebar Highlight
+  S.chatId=cid;
   renderChatList();
   renderAll();
   switchView('chat');
 }
 
-async function saveMsg(m){if(!sb||!S.user||!S.chatId)return;try{await sb.from('messages').insert({conversation_id:S.chatId,role:m.role,content:m.content,content_type:m.content_type||'text',media_url:m.media_url||null,metadata:m.metadata||{}})}catch(e){handleError(e, 'Save Message', false);}}
-async function updateTs(cid){if(!sb||!cid)return;try{await sb.from('conversations').update({updated_at:new Date().toISOString()}).eq('id',cid)}catch(e){handleError(e, 'Update Timestamp', false);}}
+async function saveMsg(m){
+  // Save to LocalStorage primarily
+  saveChatHistory(S.chatId, S.msgs);
+
+  // Try DB, but don't crash if fails (prevents DOMException)
+  if(!sb||!S.user||!S.chatId)return;
+  try{
+    await sb.from('messages').insert({
+        conversation_id:S.chatId,
+        role:m.role,
+        content:m.content,
+        content_type:m.content_type||'text',
+        media_url:m.media_url||null,
+        metadata:m.metadata||{}
+    });
+  }catch(e){
+    console.warn("DB Save Failed (likely offline/error), saved locally instead.");
+  }
+}
+
+async function updateTs(cid){
+  // Update LocalStorage metadata
+  var chat = S.chatListData.find(function(c){ return c.id === cid; });
+  if(chat) {
+      chat.updated_at = new Date().toISOString();
+      // Move to top
+      S.chatListData = S.chatListData.filter(function(c){ return c.id !== cid; });
+      S.chatListData.unshift(chat);
+      saveLocalChats();
+      renderChatList();
+  }
+  
+  // Try DB
+  if(!sb||!cid)return;
+  try{
+      await sb.from('conversations').update({updated_at:new Date().toISOString()}).eq('id',cid);
+  }catch(e){}
+}
+
 async function delConv(cid){
   if(!confirm('Delete this chat?')) return;
-  try{
-      if(apiUrl()) await fetch(apiUrl()+'/chats/'+cid,{method:'DELETE',headers:authH(),credentials:'include'});
-      // Remove from local cache immediately
+  
+  // Remove from LocalStorage
+  try {
+      localStorage.removeItem('helox_history_' + cid);
       S.chatListData = S.chatListData.filter(function(c){ return c.id !== cid; });
       saveLocalChats();
-  }catch(e){ handleError(e, 'Delete Chat (API)'); }
+  } catch(e) { handleError(e, 'Delete Local'); }
+
+  // Try API/DB
+  try{
+      if(apiUrl()) await fetch(apiUrl()+'/chats/'+cid,{method:'DELETE',headers:authH(),credentials:'include'});
+  }catch(e){ handleError(e, 'Delete Chat (API)', false); }
   
   if(!sb||!cid)return;
   try{
       await sb.from('messages').delete().eq('conversation_id',cid);
       await sb.from('conversations').delete().eq('id',cid);
-      if(S.chatId===cid){
-          S.msgs=[]; S.chatId=null; $('hdrTitle').textContent='HeloXAi'; renderAll();
-      }
-      loadChatList(); // Reload list from local after DB delete
-      toast('Deleted','inf');
-  }catch(e){ handleError(e, 'Delete Chat (DB)'); }
+  }catch(e){ handleError(e, 'Delete Chat (DB)', false); }
+  
+  if(S.chatId===cid){
+      S.msgs=[]; S.chatId=null; $('hdrTitle').textContent='HeloXAi'; renderAll();
+  }
+  renderChatList();
+  toast('Deleted','inf');
 }
 
 /* ========== THEME ========== */
 function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('data-theme',window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');else document.documentElement.setAttribute('data-theme',t)}catch(e){handleError(e, 'Set Theme', false);}S.theme=t;try{localStorage.setItem('helox-theme',t)}catch(e){}document.querySelectorAll('.t-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-t')===t)})}
 function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'dark'}catch(e){}setTheme(s);try{window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(S.theme==='system')setTheme('system')})}catch(e){}}
 
-/* ========== MARKDOWN & HTML PREVIEW ========== */
+/* ========== MARKDOWN & HTML PREVIEW (FIXED COLORS) ========== */
 function initMarked() {
   if (typeof marked === 'undefined') { S._mdOk = false; return; }
   try {
@@ -1028,6 +1078,8 @@ function initMarked() {
              btnsHtml = '<button type="button" class="cp-btn" data-action="run-html" style="margin-right:5px;"><i class="fa-solid fa-play"></i> Run</button>';
           }
           btnsHtml += '<button type="button" class="cp-btn" data-action="copy-code"><i class="fa-regular fa-copy"></i> Copy</button>';
+          // Note: hljs language class is added automatically by the CSS if we use hljs.highlight
+          // We explicitly add class for safety
           return '<div class="code-blk"><div class="code-hd"><span>'+esc(displayLang)+'</span>'+btnsHtml+'</div><pre><code class="hljs language-'+esc(displayLang)+'">'+highlighted+'</code></pre></div>';
         },
         link: function(href, title, text) {
@@ -1194,6 +1246,7 @@ function saveEdit(){
   S.msgs= S.msgs.slice(0, idx+1);
   closeEdit();
   renderAll();
+  saveChatHistory(S.chatId, S.msgs); // Save local
   if(newMsg.role==='user'){
       sendMsg(txt); 
   }
@@ -1471,10 +1524,8 @@ function scrollBot(force){
 
 /* ========== MIC / STT (UPDATED WITH PERMISSION MEMORY) ========== */
 function initMic() {
-  // Check local permission state
   S.micPermission = loadMicPermission();
   
-  // If granted, do a silent check to confirm
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     navigator.mediaDevices.getUserMedia({ audio: true })
       .then(function(stream) {
@@ -1482,12 +1533,10 @@ function initMic() {
         if (tracks.length > 0) {
           tracks.forEach(track => track.stop());
         }
-        // Ensure we save "granted" if this succeeded
         saveMicPermission('granted');
       })
       .catch(function(err) {
         console.log('Mic permission check failed:', err);
-        // Don't save error here on init, only on explicit user action
       });
   }
 }
@@ -1501,7 +1550,6 @@ function toggleMic(){
     return;
   }
   
-  // Check permission status first
   if (S.micPermission === 'denied') {
       toast('Microphone access denied. Reset in browser settings.', 'wrn');
       return;
@@ -1640,6 +1688,22 @@ async function sendMsg(text){
   var msg={id:uid(),role:'user',content:t,images:imgs,time:now()};
   S.msgs.push(msg);
   
+  // Save local immediately
+  saveChatHistory(S.chatId, S.msgs);
+
+  // Update sidebar title based on first message
+  if(S.msgs.length === 1) {
+     var newTitle = (t || 'Image/File Chat').substring(0, 30) + (t && t.length>30 ? '...' : '');
+     var c = S.chatListData.find(x => x.id === S.chatId);
+     if(c) {
+         c.title = newTitle;
+         c.updated_at = new Date().toISOString();
+         saveLocalChats();
+         renderChatList();
+         $('hdrTitle').textContent = newTitle;
+     }
+  }
+  
   if(S.user && S.chatId){
       saveMsg({role:'user',content:t||'[Image/File attached]',metadata:{has_images:imgs.length>0}});
   }
@@ -1679,13 +1743,13 @@ function sendWithFiles(text,imgs,files){
     if(!res.ok)throw new Error('HTTP '+res.status);rmTyping();
     var ct=(res.headers.get('content-type')||'').toLowerCase();
     if(ct.indexOf('application/json')!==-1){
-      return res.json().then(function(d){var c=d.response||d.content||d.result||d.message||JSON.stringify(d);var ai={id:uid(),role:'assistant',content:c,liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();addGal(c);saveMsg(ai);if(S.chatId)updateTs(S.chatId);});
+      return res.json().then(function(d){var c=d.response||d.content||d.result||d.message||JSON.stringify(d);var ai={id:uid(),role:'assistant',content:c,liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();addGal(c);saveChatHistory(S.chatId, S.msgs);if(S.chatId)updateTs(S.chatId);});
     }
     var ai={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();
-    return streamRes(res,function(chunk){full+=chunk;requestAnimationFrame(function(){updateLastAI(full);});},function(){S.msgs[S.msgs.length-1].content=full;addGal(full);saveMsg(S.msgs[S.msgs.length-1]);if(S.chatId)updateTs(S.chatId);}, onMedia);
+    return streamRes(res,function(chunk){full+=chunk;requestAnimationFrame(function(){updateLastAI(full);});},function(){S.msgs[S.msgs.length-1].content=full;addGal(full);saveChatHistory(S.chatId, S.msgs);if(S.chatId)updateTs(S.chatId);}, onMedia);
   }).catch(function(e){
     rmTyping();
-    if(e.name==='AbortError'){if(full){S.msgs[S.msgs.length-1].content=full;saveMsg(S.msgs[S.msgs.length-1]).catch(function(){});requestAnimationFrame(function(){updateLastAI(full);});}else{S.msgs.pop();renderAll();}toast('Stopped','inf');}
+    if(e.name==='AbortError'){if(full){S.msgs[S.msgs.length-1].content=full;saveChatHistory(S.chatId, S.msgs).catch(function(){});requestAnimationFrame(function(){updateLastAI(full);});}else{S.msgs.pop();renderAll();}toast('Stopped','inf');}
     else{S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});renderAll();toast('Request failed','err');}
   }).finally(function(){S.streaming=false;S.abort=null;updateCB();});
 }
@@ -1742,13 +1806,13 @@ function sendToAI(text){
     if(!res.ok)throw new Error('HTTP '+res.status);rmTyping();
     var ct=(res.headers.get('content-type')||'').toLowerCase();
     if(ct.indexOf('application/json')!==-1){
-      return res.json().then(function(d){var c=d.response||d.content||d.result||d.message||JSON.stringify(d);var ai={id:uid(),role:'assistant',content:c,liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();addGal(c);saveMsg(ai);if(S.chatId)updateTs(S.chatId);});
+      return res.json().then(function(d){var c=d.response||d.content||d.result||d.message||JSON.stringify(d);var ai={id:uid(),role:'assistant',content:c,liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();addGal(c);saveChatHistory(S.chatId, S.msgs);if(S.chatId)updateTs(S.chatId);});
     }
     var ai={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();
-    return streamRes(res,function(chunk){full+=chunk;updateLastAI(full);},function(){S.msgs[S.msgs.length-1].content=full;saveMsg(S.msgs[S.msgs.length-1]);if(S.chatId)updateTs(S.chatId);}, onMedia, onStatus);
+    return streamRes(res,function(chunk){full+=chunk;updateLastAI(full);},function(){S.msgs[S.msgs.length-1].content=full;saveChatHistory(S.chatId, S.msgs);if(S.chatId)updateTs(S.chatId);}, onMedia, onStatus);
   }).catch(function(e){
     rmTyping();
-    if(e.name==='AbortError'){if(full){S.msgs[S.msgs.length-1].content=full;saveMsg(S.msgs[S.msgs.length-1]).catch(function(){});updateLastAI(full);}else{S.msgs.pop();renderAll();}toast('Stopped','inf');}
+    if(e.name==='AbortError'){if(full){S.msgs[S.msgs.length-1].content=full;saveChatHistory(S.chatId, S.msgs).catch(function(){});updateLastAI(full);}else{S.msgs.pop();renderAll();}toast('Stopped','inf');}
     else{S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});renderAll();handleError(e, 'AI Generation');}
   }).finally(function(){S.streaming=false;S.abort=null;updateCB();});
 }
@@ -1767,10 +1831,7 @@ function regenAI(){
 }
 
 function stopGen(){
-    // Stop Stream
     if(S.abort) S.abort.abort();
-    
-    // Stop Audio if playing
     if(S.currentAudio) {
         try {
             S.currentAudio.pause();
@@ -1852,7 +1913,6 @@ async function loadVoices() {
     } catch(e) { 
         console.error(e);
         list.innerHTML = '<div style="padding:8px;color:var(--danger);font-size:12px;">Failed to load voices</div>';
-        // handleError(e, 'Load Voices'); // Optional: Don't toast immediately on load
     }
 }
 
@@ -2060,7 +2120,6 @@ function initEvents(){
     if(item){
       var cid=item.getAttribute('data-cid');
       loadConv(cid);
-      // Ensure list re-renders to show active state
       renderChatList();
       toggleSB(false);
     }
@@ -2116,8 +2175,6 @@ function initEvents(){
 async function init(){
   initTheme();initMarked();initModel();initEvents();setupAuth();renderAll();updateCB();
   initMic();
-  
-  // Load Mic Permission Status
   loadMicPermission();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
