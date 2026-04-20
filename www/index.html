@@ -1706,62 +1706,64 @@ function buildImgHtml(imgs){
 }
 
 function renderAll(){
-  if(!S.msgs.length){showWelcome();return;}
-  showMsgs();var html='';
-  S.msgs.forEach(function(m,i){
-    if(m.role==='assistant'){
-      var isLast=i===S.msgs.length-1;
-      var acts='<div class="msg-acts">';
-      acts+='<button type="button" class="ma" data-act="copy" data-i="'+i+'" data-tip="Copy"><i class="fa-regular fa-copy"></i></button>';
-      acts+='<button type="button" class="ma'+(m.liked?' liked':'')+'" data-act="like" data-i="'+i+'" data-tip="Good"><i class="fa-regular fa-thumbs-up"></i></button>';
-      acts+='<button type="button" class="ma'+(m.disliked?' disliked':'')+'" data-i="'+i+'" data-tip="Bad"><i class="fa-regular fa-thumbs-down"></i></button>';
-      if(isLast&&!S.streaming) acts+='<button type="button" class="ma" data-act="regen" data-i="'+i+'" data-tip="Regenerate"><i class="fa-solid fa-arrows-rotate"></i></button>';
-      acts+='<button type="button" class="ma'+(!S.user?' locked':'')+'" data-act="voice" data-i="'+i+'" data-tip="'+(S.user?'Read aloud':'Sign in')+'"><i class="fa-solid fa-volume-high"></i></button>';
-      acts+='</div>';
-      
-      var imgsHtml = buildImgHtml(m.images || []);
-      
-      html+='<div class="msg ai-msg" id="msg-'+i+'"><div class="msg-inner"><div class="msg-label"><span class="ai-dot"></span> AI <span id="ai-status-'+i+'" class="ai-status"></span></div><div class="msg-ct" id="mc-'+i+'"></div>'+imgsHtml+acts+'<div class="msg-time">'+m.time+'</div></div></div>';
-    }else{
-      // USER MESSAGE - ADDED COLLAPSE WRAPPER
-      var imgs=buildImgHtml(m.images);
-      // ID for the wrapper is mtw-{message_id}
-      var wrapperId = 'mtw-'+m.id;
-      var btnId = 'mtb-'+m.id;
-      
-      var uActs='<div class="msg-acts">';
-      uActs+='<button type="button" class="ma" data-act="copy" data-i="'+i+'" data-tip="Copy"><i class="fa-regular fa-copy"></i></button>';
-      uActs+='<button type="button" class="ma" data-act="edit" data-i="'+i+'" data-tip="Edit"><i class="fa-solid fa-pencil"></i></button>';
-      uActs+='</div>';
+    if (!S.msgs.length) {
+        showWelcome();
+        return;
+    }
+    showMsgs();
+    
+    var msgsEl = $('msgsEl');
+    var currentCount = msgsEl.querySelectorAll('.msg').length;
+    var html = '';
 
-      html+='<div class="msg user-msg" id="msg-'+i+'"><div class="msg-inner"><div class="msg-label">You</div><div class="msg-bubble"><div id="'+wrapperId+'" class="msg-text-wrapper">'+imgs+md(m.content)+'</div><button id="'+btnId+'" class="msg-toggle-btn">Show more</button></div><div class="msg-time">'+m.time+'</div></div>'+uActs+'</div>';
-    }
-  });
-  $('msgsEl').innerHTML=html;
-  
-  S.msgs.forEach(function(m,i){
-    if(m.role==='assistant'){
-      var el=$('mc-'+i);
-      if(el){el.innerHTML=md(m.content);applyMath(el);}
+    // OPTIMIZATION: If loading history, bulk render is fine.
+    // If chatting normally, use incremental rendering (append only).
+    if (S.isLoadingHistory) {
+        if (currentCount === 0) {
+            // Build HTML for all messages once
+            for (var i = 0; i < S.msgs.length; i++) {
+                html += buildMessageHtml(S.msgs[i], i);
+            }
+            msgsEl.innerHTML = html;
+        }
+        S.isLoadingHistory = false; // Reset flag
     } else {
-      // Check height and toggle collapse for user messages
-      var wrapper = $('mtw-'+m.id);
-      var btn = $('mtb-'+m.id);
-      if(wrapper && btn){
-          // Check if content is taller than threshold (160px)
-          if(wrapper.scrollHeight > 160) {
-              wrapper.classList.add('collapsed');
-              btn.style.display = 'block';
-              btn.textContent = 'Show more';
-          } else {
-              wrapper.classList.remove('collapsed');
-              btn.style.display = 'none';
-          }
-      }
+        // APPEND MODE: Only render new messages
+        // Loop from currentCount to end
+        for (var i = currentCount; i < S.msgs.length; i++) {
+             html += buildMessageHtml(S.msgs[i], i);
+        }
+        if (html) {
+            msgsEl.insertAdjacentHTML('beforeend', html);
+        }
     }
-  });
   
-  if(S.isAutoScrolling)scrollBot(true);
+    S.msgs.forEach(function(m, i){
+        if(m.role==='assistant'){
+            var el=$('mc-'+i);
+            if(el) {
+                el.innerHTML = md(m.content);
+                applyMath(el);
+            }
+        } else {
+            // Optimization: Check height only once
+            var wrapper = $('mtw-'+m.id);
+            var btn = $('mtb-'+m.id);
+            if(wrapper && btn) {
+                // Check if content is taller than threshold (160px)
+                if(wrapper.scrollHeight > 160) {
+                    wrapper.classList.add('collapsed');
+                    btn.style.display = 'block';
+                    btn.textContent = 'Show more';
+                } else {
+                    wrapper.classList.remove('collapsed');
+                    btn.style.display = 'none';
+                }
+            }
+        }
+    });
+  
+    if (S.isAutoScrolling) scrollBot(true);
 }
 
 function updateLastAI(content){
