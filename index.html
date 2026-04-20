@@ -6,13 +6,13 @@
 <title>HeloXAi - Advanced AI Companion</title>
 <meta name="description" content="Your advanced AI companion — think, create, code, and explore with intelligence.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
-<!-- Supabase (Library kept, but usage minimized to prevent crashes) -->
+<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<!-- Syntax Highlighting (Markdown Color) -->
+<!-- Syntax Highlighting -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/atom-one-dark.min.css">
 <!-- Math -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
@@ -250,8 +250,38 @@ main{
 .msg.user-msg{padding-left:40px;padding-right:0}
 .msg.user-msg .msg-inner{display:flex;flex-direction:column;align-items:flex-end;max-width:85%;margin-left:auto}
 .msg.user-msg .msg-label{font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:6px;text-align:right}
-.msg.user-msg .msg-bubble{background:var(--bg-user-bubble);border:1px solid var(--bg-user-bubble-border);padding:12px 16px;border-radius:var(--radius-lg) var(--radius-sm) var(--radius-lg) var(--radius-lg);word-break:break-word;width:100%}
+.msg.user-msg .msg-bubble{background:var(--bg-user-bubble);border:1px solid var(--bg-user-bubble-border);padding:12px 16px;border-radius:var(--radius-lg) var(--radius-sm) var(--radius-lg) var(--radius-lg);word-break:break-word;width:100%; display:flex; flex-direction:column;}
 .msg.user-msg .msg-acts{justify-content:flex-end}
+
+/* USER MESSAGE COLLAPSE STYLES */
+.msg-text-wrapper {
+  transition: max-height 0.3s var(--ease);
+  overflow: hidden;
+  width: 100%;
+}
+.msg-text-wrapper.collapsed {
+  max-height: 160px; 
+  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+}
+
+.msg-toggle-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 0 2px 0;
+  width: 100%;
+  text-align: left;
+  display: none; /* Hidden by default */
+  transition: color 0.2s;
+}
+.msg-toggle-btn:hover {
+  color: var(--accent-hover);
+}
+
 .msg-ct{font-size:14.5px;line-height:1.8;color:var(--text-primary);word-break:break-word;overflow-wrap:break-word}
 .msg-ct p{margin:0 0 12px 0}.msg-ct p:last-child{margin-bottom:0}.msg-ct p:only-child{margin-bottom:0}
 .msg-ct ul,.msg-ct ol{margin:8px 0 12px 0;padding-left:26px}
@@ -601,7 +631,12 @@ main{
   </div>
 </div>
 
-<div class="lb" id="lightbox"><button type="button" class="lb-close" id="lbClose" aria-label="Close"><i class="fa-solid fa-xmark"></i></button><div id="lbContent"></div><a class="lb-dl" id="lbDl" download><i class="fa-solid fa-download"></i> Download</a></div>
+<div class="lb" id="lightbox">
+  <button type="button" class="lb-close" id="lbClose" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+  <div id="lbContent"></div>
+  <!-- Download Button is just a visual button, JS handles the click -->
+  <a class="lb-dl" id="lbDl" href="#" download><i class="fa-solid fa-download"></i> Download</a>
+</div>
 
 <div class="modal-ov" id="contactModal"><div class="modal"><h3>Contact Us</h3><p>Have questions or feedback? We'd love to hear from you.</p><p style="color:var(--accent);font-weight:600;font-size:14px">support@heloxai.com</p><button type="button" class="modal-close" data-close="contactModal">Close</button></div></div>
 
@@ -751,7 +786,9 @@ var S = {
   dailyImgLimit: 6, dailyVidLimit: 3,
   mode: 'general', 
   currentAudio: null, 
-  micPermissionKey: 'helox_mic_perm_status' 
+  micPermissionKey: 'helox_mic_perm_status',
+  lbUrl: '', // Store lightbox URL for download
+  lbType: '' // Store lightbox type
 };
 
 var IMG_KW=['generate image','create image','make image','draw me','render image'];
@@ -1313,7 +1350,7 @@ function saveEdit(){
   if(idx===null||idx<0||idx>=S.msgs.length||(!txt&&!S.editingFiles.length)) return;
   
   // ChatGPT Behavior: 
-  // 1. Truncate history from the edited message onwards (including the message itself).
+  // 1. Truncate history from edited message onwards (including message itself).
   // 2. Update pending files with the new files from the editor.
   // 3. Send the updated message as if it were new.
   
@@ -1500,8 +1537,38 @@ function renderGallery(){
   });
   grid.innerHTML=html;
 }
-function openLB(src,isV){$('lbContent').innerHTML=isV?'<video src="'+src+'" controls autoplay style="max-width:90vw;max-height:85vh;border-radius:18px">':'<img src="'+src+'" style="max-width:90vw;max-height:85vh;border-radius:18px">';$('lbDl').href=src;$('lbDl').download='heloxai';$('lightbox').classList.add('on');}
-function closeLB(){$('lightbox').classList.remove('on');$('lbContent').innerHTML='';}
+function openLB(src,isV){S.lbUrl=src;S.lbType=isV?'video':'image';$('lbContent').innerHTML=isV?'<video src="'+src+'" controls autoplay style="max-width:90vw;max-height:85vh;border-radius:18px">':'<img src="'+src+'" style="max-width:90vw;max-height:85vh;border-radius:18px">';$('lightbox').classList.add('on');}
+function closeLB(){$('lightbox').classList.remove('on');$('lbContent').innerHTML='';S.lbUrl='';}
+
+/* ========== DOWNLOAD LOGIC (FIXED) ========== */
+async function downloadResource(url) {
+  if(!url) return;
+  toast('Downloading...', 'inf');
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Network response was not ok");
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    // Determine extension based on type
+    const isVideo = url.match(/\.(mp4|webm|mov)$/i);
+    const ext = isVideo ? '.mp4' : '.jpg';
+    link.download = 'heloxai-' + Date.now() + ext;
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    window.URL.revokeObjectURL(blobUrl);
+  } catch (error) {
+    console.error('Download failed:', error);
+    toast('Download failed', 'err');
+    // Fallback
+    window.open(url, '_blank');
+  }
+}
 
 function updateAiStatus(idx, text) {
     var el = document.getElementById('ai-status-' + idx);
@@ -1556,14 +1623,18 @@ function renderAll(){
       
       html+='<div class="msg ai-msg" id="msg-'+i+'"><div class="msg-inner"><div class="msg-label"><span class="ai-dot"></span> AI <span id="ai-status-'+i+'" class="ai-status"></span></div><div class="msg-ct" id="mc-'+i+'"></div>'+imgsHtml+acts+'<div class="msg-time">'+m.time+'</div></div></div>';
     }else{
-      // USER MESSAGE - ADDED MENU ACTIONS
+      // USER MESSAGE - ADDED COLLAPSE WRAPPER
       var imgs=buildImgHtml(m.images);
+      // ID for the wrapper is mtw-{message_id}
+      var wrapperId = 'mtw-'+m.id;
+      var btnId = 'mtb-'+m.id;
+      
       var uActs='<div class="msg-acts">';
       uActs+='<button type="button" class="ma" data-act="copy" data-i="'+i+'" data-tip="Copy"><i class="fa-regular fa-copy"></i></button>';
       uActs+='<button type="button" class="ma" data-act="edit" data-i="'+i+'" data-tip="Edit"><i class="fa-solid fa-pencil"></i></button>';
       uActs+='</div>';
 
-      html+='<div class="msg user-msg" id="msg-'+i+'"><div class="msg-inner"><div class="msg-label">You</div><div class="msg-bubble">'+imgs+md(m.content)+'</div><div class="msg-time">'+m.time+'</div></div>'+uActs+'</div>';
+      html+='<div class="msg user-msg" id="msg-'+i+'"><div class="msg-inner"><div class="msg-label">You</div><div class="msg-bubble"><div id="'+wrapperId+'" class="msg-text-wrapper">'+imgs+md(m.content)+'</div><button id="'+btnId+'" class="msg-toggle-btn">Show more</button></div><div class="msg-time">'+m.time+'</div></div>'+uActs+'</div>';
     }
   });
   $('msgsEl').innerHTML=html;
@@ -1572,6 +1643,21 @@ function renderAll(){
     if(m.role==='assistant'){
       var el=$('mc-'+i);
       if(el){el.innerHTML=md(m.content);applyMath(el);}
+    } else {
+      // Check height and toggle collapse for user messages
+      var wrapper = $('mtw-'+m.id);
+      var btn = $('mtb-'+m.id);
+      if(wrapper && btn){
+          // Check if content is taller than threshold (160px)
+          if(wrapper.scrollHeight > 160) {
+              wrapper.classList.add('collapsed');
+              btn.style.display = 'block';
+              btn.textContent = 'Show more';
+          } else {
+              wrapper.classList.remove('collapsed');
+              btn.style.display = 'none';
+          }
+      }
     }
   });
   
@@ -2064,6 +2150,27 @@ function initEvents(){
 
   /* ===== DELEGATED CLICKS ===== */
   document.addEventListener('click',function(e){
+    /* Show More / Show Less Logic */
+    var tgBtn = e.target.closest('.msg-toggle-btn');
+    if(tgBtn){
+        e.stopPropagation();
+        var btnId = tgBtn.id.replace('mtb-', '');
+        var wrapper = $('mtw-'+btnId);
+        if(wrapper) {
+            wrapper.classList.toggle('collapsed');
+            tgBtn.textContent = wrapper.classList.contains('collapsed') ? 'Show more' : 'Show less';
+        }
+        return;
+    }
+
+    /* Download Button Logic */
+    if(e.target.closest('#lbDl')){
+        e.preventDefault(); // Stop default link behavior
+        e.stopPropagation();
+        downloadResource(S.lbUrl);
+        return;
+    }
+
     var cpBtn=e.target.closest('[data-action="copy-code"]');
     if(cpBtn){
       e.stopPropagation();
