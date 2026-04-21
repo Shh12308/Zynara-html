@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>HeloXAi - Advanced AI Companion</title>
 <meta name="description" content="Your advanced AI companion — think, create, code, and explore with intelligence.">
+
+<!-- FAVICON & PWA ICONS (Self-contained Data URIs) -->
+<!-- Standard Favicon -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%2310b981'/%3E%3Cstop offset='100%25' style='stop-color:%23059669'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23g)'/%3E%3Ctext x='50' y='68' font-family='Arial, sans-serif' font-size='60' font-weight='bold' fill='white' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
+<!-- Apple Touch Icon (Splash for iOS) -->
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%2310b981'/%3E%3Cstop offset='100%25' style='stop-color:%23059669'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='20' fill='url(%23g)'/%3E%3Ctext x='50' y='68' font-family='Arial, sans-serif' font-size='60' font-weight='bold' fill='white' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
+<!-- PWA Meta -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#08080c">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
@@ -23,7 +34,6 @@
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
 
-<link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 
@@ -311,7 +321,7 @@ main{
   min-height:0;
   touch-action: pan-y;
   scroll-padding-bottom: 120px;
-  scroll-behavior: smooth; /* Added for smoother native scrolling */
+  scroll-behavior: smooth;
 }
 .msgs-inner{max-width:var(--msg-max);margin:0 auto;padding:24px 24px 8px;width:100%;flex:1;min-height:0}
 
@@ -357,12 +367,10 @@ main{
   transition: max-height 0.4s var(--ease-out), opacity 0.2s var(--ease-out);
   overflow: hidden;
   width: 100%;
-  /* Prevent content shift */
   transform: translateZ(0); 
 }
 .msg-text-wrapper.collapsed {
   max-height: 160px; 
-  /* Smooth gradient fade */
   -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
   mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
 }
@@ -691,12 +699,10 @@ main{
   <button type="button" class="scroll-bot" id="scrollBot" aria-label="Scroll to bottom"><i class="fa-solid fa-chevron-down"></i></button>
   
   <div class="cb-container" id="cbContainer">
-    <!-- Moved image preview strip here to sit above chatbar -->
     <div id="imgPreviewStrip" style="display:none"></div>
 
     <div class="cb-wrap">
       <div class="chatbar" id="chatbar">
-        <!-- Strip removed from here so chatbar stays full size -->
         <button type="button" class="cb-btn" id="fileBtn" aria-label="Upload file"><i class="fa-solid fa-paperclip"></i></button>
         <button type="button" class="cb-btn" id="asBtn" aria-label="Quick actions"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
         <textarea class="cb-input" id="cbInput" placeholder="Message HeloXAi..." rows="1" aria-label="Chat input"></textarea>
@@ -734,7 +740,6 @@ main{
 <div class="lb" id="lightbox">
   <button type="button" class="lb-close" id="lbClose" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
   <div id="lbContent"></div>
-  <!-- Download Button is just a visual button, JS handles to click -->
   <a class="lb-dl" id="lbDl" href="#" download><i class="fa-solid fa-download"></i> Download</a>
 </div>
 
@@ -1425,7 +1430,6 @@ function openEdit(idx){
   if(idx<0||idx>=S.msgs.length) return;
   var m=S.msgs[idx];
   S.editingIndex=idx;
-  // Deep copy images so editing them doesn't affect history until saved
   S.editingFiles = m.images ? m.images.map(function(i){return{name:i.name||'Image',dataUrl:i.dataUrl||i.url,type:'image'};}):[];
   
   $('emTextarea').value=m.content;
@@ -1446,21 +1450,10 @@ function saveEdit(){
   var idx=S.editingIndex;
   var txt=$('emTextarea').value.trim();
   
-  // Validation: If editing an existing message, ensure we have something
   if(idx===null||idx<0||idx>=S.msgs.length||(!txt&&!S.editingFiles.length)) return;
   
-  // ChatGPT Behavior: 
-  // 1. Truncate history from edited message onwards (including message itself).
-  // 2. Update pending files with the new files from the editor.
-  // 3. Send the updated message as if it were new.
-  
-  // Cut off the old message and everything after it
   S.msgs = S.msgs.slice(0, idx);
   
-  // Prepare files for sending (convert back to format expected by sendMsg)
-  // S.editingFiles contains {name, dataUrl, type}. 
-  // sendMsg expects S.pendingFiles to have {name, dataUrl, type, file, size}.
-  // We create File objects from the dataUrls.
   var filePromises = S.editingFiles.map(function(f) {
       return dataUrlToFile(f.dataUrl, f.name).then(function(fileObj) {
           return {
@@ -1474,18 +1467,11 @@ function saveEdit(){
   });
   
   Promise.all(filePromises).then(function(processedFiles){
-      // Set these as pending files
       S.pendingFiles = processedFiles;
-      
-      // Close modal
       closeEdit();
-      
-      // Resend logic: The sendMsg function handles adding the user message to S.msgs
-      // and then generating the AI response. This effectively "regenerates" the conversation branch.
       sendMsg(txt);
   }).catch(function(e){
       handleError(e, 'File Processing');
-      // Fallback: just send text if file processing fails
       S.pendingFiles = [];
       closeEdit();
       sendMsg(txt);
@@ -1518,6 +1504,10 @@ function actLike(idx, type){
   if(type==='like'){m.liked=!m.liked;m.disliked=false;}
   else{m.disliked=!m.disliked;m.liked=false;}
   renderAll();
+  
+  // UX Feedback fix
+  if(m.liked) toast('Liked', 'ok');
+  if(m.disliked) toast('Feedback received', 'ok');
 }
 
 async function actVoice(idx){
@@ -1652,7 +1642,6 @@ async function downloadResource(url) {
     
     const link = document.createElement('a');
     link.href = blobUrl;
-    // Determine extension based on type
     const isVideo = url.match(/\.(mp4|webm|mov)$/i);
     const ext = isVideo ? '.mp4' : '.jpg';
     link.download = 'heloxai-' + Date.now() + ext;
@@ -1665,7 +1654,6 @@ async function downloadResource(url) {
   } catch (error) {
     console.error('Download failed:', error);
     toast('Download failed', 'err');
-    // Fallback
     window.open(url, '_blank');
   }
 }
@@ -1705,7 +1693,6 @@ function buildImgHtml(imgs){
   return html+'</div>';
 }
 
-/* ========== ADDED MISSING FUNCTION buildMessageHtml ========== */
 function buildMessageHtml(m, i) {
   var isAi = m.role === 'assistant';
   var roleClass = isAi ? 'ai-msg' : 'user-msg';
@@ -1716,11 +1703,8 @@ function buildMessageHtml(m, i) {
       html += '<div class="msg ' + roleClass + '">';
       html += '  <div class="msg-inner">';
       html += '    <div class="msg-label"><span class="ai-dot"></span> AI <span id="ai-status-' + i + '" class="ai-status"></span></div>';
-      // Content container for AI (Markdown injected later)
       html += '    <div id="mc-' + i + '" class="msg-ct"></div>';
-      // Images
       if (m.images && m.images.length) html += buildImgHtml(m.images);
-      // Actions
       html += '    <div class="msg-acts">';
       html += '      <button class="ma" data-act="copy" data-i="' + i + '"><i class="fa-regular fa-copy"></i></button>';
       html += '      <button class="ma' + (m.liked?' liked':'') + '" data-act="like" data-i="' + i + '"><i class="fa-regular fa-thumbs-up"></i></button>';
@@ -1736,13 +1720,13 @@ function buildMessageHtml(m, i) {
       html += '  <div class="msg-inner">';
       html += '    <div class="msg-label">' + name + '</div>';
       html += '    <div class="msg-bubble">';
-      // Raw text wrapper for collapse logic
       html += '      <div class="msg-text-wrapper" id="mtw-' + m.id + '">' + esc(m.content) + '</div>';
       html += '      <button class="msg-toggle-btn" id="mtb-' + m.id + '">Show more</button>';
       if (m.images && m.images.length) html += buildImgHtml(m.images);
       html += '    </div>';
-      // Actions for user (Edit)
+      // Updated User Actions: Added Copy Button
       html += '    <div class="msg-acts">';
+      html += '      <button class="ma" data-act="copy" data-i="' + i + '"><i class="fa-regular fa-copy"></i></button>';
       html += '      <button class="ma" data-act="edit" data-i="' + i + '"><i class="fa-solid fa-pen"></i></button>';
       html += '    </div>';
       html += '    <div class="msg-time">' + m.time + '</div>';
@@ -1763,20 +1747,15 @@ function renderAll(){
     var currentCount = msgsEl.querySelectorAll('.msg').length;
     var html = '';
 
-    // OPTIMIZATION: If loading history, bulk render is fine.
-    // If chatting normally, use incremental rendering (append only).
     if (S.isLoadingHistory) {
         if (currentCount === 0) {
-            // Build HTML for all messages once
             for (var i = 0; i < S.msgs.length; i++) {
                 html += buildMessageHtml(S.msgs[i], i);
             }
             msgsEl.innerHTML = html;
         }
-        S.isLoadingHistory = false; // Reset flag
+        S.isLoadingHistory = false;
     } else {
-        // APPEND MODE: Only render new messages
-        // Loop from currentCount to end
         for (var i = currentCount; i < S.msgs.length; i++) {
              html += buildMessageHtml(S.msgs[i], i);
         }
@@ -1793,11 +1772,9 @@ function renderAll(){
                 applyMath(el);
             }
         } else {
-            // Optimization: Check height only once
             var wrapper = $('mtw-'+m.id);
             var btn = $('mtb-'+m.id);
             if(wrapper && btn) {
-                // Check if content is taller than threshold (160px)
                 if(wrapper.scrollHeight > 160) {
                     wrapper.classList.add('collapsed');
                     btn.style.display = 'block';
@@ -2314,7 +2291,7 @@ function initEvents(){
 
     /* Download Button Logic */
     if(e.target.closest('#lbDl')){
-        e.preventDefault(); // Stop default link behavior
+        e.preventDefault();
         e.stopPropagation();
         downloadResource(S.lbUrl);
         return;
