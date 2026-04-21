@@ -1705,6 +1705,53 @@ function buildImgHtml(imgs){
   return html+'</div>';
 }
 
+/* ========== ADDED MISSING FUNCTION buildMessageHtml ========== */
+function buildMessageHtml(m, i) {
+  var isAi = m.role === 'assistant';
+  var roleClass = isAi ? 'ai-msg' : 'user-msg';
+  var name = isAi ? 'AI' : 'You';
+  var html = '';
+
+  if (isAi) {
+      html += '<div class="msg ' + roleClass + '">';
+      html += '  <div class="msg-inner">';
+      html += '    <div class="msg-label"><span class="ai-dot"></span> AI <span id="ai-status-' + i + '" class="ai-status"></span></div>';
+      // Content container for AI (Markdown injected later)
+      html += '    <div id="mc-' + i + '" class="msg-ct"></div>';
+      // Images
+      if (m.images && m.images.length) html += buildImgHtml(m.images);
+      // Actions
+      html += '    <div class="msg-acts">';
+      html += '      <button class="ma" data-act="copy" data-i="' + i + '"><i class="fa-regular fa-copy"></i></button>';
+      html += '      <button class="ma' + (m.liked?' liked':'') + '" data-act="like" data-i="' + i + '"><i class="fa-regular fa-thumbs-up"></i></button>';
+      html += '      <button class="ma' + (m.disliked?' disliked':'') + '" data-act="dislike" data-i="' + i + '"><i class="fa-regular fa-thumbs-down"></i></button>';
+      html += '      <button class="ma' + (isAuthed()?'':' locked') + '" data-act="voice" data-i="' + i + '"><i class="fa-solid fa-volume-high"></i></button>';
+      html += '      <button class="ma" data-act="regen" data-i="' + i + '"><i class="fa-solid fa-rotate-right"></i></button>';
+      html += '    </div>';
+      html += '    <div class="msg-time">' + m.time + '</div>';
+      html += '  </div>';
+      html += '</div>';
+  } else {
+      html += '<div class="msg ' + roleClass + '">';
+      html += '  <div class="msg-inner">';
+      html += '    <div class="msg-label">' + name + '</div>';
+      html += '    <div class="msg-bubble">';
+      // Raw text wrapper for collapse logic
+      html += '      <div class="msg-text-wrapper" id="mtw-' + m.id + '">' + esc(m.content) + '</div>';
+      html += '      <button class="msg-toggle-btn" id="mtb-' + m.id + '">Show more</button>';
+      if (m.images && m.images.length) html += buildImgHtml(m.images);
+      html += '    </div>';
+      // Actions for user (Edit)
+      html += '    <div class="msg-acts">';
+      html += '      <button class="ma" data-act="edit" data-i="' + i + '"><i class="fa-solid fa-pen"></i></button>';
+      html += '    </div>';
+      html += '    <div class="msg-time">' + m.time + '</div>';
+      html += '  </div>';
+      html += '</div>';
+  }
+  return html;
+}
+
 function renderAll(){
     if (!S.msgs.length) {
         showWelcome();
@@ -2457,21 +2504,5 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
 })();
 </script>
-
-
-    <script>
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker
-        .register("/sw.js")
-        .then((registration) => {
-          console.log("Service Worker registered:", registration.scope);
-        })
-        .catch((error) => {
-          console.log("Service Worker registration failed:", error);
-        });
-    });
-  }
-</script>
-</body>
+  </body>
 </html>
