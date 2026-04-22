@@ -70,6 +70,48 @@
     .section-title { font-size: 2.5rem; font-weight: 600; color: var(--text-primary); text-align: center; margin-bottom: 20px; }
     .section-subtitle { font-size: 1.1rem; color: var(--text-secondary); text-align: center; max-width: 700px; margin: 0 auto 50px; }
 
+    #countdown {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-family: 'Poppins', monospace;
+}
+
+.time-box {
+  background: linear-gradient(145deg, #1e293b, #0f172a);
+  border: 1px solid rgba(0,224,255,0.2);
+  border-radius: 12px;
+  padding: 15px 18px;
+  min-width: 70px;
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: var(--primary-cyan);
+  position: relative;
+  animation: popIn 0.3s ease;
+}
+
+.time-box span {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 5px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+@keyframes popIn {
+  from { transform: scale(0.9); opacity: 0.6; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.expired {
+  color: var(--error);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+    
     /* BENEFITS GRID */
     .benefits-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
     .benefit-card {
@@ -601,22 +643,52 @@
     debugBanner.innerHTML = html;
   }
 
-  function startCountdown() {
-    // Set target date (Example: 7 days from now)
-    var target = new Date();
-    target.setDate(target.getDate() + 29/04/2026); 
+function startCountdown() {
+  // ✅ SET YOUR EXACT END DATE HERE (YYYY, MM-1, DD, HH, MM, SS)
+  // Example: April 29, 2026 at midnight
+  var target = new Date(2026, 3, 29, 0, 0, 0); 
+  // Month is 0-based → 3 = April
 
-    var el = document.getElementById('countdown');
-    if (!el) return;
-    
-    function tick() {
-      var d = target - new Date().getTime();
-      if (d <= 0) { el.textContent = 'Offer Ended'; return; }
-      el.textContent = Math.floor(d/86400000) + 'd ' + Math.floor((d%86400000)/3600000) + 'h ' + Math.floor((d%3600000)/60000) + 'm ' + Math.floor((d%60000)/1000) + 's';
+  var el = document.getElementById('countdown');
+  if (!el) return;
+
+  function tick() {
+    var now = new Date().getTime();
+    var distance = target.getTime() - now;
+
+    if (distance <= 0) {
+      el.textContent = 'Offer Ended';
+      return;
     }
-    tick();
-    setInterval(tick, 1000);
+
+    var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+    var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+    el.textContent = days + 'd ' + hours + 'h ' + minutes + 'm ' + seconds + 's';
   }
+
+  tick();
+  setInterval(tick, 1000);
+}
+
+  function renderAnimated(d, h, m, s) {
+  const el = document.getElementById('countdown');
+
+  el.innerHTML = `
+    <div class="time-box">${pad(d)}<span>Days</span></div>
+    <div class="time-box">${pad(h)}<span>Hours</span></div>
+    <div class="time-box">${pad(m)}<span>Min</span></div>
+    <div class="time-box">${pad(s)}<span>Sec</span></div>
+  `;
+}
+
+function pad(n) {
+  return n.toString().padStart(2, '0');
+}
+
+  
 
   function initFAQ() {
     document.querySelectorAll('.faq-question').forEach(function(q) {
