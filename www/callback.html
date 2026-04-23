@@ -98,15 +98,20 @@ const spinner = document.getElementById("spinner");
 const supabaseUrl = window.__ENV__?.SUPABASE_URL;
 const supabaseKey = window.__ENV__?.SUPABASE_ANON_KEY;
 
-function showError(msg) {
+function showError(msg, allowReload = true) {
   spinner.style.display = "none";
   statusEl.style.display = "none";
   errorEl.style.display = "block";
   errorMsg.textContent = msg;
+  
+  // Hide reload button if it's a config error
+  if(!allowReload) {
+    errorEl.querySelector('button').style.display = 'none';
+  }
 }
 
 if (!supabaseUrl || !supabaseKey) {
-  showError("Missing Supabase environment config.");
+  showError("Missing Supabase environment config.", false);
   throw new Error("Missing env");
 }
 
@@ -115,7 +120,7 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    storage: localStorage
+    storage: window.localStorage 
   }
 });
 
@@ -123,7 +128,7 @@ async function run() {
   try {
     statusEl.textContent = "Checking session...";
 
-    // ✅ SAFE METHOD (no PKCE crash)
+    // 1. Attempt to get session (Supabase automatically checks URL if detectSessionInUrl is true)
     const { data, error } = await supabase.auth.getSession();
 
     if (error) throw error;
@@ -131,14 +136,28 @@ async function run() {
     const session = data?.session;
     const user = session?.user;
 
-    if (!session || !user) {
-      showError("No active session found. Please log in again.");
+    // 2. HELPER: Detect if we are stuck with "Stale" tokens in the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const hasTokensInUrl = urlParams.has('access_token') || hashParams.has('access_token');
+
+    if (!session) {
+      // If there are no tokens in storage BUT there are tokens in the URL, 
+      // it means the URL tokens were invalid/expired (stale).
+      // We must clean the URL to prevent a reload loop.
+      if (hasTokensInUrl) {
+        console.warn("Detected stale tokens in URL. Cleaning...");
+        const cleanUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
+      
+      showError("No active session found. Login link may have expired.");
       return;
     }
 
+    // 3. Check Account Status
     statusEl.textContent = "Checking account...";
-
-    // Optional ban check (safe)
+    
     try {
       const { data: profile } = await supabase
         .from("users")
