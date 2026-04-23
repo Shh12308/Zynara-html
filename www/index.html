@@ -671,6 +671,7 @@ main{
 </div>
 
 <div class="toast-ct" id="toastCt"></div>
+<!-- Assuming env.js might not be present, we handle errors gracefully -->
 <script src="env.js"></script>
 <script>
 /* =========================================
@@ -802,13 +803,26 @@ function loadLocalChats() {
     } catch(e) { console.error('Error loading local chats', e); }
     return [];
 }
+
+/* OPTIMIZED: Strip heavy image data to prevent LocalStorage Quota Exceeded errors for mass users */
 function saveChatHistory(id, msgs) {
     try {
-        var toSave = msgs.slice(-100); 
+        // Create a clean copy of messages for storage
+        var toSave = msgs.slice(-100).map(function(m) {
+            var nm = { ...m };
+            // Remove heavy data URLs to prevent crashing user storage
+            delete nm.dataUrl;
+            if(nm.images) {
+                nm.images = nm.images.map(function(img) {
+                    return { url: img.url, name: img.name, type: img.type };
+                });
+            }
+            return nm;
+        }); 
         localStorage.setItem('helox_history_' + id, JSON.stringify(toSave));
         var c = S.chatListData.find(function(x){ return x.id === id; });
         if(c) { c.updated_at = new Date().toISOString(); saveLocalChats(); renderChatList(); }
-    } catch(e) { console.warn("Could not save chat history", e); }
+    } catch(e) { console.warn("Could not save chat history (Quota exceeded?)", e); }
 }
 function loadChatHistory(id) {
     try { var raw = localStorage.getItem('helox_history_' + id); if (raw) return JSON.parse(raw); } catch(e) {}
@@ -950,8 +964,13 @@ async function loadChatList(){
   renderChatList();
 }
 async function startNewChat(){
+  // FIX: Stop generation to prevent state corruption
+  if(S.streaming) stopGen();
+
   S.chatId = uid();
   S.msgs = [];
+  S.gallery = []; // Clear gallery on new chat
+  
   var newTitle = 'New Chat ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   var newMeta = { id: S.chatId, title: newTitle, updated_at: new Date().toISOString() };
   S.chatListData.unshift(newMeta);
@@ -961,6 +980,7 @@ async function startNewChat(){
   $('hdrTitle').textContent = newTitle;
   renderAll();
   if(S.sbOpen) toggleSB(false);
+  
   try {
     if(!apiUrl()) throw new Error("API not configured");
     var r=await fetch(apiUrl()+'/newchat',{
@@ -1238,17 +1258,37 @@ function actLike(idx, type){
   if(m.disliked) toast('Feedback received', 'ok');
 }
 
-/* FIXED: Voice Reply Logic */
+/* FIXED: Hybrid Voice Reply Logic */
 async function actVoice(idx){
   var m=S.msgs[idx];
   if(!m||!m.content) return;
+  
+  // Visual feedback immediately
+  toast('Preparing audio...', 'inf');
+  
+  // Clean text
+  var textToRead = m.content.replace(/<[^>]*>/g,'').substring(0, 2000); // Limit length for browser TTS safety
+
+  // Try Native Browser TTS first (Fastest, most reliable for mass users)
+  if ('speechSynthesis' in window) {
+      try {
+          var utterance = new SpeechSynthesisUtterance(textToRead);
+          utterance.rate = 1.0;
+          utterance.pitch = 1.0;
+          window.speechSynthesis.cancel(); // Stop any previous audio
+          window.speechSynthesis.speak(utterance);
+          toast('Reading locally...', 'ok');
+          return; 
+      } catch (e) {
+          console.warn('Native TTS failed', e);
+      }
+  }
+
+  // Fallback to API if native fails or preferred (and user is authed)
   if(!isAuthed()){
-      toast('Sign in to use voice reply','wrn');
+      toast('Sign in for advanced voice', 'wrn');
       return;
   }
-  
-  var textToRead = m.content.replace(/<[^>]*>/g,'');
-  toast('Generating audio...', 'inf');
 
   try {
     if(!apiUrl()) throw new Error("API not configured");
@@ -1444,8 +1484,8 @@ function buildMessageHtml(m, i) {
       html += '      <button class="ma" data-act="copy" data-i="' + i + '"><i class="fa-regular fa-copy"></i></button>';
       html += '      <button class="ma' + (m.liked?' liked':'') + '" data-act="like" data-i="' + i + '"><i class="fa-regular fa-thumbs-up"></i></button>';
       html += '      <button class="ma' + (m.disliked?' disliked':'') + '" data-act="dislike" data-i="' + i + '"><i class="fa-regular fa-thumbs-down"></i></button>';
-      // Voice Reply: Lock if not authed
-      html += '      <button class="ma' + (isAuthed()?'':' locked') + '" data-act="voice" data-i="' + i + '"><i class="fa-solid fa-volume-high"></i></button>';
+      // Voice Reply Button
+      html += '      <button class="ma' + (isAuthed()?'':' locked') + '" data-act="voice" data-i="' + i + '" data-tip="Read Aloud"><i class="fa-solid fa-volume-high"></i></button>';
       html += '      <button class="ma" data-act="regen" data-i="' + i + '"><i class="fa-solid fa-rotate-right"></i></button>';
       html += '    </div>';
       html += '    <div class="msg-time">' + m.time + '</div>';
