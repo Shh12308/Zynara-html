@@ -98,16 +98,18 @@
 *{scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 
 /* =========================================
-   LAYOUT & SCROLL FIX
+   LAYOUT & SCROLL FIX (UPDATED FOR FILL SCREEN)
    ========================================= */
 html, body {
   width: 100%;
-  height: 100vh;
+  /* Use 100dvh to ensure it fills the dynamic viewport (minus mobile bars) */
   height: 100dvh;
   margin: 0;
   padding: 0;
-  overflow: hidden;
+  overflow: hidden; /* Prevent body scroll */
   -webkit-overflow-scrolling: touch;
+  /* Stop bounce/rubber-banding on iOS/Android */
+  overscroll-behavior: none;
   background: var(--bg-primary);
 }
 
@@ -117,7 +119,7 @@ body {
   transition: background var(--speed-slow), color var(--speed-slow);
   -webkit-font-smoothing: antialiased;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   position: relative;
 }
 
@@ -142,7 +144,8 @@ body::before {
   z-index:100;
   display:flex;flex-direction:column;overflow:hidden;
   width:var(--sidebar-w);
-  height: 100vh; height: 100dvh;
+  /* Sidebar should also fill 100dvh to match main */
+  height: 100dvh;
   flex-shrink:0;
   transition:transform .35s var(--ease);
   padding-top: env(safe-area-inset-top);
@@ -204,7 +207,8 @@ main{
   position:relative;
   background:var(--bg-primary);
   overflow:hidden;
-  height: 100vh; height: 100dvh;
+  /* STRICT HEIGHT for fill screen */
+  height: 100dvh;
 }
 .chat-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg-primary);z-index:10;flex-shrink:0;min-height:64px;flex-wrap:wrap; padding-top: max(10px, env(safe-area-inset-top));}
 .hdr-title{font-family:var(--font-display);font-size:16px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.2px}
@@ -405,14 +409,15 @@ main{
   gap: 10px;
   flex-wrap: wrap;
   margin-bottom: 8px;
-  padding: 6px;
+  padding: 8px;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  max-height: 140px;
+  max-height: 120px;
   overflow-y: auto;
   align-items: center;
   width: 100%;
+  overflow-x: auto;
 }
 
 .cb-input{flex:1;background:none;border:none;outline:none;color:var(--text-primary);font-family:var(--font-body);font-size:16px;line-height:1.5;resize:none;max-height:200px;padding:6px 8px;min-height:26px}
@@ -772,8 +777,8 @@ var S = {
   dailyImgLimit: 6, dailyVidLimit: 3,
   mode: 'general', 
   currentAudio: null, 
-  lbUrl: '', 
-  lbType: '' 
+  lbUrl:'', 
+  lbType:'' 
 };
 
 var IMG_KW=['generate image','create image','make image','draw me','render image'];
@@ -932,7 +937,7 @@ async function setupAuth(){
     S.user=null; refreshUI(); 
   }
   sb.auth.onAuthStateChange(async function(ev,sess){
-    try {
+    try{
         if(ev==='SIGNED_OUT'){ doSignOut(); return; }
         if(ev==='INITIAL_SESSION'||ev==='SIGNED_IN'||ev==='TOKEN_REFRESHED'){
           if(sess&&sess.user){
@@ -964,12 +969,11 @@ async function loadChatList(){
   renderChatList();
 }
 async function startNewChat(){
-  // FIX: Stop generation to prevent state corruption
   if(S.streaming) stopGen();
 
   S.chatId = uid();
   S.msgs = [];
-  S.gallery = []; // Clear gallery on new chat
+  S.gallery = []; 
   
   var newTitle = 'New Chat ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   var newMeta = { id: S.chatId, title: newTitle, updated_at: new Date().toISOString() };
@@ -1173,7 +1177,7 @@ function selectMode(m){
     if(map[m]) toast('Mode: ' + map[m], 'ok');
 }
 
-/* ========== FILE HANDLING ========== */
+/* ========== FILE HANDLING (FIXED) ========== */
 function renderImgPreview(){
   var strip=$('imgPreviewStrip');
   if(!strip) return;
@@ -1184,8 +1188,9 @@ function renderImgPreview(){
   imgs.forEach(function(img,idx){
     var isVideo = img.type === 'video';
     var src = img.dataUrl;
-    var thumb = isVideo ? '<i class="fa-solid fa-play" style="color:white;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:20px;"></i>' : '';
-    html+='<div class="msg-img-item single" style="width:70px;height:70px;position:relative;" data-rm-idx="'+idx+'"><img src="'+src+'" style="width:100%;height:100%;object-fit:cover;">'+thumb+'<button type="button" style="position:absolute;top:0;right:0;background:rgba(0,0,0,.7);color:#fff;border:none;width:20px;height:20px;border-radius:0 6px 0 6px;cursor:pointer;font-size:12px;">×</button></div>';
+    // Thumb styling improved
+    var thumb = isVideo ? '<i class="fa-solid fa-play" style="color:white;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:20px;z-index:1;"></i>' : '';
+    html+='<div class="msg-img-item single" style="width:60px;height:60px;position:relative;flex-shrink:0;" data-rm-idx="'+idx+'"><img src="'+src+'" style="width:100%;height:100%;object-fit:cover;">'+thumb+'<button type="button" style="position:absolute;top:-4px;right:-4px;background:rgba(0,0,0,.8);color:#fff;border:none;width:18px;height:18px;border-radius:50%;cursor:pointer;font-size:10px;z-index:2;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 4px rgba(0,0,0,.3);" title="Remove">×</button></div>';
   });
   strip.innerHTML=html;
 }
@@ -1261,8 +1266,7 @@ function actLike(idx, type){
 /* FIXED: Hybrid Voice Reply Logic */
 async function actVoice(idx){
   var m=S.msgs[idx];
-  if(!m||!m.content) return;
-  
+  if(!m||!m.content) return;  
   // Visual feedback immediately
   toast('Preparing audio...', 'inf');
   
@@ -1484,7 +1488,6 @@ function buildMessageHtml(m, i) {
       html += '      <button class="ma" data-act="copy" data-i="' + i + '"><i class="fa-regular fa-copy"></i></button>';
       html += '      <button class="ma' + (m.liked?' liked':'') + '" data-act="like" data-i="' + i + '"><i class="fa-regular fa-thumbs-up"></i></button>';
       html += '      <button class="ma' + (m.disliked?' disliked':'') + '" data-act="dislike" data-i="' + i + '"><i class="fa-regular fa-thumbs-down"></i></button>';
-      // Voice Reply Button
       html += '      <button class="ma' + (isAuthed()?'':' locked') + '" data-act="voice" data-i="' + i + '" data-tip="Read Aloud"><i class="fa-solid fa-volume-high"></i></button>';
       html += '      <button class="ma" data-act="regen" data-i="' + i + '"><i class="fa-solid fa-rotate-right"></i></button>';
       html += '    </div>';
@@ -1511,6 +1514,12 @@ function buildMessageHtml(m, i) {
   return html;
 }
 
+/* 
+  FIX FOR ISSUE 1:
+  Re-implemented renderAll to completely rebuilds the chat from S.msgs array.
+  This ensures that if images exist in S.msgs, they will always be rendered,
+  preventing the "vanishing" bug caused by previous incremental DOM logic.
+*/
 function renderAll(){
     if (!S.msgs.length) {
         showWelcome();
@@ -1518,19 +1527,17 @@ function renderAll(){
     }
     showMsgs();
     var msgsEl = $('msgsEl');
-    var currentCount = msgsEl.querySelectorAll('.msg').length;
+    
+    // Force rebuild to ensure consistency
+    msgsEl.innerHTML = ''; 
     var html = '';
-    if (S.isLoadingHistory) {
-        if (currentCount === 0) {
-            for (var i = 0; i < S.msgs.length; i++) html += buildMessageHtml(S.msgs[i], i);
-            msgsEl.innerHTML = html;
-        }
-        S.isLoadingHistory = false;
-    } else {
-        for (var i = currentCount; i < S.msgs.length; i++) html += buildMessageHtml(S.msgs[i], i);
-        if (html) msgsEl.insertAdjacentHTML('beforeend', html);
+    
+    for (var i = 0; i < S.msgs.length; i++) {
+        html += buildMessageHtml(S.msgs[i], i);
     }
-  
+    
+    msgsEl.innerHTML = html;
+
     S.msgs.forEach(function(m, i){
         if(m.role==='assistant'){
             var el=$('mc-'+i);
@@ -1646,8 +1653,11 @@ function streamRes(res, onChunk, onDone, onMedia, onStatus) {
         if (line === '[DONE]') { onDone(); finished = true; return; }
         try {
             var json = JSON.parse(line);
-            if (json.type === 'images' && typeof onMedia === 'function') { onMedia({ type: 'image', data: json.images }); return; }
-            if (json.type === 'video' && typeof onMedia === 'function') { onMedia({ type: 'video', url: json.url }); return; }
+            if (json.type === 'media' && typeof onMedia === 'function') { 
+                // Backend sends {type: 'media', media_type: 'image', url: ...}
+                onMedia(json); 
+                return; 
+            }
             if (json.type === 'status' && typeof onStatus === 'function') { onStatus(json.message); return; }
             var text = json.token || json.text || json.content || (json.delta && json.delta.content) || '';
             if (text) { onChunk(text); }
@@ -1756,22 +1766,36 @@ function sendToAI(text){
       var idx = S.msgs.length - 1;
       if(!S.msgs[idx]) return;
       if(!S.msgs[idx].images) S.msgs[idx].images = [];
+      
+      // Map backend media_type to frontend type
+      var mediaType = 'image'; // Default
+      if (data.media_type === 'video' || (data.url && (data.url.includes('.mp4') || data.url.includes('.webm')))) {
+          mediaType = 'video';
+      }
+
       if(data.type === 'image'){
           data.data.forEach(function(img){
-              S.msgs[idx].images.push(img);
-              if(!S.gallery.some(function(g){return g.url===img.url})) S.gallery.unshift({type:'image',url:img.url,prompt:'Generated',id:uid()});
+              // Ensure we have a url from backend
+              var url = img.url || img;
+              S.msgs[idx].images.push({
+                  url: url, 
+                  name: 'Generated', 
+                  type: mediaType
+              });
+              if(!S.gallery.some(function(g){return g.url===url})) S.gallery.unshift({type:mediaType,url:url,prompt:'Generated',id:uid()});
               incrementUsage('images');
               var el=$('mc-'+idx);
-              if(el) el.insertAdjacentHTML('beforeend', '<div class="img-wrap"><img src="'+img.url+'" loading="lazy"></div>');
+              if(el) el.insertAdjacentHTML('beforeend', '<div class="img-wrap"><img src="'+url+'" loading="lazy"></div>');
           });
       } else if (data.type === 'video') {
-          var vidObj = {type:'video', url:data.url};
+          var vidObj = {type:mediaType, url:data.url};
           S.msgs[idx].images.push(vidObj);
-          if(!S.gallery.some(function(g){return g.url===data.url})) S.gallery.unshift({type:'video',url:data.url,prompt:'Generated',id:uid()});
+          if(!S.gallery.some(function(g){return g.url===data.url})) S.gallery.unshift({type:mediaType,url:data.url,prompt:'Generated',id:uid()});
           incrementUsage('videos');
           var el=$('mc-'+idx);
           if(el) el.insertAdjacentHTML('beforeend', '<div class="img-wrap"><video src="'+data.url+'" controls autoplay loop muted playsinline></video></div>');
       }
+      renderAll(); // Important: Trigger full re-render so image is definitely attached to DOM
       scrollBot(true);
   };
 
@@ -1960,10 +1984,17 @@ function initEvents(){
     if(S.vdOpen && $('voiceList').children.length === 0) loadVoices();
   });
 
-  /* File upload */
+  /* File Upload - FIXED LIMIT 2 */
   $('fileBtn').addEventListener('click',function(e){e.stopPropagation();$('fileInput').click();});
   $('fileInput').addEventListener('change',function(){
     var files=this.files;if(!files||!files.length)return;
+    
+    // FIX: Limit to 2 files max
+    if(files.length > 2) {
+        toast('Only 2 files allowed at a time', 'wrn');
+        files = Array.from(files).slice(0, 2); // Take first 2
+    }
+    
     var promises=[];
     for(var i=0;i<files.length;i++){(function(file){
       if(isImgFile(file)){promises.push(readAsDataUrl(file).then(function(url){S.pendingFiles.push({type:'image',dataUrl:url,name:file.name,size:file.size,file:file});}));}
