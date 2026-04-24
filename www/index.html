@@ -279,6 +279,43 @@ main{
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+  .cookie-banner {
+      position: fixed; bottom: 20px; left: 20px; right: 20px;
+      background: rgba(15,23,42,0.95); color: #f1f5f9;
+      padding: 18px 20px; border: 1px solid rgba(14,165,165,0.2);
+      border-radius: 14px; display: none; z-index: 1000;
+      font-family: var(--font); font-size: 13px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5); backdrop-filter: blur(16px);
+    }
+    .cookie-banner.visible { display: block; animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(24px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .cookie-banner p { margin: 0 0 14px 0; line-height: 1.5; }
+    .cookie-banner a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+    .cookie-actions { display: flex; gap: 10px; }
+    .cookie-accept {
+      background: linear-gradient(90deg, var(--accent2), var(--accent3));
+      color: #062022; border: none; padding: 9px 20px; border-radius: 8px;
+      cursor: pointer; font-weight: 600; font-family: var(--font); font-size: 13px;
+      -webkit-appearance: none; appearance: none; outline: none;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .cookie-accept:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(14,165,165,0.3); }
+    .cookie-accept:active { transform: translateY(0); }
+    .cookie-decline {
+      background: transparent; color: var(--muted);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 9px 20px; border-radius: 8px; cursor: pointer;
+      font-family: var(--font); font-size: 13px;
+      -webkit-appearance: none; appearance: none; outline: none;
+      transition: all 0.15s;
+    }
+    .cookie-decline:hover { border-color: rgba(255,255,255,0.2); color: var(--fg); background: rgba(255,255,255,0.03); }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
 .msg.ai-msg{padding-left:0;padding-right:50px}.msg.ai-msg .msg-inner{max-width:100%}
 .msg.ai-msg .msg-label{font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:8px;display:flex;align-items:center;gap:10px}
 .msg.ai-msg .msg-label .ai-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0}
