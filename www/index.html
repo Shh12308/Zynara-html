@@ -670,10 +670,32 @@ main{
   </div>
 </div>
 
+    <div class="cookie-banner" id="cookie-banner" role="dialog" aria-label="Cookie consent">
+    <p><i class="fa-solid fa-cookie-bite" style="color:var(--accent2)"></i>&ensp;We use cookies and local storage to improve your experience. By continuing, you agree to our <a href="priv.html">Privacy Policy</a>.</p>
+    <div class="cookie-actions">
+      <button class="cookie-accept" id="cookie-accept">Accept</button>
+      <button class="cookie-decline" id="cookie-decline">Decline</button>
+    </div>
+  </div> 
+
 <div class="toast-ct" id="toastCt"></div>
 <!-- Assuming env.js might not be present, we handle errors gracefully -->
 <script src="env.js"></script>
 <script>
+ /* ═══════════════════════════════════
+       Cookie consent
+       ═══════════════════════════════════ */
+    const cBanner = document.getElementById('cookie-banner');
+    if (!localStorage.getItem('heloxai_cookie_consent')) cBanner.classList.add('visible');
+    document.getElementById('cookie-accept').addEventListener('click', () => {
+      localStorage.setItem('heloxai_cookie_consent', 'accepted');
+      cBanner.classList.remove('visible');
+    });
+    document.getElementById('cookie-decline').addEventListener('click', () => {
+      localStorage.setItem('heloxai_cookie_consent', 'declined');
+      cBanner.classList.remove('visible');
+    });
+   
 /* =========================================
    ENV FALLBACK & ERROR HANDLING
    ========================================= */
