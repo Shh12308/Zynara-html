@@ -98,17 +98,15 @@
 *{scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 
 /* =========================================
-   LAYOUT & SCROLL FIX (UPDATED FOR FILL SCREEN)
+   LAYOUT
    ========================================= */
 html, body {
   width: 100%;
-  /* Use 100dvh to ensure it fills the dynamic viewport (minus mobile bars) */
   height: 100dvh;
   margin: 0;
   padding: 0;
-  overflow: hidden; /* Prevent body scroll */
+  overflow: hidden;
   -webkit-overflow-scrolling: touch;
-  /* Stop bounce/rubber-banding on iOS/Android */
   overscroll-behavior: none;
   background: var(--bg-primary);
 }
@@ -123,7 +121,6 @@ body {
   position: relative;
 }
 
-/* BACKGROUND NOISE */
 body::before {
   content:'';
   position:fixed; inset:0; pointer-events:none; z-index:9999; opacity:.35;
@@ -144,7 +141,6 @@ body::before {
   z-index:100;
   display:flex;flex-direction:column;overflow:hidden;
   width:var(--sidebar-w);
-  /* Sidebar should also fill 100dvh to match main */
   height: 100dvh;
   flex-shrink:0;
   transition:transform .35s var(--ease);
@@ -207,7 +203,6 @@ main{
   position:relative;
   background:var(--bg-primary);
   overflow:hidden;
-  /* STRICT HEIGHT for fill screen */
   height: 100dvh;
 }
 .chat-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg-primary);z-index:10;flex-shrink:0;min-height:64px;flex-wrap:wrap; padding-top: max(10px, env(safe-area-inset-top));}
@@ -349,8 +344,8 @@ main{
 /* Images & Videos */
 .img-wrap{margin:14px 0;border-radius:var(--radius);overflow:hidden;position:relative;display:inline-block;max-width:100%;border:1px solid var(--border)}
 .img-wrap img,.img-wrap video{display:block;max-width:100%;border-radius:var(--radius)}
-.msg-imgs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-.msg-imgs:only-child{margin-bottom:0}
+.msg-imgs{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
+.msg-imgs:only-child{margin-top:0}
 .msg-img-item{position:relative;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);cursor:pointer;transition:transform .2s var(--ease),border-color .2s var(--ease);flex-shrink:0;touch-action:manipulation}
 .msg-img-item:hover{transform:scale(1.02);border-color:var(--border-active)}
 .msg-img-item img{display:block;object-fit:cover;border-radius:var(--radius)}
@@ -809,18 +804,24 @@ function loadLocalChats() {
     return [];
 }
 
-/* OPTIMIZED: Strip heavy image data to prevent LocalStorage Quota Exceeded errors for mass users */
+/* 
+  FIX: User File Persistence 
+  - For User messages: Keep 'dataUrl' so uploads persist across reloads (within LocalStorage limits).
+  - For AI messages: Strip 'dataUrl' and keep only external 'url' to save space.
+*/
 function saveChatHistory(id, msgs) {
     try {
-        // Create a clean copy of messages for storage
         var toSave = msgs.slice(-100).map(function(m) {
             var nm = { ...m };
-            // Remove heavy data URLs to prevent crashing user storage
-            delete nm.dataUrl;
-            if(nm.images) {
-                nm.images = nm.images.map(function(img) {
-                    return { url: img.url, name: img.name, type: img.type };
-                });
+            
+            // Keep dataUrl for user uploads so they don't disappear on refresh
+            if (m.role !== 'user') {
+                delete nm.dataUrl;
+                if(nm.images) {
+                    nm.images = nm.images.map(function(img) {
+                        return { url: img.url, name: img.name, type: img.type };
+                    });
+                }
             }
             return nm;
         }); 
@@ -855,7 +856,6 @@ function incrementUsage(key) {
 function checkLimits(text) {
     var isMedia = isImgQ(text) || isVidQ(text);
     
-    // FIX: Guests cannot request media generation
     if (isMedia && !isAuthed()) {
         return { allowed: false, msg: 'Please Sign In to generate images or videos.' };
     }
@@ -1188,7 +1188,6 @@ function renderImgPreview(){
   imgs.forEach(function(img,idx){
     var isVideo = img.type === 'video';
     var src = img.dataUrl;
-    // Thumb styling improved
     var thumb = isVideo ? '<i class="fa-solid fa-play" style="color:white;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:20px;z-index:1;"></i>' : '';
     html+='<div class="msg-img-item single" style="width:60px;height:60px;position:relative;flex-shrink:0;" data-rm-idx="'+idx+'"><img src="'+src+'" style="width:100%;height:100%;object-fit:cover;">'+thumb+'<button type="button" style="position:absolute;top:-4px;right:-4px;background:rgba(0,0,0,.8);color:#fff;border:none;width:18px;height:18px;border-radius:50%;cursor:pointer;font-size:10px;z-index:2;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 4px rgba(0,0,0,.3);" title="Remove">×</button></div>';
   });
@@ -1263,74 +1262,69 @@ function actLike(idx, type){
   if(m.disliked) toast('Feedback received', 'ok');
 }
 
-/* FIXED: Hybrid Voice Reply Logic */
+/* FIXED: Voice Reply Logic - Connected to /tts */
 async function actVoice(idx){
   var m=S.msgs[idx];
   if(!m||!m.content) return;  
-  // Visual feedback immediately
-  toast('Preparing audio...', 'inf');
+  toast('Generating audio...', 'inf');
   
-  // Clean text
-  var textToRead = m.content.replace(/<[^>]*>/g,'').substring(0, 2000); // Limit length for browser TTS safety
+  var textToRead = m.content.replace(/<[^>]*>/g,'').substring(0, 4000); 
 
-  // Try Native Browser TTS first (Fastest, most reliable for mass users)
-  if ('speechSynthesis' in window) {
+  // Priority: Backend /tts
+  if(isAuthed() && apiUrl()) {
       try {
-          var utterance = new SpeechSynthesisUtterance(textToRead);
-          utterance.rate = 1.0;
-          utterance.pitch = 1.0;
-          window.speechSynthesis.cancel(); // Stop any previous audio
-          window.speechSynthesis.speak(utterance);
-          toast('Reading locally...', 'ok');
-          return; 
-      } catch (e) {
-          console.warn('Native TTS failed', e);
+        var r = await fetch(apiUrl()+'/tts', {
+          method: 'POST',
+          headers: authH(),
+          body: JSON.stringify({ 
+            text: textToRead, 
+            voice: S.selectedVoice || 'alloy' 
+          })
+        });
+
+        if(!r.ok) {
+            var errText = await r.text();
+            console.warn('TTS API failed:', errText);
+            throw new Error(errText || 'TTS failed');
+        }
+
+        var blob = await r.blob();
+        var audioUrl = URL.createObjectURL(blob);
+        var audio = new Audio(audioUrl);
+        
+        S.currentAudio = audio;
+        audio.onended = function() { 
+            URL.revokeObjectURL(audioUrl); 
+            S.currentAudio = null;
+        };
+        audio.onerror = function() { 
+            toast('Audio playback error', 'err'); 
+            S.currentAudio = null;
+        };
+        
+        audio.play();
+        toast('Playing audio', 'ok');
+        return;
+      } catch(e) {
+          handleError(e, 'Voice Generation', false);
+          toast('Backend voice unavailable', 'wrn');
       }
   }
 
-  // Fallback to API if native fails or preferred (and user is authed)
-  if(!isAuthed()){
-      toast('Sign in for advanced voice', 'wrn');
-      return;
-  }
-
-  try {
-    if(!apiUrl()) throw new Error("API not configured");
-
-    var r = await fetch(apiUrl()+'/tts', {
-      method: 'POST',
-      headers: authH(),
-      body: JSON.stringify({ 
-        text: textToRead, 
-        voice: S.selectedVoice || 'alloy' 
-      })
-    });
-
-    if(!r.ok) {
-        var err = await r.text();
-        throw new Error(err || 'TTS failed');
-    }
-
-    var blob = await r.blob();
-    var audioUrl = URL.createObjectURL(blob);
-    var audio = new Audio(audioUrl);
-    
-    S.currentAudio = audio;
-
-    audio.onended = function() { 
-        URL.revokeObjectURL(audioUrl); 
-        S.currentAudio = null;
-    };
-    audio.onerror = function() { 
-        toast('Audio playback error', 'err'); 
-        S.currentAudio = null;
-    };
-    
-    audio.play();
-    toast('Playing audio', 'ok');
-
-  } catch(e) {
-    handleError(e, 'Voice Generation');
+  // Fallback: Native Browser TTS
+  if ('speechSynthesis' in window) {
+      try {
+          window.speechSynthesis.cancel(); 
+          var utterance = new SpeechSynthesisUtterance(textToRead);
+          utterance.rate = 1.0;
+          utterance.pitch = 1.0;
+          window.speechSynthesis.speak(utterance);
+          toast('Reading locally...', 'ok');
+      } catch (e) {
+          toast('Voice unavailable', 'err');
+      }
+  } else {
+      toast('Voice not supported', 'err');
   }
 }
 
@@ -1425,19 +1419,36 @@ function renderGallery(){
 }
 function openLB(src,isV){S.lbUrl=src;S.lbType=isV?'video':'image';$('lbContent').innerHTML=isV?'<video src="'+src+'" controls autoplay style="max-width:90vw;max-height:85vh;border-radius:18px">':'<img src="'+src+'" style="max-width:90vw;max-height:85vh;border-radius:18px">';$('lightbox').classList.add('on');}
 function closeLB(){$('lightbox').classList.remove('on');$('lbContent').innerHTML='';S.lbUrl='';}
+
+/* 
+  FIX: PWA Direct Download
+  Forces file download via Blob instead of opening in browser tab.
+*/
 async function downloadResource(url) {
   if(!url) return;
   toast('Downloading...', 'inf');
   try {
     const response = await fetch(url);
     if (!response.ok) throw new Error("Network response was not ok");
+    
     const blob = await response.blob();
     const blobUrl = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = blobUrl;
-    const isVideo = url.match(/\.(mp4|webm|mov)$/i);
-    const ext = isVideo ? '.mp4' : '.jpg';
-    link.download = 'heloxai-' + Date.now() + ext;
+    
+    // Determine extension from MIME type
+    let ext = 'bin';
+    const type = blob.type || '';
+    if (type.includes('jpeg') || type.includes('jpg')) ext = 'jpg';
+    else if (type.includes('png')) ext = 'png';
+    else if (type.includes('gif')) ext = 'gif';
+    else if (type.includes('webp')) ext = 'webp';
+    else if (type.includes('mp4')) ext = 'mp4';
+    else if (type.includes('webm')) ext = 'webm';
+    else if (type.includes('quicktime')) ext = 'mov';
+    
+    link.download = 'heloxai-' + Date.now() + '.' + ext;
+    
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1445,11 +1456,12 @@ async function downloadResource(url) {
   } catch (error) {
     console.error('Download failed:', error);
     toast('Download failed', 'err');
+    // Fallback: try opening normally
     window.open(url, '_blank');
   }
 }
 
-/* ========== RENDER MESSAGES ========== */
+/* ========== RENDER MESSAGES (FIXED FOR BREAKING CHATS) ========== */
 function showWelcome(){$('welcomeEl').style.display='flex';$('msgsEl').style.display='none';}
 function showMsgs(){$('welcomeEl').style.display='none';$('msgsEl').style.display='block';}
 function renderChatList(){
@@ -1482,8 +1494,9 @@ function buildMessageHtml(m, i) {
       html += '<div class="msg ' + roleClass + '">';
       html += '  <div class="msg-inner">';
       html += '    <div class="msg-label"><span class="ai-dot"></span> AI <span id="ai-status-' + i + '" class="ai-status"></span></div>';
+      // Separated containers for robustness
       html += '    <div id="mc-' + i + '" class="msg-ct"></div>';
-      if (m.images && m.images.length) html += buildImgHtml(m.images);
+      html += '    <div id="mi-' + i + '" class="msg-imgs"></div>';
       html += '    <div class="msg-acts">';
       html += '      <button class="ma" data-act="copy" data-i="' + i + '"><i class="fa-regular fa-copy"></i></button>';
       html += '      <button class="ma' + (m.liked?' liked':'') + '" data-act="like" data-i="' + i + '"><i class="fa-regular fa-thumbs-up"></i></button>';
@@ -1501,6 +1514,7 @@ function buildMessageHtml(m, i) {
       html += '    <div class="msg-bubble">';
       html += '      <div class="msg-text-wrapper" id="mtw-' + m.id + '">' + esc(m.content) + '</div>';
       html += '      <button class="msg-toggle-btn" id="mtb-' + m.id + '">Show more</button>';
+      /* FIXED: User Images Rendered Here */
       if (m.images && m.images.length) html += buildImgHtml(m.images);
       html += '    </div>';
       html += '    <div class="msg-acts">';
@@ -1514,12 +1528,6 @@ function buildMessageHtml(m, i) {
   return html;
 }
 
-/* 
-  FIX FOR ISSUE 1:
-  Re-implemented renderAll to completely rebuilds the chat from S.msgs array.
-  This ensures that if images exist in S.msgs, they will always be rendered,
-  preventing the "vanishing" bug caused by previous incremental DOM logic.
-*/
 function renderAll(){
     if (!S.msgs.length) {
         showWelcome();
@@ -1528,7 +1536,6 @@ function renderAll(){
     showMsgs();
     var msgsEl = $('msgsEl');
     
-    // Force rebuild to ensure consistency
     msgsEl.innerHTML = ''; 
     var html = '';
     
@@ -1540,8 +1547,12 @@ function renderAll(){
 
     S.msgs.forEach(function(m, i){
         if(m.role==='assistant'){
-            var el=$('mc-'+i);
+            var el=$('mc-'+i); 
+            var miEl=$('mi-'+i); 
             if(el) { el.innerHTML = md(m.content); applyMath(el); }
+            if(miEl && m.images && m.images.length) {
+                miEl.innerHTML = buildImgHtml(m.images).replace('<div class="msg-imgs">','').replace('</div>','');
+            }
         } else {
             var wrapper = $('mtw-'+m.id);
             var btn = $('mtb-'+m.id);
@@ -1654,7 +1665,6 @@ function streamRes(res, onChunk, onDone, onMedia, onStatus) {
         try {
             var json = JSON.parse(line);
             if (json.type === 'media' && typeof onMedia === 'function') { 
-                // Backend sends {type: 'media', media_type: 'image', url: ...}
                 onMedia(json); 
                 return; 
             }
@@ -1767,15 +1777,13 @@ function sendToAI(text){
       if(!S.msgs[idx]) return;
       if(!S.msgs[idx].images) S.msgs[idx].images = [];
       
-      // Map backend media_type to frontend type
-      var mediaType = 'image'; // Default
+      var mediaType = 'image'; 
       if (data.media_type === 'video' || (data.url && (data.url.includes('.mp4') || data.url.includes('.webm')))) {
           mediaType = 'video';
       }
 
       if(data.type === 'image'){
           data.data.forEach(function(img){
-              // Ensure we have a url from backend
               var url = img.url || img;
               S.msgs[idx].images.push({
                   url: url, 
@@ -1784,18 +1792,21 @@ function sendToAI(text){
               });
               if(!S.gallery.some(function(g){return g.url===url})) S.gallery.unshift({type:mediaType,url:url,prompt:'Generated',id:uid()});
               incrementUsage('images');
-              var el=$('mc-'+idx);
-              if(el) el.insertAdjacentHTML('beforeend', '<div class="img-wrap"><img src="'+url+'" loading="lazy"></div>');
+              
+              var el=$('mi-'+idx);
+              if(el) {
+                  el.insertAdjacentHTML('beforeend', '<div class="msg-img-item single"><img src="'+url+'" loading="lazy"></div>');
+              }
           });
       } else if (data.type === 'video') {
           var vidObj = {type:mediaType, url:data.url};
           S.msgs[idx].images.push(vidObj);
           if(!S.gallery.some(function(g){return g.url===data.url})) S.gallery.unshift({type:mediaType,url:data.url,prompt:'Generated',id:uid()});
           incrementUsage('videos');
-          var el=$('mc-'+idx);
-          if(el) el.insertAdjacentHTML('beforeend', '<div class="img-wrap"><video src="'+data.url+'" controls autoplay loop muted playsinline></video></div>');
+          var el=$('mi-'+idx);
+          if(el) el.insertAdjacentHTML('beforeend', '<div class="msg-img-item single"><video src="'+data.url+'" controls autoplay loop muted playsinline></video></div>');
       }
-      renderAll(); // Important: Trigger full re-render so image is definitely attached to DOM
+      renderAll(); 
       scrollBot(true);
   };
 
@@ -1821,16 +1832,12 @@ function sendToAI(text){
   }).catch(function(e){
     rmTyping();
     
-    // FIX: Stop Logic
     if(e.name==='AbortError'){
-        // User clicked stop
         if(full){
-            // Save whatever text was generated
             S.msgs[S.msgs.length-1].content=full;
             saveChatHistory(S.chatId, S.msgs).catch(function(){});
             updateLastAI(full);
         }else{
-            // If nothing generated, remove the empty bubble
             S.msgs.pop();
             renderAll();
         }
@@ -1857,7 +1864,7 @@ function regenAI(){
 }
 
 function stopGen(){
-    if(S.abort) S.abort.abort();
+    if(S.abort) S.abort.abort(); 
     if(S.currentAudio) {
         try { S.currentAudio.pause(); S.currentAudio.currentTime = 0; } catch(e) {}
         S.currentAudio = null;
@@ -1989,10 +1996,9 @@ function initEvents(){
   $('fileInput').addEventListener('change',function(){
     var files=this.files;if(!files||!files.length)return;
     
-    // FIX: Limit to 2 files max
     if(files.length > 2) {
         toast('Only 2 files allowed at a time', 'wrn');
-        files = Array.from(files).slice(0, 2); // Take first 2
+        files = Array.from(files).slice(0, 2); 
     }
     
     var promises=[];
