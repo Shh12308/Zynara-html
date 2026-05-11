@@ -1886,7 +1886,52 @@ function sendToAI(text){
     if(ct.indexOf('application/json')!==-1){
       return res.json().then(function(d){var c=d.response||d.content||d.result||d.message||JSON.stringify(d);var ai={id:uid(),role:'assistant',content:c,liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();addGal(c);saveChatHistory(S.chatId, S.msgs);if(S.chatId)updateTs(S.chatId);});
     }
-    var ai={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();
+    return res.json().then(function(d){
+
+  var text = d.response || d.content || d.result || d.message || '';
+  
+  var images = [];
+
+  // 🔥 HANDLE IMAGE RESPONSE
+  if (d.image_url) {
+    images.push({ url: d.image_url, name: 'Generated', type: 'image' });
+  }
+
+  if (d.data && Array.isArray(d.data)) {
+    d.data.forEach(function(item){
+      if(item.url){
+        images.push({ url: item.url, name: 'Generated', type: 'image' });
+      }
+    });
+  }
+
+  var ai = {
+    id: uid(),
+    role: 'assistant',
+    content: text || 'Here is your image:',
+    images: images,
+    liked:false,
+    disliked:false,
+    time: now()
+  };
+
+  S.msgs.push(ai);
+
+  // Add to gallery
+  images.forEach(function(img){
+    if(!S.gallery.some(function(g){return g.url===img.url})) {
+      S.gallery.unshift({
+        type:'image',
+        url:img.url,
+        prompt:text,
+        id:uid()
+      });
+    }
+  });
+
+  renderAll();
+  scrollBot(true);
+});
     return streamRes(res,function(chunk){full+=chunk;updateLastAI(full);},function(){S.msgs[S.msgs.length-1].content=full;saveChatHistory(S.chatId, S.msgs);if(S.chatId)updateTs(S.chatId);}, onMedia, onStatus);
   }).catch(function(e){
     rmTyping();
