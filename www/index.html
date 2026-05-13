@@ -868,26 +868,55 @@ function loadLocalChats() {
   - For User messages: Keep 'dataUrl' so uploads persist across reloads (within LocalStorage limits).
   - For AI messages: Strip 'dataUrl' and keep only external 'url' to save space.
 */
+function getSize(str) {
+    return new Blob([str]).size;
+}
+
+function safeStringify(obj) {
+    return JSON.stringify(obj);
+}
+
 function saveChatHistory(id, msgs) {
     try {
-        var toSave = msgs.slice(-100).map(function(m) {
+        var toSave = msgs.slice(-50).map(function(m) {
             var nm = { ...m };
-            
-            // Keep dataUrl for user uploads so they don't disappear on refresh
-            if (m.role !== 'user') {
-                delete nm.dataUrl;
-                if(nm.images) {
-                    nm.images = nm.images.map(function(img) {
-                        return { url: img.url, name: img.name, type: img.type };
-                    });
-                }
+
+            delete nm.dataUrl;
+
+            if (nm.images) {
+                nm.images = nm.images.map(function(img) {
+                    return {
+                        url: img.url.length > 2000 ? null : img.url,
+                        name: img.name,
+                        type: img.type
+                    };
+                }).filter(img => img.url !== null);
             }
+
             return nm;
-        }); 
-        localStorage.setItem('helox_history_' + id, JSON.stringify(toSave));
-        var c = S.chatListData.find(function(x){ return x.id === id; });
-        if(c) { c.updated_at = new Date().toISOString(); saveLocalChats(); renderChatList(); }
-    } catch(e) { console.warn("Could not save chat history (Quota exceeded?)", e); }
+        });
+
+        var serialized = JSON.stringify(toSave);
+
+        // crude safety check (~4.5MB cap)
+        if (serialized.length > 4.5 * 1024 * 1024) {
+            console.warn("Chat too large, trimming...");
+            toSave = toSave.slice(-20);
+            serialized = JSON.stringify(toSave);
+        }
+
+        localStorage.setItem('helox_history_' + id, serialized);
+
+        var c = S.chatListData.find(x => x.id === id);
+        if (c) {
+            c.updated_at = new Date().toISOString();
+            saveLocalChats();
+            renderChatList();
+        }
+
+    } catch (e) {
+        console.warn("Could not save chat history (Quota exceeded?)", e);
+    }
 }
 function loadChatHistory(id) {
     try { var raw = localStorage.getItem('helox_history_' + id); if (raw) return JSON.parse(raw); } catch(e) {}
