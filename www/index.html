@@ -1200,8 +1200,15 @@ function initMarked() {
           btnsHtml += '<button type="button" class="cp-btn" data-action="copy-code"><i class="fa-regular fa-copy"></i> Copy</button>';
           return '<div class="code-blk"><div class="code-hd"><span>'+esc(displayLang)+'</span>'+btnsHtml+'</div><pre><code class="hljs language-'+esc(displayLang)+'">'+highlighted+'</code></pre></div>';
         },
+        /* UPDATE: Image renderer now supports lightbox clicking */
         image: function(href, title, text) {
-          return '<div class="img-wrap"><img src="'+esc(href)+'" alt="'+esc(text||title||'Image')+'" loading="lazy"></div>';
+          return '<div class="img-wrap"><img src="'+esc(href)+'" alt="'+esc(text||title||'Image')+'" loading="lazy" data-msg-img="'+esc(href)+'"></div>';
+        },
+        /* UPDATE: Link renderer adds security attributes and enables custom modal handling */
+        link: function(href, title, text) {
+          var titleAttr = title ? ' title="' + esc(title) + '"' : '';
+          // We add a class to help identify these links if needed, though delegation handles the logic
+          return '<a href="'+esc(href)+'" target="_blank" rel="noopener noreferrer"' + titleAttr + '>'+text+'</a>';
         }
       }
     });
@@ -2101,6 +2108,18 @@ function initEvents(){
 
   /* Delegated Clicks */
   document.addEventListener('click',function(e){
+    /* UPDATE: Intercept Markdown Links for Search Results */
+    var linkEl = e.target.closest('.msg-ct a');
+    if(linkEl){
+        e.preventDefault(); // Stop default navigation
+        var url = linkEl.getAttribute('href');
+        // Trigger the custom Link Modal (allows "Follow Up" questions)
+        if(url && (url.startsWith('http') || url.startsWith('/'))) {
+            openLinkModal(url);
+        }
+        return;
+    }
+
     /* Toggle Show More/Less */
     var tgBtn = e.target.closest('.msg-toggle-btn');
     if(tgBtn){
