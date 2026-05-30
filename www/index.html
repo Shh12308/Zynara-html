@@ -1247,16 +1247,16 @@ function initMarked() {
       );
     };
 
+    /* UPDATED IMAGE RENDERER FOR TAVILY/SEARCH RESULTS */
     renderer.image = function(href, title, text) {
+      var safeHref = esc(href);
+      var safeAlt = esc(text || title || 'Image');
+      var safeTitle = title ? '<div class="md-img-caption">' + esc(title) + '</div>' : '';
+      
       return (
-        '<div class="img-wrap">' +
-        '<img src="' +
-        esc(href) +
-        '" alt="' +
-        esc(text || title || 'Image') +
-        '" loading="lazy" data-msg-img="' +
-        esc(href) +
-        '">' +
+        '<div class="md-img-card">' +
+        '<img src="' + safeHref + '" alt="' + safeAlt + '" loading="lazy" data-msg-img="' + safeHref + '">' +
+        safeTitle + 
         '</div>'
       );
     };
@@ -1310,12 +1310,13 @@ function md(text) {
           'sup', 'sub', 'del', 's',
           'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
           'hr', 'table', 'thead', 'tbody', 'tr', 'td', 'th',
-          'blockquote'
+          'blockquote', 'figure', 'figcaption' // Added figure/figcaption for captions
         ],
         ALLOWED_ATTR: [
           'href', 'target', 'rel', 'class', 'id',
           'title', 'alt',
-          'data-action', 'src', 'loading'
+          'data-action', 'src', 'loading',
+          'data-msg-img' // Crucial for lightbox
         ]
       });
     }
