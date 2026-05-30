@@ -1170,72 +1170,179 @@ function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('
 function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'dark'}catch(e){}setTheme(s);try{window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(S.theme==='system')setTheme('system')})}catch(e){}}
 
 /* ========== MARKDOWN ========== */
+let mdCache = new Map();
+
 function initMarked() {
-  if (typeof marked === 'undefined') { S._mdOk = false; return; }
+  if (typeof marked === 'undefined') {
+    S._mdOk = false;
+    return;
+  }
+
   try {
-    marked.use({ breaks: true, gfm: true });
-    marked.use({
-      renderer: {
-        code: function(code, infostring) {
-          var text = code || '';
-          var langArr = (infostring || '').trim().split(/\s+/);
-          var language = langArr[0] || '';
-          var validLang = '';
-          if (typeof hljs !== 'undefined' && typeof hljs.getLanguage === 'function') {
-            if (language && hljs.getLanguage(language)) validLang = language;
-          }
-          var highlighted = '';
-          try {
-            if (typeof hljs !== 'undefined') {
-              if (validLang) highlighted = hljs.highlight(text, { language: validLang, ignoreIllegals: true }).value;
-              else { var result = hljs.highlightAuto(text); highlighted = result.value; }
-              if (!highlighted || typeof highlighted !== 'string') highlighted = esc(text);
-            } else { highlighted = esc(text); }
-          } catch (e) { highlighted = esc(text); }
-          var displayLang = validLang || 'plaintext';
-          var btnsHtml = '';
-          if (validLang && (validLang.toLowerCase() === 'html' || validLang.toLowerCase() === 'xml')) {
-             btnsHtml = '<button type="button" class="cp-btn" data-action="run-html" style="margin-right:5px;"><i class="fa-solid fa-play"></i> Run</button>';
-          }
-          btnsHtml += '<button type="button" class="cp-btn" data-action="copy-code"><i class="fa-regular fa-copy"></i> Copy</button>';
-          return '<div class="code-blk"><div class="code-hd"><span>'+esc(displayLang)+'</span>'+btnsHtml+'</div><pre><code class="hljs language-'+esc(displayLang)+'">'+highlighted+'</code></pre></div>';
-        },
-        /* UPDATE: Image renderer now supports lightbox clicking */
-        image: function(href, title, text) {
-          return '<div class="img-wrap"><img src="'+esc(href)+'" alt="'+esc(text||title||'Image')+'" loading="lazy" data-msg-img="'+esc(href)+'"></div>';
-        },
-        /* UPDATE: Link renderer adds security attributes and enables custom modal handling */
-        link: function(href, title, text) {
-          var titleAttr = title ? ' title="' + esc(title) + '"' : '';
-          // We add a class to help identify these links if needed, though delegation handles the logic
-          return '<a href="'+esc(href)+'" target="_blank" rel="noopener noreferrer"' + titleAttr + '>'+text+'</a>';
-        }
+    const renderer = new marked.Renderer();
+
+    renderer.code = function(code, infostring) {
+      var text = String(code || '');
+      var langArr = (infostring || '').trim().split(/\s+/);
+      var language = langArr[0] || '';
+      var validLang = '';
+
+      if (typeof hljs !== 'undefined' && typeof hljs.getLanguage === 'function') {
+        if (language && hljs.getLanguage(language)) validLang = language;
       }
+
+      var highlighted = '';
+
+      try {
+        if (typeof hljs !== 'undefined') {
+          if (text.length > 100000) text = text.slice(0, 100000);
+
+          if (validLang) {
+            highlighted = hljs.highlight(text, {
+              language: validLang,
+              ignoreIllegals: true
+            }).value;
+          } else {
+            highlighted = hljs.highlightAuto(text).value;
+          }
+
+          if (!highlighted || typeof highlighted !== 'string') {
+            highlighted = esc(text);
+          }
+        } else {
+          highlighted = esc(text);
+        }
+      } catch (e) {
+        console.warn("Highlight error:", e);
+        highlighted = esc(text);
+      }
+
+      var displayLang = validLang || 'plaintext';
+
+      var btnsHtml = '';
+
+      if (
+        validLang &&
+        (validLang.toLowerCase() === 'html' || validLang.toLowerCase() === 'xml')
+      ) {
+        btnsHtml +=
+          '<button type="button" class="cp-btn" data-action="run-html" style="margin-right:5px;">Run</button>';
+      }
+
+      btnsHtml +=
+        '<button type="button" class="cp-btn" data-action="copy-code">Copy</button>';
+
+      return (
+        '<div class="code-blk">' +
+        '<div class="code-hd"><span>' +
+        esc(displayLang) +
+        '</span>' +
+        btnsHtml +
+        '</div>' +
+        '<pre><code class="hljs language-' +
+        esc(displayLang) +
+        '">' +
+        highlighted +
+        '</code></pre></div>'
+      );
+    };
+
+    renderer.image = function(href, title, text) {
+      return (
+        '<div class="img-wrap">' +
+        '<img src="' +
+        esc(href) +
+        '" alt="' +
+        esc(text || title || 'Image') +
+        '" loading="lazy" data-msg-img="' +
+        esc(href) +
+        '">' +
+        '</div>'
+      );
+    };
+
+    renderer.link = function(href, title, text) {
+      var titleAttr = title ? ' title="' + esc(title) + '"' : '';
+      return (
+        '<a href="' +
+        esc(href) +
+        '" target="_blank" rel="noopener noreferrer"' +
+        titleAttr +
+        '>' +
+        text +
+        '</a>'
+      );
+    };
+
+    marked.use({
+      breaks: true,
+      gfm: true,
+      renderer: renderer
     });
+
     S._mdOk = true;
-  } catch (e) { console.error('Marked init failed:', e); S._mdOk = false; }
+  } catch (e) {
+    console.error('Marked init failed:', e);
+    S._mdOk = false;
+  }
 }
 
 function md(text) {
-  if (!text) return '';
-  var html = '';
+  if (text == null) return '';
+
   try {
-    if (S._mdOk && typeof marked !== 'undefined') html = marked.parse(text);
-    else html = esc(text).replace(/\n/g, '<br>');
+    if (mdCache.has(text)) return mdCache.get(text);
+
+    var html = '';
+
+    if (S._mdOk && typeof marked !== 'undefined') {
+      html = marked.parse(String(text));
+    } else {
+      html = esc(String(text)).replace(/\n/g, '<br>');
+    }
+
     if (typeof DOMPurify !== 'undefined') {
       html = DOMPurify.sanitize(html, {
-        ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'strong', 'em', 'a', 'code', 'pre', 'span', 'div', 'ul', 'ol', 'li', 'sup', 'sub', 'del', 's', 'button', 'iframe', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'blockquote', 'video', 'source'],
-        ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'id', 'style', 'title', 'alt', 'data-action', 'src', 'loading', 'sandbox', 'srcdoc', 'start', 'controls', 'autoplay', 'loop', 'muted', 'playsinline'],
-        ALLOW_DATA_ATTR: true
+        ALLOWED_TAGS: [
+          'p', 'br', 'b', 'i', 'strong', 'em', 'a',
+          'code', 'pre', 'span', 'div',
+          'ul', 'ol', 'li',
+          'sup', 'sub', 'del', 's',
+          'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+          'hr', 'table', 'thead', 'tbody', 'tr', 'td', 'th',
+          'blockquote'
+        ],
+        ALLOWED_ATTR: [
+          'href', 'target', 'rel', 'class', 'id',
+          'title', 'alt',
+          'data-action', 'src', 'loading'
+        ]
       });
     }
-  } catch (e) { console.error('Markdown parse error:', e); html = esc(text).replace(/\n/g, '<br>'); }
-  return html;
+
+    mdCache.set(text, html);
+    return html;
+  } catch (e) {
+    console.error('Markdown parse error:', e);
+    return esc(String(text)).replace(/\n/g, '<br>');
+  }
 }
 
-function applyMath(el){
-  if(typeof renderMathInElement!=='undefined'){
-    try{ renderMathInElement(el,{ delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}], throwOnError:false }); }catch(e){}
+function applyMath(el) {
+  if (typeof renderMathInElement !== 'undefined') {
+    try {
+      renderMathInElement(el, {
+        delimiters: [
+          { left: '$$', right: '$$', display: true },
+          { left: '$', right: '$', display: false },
+          { left: '\\(', right: '\\)', display: false },
+          { left: '\\[', right: '\\]', display: true }
+        ],
+        throwOnError: false
+      });
+    } catch (e) {
+      console.warn("Math render error:", e);
+    }
   }
 }
 
