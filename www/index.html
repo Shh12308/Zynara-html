@@ -1170,6 +1170,7 @@ function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('
 function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'dark'}catch(e){}setTheme(s);try{window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(S.theme==='system')setTheme('system')})}catch(e){}}
 
 /* ========== MARKDOWN ========== */
+/* ========== MARKDOWN (UPDATED FOR IMAGES) ========== */
 let mdCache = new Map();
 
 function initMarked() {
@@ -1181,6 +1182,7 @@ function initMarked() {
   try {
     const renderer = new marked.Renderer();
 
+    // 1. Code Block Rendering
     renderer.code = function(code, infostring) {
       var text = String(code || '');
       var langArr = (infostring || '').trim().split(/\s+/);
@@ -1192,71 +1194,50 @@ function initMarked() {
       }
 
       var highlighted = '';
-
       try {
         if (typeof hljs !== 'undefined') {
           if (text.length > 100000) text = text.slice(0, 100000);
-
           if (validLang) {
-            highlighted = hljs.highlight(text, {
-              language: validLang,
-              ignoreIllegals: true
-            }).value;
+            highlighted = hljs.highlight(text, { language: validLang, ignoreIllegals: true }).value;
           } else {
             highlighted = hljs.highlightAuto(text).value;
           }
-
-          if (!highlighted || typeof highlighted !== 'string') {
-            highlighted = esc(text);
-          }
+          if (!highlighted || typeof highlighted !== 'string') highlighted = esc(text);
         } else {
           highlighted = esc(text);
         }
       } catch (e) {
-        console.warn("Highlight error:", e);
         highlighted = esc(text);
       }
 
       var displayLang = validLang || 'plaintext';
-
       var btnsHtml = '';
-
-      if (
-        validLang &&
-        (validLang.toLowerCase() === 'html' || validLang.toLowerCase() === 'xml')
-      ) {
-        btnsHtml +=
-          '<button type="button" class="cp-btn" data-action="run-html" style="margin-right:5px;">Run</button>';
+      
+      // Run button for HTML
+      if (validLang && (validLang.toLowerCase() === 'html' || validLang.toLowerCase() === 'xml')) {
+        btnsHtml += '<button type="button" class="cp-btn" data-action="run-html" style="margin-right:5px;">Run</button>';
       }
-
-      btnsHtml +=
-        '<button type="button" class="cp-btn" data-action="copy-code">Copy</button>';
+      // Copy button
+      btnsHtml += '<button type="button" class="cp-btn" data-action="copy-code">Copy</button>';
 
       return (
         '<div class="code-blk">' +
-        '<div class="code-hd"><span>' +
-        esc(displayLang) +
-        '</span>' +
-        btnsHtml +
-        '</div>' +
-        '<pre><code class="hljs language-' +
-        esc(displayLang) +
-        '">' +
-        highlighted +
-        '</code></pre></div>'
+        '<div class="code-hd"><span>' + esc(displayLang) + '</span>' + btnsHtml + '</div>' +
+        '<pre><code class="hljs language-' + esc(displayLang) + '">' + highlighted + '</code></pre></div>'
       );
     };
 
-    /* UPDATED IMAGE RENDERER FOR TAVILY/SEARCH RESULTS */
+    // 2. Image Rendering (ChatGPT Style)
     renderer.image = function(href, title, text) {
-      var safeHref = esc(href);
-      var safeAlt = esc(text || title || 'Image');
-      var safeTitle = title ? '<div class="md-img-caption">' + esc(title) + '</div>' : '';
-      
+      // ChatGPT usually wraps images in a clean container that allows expansion
+      // We keep 'data-msg-img' so your existing Lightbox logic works
       return (
-        '<div class="md-img-card">' +
-        '<img src="' + safeHref + '" alt="' + safeAlt + '" loading="lazy" data-msg-img="' + safeHref + '">' +
-        safeTitle + 
+        '<div class="img-wrap">' +
+        '<img src="' + esc(href) + '" ' +
+        'alt="' + esc(text || title || 'Image') + '" ' +
+        'title="' + esc(title || text || 'Click to view') + '" ' +
+        'loading="lazy" ' +
+        'data-msg-img="' + esc(href) + '">' +
         '</div>'
       );
     };
@@ -1264,22 +1245,11 @@ function initMarked() {
     renderer.link = function(href, title, text) {
       var titleAttr = title ? ' title="' + esc(title) + '"' : '';
       return (
-        '<a href="' +
-        esc(href) +
-        '" target="_blank" rel="noopener noreferrer"' +
-        titleAttr +
-        '>' +
-        text +
-        '</a>'
+        '<a href="' + esc(href) + '" target="_blank" rel="noopener noreferrer"' + titleAttr + '>' + text + '</a>'
       );
     };
 
-    marked.use({
-      breaks: true,
-      gfm: true,
-      renderer: renderer
-    });
-
+    marked.use({ breaks: true, gfm: true, renderer: renderer });
     S._mdOk = true;
   } catch (e) {
     console.error('Marked init failed:', e);
@@ -1291,16 +1261,18 @@ function md(text) {
   if (text == null) return '';
 
   try {
+    // Check cache
     if (mdCache.has(text)) return mdCache.get(text);
 
     var html = '';
-
     if (S._mdOk && typeof marked !== 'undefined') {
       html = marked.parse(String(text));
     } else {
       html = esc(String(text)).replace(/\n/g, '<br>');
     }
 
+    // Sanitize HTML
+    // CRITICAL UPDATE: Added 'img' to ALLOWED_TAGS and 'src', 'alt', 'loading' to ALLOWED_ATTR
     if (typeof DOMPurify !== 'undefined') {
       html = DOMPurify.sanitize(html, {
         ALLOWED_TAGS: [
@@ -1310,13 +1282,12 @@ function md(text) {
           'sup', 'sub', 'del', 's',
           'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
           'hr', 'table', 'thead', 'tbody', 'tr', 'td', 'th',
-          'blockquote', 'figure', 'figcaption' // Added figure/figcaption for captions
+          'blockquote',
+          'img' // <--- ADDED THIS
         ],
         ALLOWED_ATTR: [
-          'href', 'target', 'rel', 'class', 'id',
-          'title', 'alt',
-          'data-action', 'src', 'loading',
-          'data-msg-img' // Crucial for lightbox
+          'href', 'target', 'rel', 'class', 'id', 'title', 'alt',
+          'data-action', 'src', 'loading', 'width', 'height' // <--- ADDED src, loading, alt
         ]
       });
     }
