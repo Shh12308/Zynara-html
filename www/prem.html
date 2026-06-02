@@ -21,6 +21,8 @@
       --secondary: #38bdf8;
       --text-main: #f1f5f9;
       --text-muted: #94a3b8;
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.2);
       --danger: #ef4444;
       --danger-hover: #dc2626;
       --border: rgba(255, 255, 255, 0.1);
@@ -166,7 +168,20 @@
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
     }
 
-    /* Highlighted Card (Ultimate) */
+    /* Active Plan Card Styling */
+    .plan-card.current-plan {
+      border: 1px solid var(--success);
+      box-shadow: 0 0 30px var(--success-glow);
+      background: linear-gradient(to bottom, rgba(16, 185, 129, 0.05), rgba(30, 41, 59, 0.8));
+    }
+
+    .plan-card.current-plan .plan-header h2::after {
+      content: " — Active";
+      color: var(--success);
+      font-weight: 500;
+    }
+
+    /* Highlighted Card (Ultimate - Marketing) */
     .plan-card.featured {
       border: 1px solid var(--primary);
       box-shadow: 0 0 30px rgba(0, 224, 255, 0.15);
@@ -185,6 +200,7 @@
       padding: 6px 20px;
       border-bottom-left-radius: 12px;
       border-bottom-right-radius: 12px;
+      z-index: 10;
     }
 
     .plan-header h2 {
@@ -207,6 +223,19 @@
       color: var(--text-muted);
       font-weight: 400;
       margin-left: 5px;
+    }
+
+    /* Status Badge inside Card */
+    .plan-status {
+      display: none; /* Hidden by default */
+      background: var(--success);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+      align-self: flex-start;
+      margin-bottom: 15px;
     }
 
     /* Features List */
@@ -282,18 +311,22 @@
       cursor: not-allowed;
       transform: none !important;
       box-shadow: none !important;
+      background: rgba(255,255,255,0.05);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
     }
 
     /* Cancel Mode Button */
     .btn-cancel {
-      background: var(--danger);
-      color: white;
+      background: transparent;
+      color: var(--danger);
       border: 1px solid var(--danger);
     }
 
     .btn-cancel:hover {
-      background: var(--danger-hover);
-      box-shadow: 0 10px 20px rgba(239, 68, 68, 0.3);
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--danger-hover);
+      border-color: var(--danger-hover);
     }
 
     /* Loading Spinner */
@@ -458,7 +491,8 @@
 
     <main class="pricing-grid">
       <!-- Free Plan -->
-      <article class="plan-card">
+      <article class="plan-card" id="card-free">
+        <div class="plan-status" id="status-free">Current Plan</div>
         <div class="plan-header">
           <h2>Free Plan</h2>
           <div class="price">$0<span>/month</span></div>
@@ -476,7 +510,8 @@
       </article>
 
       <!-- Ultimate Monthly -->
-      <article class="plan-card featured">
+      <article class="plan-card featured" id="card-ultimate_monthly">
+        <div class="plan-status" id="status-ultimate_monthly">Current Plan</div>
         <div class="plan-header">
           <h2>Ultimate Monthly</h2>
           <div class="price">£4.99<span>/month</span></div>
@@ -504,7 +539,8 @@
       </article>
 
       <!-- Ultimate Yearly -->
-      <article class="plan-card">
+      <article class="plan-card" id="card-ultimate_yearly">
+        <div class="plan-status" id="status-ultimate_yearly">Current Plan</div>
         <div class="plan-header">
           <h2>Ultimate Yearly</h2>
           <div class="price">£115<span>/year</span></div>
@@ -621,8 +657,7 @@ async function getUserPlan() {
       return "free";
     }
 
-    // ✅ FIX 1: Use .maybeSingle() to prevent PGRST116 crash
-    // This returns null if no row exists, instead of crashing
+    // Fetch profile data
     const { data, error } = await supabase
       .from('user_profiles')
       .select('*')
@@ -631,11 +666,10 @@ async function getUserPlan() {
 
     if (error) {
       console.error("Supabase Fetch Error:", error);
-      // If RLS or other error occurs, default to free to prevent app crash
       return "free";
     }
     
-    // data might be null if the row doesn't exist (new user)
+    // Return plan type, defaulting to 'free' if null/undefined
     return data?.plan || "free";
   } catch (e) {
     console.error("Unexpected error in getUserPlan:", e);
@@ -698,7 +732,6 @@ async function createStripeCheckoutSession(planType) {
 
     const data = await res.json();
     
-    // Better Error Logging
     if (!res.ok) {
       console.error("Backend Error Response:", data);
       throw new Error(data.error || data.message || "Failed to create session");
@@ -764,6 +797,106 @@ function setButtonLoading(btn, isLoading) {
 }
 
 // ===========================
+// 💡 UI State Management (UPDATED)
+// =========================
+async function updatePlanButtons() {
+  const currentPlan = await getUserPlan();
+  console.log("Current Plan Detected:", currentPlan);
+
+  // Define mapping of DB plan values to DOM IDs/Text
+  const plans = {
+    'free': {
+      cardId: 'card-free',
+      btnId: 'freeBtn',
+      defaultText: 'Use Free Plan'
+    },
+    'monthly': {
+      cardId: 'card-ultimate_monthly',
+      btnId: 'ultimateMonthlyBtn',
+      defaultText: 'Go Ultimate Monthly'
+    },
+    'yearly': {
+      cardId: 'card-ultimate_yearly',
+      btnId: 'ultimateYearlyBtn',
+      defaultText: 'Go Ultimate Yearly'
+    }
+  };
+
+  // Helper to reset a card/button to default state
+  const resetCard = (planKey) => {
+    const planData = plans[planKey];
+    if (!planData) return;
+    
+    const card = document.getElementById(planData.cardId);
+    const btn = document.getElementById(planData.btnId);
+    const status = document.getElementById(`status-${planKey}`); // Hide status badge
+
+    if (card) card.classList.remove('current-plan');
+    if (status) status.style.display = 'none';
+    
+    if (btn) {
+      btn.disabled = false;
+      btn.classList.remove('btn-cancel');
+      // Restore original class color logic (Free is secondary, Paid is primary)
+      if (planKey === 'free') {
+        btn.classList.add('btn-secondary');
+        btn.classList.remove('btn-primary');
+      } else {
+        btn.classList.add('btn-primary');
+        btn.classList.remove('btn-secondary');
+      }
+      
+      // Reset Text
+      const span = btn.querySelector('span');
+      if (span) span.textContent = planData.defaultText;
+      
+      // Remove cancel flag
+      delete btn.dataset.isCancel;
+    }
+  };
+
+  // 1. Reset All Cards First
+  Object.keys(plans).forEach(key => resetCard(key));
+
+  // 2. Handle "Lifetime" edge case (maps to yearly for UI usually, or disable all paid)
+  let activePlanKey = currentPlan;
+  if (currentPlan === 'lifetime') {
+    activePlanKey = 'yearly'; // Visually treat as yearly for highlighting
+  }
+
+  // 3. Highlight Active Plan
+  const activeData = plans[activePlanKey];
+  if (activeData) {
+    const activeCard = document.getElementById(activeData.cardId);
+    const activeBtn = document.getElementById(activeData.btnId);
+    const activeStatus = document.getElementById(`status-${activePlanKey}`);
+
+    if (activeCard) activeCard.classList.add('current-plan');
+    if (activeStatus) activeStatus.style.display = 'block';
+    
+    if (activeBtn) {
+      activeBtn.disabled = true;
+      activeBtn.classList.remove('btn-primary', 'btn-secondary'); // Clear colors
+      const span = activeBtn.querySelector('span');
+      if (span) span.textContent = "Current Plan";
+    }
+  }
+
+  // 4. Handle Paid Plan Logic (Modify Free button to Cancel)
+  if (['monthly', 'yearly', 'lifetime'].includes(currentPlan)) {
+    const freeBtn = document.getElementById('freeBtn');
+    if (freeBtn) {
+      freeBtn.disabled = false;
+      freeBtn.classList.remove('btn-secondary');
+      freeBtn.classList.add('btn-cancel');
+      const span = freeBtn.querySelector('span');
+      if (span) span.textContent = "Cancel Subscription";
+      freeBtn.dataset.isCancel = "true";
+    }
+  }
+}
+
+// ===========================
 // 🔄 Subscription Handler
 // ===========================
 async function handleSubscription(planType, btnElement) {
@@ -784,68 +917,10 @@ async function handleSubscription(planType, btnElement) {
     updatePlanButtons();
   } catch (err) {
     console.error(err);
-    // Ensure we show the actual message from the error object
     const msg = err.message || err.toString() || "Something went wrong";
     showToast(msg, "error");
   } finally {
     setButtonLoading(btnElement, false);
-  }
-}
-
-// ===========================
-// 💡 UI State Management
-// =========================
-async function updatePlanButtons() {
-  const currentPlan = await getUserPlan();
-  console.log("Current Plan Detected:", currentPlan); // Debug log
-
-  const buttons = {
-    free: document.getElementById("freeBtn"),
-    ultimate_monthly: document.getElementById("ultimateMonthlyBtn"),
-    ultimate_yearly: document.getElementById("ultimateYearlyBtn"),
-  };
-
-  // Reset all
-  Object.values(buttons).forEach(btn => {
-    if (!btn) return;
-    setButtonLoading(btn, false);
-    btn.classList.remove('btn-cancel', 'btn-primary', 'btn-secondary');
-    if (btn.id !== 'freeBtn') btn.classList.add('btn-primary');
-    else btn.classList.add('btn-secondary');
-  });
-
-  if (!currentPlan) return; 
-
-  // User is on a paid plan (Node.js returns 'monthly', 'yearly', 'lifetime')
-  if (['monthly', 'yearly', 'lifetime'].includes(currentPlan)) {
-    // Disable the active paid plan button
-    const btnKey = currentPlan === 'lifetime' ? null : (currentPlan === 'monthly' ? 'ultimate_monthly' : 'ultimate_yearly');
-    
-    if (btnKey && buttons[btnKey]) {
-      buttons[btnKey].disabled = true;
-      buttons[btnKey].querySelector('span').textContent = "Current Plan";
-      buttons[btnKey].style.opacity = "0.7";
-    } else if (currentPlan === 'lifetime') {
-        // If lifetime, disable both paid buttons
-        buttons.ultimate_monthly.disabled = true;
-        buttons.ultimate_yearly.disabled = true;
-        buttons.ultimate_monthly.querySelector('span').textContent = "Lifetime Active";
-        buttons.ultimate_yearly.querySelector('span').textContent = "Lifetime Active";
-    }
-
-    // Convert Free button to Cancel button
-    if (buttons.free) {
-      buttons.free.disabled = false;
-      buttons.free.classList.remove('btn-secondary');
-      buttons.free.classList.add('btn-cancel');
-      buttons.free.querySelector('span').textContent = "Cancel Subscription";
-      buttons.free.dataset.isCancel = "true";
-    }
-  } 
-  // User is on Free plan
-  else if (currentPlan === 'free') {
-    buttons.free.disabled = true;
-    buttons.free.querySelector('span').textContent = "Current Plan";
   }
 }
 
@@ -908,7 +983,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       const res = await fetch(`${BACKEND_URL}/verify-session?session_id=${sessionId}`);
       const data = await res.json();
 
-      // ✅ FIX 2: Updated to match backend response format
       if (data.status === 'success' || data.upgraded || data.already_upgraded) {
         showToast("Payment successful! Plan upgraded.");
       } else {
