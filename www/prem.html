@@ -621,9 +621,13 @@ async function getUserPlan() {
       return "free";
     }
 
-    // Fetch plan from 'users' table
-  // ✅ CHANGE TO THIS (Reads the safe table instead)
-const { data, error } = await supabase.from('user_profiles').select('*').eq('user_id', user.id).single();
+    // ✅ FIX 1: Use .maybeSingle() to prevent PGRST116 crash
+    // This returns null if no row exists, instead of crashing
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle(); 
 
     if (error) {
       console.error("Supabase Fetch Error:", error);
@@ -631,6 +635,7 @@ const { data, error } = await supabase.from('user_profiles').select('*').eq('use
       return "free";
     }
     
+    // data might be null if the row doesn't exist (new user)
     return data?.plan || "free";
   } catch (e) {
     console.error("Unexpected error in getUserPlan:", e);
@@ -792,6 +797,8 @@ async function handleSubscription(planType, btnElement) {
 // =========================
 async function updatePlanButtons() {
   const currentPlan = await getUserPlan();
+  console.log("Current Plan Detected:", currentPlan); // Debug log
+
   const buttons = {
     free: document.getElementById("freeBtn"),
     ultimate_monthly: document.getElementById("ultimateMonthlyBtn"),
@@ -901,7 +908,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       const res = await fetch(`${BACKEND_URL}/verify-session?session_id=${sessionId}`);
       const data = await res.json();
 
-      if (data.upgraded || data.already_upgraded) {
+      // ✅ FIX 2: Updated to match backend response format
+      if (data.status === 'success' || data.upgraded || data.already_upgraded) {
         showToast("Payment successful! Plan upgraded.");
       } else {
         showToast("Payment verification failed.", "error");
