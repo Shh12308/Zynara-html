@@ -622,11 +622,8 @@ async function getUserPlan() {
     }
 
     // Fetch plan from 'users' table
-    const { data, error } = await supabase
-      .from("users")
-      .select("plan, is_premium")
-      .eq("id", user.id)
-      .single();
+  // ✅ CHANGE TO THIS (Reads the safe table instead)
+const { data, error } = await supabase.from('user_profiles').select('*').eq('user_id', user.id).single();
 
     if (error) {
       console.error("Supabase Fetch Error:", error);
