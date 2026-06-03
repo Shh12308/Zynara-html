@@ -984,16 +984,29 @@ document.addEventListener("DOMContentLoaded", async () => {
       const data = await res.json();
 
       if (data.status === 'success' || data.upgraded || data.already_upgraded) {
-        showToast("Payment successful! Plan upgraded.");
+        showToast("Payment successful! Updating your plan...", "success");
+        
+        // CRITICAL FIX: Wait 2 seconds to allow backend DB commit
+        setTimeout(async () => {
+          await updatePlanButtons();
+          window.history.replaceState({}, document.title, window.location.pathname);
+          
+          // Sanity Check: If it's STILL free after 2 seconds, warn user.
+          const finalCheck = await getUserPlan();
+          if (finalCheck === 'free') {
+            console.error("Payment verified but database not updated.");
+            showToast("Payment processed, but plan update failed. Refreshing...", "error");
+            setTimeout(() => location.reload(), 3000);
+          }
+        }, 2000);
       } else {
         showToast("Payment verification failed.", "error");
+        window.history.replaceState({}, document.title, window.location.pathname);
       }
     } catch (e) {
       console.error(e);
       showToast("Could not verify payment with server.", "error");
-    } finally {
       window.history.replaceState({}, document.title, window.location.pathname);
-      await updatePlanButtons();
     }
   }
 
