@@ -308,32 +308,18 @@
         align-items: center;
       }
       .sidebar-header { display: none; }
-      
-      /* Make nav horizontal and centered */
       .nav-list { display: flex; flex-direction: row; gap: 10px; width: auto; overflow-x: auto; padding-bottom: 2px; }
       .nav-item { margin: 0; flex-shrink: 0; }
       .nav-btn { width: auto; white-space: nowrap; padding: 8px 16px; border: 1px solid var(--border); }
       .nav-btn.active { border-color: var(--primary); background: var(--primary); color: #fff; }
-      
-      /* Move Logout to the end of the horizontal scroll */
       .logout-wrapper { 
-        margin-top: 0; 
-        padding-top: 0; 
-        border-top: none; 
-        margin-left: 10px; 
-        padding-left: 10px; 
-        border-left: 1px solid var(--border);
+        margin-top: 0; padding-top: 0; border-top: none; 
+        margin-left: 10px; padding-left: 10px; border-left: 1px solid var(--border);
       }
-      #logout-btn {
-        width: auto; padding: 8px 12px; justify-content: center;
-        border: 1px solid var(--border); color: var(--danger);
-      }
-
+      #logout-btn { width: auto; padding: 8px 12px; justify-content: center; border: 1px solid var(--border); color: var(--danger); }
       .main-content { padding: 20px; max-width: 100%; }
-      
       .avatar-container { flex-direction: column; text-align: center; gap: 12px; }
       .avatar-wrapper { margin: 0 auto; }
-      
       .btn-group { width: 100%; flex-direction: column; }
       .btn-group.right { justify-content: stretch; align-items: stretch; }
       .btn { width: 100%; }
@@ -375,8 +361,6 @@
         </button>
       </li>
     </ul>
-    
-    <!-- Fixed Logout Wrapper for Mobile Layout -->
     <div class="logout-wrapper">
       <button id="logout-btn" class="nav-btn">
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
@@ -546,12 +530,12 @@
 
       <div class="settings-card">
         <h3 style="margin-top:0; margin-bottom:15px; font-size:1rem;">Export Data</h3>
-        <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:15px;">Download a copy of your chat history and profile data as a ZIP file.</p>
+        <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:15px;">Download a copy of your chat history and profile data as a ZIP file, formatted like standard AI exports (ChatGPT/Anthropic style).</p>
         <div class="btn-group stretch">
             <button id="export-data-btn" class="btn">
                 <div class="spinner"></div>
                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                <span>Download ZIP</span>
+                <span>Export Conversations</span>
             </button>
         </div>
       </div>
@@ -686,21 +670,35 @@
       else { btn.classList.remove('loading'); btn.disabled = false; }
   }
 
-  // --- EXPORT DATA (FIXED) ---
+  // --- EXPORT DATA (CHATGPT STYLE) ---
   document.getElementById("export-data-btn").addEventListener("click", async () => {
       const btnId = "export-data-btn";
       setButtonLoading(btnId, true);
 
       try {
+          // 1. Create Zip
+          const zip = new JSZip();
+          const dateStr = new Date().toISOString().slice(0, 10);
+          const folderName = `HeloxAi_Export_${dateStr}`;
+          const conversationsFolder = zip.folder(`${folderName}/conversations`);
+
+          // 2. Fetch Conversations
           const { data: conversations, error: convError } = await supabase
             .from('conversations')
-            .select('id, title, created_at')
+            .select('id, title, created_at, updated_at')
             .eq('user_id', currentUser.id)
             .order('created_at', { ascending: true });
 
           if (convError) throw convError;
-          const convoIds = conversations.map(c => c.id);
 
+          if (!conversations || conversations.length === 0) {
+              showToast("No conversations found to export.", "error");
+              setButtonLoading(btnId, false);
+              return;
+          }
+
+          // 3. Fetch Messages for all these conversations
+          const convoIds = conversations.map(c => c.id);
           let messages = [];
           if (convoIds.length > 0) {
               const { data: msgsData, error: msgError } = await supabase
@@ -708,33 +706,69 @@
                 .select('*')
                 .in('conversation_id', convoIds)
                 .order('created_at', { ascending: true });
+              
               if (msgError) throw msgError;
               messages = msgsData || [];
           }
 
-          const exportData = {
-              meta: {
-                  user_id: currentUser.id,
-                  email: currentUser.email,
-                  exported_at: new Date().toISOString(),
-                  version: "1.0"
-              },
-              stats: {
-                  total_conversations: conversations.length,
-                  total_messages: messages.length
-              },
-              conversations: conversations.map(c => ({
-                  ...c,
-                  messages: messages.filter(m => m.conversation_id === c.id)
-              }))
+          // 4. Structure Data: One JSON file per conversation
+          const manifest = {
+              version: "1.0",
+              exported_at: new Date().toISOString(),
+              user_id: currentUser.id,
+              total_conversations: conversations.length,
+              total_messages: messages.length
           };
 
-          const zip = new JSZip();
-          zip.file("helox_data_export.json", JSON.stringify(exportData, null, 2));
-          zip.file("README.txt", "HeloxAi Data Export\n\nThis ZIP contains your conversation history in JSON format.");
+          conversations.forEach(conv => {
+              const convMessages = messages.filter(m => m.conversation_id === conv.id);
+              
+              const chatData = {
+                  id: conv.id,
+                  title: conv.title,
+                  created_at: conv.created_at,
+                  updated_at: conv.updated_at,
+                  messages: convMessages.map(m => ({
+                      role: m.role,
+                      content: m.content,
+                      created_at: m.created_at
+                  }))
+              };
+
+              // Create safe filename: remove special chars, limit length
+              const safeTitle = (conv.title || "Untitled")
+                  .replace(/[^a-z0-9]/gi, '_')
+                  .replace(/_+/g, '_')
+                  .toLowerCase();
+              
+              const fileName = `${safeTitle}.json`;
+              conversationsFolder.file(fileName, JSON.stringify(chatData, null, 2));
+          });
+
+          // 5. Add Manifest & Readme
+          zip.file(`${folderName}/manifest.json`, JSON.stringify(manifest, null, 2));
+          zip.file(`${folderName}/README.txt`, 
+`HeloxAi Data Export
+--------------------
+Export Date: ${manifest.exported_at}
+Total Conversations: ${manifest.total_conversations}
+
+This ZIP contains your conversation history in JSON format.
+Each conversation is stored as a separate JSON file in the 'conversations/' folder.
+
+Format:
+- id: Unique Conversation ID
+- title: The title of the chat
+- messages: Array of messages with role, content, and timestamp.
+
+© ${new Date().getFullYear()} HeloxAi`);
+
+          // 6. Generate & Download
           const content = await zip.generateAsync({ type: "blob" });
-          saveAs(content, `helox_export_${Date.now()}.zip`);
-          showToast("Export successful!");
+          saveAs(content, `${folderName}.zip`);
+
+          showToast(`Exported ${conversations.length} conversations successfully!`);
+
       } catch (err) {
           console.error(err);
           showToast("Export failed: " + err.message, "error");
