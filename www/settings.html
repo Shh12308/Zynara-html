@@ -621,10 +621,10 @@
     if (provider !== "email") document.getElementById("password-card").style.display = "none";
 
     // 2. Fetch Profile Data from 'users' table
-    // FIX: Changed from select('*') to specific columns to avoid infinite recursion error
+    // FIX: Added 'is_premium' and 'is_lifetime' to ensure badge updates correctly
     const { data: profile, error: profileError } = await supabase
       .from('users')
-      .select('id, nickname, personality, plan') 
+      .select('id, nickname, personality, plan, is_premium, is_lifetime') 
       .eq('id', user.id)
       .single();
 
