@@ -621,9 +621,10 @@
     if (provider !== "email") document.getElementById("password-card").style.display = "none";
 
     // 2. Fetch Profile Data from 'users' table
+    // FIX: Changed from select('*') to specific columns to avoid infinite recursion error
     const { data: profile, error: profileError } = await supabase
       .from('users')
-      .select('*')
+      .select('id, nickname, personality, plan') 
       .eq('id', user.id)
       .single();
 
@@ -632,7 +633,12 @@
     } else if (profile) {
       nicknameInput.value = profile.nickname || '';
       personalitySelect.value = profile.personality || 'friendly';
+      
+      // NOTE: If your avatar_url is in a separate 'profiles' table, 
+      // you won't see it update here without fetching that table.
+      // Based on your schema, 'users' has the plan, but 'profiles' has the avatar.
       if (profile.avatar_url) avatarPreview.src = profile.avatar_url;
+      
       updatePlanBadge(profile);
     }
   }
