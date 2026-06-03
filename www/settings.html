@@ -75,6 +75,7 @@
       padding: 16px;
       flex-shrink: 0;
       transition: transform 0.3s ease;
+      z-index: 10;
     }
 
     .sidebar-header {
@@ -85,9 +86,10 @@
       font-weight: 700;
       font-size: 1.1rem;
       color: var(--text-main);
+      white-space: nowrap;
     }
 
-    .nav-list { list-style: none; padding: 0; margin: 0; flex: 1; }
+    .nav-list { list-style: none; padding: 0; margin: 0; flex: 1; display: flex; flex-direction: column; }
     .nav-item { margin-bottom: 4px; }
 
     .nav-btn {
@@ -105,6 +107,7 @@
       align-items: center;
       gap: 12px;
       transition: all 0.2s;
+      white-space: nowrap;
     }
 
     .nav-btn:hover { background-color: rgba(0,0,0,0.05); color: var(--text-main); }
@@ -114,7 +117,13 @@
       font-weight: 600;
     }
     [data-theme="dark"] .nav-btn:hover { background-color: rgba(255,255,255,0.05); }
-    .nav-icon { width: 18px; height: 18px; opacity: 0.8; }
+    .nav-icon { width: 18px; height: 18px; opacity: 0.8; flex-shrink: 0; }
+
+    .logout-wrapper {
+      margin-top: auto; 
+      padding-top: 10px; 
+      border-top: 1px solid var(--border);
+    }
 
     .main-content {
       flex: 1;
@@ -135,7 +144,10 @@
       border-radius: var(--radius);
       padding: 24px;
       margin-bottom: 24px;
+      box-shadow: var(--shadow);
+      transition: box-shadow 0.2s;
     }
+    .settings-card:hover { box-shadow: 0 6px 10px -1px rgba(0, 0, 0, 0.12); }
 
     .form-group { margin-bottom: 20px; }
     .form-group:last-child { margin-bottom: 0; }
@@ -162,13 +174,14 @@
 
     .form-input:focus {
       border-color: var(--border-hover);
-      box-shadow: 0 0 0 2px rgba(0,0,0,0.05);
+      box-shadow: 0 0 0 2px rgba(16, 163, 127, 0.1);
     }
 
     /* --- BUTTON SYSTEM --- */
     .btn-group { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-    .btn-group.right { justify-content: flex-end; }
+    .btn-group.right { justify-content: flex-end; margin-top: 10px; }
     .btn-group.center { justify-content: center; }
+    .btn-group.stretch > .btn { flex: 1; }
 
     .btn {
       display: inline-flex;
@@ -238,7 +251,7 @@
     .avatar-container { display: flex; align-items: center; gap: 20px; margin-bottom: 24px; }
     .avatar-wrapper {
       position: relative; width: 80px; height: 80px; cursor: pointer;
-      border-radius: 50%; overflow: hidden; box-shadow: var(--shadow);
+      border-radius: 50%; overflow: hidden; box-shadow: var(--shadow); flex-shrink: 0;
     }
     .avatar-img { width: 100%; height: 100%; object-fit: cover; }
     .avatar-overlay {
@@ -267,7 +280,7 @@
     .provider-badge {
       display: inline-flex; align-items: center; gap: 6px;
       padding: 4px 8px; background: rgba(16, 163, 127, 0.1);
-      color: var(--primary); border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-top: 4px;
+      color: var(--primary); border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-top: 4px; flex-shrink: 0;
     }
 
     .tab-content { display: none; animation: fadeIn 0.3s ease; }
@@ -276,7 +289,7 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
     /* TOAST */
-    #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
+    #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; }
     .toast {
       background: var(--bg-card); color: var(--text-main); padding: 12px 20px;
       border-radius: var(--radius); box-shadow: var(--shadow); border-left: 4px solid var(--primary);
@@ -286,7 +299,7 @@
     .toast.error { border-left-color: var(--danger); }
     @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-    /* MOBILE RESPONSIVENESS */
+    /* MOBILE RESPONSIVENESS FIXES */
     @media (max-width: 768px) {
       .app-container { flex-direction: column; }
       .sidebar { 
@@ -295,14 +308,35 @@
         align-items: center;
       }
       .sidebar-header { display: none; }
-      .nav-list { display: flex; gap: 10px; width: 100%; }
+      
+      /* Make nav horizontal and centered */
+      .nav-list { display: flex; flex-direction: row; gap: 10px; width: auto; overflow-x: auto; padding-bottom: 2px; }
       .nav-item { margin: 0; flex-shrink: 0; }
       .nav-btn { width: auto; white-space: nowrap; padding: 8px 16px; border: 1px solid var(--border); }
       .nav-btn.active { border-color: var(--primary); background: var(--primary); color: #fff; }
-      .main-content { padding: 20px; }
-      .avatar-container { flex-direction: column; text-align: center; }
-      .btn-group { width: 100%; justify-content: stretch; }
-      .btn { flex: 1; }
+      
+      /* Move Logout to the end of the horizontal scroll */
+      .logout-wrapper { 
+        margin-top: 0; 
+        padding-top: 0; 
+        border-top: none; 
+        margin-left: 10px; 
+        padding-left: 10px; 
+        border-left: 1px solid var(--border);
+      }
+      #logout-btn {
+        width: auto; padding: 8px 12px; justify-content: center;
+        border: 1px solid var(--border); color: var(--danger);
+      }
+
+      .main-content { padding: 20px; max-width: 100%; }
+      
+      .avatar-container { flex-direction: column; text-align: center; gap: 12px; }
+      .avatar-wrapper { margin: 0 auto; }
+      
+      .btn-group { width: 100%; flex-direction: column; }
+      .btn-group.right { justify-content: stretch; align-items: stretch; }
+      .btn { width: 100%; }
     }
   </style>
 </head>
@@ -341,10 +375,12 @@
         </button>
       </li>
     </ul>
-    <div style="margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border);">
-      <button id="logout-btn" class="nav-btn" style="color: var(--danger); width: 100%;">
+    
+    <!-- Fixed Logout Wrapper for Mobile Layout -->
+    <div class="logout-wrapper">
+      <button id="logout-btn" class="nav-btn">
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-        Log out
+        <span>Log out</span>
       </button>
     </div>
   </aside>
@@ -367,7 +403,7 @@
             </div>
             <input type="file" id="avatar-input" accept="image/*" style="display:none">
           </div>
-          <div>
+          <div style="flex: 1;">
             <h3 style="margin:0; font-size:1rem;">Profile Picture</h3>
             <p style="margin:5px 0 0; font-size:0.85rem; color:var(--text-muted);">Click the avatar to upload a new image.</p>
           </div>
@@ -389,7 +425,7 @@
           </select>
         </div>
 
-        <div class="btn-group right">
+        <div class="btn-group right stretch">
             <button id="save-profile" class="btn btn-primary">
                 <div class="spinner"></div>
                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
@@ -420,13 +456,13 @@
       <div class="settings-card">
         <div class="form-group">
           <label class="form-label">Email Address</label>
-          <div style="display:flex; gap:10px; margin-bottom:10px; align-items: center;">
-            <span id="user-email" style="font-weight:500; font-size: 1.1rem;">Loading...</span>
+          <div style="display:flex; gap:10px; margin-bottom:10px; align-items:center; flex-wrap: wrap;">
+            <span id="user-email" style="font-weight:500; font-size: 1.1rem; word-break: break-all;">Loading...</span>
             <div id="provider-badge"></div>
           </div>
           <input type="email" id="new-email" class="form-input" placeholder="Enter new email address">
         </div>
-        <div class="btn-group">
+        <div class="btn-group stretch">
             <button id="update-email-btn" class="btn">
                 <div class="spinner"></div>
                 <span>Update Email</span>
@@ -440,7 +476,7 @@
           <label class="form-label">New Password</label>
           <input type="password" id="new-password" class="form-input" placeholder="Min. 6 characters">
         </div>
-        <div class="btn-group">
+        <div class="btn-group stretch">
             <button id="update-password-btn" class="btn">
                 <div class="spinner"></div>
                 <span>Update Password</span>
@@ -451,7 +487,7 @@
       <div class="settings-card" style="border-color: var(--danger-border);">
         <h3 style="margin-top:0; color: var(--danger); margin-bottom:10px; font-size:1rem;">Delete Account</h3>
         <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:15px;">Permanently delete your account and all associated data. This action cannot be undone.</p>
-        <div class="btn-group">
+        <div class="btn-group stretch">
             <button id="delete-account-btn" class="btn btn-danger">
                 <div class="spinner"></div>
                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path></svg>
@@ -479,7 +515,7 @@
           </div>
         </div>
         
-        <div class="btn-group">
+        <div class="btn-group stretch">
             <button id="manage-subscription" class="btn btn-primary">
                 <div class="spinner"></div>
                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"></path></svg>
@@ -491,7 +527,7 @@
       <div class="settings-card">
         <h3 style="margin-top:0; margin-bottom:15px; font-size:1rem;">Refunds</h3>
         <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:15px;">If you are unsatisfied with your purchase, you may request a refund within 7 days of transaction.</p>
-        <div class="btn-group">
+        <div class="btn-group stretch">
             <button id="request-refund" class="btn btn-danger">
                 <div class="spinner"></div>
                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
@@ -511,7 +547,7 @@
       <div class="settings-card">
         <h3 style="margin-top:0; margin-bottom:15px; font-size:1rem;">Export Data</h3>
         <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:15px;">Download a copy of your chat history and profile data as a ZIP file.</p>
-        <div class="btn-group">
+        <div class="btn-group stretch">
             <button id="export-data-btn" class="btn">
                 <div class="spinner"></div>
                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
@@ -552,7 +588,6 @@
 
   let supabase;
   
-  // Only initialize Supabase if keys exist (prevents immediate crash if env is missing)
   if (SUPABASE_URL && SUPABASE_ANON_KEY) {
     supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   } else {
@@ -582,8 +617,6 @@
 
     const { data: { user }, error } = await supabase.auth.getUser();
     if (error || !user) { 
-      // If we are in a real browser env without auth, redirect. 
-      // For tool demo purposes, we might stay on page but show error.
       if(window.location.protocol !== 'file:') {
          window.location.href = "auth.html"; 
       } else {
@@ -659,8 +692,6 @@
       setButtonLoading(btnId, true);
 
       try {
-          // 1. Fetch Conversations belonging to user
-          // Schema: conversations -> user_id
           const { data: conversations, error: convError } = await supabase
             .from('conversations')
             .select('id, title, created_at')
@@ -668,12 +699,8 @@
             .order('created_at', { ascending: true });
 
           if (convError) throw convError;
-
-          // 2. Extract Conversation IDs
           const convoIds = conversations.map(c => c.id);
 
-          // 3. Fetch Messages linked to those conversations
-          // Schema: messages -> conversation_id
           let messages = [];
           if (convoIds.length > 0) {
               const { data: msgsData, error: msgError } = await supabase
@@ -681,12 +708,10 @@
                 .select('*')
                 .in('conversation_id', convoIds)
                 .order('created_at', { ascending: true });
-              
               if (msgError) throw msgError;
               messages = msgsData || [];
           }
 
-          // 4. Prepare JSON Data
           const exportData = {
               meta: {
                   user_id: currentUser.id,
@@ -704,16 +729,11 @@
               }))
           };
 
-          // 5. Create ZIP
           const zip = new JSZip();
           zip.file("helox_data_export.json", JSON.stringify(exportData, null, 2));
-          // Optionally add a readme
           zip.file("README.txt", "HeloxAi Data Export\n\nThis ZIP contains your conversation history in JSON format.");
-
-          // 6. Generate & Download
           const content = await zip.generateAsync({ type: "blob" });
           saveAs(content, `helox_export_${Date.now()}.zip`);
-
           showToast("Export successful!");
       } catch (err) {
           console.error(err);
@@ -734,7 +754,6 @@
     let avatarUrl = null;
 
     try {
-      // Upload Avatar if selected
       if (avatarFile) {
         const fileExt = avatarFile.name.split('.').pop();
         const fileName = `${currentUser.id}/${Math.random().toString(36).substring(7)}.${fileExt}`;
@@ -745,21 +764,12 @@
         avatarPreview.src = avatarUrl;
       }
 
-      // Update 'users' table
-      const updates = {
-        id: currentUser.id,
-        nickname,
-        personality, 
-        updated_at: new Date()
-      };
-
+      const updates = { id: currentUser.id, nickname, personality, updated_at: new Date() };
       if (avatarUrl) updates.avatar_url = avatarUrl;
       
       const { error } = await supabase.from('users').upsert(updates);
-
       if (error) throw error;
       showToast("Profile & Personality saved successfully");
-
     } catch (err) {
       console.error(err);
       showToast("Error: " + err.message, "error");
@@ -772,7 +782,6 @@
     const newEmail = document.getElementById("new-email").value;
     if (!newEmail) return showToast("Please enter an email", "error");
     setButtonLoading(btnId, true);
-    
     const { error } = await supabase.auth.updateUser({ email: newEmail });
     if (error) { showToast(error.message, "error"); } else { 
         showToast("Confirmation email sent to " + newEmail); 
@@ -787,7 +796,6 @@
     const newPass = document.getElementById("new-password").value;
     if (!newPass || newPass.length < 6) return showToast("Password must be 6+ chars", "error");
     setButtonLoading(btnId, true);
-    
     const { error } = await supabase.auth.updateUser({ password: newPass });
     if (error) { showToast(error.message, "error"); } else { 
         showToast("Password updated"); 
@@ -800,8 +808,6 @@
   function updatePlanBadge(profile) {
     const badge = document.getElementById('plan-badge');
     const status = document.getElementById('plan-status');
-    
-    // Logic based on provided schema columns
     const isLifetime = profile.is_lifetime || profile.plan === 'lifetime';
     const isPremium = profile.is_premium || profile.plan === 'premium' || profile.plan === 'ultimate_monthly' || profile.plan === 'ultimate_yearly';
 
@@ -818,9 +824,7 @@
   document.getElementById("manage-subscription").addEventListener("click", async () => {
     const btnId = "manage-subscription"; 
     setButtonLoading(btnId, true);
-    
     if (!BACKEND_URL) { showToast("Backend URL not configured", "error"); setButtonLoading(btnId, false); return; }
-
     try {
       const res = await fetch(`${BACKEND_URL}/create-portal-session`, { 
           method: "POST", 
@@ -837,9 +841,7 @@
     const btnId = "request-refund";
     if (!confirm("Are you sure you want to request a refund?")) return;
     setButtonLoading(btnId, true);
-    
     if (!BACKEND_URL) { showToast("Backend URL not configured", "error"); setButtonLoading(btnId, false); return; }
-
     try {
       const res = await fetch(`${BACKEND_URL}/refund`, { 
           method: "POST", 
@@ -854,43 +856,21 @@
   // --- DELETE ACCOUNT ---
 document.getElementById("delete-account-btn").addEventListener("click", async () => {
   const btnId = "delete-account-btn";
-
   if (!confirm("Are you sure? This cannot be undone.")) return;
   if (!confirm("This will delete all your chats, media, and profile data. Continue?")) return;
-
   setButtonLoading(btnId, true);
-
   try {
-    // ✅ Get current Supabase session
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-    if (sessionError || !session) {
-      throw new Error("User not authenticated");
-    }
-
-    // ✅ Call backend securely with JWT
+    if (sessionError || !session) throw new Error("User not authenticated");
     const res = await fetch(`${BACKEND_URL}/delete-account`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${session.access_token}`
-      }
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}` }
     });
-
     const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.error || "Failed to delete account");
-    }
-
+    if (!res.ok) throw new Error(data.error || "Failed to delete account");
     showToast("Account deleted successfully", "success");
-
-    // ✅ Sign out user
     await supabase.auth.signOut();
-
-    // ✅ Redirect
     window.location.href = "auth.html";
-
   } catch (err) {
     console.error(err);
     showToast("Error: " + err.message, "error");
@@ -905,7 +885,7 @@ document.getElementById("delete-account-btn").addEventListener("click", async ()
   });
 
   // Run Init
-  init();
+  document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
