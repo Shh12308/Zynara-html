@@ -761,6 +761,8 @@ function getEnvVar(k) {
 'use strict';
 
 var SB_URL = getEnvVar('SUPABASE_URL'), SB_KEY = getEnvVar('SUPABASE_ANON_KEY');
+var BACKEND_URL = getEnvVar('BACKEND_URL'); // Added Backend URL access
+
 var sb = null;
 if (SB_URL && SB_KEY && SB_URL.indexOf('http') === 0) {
   try { 
@@ -992,19 +994,58 @@ function guestId(){
   } catch(e) { return 'guest-error'; }
 }
 
-/* ========== AUTH ========== */
+/* ========== AUTH (UPDATED WITH BACKEND FALLBACK) ========== */
 async function setUserFromSess(sess){
   try{
     if(!sess || !sess.user) throw new Error("Invalid session");
     var prof=null;
+    
+    // 1. Try Supabase First (The standard way)
     if(sb){
         try{
             var r=await sb.from('users').select('plan,is_premium,is_lifetime').eq('id',sess.user.id).single();
             if(!r.error && r.data) prof=r.data;
-        } catch(dbErr){}
+        } catch(dbErr){
+            console.warn("Supabase read failed (likely RLS), attempting Backend fallback...", dbErr);
+        }
     }
+
+    // 2. Backend Fallback (If Supabase failed or returned null)
+    // This ensures S.user is set correctly even if the DB policies are broken
+    if (!prof && BACKEND_URL) {
+        try {
+            var h={'Content-Type':'application/json'};
+            if(sess.access_token) h['Authorization']='Bearer '+sess.access_token;
+            
+            var res = await fetch(BACKEND_URL+'/user/plan', {
+                method: "GET",
+                headers: h
+            });
+            
+            if (res.ok) {
+                var data = await res.json();
+                // Map Backend strings to Frontend schema
+                var p = (data.plan || '').toLowerCase();
+                prof = {
+                    plan: p === 'monthly' ? 'ultimate_monthly' : (p === 'yearly' ? 'ultimate_yearly' : p),
+                    is_premium: p !== 'free',
+                    is_lifetime: p === 'lifetime'
+                };
+                console.log("Backend Fallback: User set to plan:", prof);
+            }
+        } catch(e) {
+            console.warn("Backend fallback failed, defaulting to Free", e);
+        }
+    }
+
+    // 3. Final Assignment
     var u={ id:sess.user.id, email:sess.user.email, token:sess.access_token, plan:'free', is_premium:false, is_lifetime:false };
-    if(prof){ u.plan=prof.plan||'free'; u.is_premium=!!prof.is_premium; u.is_lifetime=!!prof.is_lifetime; }
+    if(prof){ 
+        u.plan=prof.plan||'free'; 
+        u.is_premium=!!prof.is_premium; 
+        u.is_lifetime=!!prof.is_lifetime; 
+    }
+    
     S.user=u;
     try{localStorage.setItem('helox-last-login',Date.now())}catch(e){}
   }catch(e){ 
@@ -1018,7 +1059,10 @@ async function setupAuth(){
   try {
       var { data: { session }, error } = await sb.auth.getSession();
       if (error) throw error;
-      if (session && session.user) { await setUserFromSess(session); refreshUI(); }
+      if (session && session.user) { 
+          await setUserFromSess(session); 
+          refreshUI(); 
+      }
       else { S.user = null; refreshUI(); }
   } catch(e) { 
     handleError(e, 'Session Check', false); 
@@ -1121,7 +1165,7 @@ async function loadConv(cid){
   }
   S.gallery=[];
   S.msgs.forEach(function(m){ 
-      if(m.role==='assistant') {
+      if(m.role==='assistant'){
           if(m.images && m.images.length) {
               m.images.forEach(function(i){
                   var type = (i.url && (i.url.includes('.mp4') || i.url.includes('.webm'))) ? 'video' : 'image';
@@ -1169,7 +1213,6 @@ async function delConv(cid){
 function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('data-theme',window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');else document.documentElement.setAttribute('data-theme',t)}catch(e){handleError(e, 'Set Theme', false);}S.theme=t;try{localStorage.setItem('helox-theme',t)}catch(e){}document.querySelectorAll('.t-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-t')===t)})}
 function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'dark'}catch(e){}setTheme(s);try{window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(S.theme==='system')setTheme('system')})}catch(e){}}
 
-/* ========== MARKDOWN ========== */
 /* ========== MARKDOWN (UPDATED FOR IMAGES) ========== */
 let mdCache = new Map();
 
@@ -1229,8 +1272,6 @@ function initMarked() {
 
     // 2. Image Rendering (ChatGPT Style)
     renderer.image = function(href, title, text) {
-      // ChatGPT usually wraps images in a clean container that allows expansion
-      // We keep 'data-msg-img' so your existing Lightbox logic works
       return (
         '<div class="img-wrap">' +
         '<img src="' + esc(href) + '" ' +
@@ -1283,11 +1324,11 @@ function md(text) {
           'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
           'hr', 'table', 'thead', 'tbody', 'tr', 'td', 'th',
           'blockquote',
-          'img' // <--- ADDED THIS
+          'img'
         ],
         ALLOWED_ATTR: [
           'href', 'target', 'rel', 'class', 'id', 'title', 'alt',
-          'data-action', 'src', 'loading', 'width', 'height' // <--- ADDED src, loading, alt
+          'data-action', 'src', 'loading', 'width', 'height'
         ]
       });
     }
@@ -1359,7 +1400,7 @@ function renderImgPreview(){
   if(!imgs.length){strip.style.display='none';strip.innerHTML='';return;}
   strip.style.display='flex';
   var html='';
-  imgs.forEach(function(img,idx){
+  imgs.forEach(function(img){
     var isVideo = img.type === 'video';
     var src = img.dataUrl;
     var thumb = isVideo ? '<i class="fa-solid fa-play" style="color:white;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:20px;z-index:1;"></i>' : '';
@@ -1492,10 +1533,10 @@ async function actVoice(idx){
           var utterance = new SpeechSynthesisUtterance(textToRead);
           utterance.rate = 1.0;
           utterance.pitch = 1.0;
-          window.speechSynthesis.speak(utterance);
+          window.synthesis.speak(utterance);
           toast('Reading locally...', 'ok');
       } catch (e) {
-          toast('Voice unavailable', 'err');
+          toast('Voice not supported', 'err');
       }
   } else {
       toast('Voice not supported', 'err');
@@ -1626,7 +1667,7 @@ async function downloadResource(url) {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    window.URL.revokeObjectURL(blobUrl);
+    window.URL.reactivateObjectURL(blobUrl);
   } catch (error) {
     console.error('Download failed:', error);
     toast('Download failed', 'err');
@@ -1674,7 +1715,7 @@ function buildMessageHtml(m, i) {
       html += '    <div class="msg-acts">';
       html += '      <button class="ma" data-act="copy" data-i="' + i + '"><i class="fa-regular fa-copy"></i></button>';
       html += '      <button class="ma' + (m.liked?' liked':'') + '" data-act="like" data-i="' + i + '"><i class="fa-regular fa-thumbs-up"></i></button>';
-      html += '      <button class="ma' + (m.disliked?' disliked':'') + '" data-act="dislike" data-i="' + i + '"><i class="fa-regular fa-thumbs-down"></i></button>';
+      html += '      <button class="ma' + (m.disliked?' disliked:'') + '" data-act="dislike" data-i="' + i + '"><i class="fa-regular fa-thumbs-down"></i></button>';
       html += '      <button class="ma' + (isAuthed()?'':' locked') + '" data-act="voice" data-i="' + i + '" data-tip="Read Aloud"><i class="fa-solid fa-volume-high"></i></button>';
       html += '      <button class="ma" data-act="regen" data-i="' + i + '"><i class="fa-solid fa-rotate-right"></i></button>';
       html += '    </div>';
@@ -1912,47 +1953,11 @@ function sendWithFiles(text,imgs,files){
   var full='';
   var onMedia = function(data){ 
       var idx = S.msgs.length-1; 
-      if(data.type==='image'){
-          if(!S.msgs[idx].images) S.msgs[idx].images = [];
-          data.data.forEach(function(img){ S.msgs[idx].images.push(img); });
-          renderAll();
-      }
-  };
-
-  fetch(apiUrl()+'/analysis',{method:'POST',headers:h,credentials:'include',signal:S.abort.signal,body:fd}).then(function(res){
-    if(!res.ok)throw new Error('HTTP '+res.status);rmTyping();
-    var ct=(res.headers.get('content-type')||'').toLowerCase();
-    if(ct.indexOf('application/json')!==-1){
-      return res.json().then(function(d){var c=d.response||d.content||d.result||d.message||JSON.stringify(d);var ai={id:uid(),role:'assistant',content:c,liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();addGal(c);saveChatHistory(S.chatId, S.msgs);if(S.chatId)updateTs(S.chatId);});
-    }
-    var ai={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();
-    return streamRes(res,function(chunk){full+=chunk;requestAnimationFrame(function(){updateLastAI(full);});},function(){S.msgs[S.msgs.length-1].content=full;addGal(full);saveChatHistory(S.chatId, S.msgs);if(S.chatId)updateTs(S.chatId);}, onMedia);
-  }).catch(function(e){
-    rmTyping();
-    if(e.name==='AbortError'){
-        if(full){
-            S.msgs[S.msgs.length-1].content=full;
-            saveChatHistory(S.chatId, S.msgs).catch(function(){});
-            updateLastAI(full);
-        }else{
-            S.msgs.pop();renderAll();
-        }
-        toast('Stopped','inf');
-    }
-    else{S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});renderAll();toast('Request failed','err');}
-  }).finally(function(){S.streaming=false;S.abort=null;updateCB();});
-}
-
-function sendToAI(text){
-  if(!text)return;S.streaming=true;S.abort=new AbortController();addTyping();updateCB();var full='';
-
-  var onMedia = function(data){
-      var idx = S.msgs.length - 1;
       if(!S.msgs[idx]) return;
       if(!S.msgs[idx].images) S.msgs[idx].images = [];
       
       var mediaType = 'image'; 
-      if (data.media_type === 'video' || (data.url && (data.url.includes('.mp4') || data.url.includes('.webm')))) {
+      if (data.type === 'video' || (data.url && (data.url.includes('.mp4') || data.url.includes('.webm')))) {
           mediaType = 'video';
       }
 
@@ -1984,28 +1989,16 @@ function sendToAI(text){
       scrollBot(true);
   };
 
-  var onStatus = function(msg){
-      var typing = document.getElementById('ai-status-typing');
-      if(typing) typing.textContent = msg;
-      var realIdx = S.msgs.length - 1;
-      var el=$('ai-status-'+realIdx);
-      if(el) { el.textContent = msg; el.style.display = 'inline-block'; }
-  };
-
-  fetch(apiUrl()+'/ask/universal',{
-      method:'POST', headers:authH(), credentials:'include', signal:S.abort.signal,
-      body:JSON.stringify({ prompt:text, conversation_id:S.chatId, mode: S.mode, model: S.model })
-  }).then(function(res){
+  fetch(apiUrl()+'/analysis',{method:'POST',headers:h,credentials:'include',signal:S.abort.signal,body:fd}).then(function(res){
     if(!res.ok)throw new Error('HTTP '+res.status);rmTyping();
     var ct=(res.headers.get('content-type')||'').toLowerCase();
     if(ct.indexOf('application/json')!==-1){
       return res.json().then(function(d){var c=d.response||d.content||d.result||d.message||JSON.stringify(d);var ai={id:uid(),role:'assistant',content:c,liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();addGal(c);saveChatHistory(S.chatId, S.msgs);if(S.chatId)updateTs(S.chatId);});
     }
     var ai={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();
-    return streamRes(res,function(chunk){full+=chunk;updateLastAI(full);},function(){S.msgs[S.msgs.length-1].content=full;saveChatHistory(S.chatId, S.msgs);if(S.chatId)updateTs(S.chatId);}, onMedia, onStatus);
+    return streamRes(res,function(chunk){full+=chunk;requestAnimationFrame(function(){updateLastAI(full);});},function(){S.msgs[S.msgs.length-1].content=full;addGal(full);saveChatHistory(S.chatId, S.msgs);if(S.chatId)updateTs(S.chatId);}, onMedia);
   }).catch(function(e){
     rmTyping();
-    
     if(e.name==='AbortError'){
         if(full){
             S.msgs[S.msgs.length-1].content=full;
@@ -2054,8 +2047,7 @@ function updateCB(){
   if(S.streaming){
     mic.classList.add('hide');
     voice.classList.add('hide');
-    ss.classList.remove('hide','send');
-    ss.classList.add('stop');
+    ss.classList.remove('hide','stop');
     ss.innerHTML='<i class="fa-solid fa-stop"></i>';
     ss.setAttribute('aria-label','Stop generating');
   }else if(hasText||hasFiles){
@@ -2095,7 +2087,7 @@ async function loadVoices() {
                     el.dataset.v=v.id;
                     el.addEventListener('click',function(){
                         S.selectedVoice=v.id;
-                        document.querySelectorAll('.v-item').forEach(function(i){i.classList.remove('active')});
+                        document.querySelectorAll('.v-item').forEach(function(i){i.classList.remove('active');});
                         el.classList.add('active');
                         toggleVD(false);
                         toast('Voice: ' + v.name, 'ok');
@@ -2108,7 +2100,7 @@ async function loadVoices() {
         } else {
             throw new Error(`HTTP ${r.status}`);
         }
-    } catch(e) { 
+    } catch (e) { 
         console.error(e);
         list.innerHTML = '<div style="padding:10px;color:var(--danger);font-size:12px;">Failed to load voices</div>';
     }
@@ -2123,7 +2115,7 @@ function initEvents(){
   $('newChatBtn').addEventListener('click',function(e){e.stopPropagation();startNewChat();});
   $('signInLink').addEventListener('click',function(e){if(S.user){e.preventDefault();signOut();}});
   $('contactLink').addEventListener('click',function(e){e.stopPropagation();toggleSB(false);$('contactModal').classList.add('on');});
-  $('sbSearch').addEventListener('input',function(){var q=this.value.toLowerCase();document.querySelectorAll('#chatListItems .cl-item').forEach(function(el){var t=el.querySelector('.cl-title');if(t)t=t.textContent.toLowerCase();el.style.display=(!q||t.indexOf(q)!==-1)?'flex':'none';});});
+  $('sbSearch').addEventListener('input',function(){var q=this.value.toLowerCase();document.querySelectorAll('#chatListItems .cl-item').forEach(function(el){var t=el.querySelector('.cl-title');if(t)t=t.textContent.toLowerCase();el.style.display=(!q||t.indexOf(q)!==-1)?'flex':'none');});});
 
   /* Theme */
   $('themeGrid').addEventListener('click',function(e){var b=e.target.closest('.t-btn');if(b){e.stopPropagation();setTheme(b.getAttribute('data-t'));}});
@@ -2190,9 +2182,8 @@ function initEvents(){
     /* UPDATE: Intercept Markdown Links for Search Results */
     var linkEl = e.target.closest('.msg-ct a');
     if(linkEl){
-        e.preventDefault(); // Stop default navigation
+        e.preventDefault(); 
         var url = linkEl.getAttribute('href');
-        // Trigger the custom Link Modal (allows "Follow Up" questions)
         if(url && (url.startsWith('http') || url.startsWith('/'))) {
             openLinkModal(url);
         }
@@ -2317,7 +2308,6 @@ function initEvents(){
 
   $('emClose').addEventListener('click',closeEdit);
   $('emCancel').addEventListener('click',closeEdit);
-  $('emOverlay').addEventListener('click',closeEdit);
   $('emSave').addEventListener('click',saveEdit);
 
   $('closeHtmlPrev').addEventListener('click',function(){$('htmlPreviewModal').classList.remove('on');});
@@ -2340,22 +2330,12 @@ function initEvents(){
     }
   });
 
-  document.addEventListener('click',function(e){
-    var cb=e.target.closest('[data-close]');
-    if(cb){e.stopPropagation();var target=$(cb.getAttribute('data-close'));if(target)target.classList.remove('on');return;}
-    var ov=e.target.closest('.modal-ov');
-    if(ov&&e.target===ov){ov.classList.remove('on');return;}
-    if(S.vdOpen&&!e.target.closest('#voiceDd')&&!e.target.closest('#voiceBtn'))toggleVD(false);
-    if(S.mdOpen&&!e.target.closest('#modelSel')&&!e.target.closest('#modelDd'))toggleMD(false);
-  });
-
   document.addEventListener('keydown',function(e){
     if(e.key!=='Escape')return;
     if($('lightbox').classList.contains('on')){closeLB();return;}
     if($('htmlPreviewModal').classList.contains('on')){$('htmlPreviewModal').classList.remove('on');return;}
     if(S.asOpen){toggleAS(false);return;}
     if(S.vdOpen){toggleVD(false);return;}
-    if(S.sbOpen){toggleSB(false);return;}
     if(S.mdOpen){toggleMD(false);return;}
     if($('emModal').classList.contains('on')){closeEdit();return;}
     document.querySelectorAll('.modal-ov.on').forEach(function(m){m.classList.remove('on');});
@@ -2363,7 +2343,8 @@ function initEvents(){
 
   document.addEventListener('paste',function(e){
     if(S.streaming)return;
-    var items=e.clipboardData&&e.clipboardData.items;if(!items)return;
+    var items=e.clipboardData&&e.clipboardData.items;
+    if(!items)return;
     for(var i=0;i<items.length;i++){
       if(items[i].type.indexOf('image/')===0){
         e.preventDefault();
