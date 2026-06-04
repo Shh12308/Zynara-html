@@ -401,6 +401,7 @@
 
     .toast.error { border-left-color: var(--danger); }
     .toast.success { border-left-color: #10b981; }
+    .toast.warning { border-left-color: #f59e0b; }
 
     /* Restore Section */
     .restore-section {
@@ -640,7 +641,7 @@ function getPlatform() {
 }
 
 // ===========================
-// 🧠 Supabase Data (FIXED)
+// 🧠 Supabase Data (WITH BACKEND FALLBACK)
 // ===========================
 async function getUserPlan() {
   if (!supabase) return "free";
@@ -649,39 +650,72 @@ async function getUserPlan() {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return "free";
 
-    // PRIORITY 1: Check 'users' table (The main source of truth per schema)
-    const { data: mainData, error: mainError } = await supabase
-      .from('users')
-      .select('plan, is_premium, is_lifetime')
-      .eq('id', user.id)
-      .maybeSingle();
+    // --- ATTEMPT 1: Read from Supabase (Users Table) ---
+    try {
+      const { data: mainData, error: mainError } = await supabase
+        .from('users')
+        .select('plan, is_premium, is_lifetime')
+        .eq('id', user.id)
+        .maybeSingle();
 
-    console.log("getUserPlan (users table):", mainData, mainError);
+      // Check for the Infinite Recursion Error specifically
+      if (mainError && mainError.code === '42P17') {
+        console.warn("⚠️ RLS Error (42P17) detected. Switching to Backend Fallback.");
+        throw new Error("RLS_RECURSION");
+      }
 
-    if (!mainError && mainData) {
-       const planStr = (mainData.plan || '').toLowerCase();
-       
-       // Logic to match the schema provided previously
-       if (mainData.is_lifetime) return 'lifetime';
-       if (mainData.is_premium) {
-         return planStr === 'ultimate_yearly' ? 'yearly' : 'monthly';
-       }
-       
-       // Fallback to string if boolean flags aren't set
-       if (planStr === 'ultimate_yearly') return 'yearly';
-       if (planStr === 'ultimate_monthly') return 'monthly';
-       
-       return planStr || 'free';
+      if (!mainError && mainData) {
+         const planStr = (mainData.plan || '').toLowerCase();
+         if (mainData.is_lifetime) return 'lifetime';
+         if (mainData.is_premium) {
+           return planStr === 'ultimate_yearly' ? 'yearly' : 'monthly';
+         }
+         if (planStr === 'ultimate_yearly') return 'yearly';
+         if (planStr === 'ultimate_monthly') return 'monthly';
+         return planStr || 'free';
+      }
+    } catch (e) {
+      if (e.message !== "RLS_RECURSION") throw e; // Re-throw if not the specific RLS error
     }
 
-    // PRIORITY 2: Check 'user_profiles' table (Legacy/Fallback)
+    // --- ATTEMPT 2: Backend Fallback (Bypasses RLS) ---
+    if (BACKEND_URL) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return "free";
+
+        console.log("Fetching plan from Backend (Fallback)...");
+        // We call the same endpoint used for updates, but we assume it can return the current plan
+        // If your backend supports GET /user/plan, it will work.
+        const res = await fetch(`${BACKEND_URL}/user/plan`, {
+            method: "GET", // Try GET
+            headers: { "Authorization": `Bearer ${session.access_token}` }
+        });
+
+        let data;
+        if (res.ok) {
+            data = await res.json();
+            // Normalize backend response
+            const p = (data.plan || '').toLowerCase();
+            if (p === 'ultimate_monthly') return 'monthly';
+            if (p === 'ultimate_yearly') return 'yearly';
+            if (p === 'lifetime') return 'lifetime';
+            return p || 'free';
+        } else {
+            // Fallback: Try POST if GET fails (unlikely but safe)
+            // Or just accept we can't read it.
+        }
+      } catch (err) {
+        console.error("Backend fallback failed", err);
+      }
+    }
+
+    // --- ATTEMPT 3: Legacy Profile Table ---
     const { data: profileData, error: profileError } = await supabase
       .from('user_profiles')
       .select('plan')
       .eq('user_id', user.id)
       .maybeSingle();
-
-    console.log("getUserPlan (profiles table fallback):", profileData, profileError);
 
     if (!profileError && profileData) {
        const pPlan = (profileData.plan || '').toLowerCase();
@@ -781,7 +815,7 @@ function showToast(message, type = 'success') {
   
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
-  let icon = type === 'success' ? '✓' : '✕';
+  let icon = type === 'success' ? '✓' : type === 'warning' ? '⚠️' : '✕';
   toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
   container.appendChild(toast);
 
@@ -970,7 +1004,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const cancelled = params.get('cancelled');
 
   if (sessionId) {
-    // Clean URL immediately to prevent double triggers on refresh
+    // Clean URL immediately
     window.history.replaceState({}, document.title, window.location.pathname);
 
     if (!BACKEND_URL) {
