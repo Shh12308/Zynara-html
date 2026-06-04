@@ -580,7 +580,7 @@
   }
 
   let currentUser = null;
-  let isProfileInitialized = false; // Tracks if we successfully fetched the user row
+  let isProfileInitialized = false; 
 
   // --- DOM ELEMENTS ---
   const userEmailSpan = document.getElementById("user-email");
@@ -619,10 +619,9 @@
     const icons = { google: "G", github: "GH", email: "E" };
     providerBadge.innerHTML = `<span class="provider-badge">${icons[provider] || 'E'} ${provider}</span>`;
 
-    // Hide password card for OAuth users
     if (provider !== "email") document.getElementById("password-card").style.display = "none";
 
-    // 2. Fetch Data from SEPARATE tables (Fixes Schema Mismatch)
+    // 2. Fetch Data from SEPARATE tables
     
     // A. Fetch Plan/Profile data from 'users' table
     let { data: dbUser, error: userError } = await supabase
@@ -644,20 +643,42 @@
 
     // 3. Handle Missing Data (Recursion/RLS Fallback)
     if (!dbUser) {
-        console.warn("User row missing in 'users' table. Defaulting to Free plan.");
-        showToast("User profile not found in database. Using defaults.", "warning");
-        // Set defaults
+        console.warn("User row missing in 'users' table. Trying Backend Fallback for Plan...");
+        
+        // Try to fetch plan from Backend (Bypasses RLS)
+        let planStatus = 'free';
+        if (BACKEND_URL) {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session) {
+                    const res = await fetch(`${BACKEND_URL}/user/plan`, {
+                        method: "GET",
+                        headers: { "Authorization": `Bearer ${session.access_token}` }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        const p = (data.plan || '').toLowerCase();
+                        // Map backend 'monthly'/'yearly' to DB strings
+                        if (p === 'monthly') planStatus = 'ultimate_monthly';
+                        else if (p === 'yearly') planStatus = 'ultimate_yearly';
+                        else if (p === 'lifetime') planStatus = 'lifetime';
+                    }
+                }
+            } catch (e) {
+                console.warn("Backend fallback failed, defaulting to free");
+            }
+        }
+
         updatePlanBadge({
-            plan: 'free',
-            is_premium: false,
-            is_lifetime: false
+            plan: planStatus,
+            is_premium: planStatus !== 'free',
+            is_lifetime: planStatus === 'lifetime'
         });
-        // Leave nickname/personality empty or default
+
         nicknameInput.value = user.email?.split('@')[0] || ''; 
         personalitySelect.value = 'friendly';
         isProfileInitialized = false; 
     } else {
-        // Load data from DB
         nicknameInput.value = dbUser.nickname || '';
         personalitySelect.value = dbUser.personality || 'friendly';
         updatePlanBadge(dbUser);
@@ -668,7 +689,6 @@
     if (dbProfile?.avatar_url) {
         avatarPreview.src = dbProfile.avatar_url;
     } else {
-        // Use Picsum if missing
         avatarPreview.src = `https://picsum.photos/seed/${user.id}/200/200`;
     }
   }
@@ -706,7 +726,7 @@
       else { btn.classList.remove('loading'); btn.disabled = false; }
   }
 
-  // --- EXPORT DATA (CHATGPT STYLE) ---
+  // --- EXPORT DATA ---
   document.getElementById("export-data-btn").addEventListener("click", async () => {
       const btnId = "export-data-btn";
       setButtonLoading(btnId, true);
@@ -798,28 +818,23 @@
         const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
         avatarUrl = publicUrlData.publicUrl;
         avatarPreview.src = avatarUrl;
-
-        // Update profiles table for avatar
         await supabase.from('profiles').upsert({ id: currentUser.id, avatar_url: avatarUrl });
       }
 
       // 2. Handle User Data (Nickname, Personality)
-      // NOTE: We check if the profile was initialized. If not, we try to Upsert (create)
-      // If the RLS policy is broken (Recursion), this will fail, and we catch it.
       const updates = { id: currentUser.id, nickname, personality, updated_at: new Date() };
       
       const { error } = await supabase.from('users').upsert(updates);
       
       if (error) {
-        // Specific handling for the RLS Recursion error
         if (error.code === '42P17') {
-            throw new Error("Database Policy Error: Your account cannot be created automatically. Please contact support or check RLS policies.");
+            throw new Error("Database Policy Error: Check RLS policies.");
         }
         throw error;
       }
 
       showToast("Profile & Personality saved successfully");
-      isProfileInitialized = true; // Now it exists
+      isProfileInitialized = true;
 
     } catch (err) {
       console.error(err);
