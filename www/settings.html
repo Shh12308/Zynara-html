@@ -621,26 +621,58 @@
     if (provider !== "email") document.getElementById("password-card").style.display = "none";
 
     // 2. Fetch Profile Data from 'users' table
-    // FIX: Added 'is_premium' and 'is_lifetime' to ensure badge updates correctly
-    const { data: profile, error: profileError } = await supabase
+    // CRITICAL FIX: Using maybeSingle() to prevent crash if row doesn't exist
+    let { data: profile, error: profileError } = await supabase
       .from('users')
-      .select('id, nickname, personality, plan, is_premium, is_lifetime') 
+      .select('id, nickname, personality, plan, is_premium, is_lifetime, avatar_url') 
       .eq('id', user.id)
-      .single();
+      .maybeSingle(); 
 
-    if (profileError) {
-      console.error("Profile fetch error:", profileError);
-    } else if (profile) {
-      nicknameInput.value = profile.nickname || '';
-      personalitySelect.value = profile.personality || 'friendly';
+    console.log("Initial Profile Fetch:", profile, "Error:", profileError);
+
+    // FIX: If profile is null, the user exists in Auth but not in Public table.
+    // We create a default entry for them so the Plan logic works.
+    if (!profile || profileError) {
+      console.warn("User profile missing. Creating default row...");
+      const newProfile = {
+        id: user.id,
+        email: user.email,
+        nickname: user.email?.split('@')[0],
+        plan: 'free',
+        is_premium: false,
+        is_lifetime: false
+      };
       
-      // NOTE: If your avatar_url is in a separate 'profiles' table, 
-      // you won't see it update here without fetching that table.
-      // Based on your schema, 'users' has the plan, but 'profiles' has the avatar.
-      if (profile.avatar_url) avatarPreview.src = profile.avatar_url;
-      
-      updatePlanBadge(profile);
+      const { data: upsertData, error: upsertError } = await supabase
+        .from('users')
+        .upsert(newProfile)
+        .select()
+        .single();
+
+      if (upsertError) {
+        console.error("Failed to create profile:", upsertError);
+        showToast("Error initializing user profile", "error");
+        return; // Stop here if we can't create the row
+      } else {
+        profile = upsertData;
+        console.log("Profile created:", profile);
+      }
     }
+    
+    // 3. Populate UI
+    nicknameInput.value = profile.nickname || '';
+    personalitySelect.value = profile.personality || 'friendly';
+    
+    // Handle Avatar
+    if (profile.avatar_url) {
+      avatarPreview.src = profile.avatar_url;
+    } else {
+      // Check separate 'profiles' table if avatar is missing in 'users'
+      const { data: profileExtra } = await supabase.from('profiles').select('avatar_url').eq('id', user.id).maybeSingle();
+      if (profileExtra?.avatar_url) avatarPreview.src = profileExtra.avatar_url;
+    }
+    
+    updatePlanBadge(profile);
   }
 
   function setTheme(theme) {
@@ -848,15 +880,28 @@ Format:
   function updatePlanBadge(profile) {
     const badge = document.getElementById('plan-badge');
     const status = document.getElementById('plan-status');
-    const isLifetime = profile.is_lifetime || profile.plan === 'lifetime';
-    const isPremium = profile.is_premium || profile.plan === 'premium' || profile.plan === 'ultimate_monthly' || profile.plan === 'ultimate_yearly';
+    
+    console.log("Updating Plan Badge with data:", profile);
+
+    const planStr = (profile.plan || '').toLowerCase();
+    const isLifetime = profile.is_lifetime || planStr === 'lifetime';
+    const isPremium = profile.is_premium || 
+                      planStr === 'premium' || 
+                      planStr === 'ultimate_monthly' || 
+                      planStr === 'ultimate_yearly';
 
     if (isLifetime) {
-      badge.textContent = 'LIFETIME'; badge.style.background = '#f59e0b'; status.textContent = "Lifetime Access Active";
+      badge.textContent = 'LIFETIME'; 
+      badge.style.background = '#f59e0b'; 
+      status.textContent = "Lifetime Access Active";
     } else if (isPremium) {
-      badge.textContent = 'PREMIUM'; badge.style.background = '#10a37f'; status.textContent = "Premium Active";
+      badge.textContent = 'PREMIUM'; 
+      badge.style.background = '#10a37f'; 
+      status.textContent = "Premium Active";
     } else {
-      badge.textContent = 'FREE'; badge.style.background = '#6e6e80'; status.textContent = "Free Plan";
+      badge.textContent = 'FREE'; 
+      badge.style.background = '#6e6e80'; 
+      status.textContent = "Free Plan";
     }
   }
 
@@ -894,29 +939,29 @@ Format:
   });
 
   // --- DELETE ACCOUNT ---
-document.getElementById("delete-account-btn").addEventListener("click", async () => {
-  const btnId = "delete-account-btn";
-  if (!confirm("Are you sure? This cannot be undone.")) return;
-  if (!confirm("This will delete all your chats, media, and profile data. Continue?")) return;
-  setButtonLoading(btnId, true);
-  try {
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !session) throw new Error("User not authenticated");
-    const res = await fetch(`${BACKEND_URL}/delete-account`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}` }
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to delete account");
-    showToast("Account deleted successfully", "success");
-    await supabase.auth.signOut();
-    window.location.href = "auth.html";
-  } catch (err) {
-    console.error(err);
-    showToast("Error: " + err.message, "error");
-    setButtonLoading(btnId, false);
-  }
-});
+  document.getElementById("delete-account-btn").addEventListener("click", async () => {
+    const btnId = "delete-account-btn";
+    if (!confirm("Are you sure? This cannot be undone.")) return;
+    if (!confirm("This will delete all your chats, media, and profile data. Continue?")) return;
+    setButtonLoading(btnId, true);
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) throw new Error("User not authenticated");
+      const res = await fetch(`${BACKEND_URL}/delete-account`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to delete account");
+      showToast("Account deleted successfully", "success");
+      await supabase.auth.signOut();
+      window.location.href = "auth.html";
+    } catch (err) {
+      console.error(err);
+      showToast("Error: " + err.message, "error");
+      setButtonLoading(btnId, false);
+    }
+  });
 
   // --- LOGOUT ---
   document.getElementById("logout-btn").addEventListener("click", async () => {
