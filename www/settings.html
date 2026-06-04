@@ -297,6 +297,7 @@
       animation: slideIn 0.3s ease; max-width: 300px;
     }
     .toast.error { border-left-color: var(--danger); }
+    .toast.warning { border-left-color: #f59e0b; }
     @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
     /* MOBILE RESPONSIVENESS FIXES */
@@ -579,6 +580,7 @@
   }
 
   let currentUser = null;
+  let isProfileInitialized = false; // Tracks if we successfully fetched the user row
 
   // --- DOM ELEMENTS ---
   const userEmailSpan = document.getElementById("user-email");
@@ -620,59 +622,55 @@
     // Hide password card for OAuth users
     if (provider !== "email") document.getElementById("password-card").style.display = "none";
 
-    // 2. Fetch Profile Data from 'users' table
-    // CRITICAL FIX: Using maybeSingle() to prevent crash if row doesn't exist
-    let { data: profile, error: profileError } = await supabase
+    // 2. Fetch Data from SEPARATE tables (Fixes Schema Mismatch)
+    
+    // A. Fetch Plan/Profile data from 'users' table
+    let { data: dbUser, error: userError } = await supabase
       .from('users')
-      .select('id, nickname, personality, plan, is_premium, is_lifetime, avatar_url') 
+      .select('id, nickname, personality, plan, is_premium, is_lifetime')
       .eq('id', user.id)
       .maybeSingle(); 
 
-    console.log("Initial Profile Fetch:", profile, "Error:", profileError);
+    console.log("User Data Fetch:", dbUser, userError);
 
-    // FIX: If profile is null, the user exists in Auth but not in Public table.
-    // We create a default entry for them so the Plan logic works.
-    if (!profile || profileError) {
-      console.warn("User profile missing. Creating default row...");
-      const newProfile = {
-        id: user.id,
-        email: user.email,
-        nickname: user.email?.split('@')[0],
-        plan: 'free',
-        is_premium: false,
-        is_lifetime: false
-      };
-      
-      const { data: upsertData, error: upsertError } = await supabase
-        .from('users')
-        .upsert(newProfile)
-        .select()
-        .single();
+    // B. Fetch Avatar data from 'profiles' table
+    let { data: dbProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('avatar_url')
+      .eq('id', user.id)
+      .maybeSingle();
 
-      if (upsertError) {
-        console.error("Failed to create profile:", upsertError);
-        showToast("Error initializing user profile", "error");
-        return; // Stop here if we can't create the row
-      } else {
-        profile = upsertData;
-        console.log("Profile created:", profile);
-      }
-    }
-    
-    // 3. Populate UI
-    nicknameInput.value = profile.nickname || '';
-    personalitySelect.value = profile.personality || 'friendly';
-    
-    // Handle Avatar
-    if (profile.avatar_url) {
-      avatarPreview.src = profile.avatar_url;
+    console.log("Profile Data Fetch:", dbProfile, profileError);
+
+    // 3. Handle Missing Data (Recursion/RLS Fallback)
+    if (!dbUser) {
+        console.warn("User row missing in 'users' table. Defaulting to Free plan.");
+        showToast("User profile not found in database. Using defaults.", "warning");
+        // Set defaults
+        updatePlanBadge({
+            plan: 'free',
+            is_premium: false,
+            is_lifetime: false
+        });
+        // Leave nickname/personality empty or default
+        nicknameInput.value = user.email?.split('@')[0] || ''; 
+        personalitySelect.value = 'friendly';
+        isProfileInitialized = false; 
     } else {
-      // Check separate 'profiles' table if avatar is missing in 'users'
-      const { data: profileExtra } = await supabase.from('profiles').select('avatar_url').eq('id', user.id).maybeSingle();
-      if (profileExtra?.avatar_url) avatarPreview.src = profileExtra.avatar_url;
+        // Load data from DB
+        nicknameInput.value = dbUser.nickname || '';
+        personalitySelect.value = dbUser.personality || 'friendly';
+        updatePlanBadge(dbUser);
+        isProfileInitialized = true;
     }
-    
-    updatePlanBadge(profile);
+
+    // 4. Handle Avatar
+    if (dbProfile?.avatar_url) {
+        avatarPreview.src = dbProfile.avatar_url;
+    } else {
+        // Use Picsum if missing
+        avatarPreview.src = `https://picsum.photos/seed/${user.id}/200/200`;
+    }
   }
 
   function setTheme(theme) {
@@ -694,8 +692,8 @@
   window.showToast = function(message, type = 'success') {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
-    toast.className = `toast ${type === 'error' ? 'error' : ''}`;
-    let icon = type === 'error' ? '❌' : '✅';
+    toast.className = `toast ${type === 'error' ? 'error' : type === 'warning' ? 'warning' : ''}`;
+    let icon = type === 'error' ? '❌' : type === 'warning' ? '⚠️' : '✅';
     toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
     container.appendChild(toast);
     setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
@@ -714,13 +712,11 @@
       setButtonLoading(btnId, true);
 
       try {
-          // 1. Create Zip
           const zip = new JSZip();
           const dateStr = new Date().toISOString().slice(0, 10);
           const folderName = `HeloxAi_Export_${dateStr}`;
           const conversationsFolder = zip.folder(`${folderName}/conversations`);
 
-          // 2. Fetch Conversations
           const { data: conversations, error: convError } = await supabase
             .from('conversations')
             .select('id, title, created_at, updated_at')
@@ -728,14 +724,12 @@
             .order('created_at', { ascending: true });
 
           if (convError) throw convError;
-
           if (!conversations || conversations.length === 0) {
               showToast("No conversations found to export.", "error");
               setButtonLoading(btnId, false);
               return;
           }
 
-          // 3. Fetch Messages for all these conversations
           const convoIds = conversations.map(c => c.id);
           let messages = [];
           if (convoIds.length > 0) {
@@ -744,12 +738,10 @@
                 .select('*')
                 .in('conversation_id', convoIds)
                 .order('created_at', { ascending: true });
-              
               if (msgError) throw msgError;
               messages = msgsData || [];
           }
 
-          // 4. Structure Data: One JSON file per conversation
           const manifest = {
               version: "1.0",
               exported_at: new Date().toISOString(),
@@ -760,51 +752,22 @@
 
           conversations.forEach(conv => {
               const convMessages = messages.filter(m => m.conversation_id === conv.id);
-              
               const chatData = {
                   id: conv.id,
                   title: conv.title,
                   created_at: conv.created_at,
                   updated_at: conv.updated_at,
-                  messages: convMessages.map(m => ({
-                      role: m.role,
-                      content: m.content,
-                      created_at: m.created_at
-                  }))
+                  messages: convMessages.map(m => ({ role: m.role, content: m.content, created_at: m.created_at }))
               };
-
-              // Create safe filename: remove special chars, limit length
-              const safeTitle = (conv.title || "Untitled")
-                  .replace(/[^a-z0-9]/gi, '_')
-                  .replace(/_+/g, '_')
-                  .toLowerCase();
-              
+              const safeTitle = (conv.title || "Untitled").replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_').toLowerCase();
               const fileName = `${safeTitle}.json`;
               conversationsFolder.file(fileName, JSON.stringify(chatData, null, 2));
           });
 
-          // 5. Add Manifest & Readme
           zip.file(`${folderName}/manifest.json`, JSON.stringify(manifest, null, 2));
-          zip.file(`${folderName}/README.txt`, 
-`HeloxAi Data Export
---------------------
-Export Date: ${manifest.exported_at}
-Total Conversations: ${manifest.total_conversations}
-
-This ZIP contains your conversation history in JSON format.
-Each conversation is stored as a separate JSON file in the 'conversations/' folder.
-
-Format:
-- id: Unique Conversation ID
-- title: The title of the chat
-- messages: Array of messages with role, content, and timestamp.
-
-© ${new Date().getFullYear()} HeloxAi`);
-
-          // 6. Generate & Download
+          zip.file(`${folderName}/README.txt`, `HeloxAi Data Export\n--------------------\nExport Date: ${manifest.exported_at}\nTotal Conversations: ${manifest.total_conversations}`);
           const content = await zip.generateAsync({ type: "blob" });
           saveAs(content, `${folderName}.zip`);
-
           showToast(`Exported ${conversations.length} conversations successfully!`);
 
       } catch (err) {
@@ -826,6 +789,7 @@ Format:
     let avatarUrl = null;
 
     try {
+      // 1. Handle Avatar Upload
       if (avatarFile) {
         const fileExt = avatarFile.name.split('.').pop();
         const fileName = `${currentUser.id}/${Math.random().toString(36).substring(7)}.${fileExt}`;
@@ -834,14 +798,29 @@ Format:
         const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
         avatarUrl = publicUrlData.publicUrl;
         avatarPreview.src = avatarUrl;
+
+        // Update profiles table for avatar
+        await supabase.from('profiles').upsert({ id: currentUser.id, avatar_url: avatarUrl });
       }
 
+      // 2. Handle User Data (Nickname, Personality)
+      // NOTE: We check if the profile was initialized. If not, we try to Upsert (create)
+      // If the RLS policy is broken (Recursion), this will fail, and we catch it.
       const updates = { id: currentUser.id, nickname, personality, updated_at: new Date() };
-      if (avatarUrl) updates.avatar_url = avatarUrl;
       
       const { error } = await supabase.from('users').upsert(updates);
-      if (error) throw error;
+      
+      if (error) {
+        // Specific handling for the RLS Recursion error
+        if (error.code === '42P17') {
+            throw new Error("Database Policy Error: Your account cannot be created automatically. Please contact support or check RLS policies.");
+        }
+        throw error;
+      }
+
       showToast("Profile & Personality saved successfully");
+      isProfileInitialized = true; // Now it exists
+
     } catch (err) {
       console.error(err);
       showToast("Error: " + err.message, "error");
@@ -880,9 +859,6 @@ Format:
   function updatePlanBadge(profile) {
     const badge = document.getElementById('plan-badge');
     const status = document.getElementById('plan-status');
-    
-    console.log("Updating Plan Badge with data:", profile);
-
     const planStr = (profile.plan || '').toLowerCase();
     const isLifetime = profile.is_lifetime || planStr === 'lifetime';
     const isPremium = profile.is_premium || 
@@ -891,17 +867,11 @@ Format:
                       planStr === 'ultimate_yearly';
 
     if (isLifetime) {
-      badge.textContent = 'LIFETIME'; 
-      badge.style.background = '#f59e0b'; 
-      status.textContent = "Lifetime Access Active";
+      badge.textContent = 'LIFETIME'; badge.style.background = '#f59e0b'; status.textContent = "Lifetime Access Active";
     } else if (isPremium) {
-      badge.textContent = 'PREMIUM'; 
-      badge.style.background = '#10a37f'; 
-      status.textContent = "Premium Active";
+      badge.textContent = 'PREMIUM'; badge.style.background = '#10a37f'; status.textContent = "Premium Active";
     } else {
-      badge.textContent = 'FREE'; 
-      badge.style.background = '#6e6e80'; 
-      status.textContent = "Free Plan";
+      badge.textContent = 'FREE'; badge.style.background = '#6e6e80'; status.textContent = "Free Plan";
     }
   }
 
