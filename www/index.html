@@ -752,7 +752,7 @@ main{
    ENV FALLBACK & ERROR HANDLING
    ========================================= */
 if (typeof window.__ENV__ === 'undefined') {
-  window.__ENV__ = { SUPABASE_URL:'', SUPABASE_ANON_KEY:'', FREE_AI_URL:'', PREMIUM_AI_URL:'' };
+  window.__ENV__ = { SUPABASE_URL:'', SUPABASE_ANON_KEY:'', FREE_AI_URL:'', PREMIUM_AI_URL:'', BACKEND_URL:'' };
   console.warn('%c[HeloXAi] env.js not found. Running in Guest Mode.', 'color:#f59e0b;font-weight:bold');
 }
 
@@ -978,10 +978,21 @@ function checkLimits(text) {
 function apiUrl(){
   try {
     var base = getEnvVar('FREE_AI_URL');
+    
+    // BACKEND FALLBACK: If DB read fails, rely on backend plan status to determine URL
+    if (!base && isAuthed()) {
+        var plan = S.user?.plan || 'free';
+        if (plan === 'ultimate_monthly' || plan === 'ultimate_yearly' || plan === 'lifetime') {
+             base = getEnvVar('PREMIUM_AI_URL');
+        }
+    }
+    
+    // Standard Check
     if(S.user && (S.user.is_lifetime||S.user.is_premium)){
       var p = getEnvVar('PREMIUM_AI_URL');
       if(p && p.indexOf('http')===0) base = p;
     }
+    
     if(!base) throw new Error("API URL is not configured");
     return base;
   } catch(e) {
@@ -1007,24 +1018,62 @@ function guestId(){
   } catch(e) { return 'guest-error'; }
 }
 
-/* ========== AUTH ========== */
+/* ========== AUTH (UPDATED) ========== */
 async function setUserFromSess(sess){
   try{
     if(!sess || !sess.user) throw new Error("Invalid session");
+    
+    // 1. Attempt Primary Fetch (Users Table)
     var prof=null;
     if(sb){
         try{
-            var r=await sb.from('users').select('plan,is_premium,is_lifetime').eq('id',sess.user.id).single();
+            var r=await sb.from('users').select('plan,is_premium,is_lifetime').eq('id',sess.user.id).maybeSingle();
             if(!r.error && r.data) prof=r.data;
-        } catch(dbErr){}
+        } catch(dbErr){
+            console.warn("Primary DB fetch failed, trying fallback...", dbErr);
+        }
     }
+
+    // 2. Backend Fallback (Bypasses RLS if Primary Fails)
+    if (!prof) {
+        console.log("User profile missing in DB. Checking Backend...");
+        if(getEnvVar('BACKEND_URL')) {
+            try {
+                // We need the access token, which is in sess.access_token
+                var res = await fetch(getEnvVar('BACKEND_URL')+'/user/plan', {
+                    method: "GET",
+                    headers: { "Authorization": `Bearer ${sess.access_token}` }
+                });
+                if (res.ok) {
+                    var data = await res.json();
+                    // Normalize backend response to match DB schema
+                    if (data.plan) {
+                        prof = {
+                            plan: data.plan,
+                            is_premium: data.plan !== 'free',
+                            is_lifetime: data.plan === 'lifetime'
+                        };
+                    }
+                }
+            } catch (backendErr) {
+                console.warn("Backend fallback failed:", backendErr);
+            }
+        }
+    }
+
+    // 3. Set User State
     var u={ id:sess.user.id, email:sess.user.email, token:sess.access_token, plan:'free', is_premium:false, is_lifetime:false };
+    
     if(prof){ u.plan=prof.plan||'free'; u.is_premium=!!prof.is_premium; u.is_lifetime=!!prof.is_lifetime; }
+    
     S.user=u;
     try{localStorage.setItem('helox-last-login',Date.now())}catch(e){}
   }catch(e){ 
     console.error("SetUser Error", e);
-    S.user={ id:sess.user?.id, email:sess.user?.email, token:sess.access_token, plan:'free', is_premium:false, is_lifetime:false }; 
+    // Fallback: Allow user to remain logged in auth-wise, but with free plan default if DB check fails
+    if(sess && sess.user){
+        S.user = { id: sess.user.id, email: sess.user.email, token: sess.access_token, plan: 'free', is_premium: false, is_lifetime: false };
+    }
   }
 }
 
@@ -1244,8 +1293,6 @@ function initMarked() {
 
     // 2. Image Rendering (ChatGPT Style)
     renderer.image = function(href, title, text) {
-      // ChatGPT usually wraps images in a clean container that allows expansion
-      // We keep 'data-msg-img' so your existing Lightbox logic works
       return (
         '<div class="img-wrap">' +
         '<img src="' + esc(href) + '" ' +
@@ -1287,7 +1334,6 @@ function md(text) {
     }
 
     // Sanitize HTML
-    // CRITICAL UPDATE: Added 'img' to ALLOWED_TAGS and 'src', 'alt', 'loading' to ALLOWED_ATTR
     if (typeof DOMPurify !== 'undefined') {
       html = DOMPurify.sanitize(html, {
         ALLOWED_TAGS: [
@@ -1298,11 +1344,11 @@ function md(text) {
           'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
           'hr', 'table', 'thead', 'tbody', 'tr', 'td', 'th',
           'blockquote',
-          'img' // <--- ADDED THIS
+          'img'
         ],
         ALLOWED_ATTR: [
           'href', 'target', 'rel', 'class', 'id', 'title', 'alt',
-          'data-action', 'src', 'loading', 'width', 'height' // <--- ADDED src, loading, alt
+          'data-action', 'src', 'loading', 'width', 'height'
         ]
       });
     }
@@ -1374,7 +1420,7 @@ function renderImgPreview(){
   if(!imgs.length){strip.style.display='none';strip.innerHTML='';return;}
   strip.style.display='flex';
   var html='';
-  imgs.forEach(function(img,idx){
+  imgs.forEach(function(img){
     var isVideo = img.type === 'video';
     var src = img.dataUrl;
     var thumb = isVideo ? '<i class="fa-solid fa-play" style="color:white;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:20px;z-index:1;"></i>' : '';
@@ -1494,7 +1540,7 @@ async function actVoice(idx){
         audio.play();
         toast('Playing audio', 'ok');
         return;
-      } catch(e) {
+      } catch (e) {
           handleError(e, 'Voice Generation', false);
           toast('Backend voice unavailable', 'wrn');
       }
@@ -1507,10 +1553,10 @@ async function actVoice(idx){
           var utterance = new SpeechSynthesisUtterance(textToRead);
           utterance.rate = 1.0;
           utterance.pitch = 1.0;
-          window.speechSynthesis.speak(utterance);
+          window.synthesis.speak(utterance);
           toast('Reading locally...', 'ok');
       } catch (e) {
-          toast('Voice unavailable', 'err');
+          toast('Voice not supported', 'err');
       }
   } else {
       toast('Voice not supported', 'err');
@@ -1689,7 +1735,7 @@ function buildMessageHtml(m, i) {
       html += '    <div class="msg-acts">';
       html += '      <button class="ma" data-act="copy" data-i="' + i + '"><i class="fa-regular fa-copy"></i></button>';
       html += '      <button class="ma' + (m.liked?' liked':'') + '" data-act="like" data-i="' + i + '"><i class="fa-regular fa-thumbs-up"></i></button>';
-      html += '      <button class="ma' + (m.disliked?' disliked':'') + '" data-act="dislike" data-i="' + i + '"><i class="fa-regular fa-thumbs-down"></i></button>';
+      html += '      <button class="ma' + (m.disliked?' disliked:'') + '" data-act="dislike" data-i="' + i + '"><i class="fa-regular fa-thumbs-down"></i></button>';
       html += '      <button class="ma' + (isAuthed()?'':' locked') + '" data-act="voice" data-i="' + i + '" data-tip="Read Aloud"><i class="fa-solid fa-volume-high"></i></button>';
       html += '      <button class="ma" data-act="regen" data-i="' + i + '"><i class="fa-solid fa-rotate-right"></i></button>';
       html += '    </div>';
@@ -1894,7 +1940,7 @@ async function sendMsg(text){
   }
 
   if(!S.chatId) await startNewChat();
-  var imgs=S.pendingFiles.filter(function(f){return f.type==='image';}).map(function(f){return{dataUrl:f.dataUrl,name:f.name};});
+  var imgs=S.pendingFiles.filter(function(f){return f.type==='image';}).map(function(f){return{dataUrl:f.dataUrl,name:f.name};}});
   var files=S.pendingFiles.filter(function(f){return f.type!=='image';});
   var msg={id:uid(),role:'user',content:t,images:imgs,time:now()};
   S.msgs.push(msg);
@@ -1927,11 +1973,40 @@ function sendWithFiles(text,imgs,files){
   var full='';
   var onMedia = function(data){ 
       var idx = S.msgs.length-1; 
-      if(data.type==='image'){
-          if(!S.msgs[idx].images) S.msgs[idx].images = [];
-          data.data.forEach(function(img){ S.msgs[idx].images.push(img); });
-          renderAll();
+      if(!S.msgs[idx]) return;
+      if(!S.msgs[idx].images) S.msgs[idx].images = [];
+      
+      var mediaType = 'image'; 
+      if (data.type === 'video' || (data.url && (data.url.includes('.mp4') || data.url.includes('.webm'))) {
+          mediaType = 'video';
       }
+
+      if(data.type === 'image'){
+          data.data.forEach(function(img){
+              var url = img.url || img;
+              S.msgs[idx].images.push({
+                  url: url, 
+                  name: 'Generated', 
+                  type: mediaType
+              });
+              if(!S.gallery.some(function(g){return g.url===url})) S.gallery.unshift({type:mediaType,url:url,prompt:'Generated',id:uid()});
+              incrementUsage('images');
+              
+              var el=$('mi-'+idx);
+              if(el) {
+                  el.insertAdjacentHTML('beforeend', '<div class="msg-img-item single"><img src="'+url+'" loading="lazy"></div>');
+              }
+          });
+      } else if (data.type === 'video') {
+          var vidObj = {type:mediaType, url:data.url};
+          S.msgs[idx].images.push(vidObj);
+          if(!S.gallery.some(function(g){return g.url===data.url})) S.gallery.unshift({type:mediaType,url:data.url,prompt:'Generated',id:uid()});
+          incrementUsage('videos');
+          var el=$('mi-'+idx);
+          if(el) el.insertAdjacentHTML('beforeend', '<div class="msg-img-item single"><video src="'+data.url+'" controls autoplay loop muted playsinline></video></div>');
+      }
+      renderAll(); 
+      scrollBot(true);
   };
 
   fetch(apiUrl()+'/analysis',{method:'POST',headers:h,credentials:'include',signal:S.abort.signal,body:fd}).then(function(res){
@@ -1954,7 +2029,11 @@ function sendWithFiles(text,imgs,files){
         }
         toast('Stopped','inf');
     }
-    else{S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});renderAll();toast('Request failed','err');}
+    else {
+        S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});
+        renderAll();
+        handleError(e, 'AI Generation');
+    }
   }).finally(function(){S.streaming=false;S.abort=null;updateCB();});
 }
 
@@ -1967,11 +2046,11 @@ function sendToAI(text){
       if(!S.msgs[idx].images) S.msgs[idx].images = [];
       
       var mediaType = 'image'; 
-      if (data.media_type === 'video' || (data.url && (data.url.includes('.mp4') || data.url.includes('.webm')))) {
+      if (data.media_type === 'video' || (data.url && (data.url.includes('.mp4') || data.url.includes('.webm'))) {
           mediaType = 'video';
       }
 
-      if(data.type === 'image'){
+      if (data.type === 'image'){
           data.data.forEach(function(img){
               var url = img.url || img;
               S.msgs[idx].images.push({
@@ -1981,7 +2060,6 @@ function sendToAI(text){
               });
               if(!S.gallery.some(function(g){return g.url===url})) S.gallery.unshift({type:mediaType,url:url,prompt:'Generated',id:uid()});
               incrementUsage('images');
-              
               var el=$('mi-'+idx);
               if(el) {
                   el.insertAdjacentHTML('beforeend', '<div class="msg-img-item single"><img src="'+url+'" loading="lazy"></div>');
@@ -2069,8 +2147,8 @@ function updateCB(){
   if(S.streaming){
     mic.classList.add('hide');
     voice.classList.add('hide');
-    ss.classList.remove('hide','send');
-    ss.classList.add('stop');
+    ss.classList.remove('hide','stop');
+    ss.classList.add('send');
     ss.innerHTML='<i class="fa-solid fa-stop"></i>';
     ss.setAttribute('aria-label','Stop generating');
   }else if(hasText||hasFiles){
@@ -2078,7 +2156,7 @@ function updateCB(){
        mic.classList.add('hide');
        voice.classList.add('hide');
     }
-    ss.classList.remove('hide','stop');
+    ss.classList.remove('hide');
     ss.classList.add('send');
     ss.innerHTML='<i class="fa-solid fa-arrow-up"></i>';
     ss.setAttribute('aria-label','Send message');
@@ -2110,7 +2188,7 @@ async function loadVoices() {
                     el.dataset.v=v.id;
                     el.addEventListener('click',function(){
                         S.selectedVoice=v.id;
-                        document.querySelectorAll('.v-item').forEach(function(i){i.classList.remove('active')});
+                        document.querySelectorAll('.v-item').forEach(function(i){i.classList.remove('active');});
                         el.classList.add('active');
                         toggleVD(false);
                         toast('Voice: ' + v.name, 'ok');
@@ -2123,7 +2201,7 @@ async function loadVoices() {
         } else {
             throw new Error(`HTTP ${r.status}`);
         }
-    } catch(e) { 
+    } catch (e) { 
         console.error(e);
         list.innerHTML = '<div style="padding:10px;color:var(--danger);font-size:12px;">Failed to load voices</div>';
     }
@@ -2332,7 +2410,6 @@ function initEvents(){
 
   $('emClose').addEventListener('click',closeEdit);
   $('emCancel').addEventListener('click',closeEdit);
-  $('emOverlay').addEventListener('click',closeEdit);
   $('emSave').addEventListener('click',saveEdit);
 
   $('closeHtmlPrev').addEventListener('click',function(){$('htmlPreviewModal').classList.remove('on');});
@@ -2355,22 +2432,12 @@ function initEvents(){
     }
   });
 
-  document.addEventListener('click',function(e){
-    var cb=e.target.closest('[data-close]');
-    if(cb){e.stopPropagation();var target=$(cb.getAttribute('data-close'));if(target)target.classList.remove('on');return;}
-    var ov=e.target.closest('.modal-ov');
-    if(ov&&e.target===ov){ov.classList.remove('on');return;}
-    if(S.vdOpen&&!e.target.closest('#voiceDd')&&!e.target.closest('#voiceBtn'))toggleVD(false);
-    if(S.mdOpen&&!e.target.closest('#modelSel')&&!e.target.closest('#modelDd'))toggleMD(false);
-  });
-
   document.addEventListener('keydown',function(e){
     if(e.key!=='Escape')return;
     if($('lightbox').classList.contains('on')){closeLB();return;}
     if($('htmlPreviewModal').classList.contains('on')){$('htmlPreviewModal').classList.remove('on');return;}
     if(S.asOpen){toggleAS(false);return;}
     if(S.vdOpen){toggleVD(false);return;}
-    if(S.sbOpen){toggleSB(false);return;}
     if(S.mdOpen){toggleMD(false);return;}
     if($('emModal').classList.contains('on')){closeEdit();return;}
     document.querySelectorAll('.modal-ov.on').forEach(function(m){m.classList.remove('on');});
@@ -2378,7 +2445,8 @@ function initEvents(){
 
   document.addEventListener('paste',function(e){
     if(S.streaming)return;
-    var items=e.clipboardData&&e.clipboardData.items;if(!items)return;
+    var items=e.clipboardData&&e.clipboardData.items;
+    if(!items)return;
     for(var i=0;i<items.length;i++){
       if(items[i].type.indexOf('image/')===0){
         e.preventDefault();
@@ -2386,7 +2454,7 @@ function initEvents(){
         var name='pasted-'+Date.now()+'.'+(file.type.split('/')[1]||'png');
         (function(f,n){
           readAsDataUrl(f).then(function(url){
-            S.pendingFiles.push({type:'image',dataUrl:url,name:n,size:f.size,file:new File([f],n,{type:f.type})});
+            S.pendingFiles.push({type:'image',dataUrl:url,name:n,size:file.size,file:new File([f],n,{type:f.type})});
             renderImgPreview();updateCB();
           });
         })(file,name);
