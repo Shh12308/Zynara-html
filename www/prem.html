@@ -608,13 +608,10 @@
 // ===========================
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-// 1. Verify Environment
 if (!window.__ENV__) {
   console.error("❌ env.js not loaded correctly.");
   showToast("Configuration Error: env.js missing.", "error");
   document.querySelectorAll('.btn').forEach(b => b.disabled = true);
-} else {
-  console.log("✅ Environment loaded:", window.__ENV__);
 }
 
 const { SUPABASE_URL, SUPABASE_ANON_KEY, BACKEND_URL } = window.__ENV__ || {};
@@ -643,49 +640,69 @@ function getPlatform() {
 }
 
 // ===========================
-// 🧠 Supabase Data
+// 🧠 Supabase Data (FIXED)
 // ===========================
 async function getUserPlan() {
-  if (!supabase) return "free"; // Default fallback
+  if (!supabase) return "free";
   
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    // If not logged in, or auth fails, default to free
-    if (authError || !user) {
-      console.warn("User not authenticated, defaulting to free.");
-      return "free";
+    if (authError || !user) return "free";
+
+    // PRIORITY 1: Check 'users' table (The main source of truth per schema)
+    const { data: mainData, error: mainError } = await supabase
+      .from('users')
+      .select('plan, is_premium, is_lifetime')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    console.log("getUserPlan (users table):", mainData, mainError);
+
+    if (!mainError && mainData) {
+       const planStr = (mainData.plan || '').toLowerCase();
+       
+       // Logic to match the schema provided previously
+       if (mainData.is_lifetime) return 'lifetime';
+       if (mainData.is_premium) {
+         return planStr === 'ultimate_yearly' ? 'yearly' : 'monthly';
+       }
+       
+       // Fallback to string if boolean flags aren't set
+       if (planStr === 'ultimate_yearly') return 'yearly';
+       if (planStr === 'ultimate_monthly') return 'monthly';
+       
+       return planStr || 'free';
     }
 
-    // Fetch profile data
-    const { data, error } = await supabase
+    // PRIORITY 2: Check 'user_profiles' table (Legacy/Fallback)
+    const { data: profileData, error: profileError } = await supabase
       .from('user_profiles')
-      .select('*')
+      .select('plan')
       .eq('user_id', user.id)
-      .maybeSingle(); 
+      .maybeSingle();
 
-    if (error) {
-      console.error("Supabase Fetch Error:", error);
-      return "free";
+    console.log("getUserPlan (profiles table fallback):", profileData, profileError);
+
+    if (!profileError && profileData) {
+       const pPlan = (profileData.plan || '').toLowerCase();
+       if (pPlan === 'ultimate_yearly') return 'yearly';
+       if (pPlan === 'ultimate_monthly') return 'monthly';
+       return pPlan || 'free';
     }
-    
-    // Return plan type, defaulting to 'free' if null/undefined
-    return data?.plan || "free";
+
+    return "free";
   } catch (e) {
     console.error("Unexpected error in getUserPlan:", e);
     return "free";
   }
 }
 
-// UPDATED: Calls Node.js Backend
 async function updateSupabasePlan(plan, provider = "manual") {
   if (!BACKEND_URL) throw new Error("Backend URL is not defined in env.js");
   
-  // Get token
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error("User not authenticated");
 
-  // Call Node.js Backend /user/plan endpoint
   const res = await fetch(`${BACKEND_URL}/user/plan`, {
     method: "POST",
     headers: { 
@@ -712,7 +729,6 @@ async function createStripeCheckoutSession(planType) {
   const { data: { session } } = await supabase.auth.getSession();
 
   try {
-    // Map internal IDs to backend expectations
     const backendPlanType = planType === 'ultimate_monthly' ? 'monthly' : 'yearly';
 
     const res = await fetch(`${BACKEND_URL}/create-checkout-session`, {
@@ -725,8 +741,8 @@ async function createStripeCheckoutSession(planType) {
         user_id: user.id,
         email: user.email,
         plan: backendPlanType,
-        success_url: window.location.href + '?session_id={CHECKOUT_SESSION_ID}',
-        cancel_url: window.location.href + '?cancelled=true'
+        success_url: window.location.href.split('?')[0] + '?session_id={CHECKOUT_SESSION_ID}',
+        cancel_url: window.location.href.split('?')[0] + '?cancelled=true'
       }),
     });
 
@@ -748,9 +764,6 @@ async function createStripeCheckoutSession(planType) {
   }
 }
 
-// ===========================
-// 💳 In-App Purchase Placeholders
-// =========================
 function handleNativePayment(planType) {
   const platform = getPlatform();
   if (platform.includes('ios')) {
@@ -762,18 +775,13 @@ function handleNativePayment(planType) {
   }
 }
 
-// ===========================
-// 🎨 UI Components & Helpers
-// =========================
 function showToast(message, type = 'success') {
   const container = document.getElementById('toast-container');
   if (!container) return;
   
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
-  
   let icon = type === 'success' ? '✓' : '✕';
-  
   toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
   container.appendChild(toast);
 
@@ -797,13 +805,12 @@ function setButtonLoading(btn, isLoading) {
 }
 
 // ===========================
-// 💡 UI State Management (UPDATED)
+// 💡 UI State Management
 // =========================
 async function updatePlanButtons() {
   const currentPlan = await getUserPlan();
   console.log("Current Plan Detected:", currentPlan);
 
-  // Define mapping of DB plan values to DOM IDs/Text
   const plans = {
     'free': {
       cardId: 'card-free',
@@ -822,14 +829,13 @@ async function updatePlanButtons() {
     }
   };
 
-  // Helper to reset a card/button to default state
   const resetCard = (planKey) => {
     const planData = plans[planKey];
     if (!planData) return;
     
     const card = document.getElementById(planData.cardId);
     const btn = document.getElementById(planData.btnId);
-    const status = document.getElementById(`status-${planKey}`); // Hide status badge
+    const status = document.getElementById(`status-${planKey}`);
 
     if (card) card.classList.remove('current-plan');
     if (status) status.style.display = 'none';
@@ -837,7 +843,6 @@ async function updatePlanButtons() {
     if (btn) {
       btn.disabled = false;
       btn.classList.remove('btn-cancel');
-      // Restore original class color logic (Free is secondary, Paid is primary)
       if (planKey === 'free') {
         btn.classList.add('btn-secondary');
         btn.classList.remove('btn-primary');
@@ -845,26 +850,19 @@ async function updatePlanButtons() {
         btn.classList.add('btn-primary');
         btn.classList.remove('btn-secondary');
       }
-      
-      // Reset Text
       const span = btn.querySelector('span');
       if (span) span.textContent = planData.defaultText;
-      
-      // Remove cancel flag
       delete btn.dataset.isCancel;
     }
   };
 
-  // 1. Reset All Cards First
   Object.keys(plans).forEach(key => resetCard(key));
 
-  // 2. Handle "Lifetime" edge case (maps to yearly for UI usually, or disable all paid)
   let activePlanKey = currentPlan;
   if (currentPlan === 'lifetime') {
-    activePlanKey = 'yearly'; // Visually treat as yearly for highlighting
+    activePlanKey = 'yearly';
   }
 
-  // 3. Highlight Active Plan
   const activeData = plans[activePlanKey];
   if (activeData) {
     const activeCard = document.getElementById(activeData.cardId);
@@ -876,13 +874,12 @@ async function updatePlanButtons() {
     
     if (activeBtn) {
       activeBtn.disabled = true;
-      activeBtn.classList.remove('btn-primary', 'btn-secondary'); // Clear colors
+      activeBtn.classList.remove('btn-primary', 'btn-secondary');
       const span = activeBtn.querySelector('span');
       if (span) span.textContent = "Current Plan";
     }
   }
 
-  // 4. Handle Paid Plan Logic (Modify Free button to Cancel)
   if (['monthly', 'yearly', 'lifetime'].includes(currentPlan)) {
     const freeBtn = document.getElementById('freeBtn');
     if (freeBtn) {
@@ -911,7 +908,6 @@ async function handleSubscription(planType, btnElement) {
       showToast(`Welcome to the ${planType.replace('_', ' ')} plan!`);
     } else {
       await createStripeCheckoutSession(planType);
-      // Redirect happens inside
     }
     
     updatePlanButtons();
@@ -945,12 +941,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   freeBtn.addEventListener("click", async () => {
     const isCancelling = freeBtn.dataset.isCancel === "true";
-    
     if (isCancelling) {
       const confirm = window.confirm("Are you sure you want to cancel? Premium features will end immediately.");
       if (!confirm) return;
     }
-
     setButtonLoading(freeBtn, true);
     try {
       await updateSupabasePlan("free", "manual");
@@ -976,43 +970,52 @@ document.addEventListener("DOMContentLoaded", async () => {
   const cancelled = params.get('cancelled');
 
   if (sessionId) {
-    try {
-      if (!BACKEND_URL) throw new Error("No backend URL");
-      
-      showToast("Verifying payment...", "success");
-      const res = await fetch(`${BACKEND_URL}/verify-session?session_id=${sessionId}`);
-      const data = await res.json();
+    // Clean URL immediately to prevent double triggers on refresh
+    window.history.replaceState({}, document.title, window.location.pathname);
 
-      if (data.status === 'success' || data.upgraded || data.already_upgraded) {
-        showToast("Payment successful! Updating your plan...", "success");
-        
-        // CRITICAL FIX: Wait 2 seconds to allow backend DB commit
-        setTimeout(async () => {
-          await updatePlanButtons();
-          window.history.replaceState({}, document.title, window.location.pathname);
-          
-          // Sanity Check: If it's STILL free after 2 seconds, warn user.
-          const finalCheck = await getUserPlan();
-          if (finalCheck === 'free') {
-            console.error("Payment verified but database not updated.");
-            showToast("Payment processed, but plan update failed. Refreshing...", "error");
-            setTimeout(() => location.reload(), 3000);
-          }
-        }, 2000);
-      } else {
-        showToast("Payment verification failed.", "error");
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
+    if (!BACKEND_URL) {
+      showToast("Configuration Error: No Backend URL", "error");
+      return;
+    }
+    
+    showToast("Verifying payment...", "success");
+    
+    try {
+      // 1. Call Backend to verify and update DB
+      await fetch(`${BACKEND_URL}/verify-session?session_id=${sessionId}`);
+      
+      // 2. POLLING: Check database every 2 seconds for up to 10 seconds
+      let attempts = 0;
+      const maxAttempts = 5; 
+      
+      const pollInterval = setInterval(async () => {
+        attempts++;
+        const currentPlan = await getUserPlan();
+        console.log(`Polling attempt ${attempts}: Plan is ${currentPlan}`);
+
+        // If plan is updated successfully
+        if (currentPlan !== 'free') {
+          clearInterval(pollInterval);
+          showToast("Upgrade successful!", "success");
+          updatePlanButtons();
+        } 
+        // If we've tried 5 times (10 seconds) and it's still free
+        else if (attempts >= maxAttempts) {
+          clearInterval(pollInterval);
+          showToast("Payment verified, but database update delayed. Refreshing...", "warning");
+          setTimeout(() => location.reload(), 2000);
+        }
+      }, 2000);
+
     } catch (e) {
       console.error(e);
       showToast("Could not verify payment with server.", "error");
-      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }
 
   if (cancelled === 'true') {
-    showToast("Checkout cancelled.", "error");
     window.history.replaceState({}, document.title, window.location.pathname);
+    showToast("Checkout cancelled.", "error");
   }
 });
 </script>
