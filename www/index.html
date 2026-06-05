@@ -731,31 +731,32 @@ main{
   </div> 
 
 <div class="toast-ct" id="toastCt"></div>
-<!-- Assuming env.js might not be present, we handle errors gracefully -->
-<script src="env.js"></script>
-<script>
- /* ═══════════════════════════════════
-       Cookie consent
-       ═══════════════════════════════════ */
-    const cBanner = document.getElementById('cookie-banner');
-    if (!localStorage.getItem('heloxai_cookie_consent')) cBanner.classList.add('visible');
-    document.getElementById('cookie-accept').addEventListener('click', () => {
-      localStorage.setItem('heloxai_cookie_consent', 'accepted');
-      cBanner.classList.remove('visible');
-    });
-    document.getElementById('cookie-decline').addEventListener('click', () => {
-      localStorage.setItem('heloxai_cookie_consent', 'declined');
-      cBanner.classList.remove('visible');
-    });
-   
-/* =========================================
-   ENV FALLBACK & ERROR HANDLING
-   ========================================= */
-if (typeof window.__ENV__ === 'undefined') {
-  window.__ENV__ = { SUPABASE_URL:'', SUPABASE_ANON_KEY:'', FREE_AI_URL:'', PREMIUM_AI_URL:'' };
-  console.warn('%c[HeloXAi] env.js not found. Running in Guest Mode.', 'color:#f59e0b;font-weight:bold');
-}
 
+<script>
+/* =========================================
+   CONFIGURATION & ENVIRONMENT
+   ========================================= */
+/* 
+   NOTE: In a production environment, create an 'env.js' file 
+   with the content below. For this standalone file, we define it here.
+*/
+(function() {
+    if (typeof window.__ENV__ === 'undefined') {
+        // Mocking the env.js content for standalone functionality
+        // REPLACE THESE WITH YOUR ACTUAL KEYS
+        window.__ENV__ = {
+            SUPABASE_URL: 'https://xyzcompany.supabase.co', 
+            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...', 
+            FREE_AI_URL: 'https://api.heloxai.com/v1', 
+            PREMIUM_AI_URL: 'https://api.heloxai.com/v1/pro'
+        };
+        console.warn('%c[HeloXAi] env.js not found. Using internal mock configuration. Update window.__ENV__ in source code or provide env.js.', 'color:#f59e0b;font-weight:bold');
+    }
+})();
+
+/* =========================================
+   CORE LOGIC
+   ========================================= */
 function handleError(err, context = 'Operation', showToast = true) {
   console.error(`[HeloXAi] Error in ${context}:`, err);
   if (showToast) {
@@ -895,9 +896,7 @@ function saveChatHistory(id, msgs) {
     try {
         var toSave = msgs.slice(-50).map(function(m) {
             var nm = { ...m };
-
             delete nm.dataUrl;
-
             if (nm.images) {
                 nm.images = nm.images.map(function(img) {
                     return {
@@ -907,28 +906,21 @@ function saveChatHistory(id, msgs) {
                     };
                 }).filter(img => img.url !== null);
             }
-
             return nm;
         });
-
         var serialized = JSON.stringify(toSave);
-
-        // crude safety check (~4.5MB cap)
         if (serialized.length > 4.5 * 1024 * 1024) {
             console.warn("Chat too large, trimming...");
             toSave = toSave.slice(-20);
             serialized = JSON.stringify(toSave);
         }
-
         localStorage.setItem('helox_history_' + id, serialized);
-
         var c = S.chatListData.find(x => x.id === id);
         if (c) {
             c.updated_at = new Date().toISOString();
             saveLocalChats();
             renderChatList();
         }
-
     } catch (e) {
         console.warn("Could not save chat history (Quota exceeded?)", e);
     }
@@ -1007,21 +999,56 @@ function guestId(){
   } catch(e) { return 'guest-error'; }
 }
 
-/* ========== AUTH ========== */
+/* =========================================
+   AUTH & PLAN VERIFICATION
+   ========================================= */
 async function setUserFromSess(sess){
   try{
     if(!sess || !sess.user) throw new Error("Invalid session");
     var prof=null;
+    
+    // BACKEND CONNECTION: VERIFY PLAN
+    // This step connects to the DB to verify the user's subscription plan.
     if(sb){
         try{
+            // Query the 'users' table for plan details
             var r=await sb.from('users').select('plan,is_premium,is_lifetime').eq('id',sess.user.id).single();
-            if(!r.error && r.data) prof=r.data;
-        } catch(dbErr){}
+            
+            if(!r.error && r.data) {
+                prof = r.data;
+                console.log('[HeloXAi] Plan Verified from DB:', prof);
+            } else {
+                console.warn('[HeloXAi] Could not fetch user profile, defaulting to free.', r.error);
+            }
+        } catch(dbErr){
+            console.error('[HeloXAi] DB Query Error:', dbErr);
+        }
     }
-    var u={ id:sess.user.id, email:sess.user.email, token:sess.access_token, plan:'free', is_premium:false, is_lifetime:false };
-    if(prof){ u.plan=prof.plan||'free'; u.is_premium=!!prof.is_premium; u.is_lifetime=!!prof.is_lifetime; }
+    
+    // Construct User Object
+    var u={ 
+        id:sess.user.id, 
+        email:sess.user.email, 
+        token:sess.access_token, 
+        plan:'free', // Default
+        is_premium:false, 
+        is_lifetime:false 
+    };
+    
+    // Apply verified plan data
+    if(prof){ 
+        u.plan=prof.plan||'free'; 
+        u.is_premium=!!prof.is_premium; 
+        u.is_lifetime=!!prof.is_lifetime; 
+    }
+    
     S.user=u;
     try{localStorage.setItem('helox-last-login',Date.now())}catch(e){}
+    
+    // Notify user of plan status if applicable
+    if(u.is_lifetime) toast('Welcome back, Lifetime Member!', 'ok');
+    else if(u.is_premium) toast('Welcome back, Premium User', 'ok');
+    
   }catch(e){ 
     console.error("SetUser Error", e);
     S.user={ id:sess.user?.id, email:sess.user?.email, token:sess.access_token, plan:'free', is_premium:false, is_lifetime:false }; 
@@ -1185,7 +1212,6 @@ function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('
 function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'dark'}catch(e){}setTheme(s);try{window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(S.theme==='system')setTheme('system')})}catch(e){}}
 
 /* ========== MARKDOWN ========== */
-/* ========== MARKDOWN (UPDATED FOR IMAGES) ========== */
 let mdCache = new Map();
 
 function initMarked() {
@@ -1244,8 +1270,6 @@ function initMarked() {
 
     // 2. Image Rendering (ChatGPT Style)
     renderer.image = function(href, title, text) {
-      // ChatGPT usually wraps images in a clean container that allows expansion
-      // We keep 'data-msg-img' so your existing Lightbox logic works
       return (
         '<div class="img-wrap">' +
         '<img src="' + esc(href) + '" ' +
@@ -1276,7 +1300,6 @@ function md(text) {
   if (text == null) return '';
 
   try {
-    // Check cache
     if (mdCache.has(text)) return mdCache.get(text);
 
     var html = '';
@@ -1287,7 +1310,6 @@ function md(text) {
     }
 
     // Sanitize HTML
-    // CRITICAL UPDATE: Added 'img' to ALLOWED_TAGS and 'src', 'alt', 'loading' to ALLOWED_ATTR
     if (typeof DOMPurify !== 'undefined') {
       html = DOMPurify.sanitize(html, {
         ALLOWED_TAGS: [
@@ -1297,12 +1319,11 @@ function md(text) {
           'sup', 'sub', 'del', 's',
           'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
           'hr', 'table', 'thead', 'tbody', 'tr', 'td', 'th',
-          'blockquote',
-          'img' // <--- ADDED THIS
+          'blockquote', 'img'
         ],
         ALLOWED_ATTR: [
           'href', 'target', 'rel', 'class', 'id', 'title', 'alt',
-          'data-action', 'src', 'loading', 'width', 'height' // <--- ADDED src, loading, alt
+          'data-action', 'src', 'loading', 'width', 'height'
         ]
       });
     }
@@ -1366,7 +1387,7 @@ function selectMode(m){
     if(map[m]) toast('Mode: ' + map[m], 'ok');
 }
 
-/* ========== FILE HANDLING (FIXED) ========== */
+/* ========== FILE HANDLING ========== */
 function renderImgPreview(){
   var strip=$('imgPreviewStrip');
   if(!strip) return;
@@ -1609,10 +1630,6 @@ function renderGallery(){
 function openLB(src,isV){S.lbUrl=src;S.lbType=isV?'video':'image';$('lbContent').innerHTML=isV?'<video src="'+src+'" controls autoplay style="max-width:90vw;max-height:85vh;border-radius:18px">':'<img src="'+src+'" style="max-width:90vw;max-height:85vh;border-radius:18px">';$('lightbox').classList.add('on');}
 function closeLB(){$('lightbox').classList.remove('on');$('lbContent').innerHTML='';S.lbUrl='';}
 
-/* 
-  FIX: PWA Direct Download
-  Forces file download via Blob instead of opening in browser tab.
-*/
 async function downloadResource(url) {
   if(!url) return;
   toast('Downloading...', 'inf');
@@ -1625,7 +1642,6 @@ async function downloadResource(url) {
     const link = document.createElement('a');
     link.href = blobUrl;
     
-    // Determine extension from MIME type
     let ext = 'bin';
     const type = blob.type || '';
     if (type.includes('jpeg') || type.includes('jpg')) ext = 'jpg';
@@ -1645,12 +1661,11 @@ async function downloadResource(url) {
   } catch (error) {
     console.error('Download failed:', error);
     toast('Download failed', 'err');
-    // Fallback: try opening normally
     window.open(url, '_blank');
   }
 }
 
-/* ========== RENDER MESSAGES (FIXED FOR BREAKING CHATS) ========== */
+/* ========== RENDER MESSAGES ========== */
 function showWelcome(){$('welcomeEl').style.display='flex';$('msgsEl').style.display='none';}
 function showMsgs(){$('welcomeEl').style.display='none';$('msgsEl').style.display='block';}
 function renderChatList(){
@@ -1683,7 +1698,6 @@ function buildMessageHtml(m, i) {
       html += '<div class="msg ' + roleClass + '">';
       html += '  <div class="msg-inner">';
       html += '    <div class="msg-label"><span class="ai-dot"></span> AI <span id="ai-status-' + i + '" class="ai-status"></span></div>';
-      // Separated containers for robustness
       html += '    <div id="mc-' + i + '" class="msg-ct"></div>';
       html += '    <div id="mi-' + i + '" class="msg-imgs"></div>';
       html += '    <div class="msg-acts">';
@@ -1703,7 +1717,6 @@ function buildMessageHtml(m, i) {
       html += '    <div class="msg-bubble">';
       html += '      <div class="msg-text-wrapper" id="mtw-' + m.id + '">' + esc(m.content) + '</div>';
       html += '      <button class="msg-toggle-btn" id="mtb-' + m.id + '">Show more</button>';
-      /* FIXED: User Images Rendered Here */
       if (m.images && m.images.length) html += buildImgHtml(m.images);
       html += '    </div>';
       html += '    <div class="msg-acts">';
@@ -1724,14 +1737,11 @@ function renderAll(){
     }
     showMsgs();
     var msgsEl = $('msgsEl');
-    
     msgsEl.innerHTML = ''; 
     var html = '';
-    
     for (var i = 0; i < S.msgs.length; i++) {
         html += buildMessageHtml(S.msgs[i], i);
     }
-    
     msgsEl.innerHTML = html;
 
     S.msgs.forEach(function(m, i){
@@ -2202,19 +2212,16 @@ function initEvents(){
 
   /* Delegated Clicks */
   document.addEventListener('click',function(e){
-    /* UPDATE: Intercept Markdown Links for Search Results */
     var linkEl = e.target.closest('.msg-ct a');
     if(linkEl){
-        e.preventDefault(); // Stop default navigation
+        e.preventDefault();
         var url = linkEl.getAttribute('href');
-        // Trigger the custom Link Modal (allows "Follow Up" questions)
         if(url && (url.startsWith('http') || url.startsWith('/'))) {
             openLinkModal(url);
         }
         return;
     }
 
-    /* Toggle Show More/Less */
     var tgBtn = e.target.closest('.msg-toggle-btn');
     if(tgBtn){
         e.stopPropagation();
@@ -2227,7 +2234,6 @@ function initEvents(){
         return;
     }
 
-    /* Download */
     if(e.target.closest('#lbDl')){
         e.preventDefault();
         e.stopPropagation();
@@ -2235,7 +2241,6 @@ function initEvents(){
         return;
     }
 
-    /* Copy Code */
     var cpBtn=e.target.closest('[data-action="copy-code"]');
     if(cpBtn){
       e.stopPropagation();
@@ -2252,7 +2257,6 @@ function initEvents(){
       return;
     }
 
-    /* Run HTML */
     var runBtn = e.target.closest('[data-action="run-html"]');
     if(runBtn){
       e.stopPropagation();
@@ -2262,18 +2266,15 @@ function initEvents(){
       return;
     }
 
-    /* Remove Pending File */
     var rmBtn=e.target.closest('[data-rm-idx]');
     if(rmBtn){
       var idx=parseInt(rmBtn.getAttribute('data-rm-idx'),10);
       rmPendingFile(idx);return;
     }
 
-    /* Image in chat */
     var msgImg=e.target.closest('[data-msg-img]');
     if(msgImg){openLB(msgImg.getAttribute('data-msg-img'),false);return;}
 
-    /* Message Actions */
     var ab=e.target.closest('.ma');
     if(ab){
       if(ab.classList.contains('locked'))return;
@@ -2289,14 +2290,12 @@ function initEvents(){
       return;
     }
 
-    /* Welcome Cards */
     var wCard=e.target.closest('.w-card');
     if(wCard){
       if(wCard.classList.contains('locked')){toast('Sign in to use this feature', 'wrn');return;}
       sendMsg(wCard.getAttribute('data-prompt'));return;
     }
 
-    /* Gallery */
     var galItem=e.target.closest('.gal-item');
     if(galItem){
       var gid=galItem.getAttribute('data-gid');
