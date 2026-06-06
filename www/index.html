@@ -28,7 +28,7 @@
 
 <style>
 /* =========================================
-   CSS STYLES (Unchanged for brevity, assumed valid)
+   CSS STYLES
    ========================================= */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;outline:none;}
 :root{
@@ -466,7 +466,7 @@ function dataUrlToFile(u,n){
 }
 
 /* =========================================
-   UI HELPERS (MOVED UP)
+   UI HELPERS
    ========================================= */
 function toast(msg,type){
   var ic={ok:'fa-circle-check',err:'fa-circle-xmark',inf:'fa-circle-info',wrn:'fa-triangle-exclamation'};
@@ -478,7 +478,6 @@ function toast(msg,type){
 }
 
 function handleError(err, context = 'Operation', showToast = true) {
-  // Safely serialize error to avoid empty objects
   var errString = '';
   if (typeof err === 'string') errString = err;
   else if (err && err.message) errString = err.message;
@@ -489,10 +488,9 @@ function handleError(err, context = 'Operation', showToast = true) {
   
   if (showToast) {
     var msg = 'An unexpected error occurred.';
-    // Map specific known errors to friendly messages
     if (errString.includes('API URL is not configured')) msg = 'API URL not found. Check env.js';
     else if (errString.includes('42P17')) msg = 'Database policy error. Using Free plan.';
-    else if (errString.length < 100) msg = errString; // Use actual message if short
+    else if (errString.length < 100) msg = errString; 
 
     toast(msg, 'err');
   }
@@ -526,7 +524,7 @@ var VID_KW=['generate video','create video','make video','render video'];
 function isImgQ(t){ var l=t.toLowerCase(); for(var i=0;i<IMG_KW.length;i++) if(l.indexOf(IMG_KW[i])!==-1) return true; return false; }
 function isVidQ(t){ var l=t.toLowerCase(); for(var i=0;i<VID_KW.length;i++) if(l.indexOf(VID_KW[i])!==-1) return true; return false; }
 
-/* --- LOCAL STORAGE HELPERS (FIXED FOR QUOTA) --- */
+/* --- LOCAL STORAGE HELPERS --- */
 function safeSetItem(key, value) {
     try {
         localStorage.setItem(key, value);
@@ -534,16 +532,14 @@ function safeSetItem(key, value) {
     } catch (e) {
         if (e.name === 'QuotaExceededError') {
             console.warn('LocalStorage full. Attempting to clean up...');
-            // Clear old chats except active
             if(key.startsWith('helox_history_')) {
-                // Try to clear other chat histories to make room
                 var keys = Object.keys(localStorage);
                 var removed = 0;
                 for(var i=0; i<keys.length; i++) {
                     if(keys[i].startsWith('helox_history_') && keys[i] !== key) {
                         localStorage.removeItem(keys[i]);
                         removed++;
-                        if(removed > 2) break; // Clear a few and try again
+                        if(removed > 2) break; 
                     }
                 }
                 try {
@@ -655,16 +651,25 @@ function checkLimits(text) {
     return { allowed: true, msg: '' };
 }
 
+/* 
+  FIX: Improved Plan Fetching & API URL Routing 
+*/
 function apiUrl(){
   try {
     var base = getEnvVar('FREE_AI_URL');
-    if(S.user && (S.user.is_lifetime||S.user.is_premium)){
+    
+    // Check if user has valid premium status
+    if(S.user && (S.user.is_lifetime || S.user.is_premium)){
       var p = getEnvVar('PREMIUM_AI_URL');
-      if(p && p.indexOf('http')===0) base = p;
+      // Validate Premium URL exists before switching
+      if(p && p.indexOf('http')===0) {
+        base = p;
+        console.log('[HeloXAi] Using Premium API Endpoint');
+      }
     }
-    // FIX: Do not throw, return null to allow graceful handling
+    
     if(!base) {
-        console.error('API URL is not configured in env.js');
+        console.error('[HeloXAi] API URL is not configured in env.js');
         return null; 
     }
     return base;
@@ -673,6 +678,7 @@ function apiUrl(){
     return null;
   }
 }
+
 function authH(){
   try {
     var h={'Content-Type':'application/json'};
@@ -692,15 +698,18 @@ function guestId(){
 }
 
 /* =========================================
-   AUTH & PLAN VERIFICATION
+   AUTH & PLAN VERIFICATION (FIXED)
    ========================================= */
 async function setUserFromSess(sess){
   try{
     if(!sess || !sess.user) throw new Error("Invalid session");
     var prof=null;
+
     if(sb){
         try{
+            // Attempt to fetch user plan details
             var r=await sb.from('users').select('plan,is_premium,is_lifetime').eq('id',sess.user.id).single();
+            
             if(r.error && r.error.code === '42P17') {
                  console.warn('%c[HeloXAi] Supabase RLS Error (42P17): Infinite recursion in policy. "users" table policy needs fixing. Defaulting to Free.', 'color:#ef4444;font-weight:bold');
                  prof = null; 
@@ -714,6 +723,8 @@ async function setUserFromSess(sess){
             console.error('[HeloXAi] DB Connection Failed:', dbErr);
         }
     }
+    
+    // Construct User Object
     var u={ 
         id:sess.user.id, 
         email:sess.user.email, 
@@ -722,18 +733,39 @@ async function setUserFromSess(sess){
         is_premium:false, 
         is_lifetime:false 
     };
+
+    // If profile fetch was successful, update plan status
     if(prof){ 
         u.plan=prof.plan||'free'; 
         u.is_premium=!!prof.is_premium; 
         u.is_lifetime=!!prof.is_lifetime; 
+    } else {
+        // If DB failed (42P17 or other), we stick to 'free' defaults 
+        // but keep the user logged in so they can still use the app.
+        console.log('[HeloXAi] Could not fetch plan from DB. Using default Free plan.');
     }
+    
     S.user=u;
     safeSetItem('helox-last-login',Date.now());
+    
+    // Greeting based on final resolved plan
     if(u.is_lifetime) toast('Welcome back, Lifetime Member!', 'ok');
     else if(u.is_premium) toast('Welcome back, Premium User', 'ok');
+    else toast('Welcome back', 'ok');
+    
   }catch(e){ 
     console.error("SetUser Error", e);
-    S.user={ id:sess.user?.id, email:sess.user?.email, token:sess.access_token, plan:'free', is_premium:false, is_lifetime:false }; 
+    // Fallback to Free plan if anything crashes
+    if(sess && sess.user) {
+        S.user={ 
+            id:sess.user.id, 
+            email:sess.user.email, 
+            token:sess.access_token, 
+            plan:'free', 
+            is_premium:false, 
+            is_lifetime:false 
+        }; 
+    }
   }
 }
 
@@ -755,7 +787,7 @@ async function setupAuth(){
           if(sess&&sess.user){
             await setUserFromSess(sess);
             refreshUI();
-            if(ev==='SIGNED_IN') { loadChatList(); toast('Signed in','ok'); }
+            if(ev==='SIGNED_IN') { loadChatList(); }
           } else {
             S.user=null;
             refreshUI();
@@ -1544,13 +1576,17 @@ function sendWithFiles(text,imgs,files){
   }).catch(function(e){
     rmTyping();
     if(e.name==='AbortError'){
-        if(full){
-            S.msgs[S.msgs.length-1].content=full;
+        // FIX: Keep message on page even if stopped
+        var lastIdx = S.msgs.length-1;
+        if(full && full.trim().length > 0){
+            S.msgs[lastIdx].content = full;
             saveChatHistory(S.chatId, S.msgs).catch(function(){});
             updateLastAI(full);
-        }else{
-            S.msgs.pop();renderAll();
+        } else {
+            // Stopped immediately, don't pop, just mark stopped
+            S.msgs[lastIdx].content = "_Generation stopped by user._";
         }
+        renderAll();
         toast('Stopped','inf');
     }
     else{S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});renderAll();toast('Request failed','err');}
@@ -1559,9 +1595,8 @@ function sendWithFiles(text,imgs,files){
 
 function sendToAI(text){
   if(!text)return;S.streaming=true;S.abort=new AbortController();addTyping();updateCB();var full='';
-  var url = apiUrl(); // GET URL ONCE
+  var url = apiUrl(); 
 
-  // FIX: Check if URL exists before fetching
   if(!url) {
       toast('Backend API URL not found. Cannot send message.', 'err');
       S.streaming=false; 
@@ -1617,14 +1652,17 @@ function sendToAI(text){
   }).catch(function(e){
     rmTyping();
     if(e.name==='AbortError'){
-        if(full){
-            S.msgs[S.msgs.length-1].content=full;
+        // FIX: Keep message on page even if stopped
+        var lastIdx = S.msgs.length-1;
+        if(full && full.trim().length > 0){
+            S.msgs[lastIdx].content = full;
             saveChatHistory(S.chatId, S.msgs).catch(function(){});
             updateLastAI(full);
-        }else{
-            S.msgs.pop();
-            renderAll();
+        } else {
+            // Stopped immediately, don't pop, just mark stopped
+            S.msgs[lastIdx].content = "_Generation stopped by user._";
         }
+        renderAll();
         toast('Stopped','inf');
     } else {
         S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});
