@@ -732,28 +732,41 @@ main{
 
 <div class="toast-ct" id="toastCt"></div>
 
+<!-- Load env.js before your application code -->
+<script src="./env.js"></script>
+
 <script>
 /* =========================================
    CONFIGURATION & ENVIRONMENT
    ========================================= */
-/* 
-   NOTE: In a production environment, create an 'env.js' file 
-   with the content below. For this standalone file, we define it here.
-*/
-(function() {
-    if (typeof window.__ENV__ === 'undefined') {
-        // Mocking the env.js content for standalone functionality
-        // REPLACE THESE WITH YOUR ACTUAL KEYS
-        window.__ENV__ = {
-            SUPABASE_URL: 'https://xyzcompany.supabase.co', 
-            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...', 
-            FREE_AI_URL: 'https://api.heloxai.com/v1', 
-            PREMIUM_AI_URL: 'https://api.heloxai.com/v1/pro'
-        };
-        console.warn('%c[HeloXAi] env.js not found. Using internal mock configuration. Update window.__ENV__ in source code or provide env.js.', 'color:#f59e0b;font-weight:bold');
+
+(function () {
+    if (!window.__ENV__) {
+        console.error(
+            '[HeloXAi] env.js not loaded. Please ensure env.js is included before this script.'
+        );
+        return;
     }
+
+    const {
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY,
+        FREE_AI_URL,
+        PREMIUM_AI_URL
+    } = window.__ENV__;
+
+    console.log('[HeloXAi] Environment configuration loaded.');
+
+    // Example usage
+    window.APP_CONFIG = {
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY,
+        FREE_AI_URL,
+        PREMIUM_AI_URL
+    };
 })();
 
+  
 /* =========================================
    CORE LOGIC
    ========================================= */
