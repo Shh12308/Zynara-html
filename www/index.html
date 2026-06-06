@@ -366,22 +366,37 @@ main{ flex:1; display:flex;flex-direction:column; width:100%; position:relative;
 
 <div class="toast-ct" id="toastCt"></div>
 
+<script src="./env.js"></script>
+
 <script>
 /* =========================================
    CONFIGURATION & ENVIRONMENT
    ========================================= */
-(function() {
-    if (typeof window.__ENV__ === 'undefined') {
-        // UPDATE THESE WITH YOUR REAL API URLS
-        // If you leave these blank, the App will warn you but won't crash.
-        window.__ENV__ = {
-            SUPABASE_URL: 'https://xyzcompany.supabase.co', 
-            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...', 
-            FREE_AI_URL: 'https://api.heloxai.com/v1', 
-            PREMIUM_AI_URL: 'https://api.heloxai.com/v1/pro'
-        };
-        console.warn('%c[HeloXAi] env.js not found. Using internal mock configuration.', 'color:#f59e0b;font-weight:bold');
+
+(function () {
+    if (!window.__ENV__) {
+        console.error(
+            '[HeloXAi] env.js not loaded. Please ensure env.js is included before this script.'
+        );
+        return;
     }
+
+    const {
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY,
+        FREE_AI_URL,
+        PREMIUM_AI_URL
+    } = window.__ENV__;
+
+    console.log('[HeloXAi] Environment configuration loaded.');
+
+    // Example usage
+    window.APP_CONFIG = {
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY,
+        FREE_AI_URL,
+        PREMIUM_AI_URL
+    };
 })();
 
 /* =========================================
