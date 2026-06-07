@@ -28,7 +28,7 @@
 
 <style>
 /* =========================================
-   CSS STYLES
+   CSS STYLES (Unchanged for brevity, assumed valid)
    ========================================= */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;outline:none;}
 :root{
@@ -385,7 +385,8 @@ main{ flex:1; display:flex;flex-direction:column; width:100%; position:relative;
         SUPABASE_URL,
         SUPABASE_ANON_KEY,
         FREE_AI_URL,
-        PREMIUM_AI_URL
+        PREMIUM_AI_URL,
+        BACKEND_URL // Ensure we capture BACKEND_URL from env.js
     } = window.__ENV__;
 
     console.log('[HeloXAi] Environment configuration loaded.');
@@ -395,7 +396,8 @@ main{ flex:1; display:flex;flex-direction:column; width:100%; position:relative;
         SUPABASE_URL,
         SUPABASE_ANON_KEY,
         FREE_AI_URL,
-        PREMIUM_AI_URL
+        PREMIUM_AI_URL,
+        BACKEND_URL
     };
 })();
 
@@ -698,33 +700,104 @@ function guestId(){
 }
 
 /* =========================================
-   AUTH & PLAN VERIFICATION (FIXED)
+   AUTH & PLAN VERIFICATION (UPDATED MATCHING PREMIUM.HTML)
    ========================================= */
+
+// --- Helper: getUserPlan (Copied from premium.html/settings.html) ---
+async function getUserPlan() {
+  if (!sb) return "free";
+  
+  try {
+    const { data: { user }, error: authError } = await sb.auth.getUser();
+    if (authError || !user) return "free";
+
+    // --- ATTEMPT 1: Read from Supabase (Users Table) ---
+    try {
+      const { data: mainData, error: mainError } = await sb
+        .from('users')
+        .select('plan,is_premium,is_lifetime')
+        .eq('id',user.id)
+        .maybeSingle();
+
+      // Check for the Infinite Recursion Error specifically
+      if (mainError && mainError.code === '42P17') {
+           console.warn("⚠️ RLS Error (42P17) detected. Switching to Backend Fallback.");
+           throw new Error("RLS_RECURSION");
+      }
+
+      if (!mainError && mainData) {
+         const planStr = (mainData.plan || '').toLowerCase();
+         if (mainData.is_lifetime) return 'lifetime';
+         if (mainData.is_premium) {
+           return planStr === 'ultimate_yearly' ? 'yearly' : 'monthly';
+         }
+         if (planStr === 'ultimate_yearly') return 'yearly';
+         if (planStr === 'ultimate_monthly') return 'monthly';
+         return planStr || 'free';
+      }
+    } catch (e) {
+      if (e.message !== "RLS_RECURSION") throw e; // Re-throw if not the specific RLS error
+    }
+
+    // --- ATTEMPT 2: Backend Fallback (Bypasses RLS) ---
+    var backendUrl = getEnvVar('BACKEND_URL'); // Uses the function which checks window.__ENV__
+    if (backendUrl) {
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session) return "free";
+
+        console.log("Fetching plan from Backend (Fallback)...");
+        // We call the same endpoint used for updates, but we assume it can return the current plan
+        const res = await fetch(`${backendUrl}/user/plan`, {
+            method: "GET", 
+            headers: { "Authorization": `Bearer ${session.access_token}` }
+        });
+
+        let data;
+        if (res.ok) {
+            data = await res.json();
+            // Normalize backend response
+            const p = (data.plan || '').toLowerCase();
+            if (p === 'ultimate_monthly') return 'monthly';
+            if (p === 'ultimate_yearly') return 'yearly';
+            if (p === 'lifetime') return 'lifetime';
+            return p || 'free';
+        }
+      } catch (err) {
+          console.warn("Backend fallback failed", err);
+      }
+    }
+
+    // --- ATTEMPT 3: Legacy Profile Table ---
+    const { data: profileData, error: profileError } = await sb
+      .from('user_profiles')
+      .select('plan')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!profileError && profileData) {
+       const pPlan = (profileData.plan || '').toLowerCase();
+       if (pPlan === 'ultimate_yearly') return 'yearly';
+       if (pPlan === 'ultimate_monthly') return 'monthly';
+       return pPlan || 'free';
+    }
+
+    return "free";
+  } catch (e) {
+    console.error("Unexpected error in getUserPlan:", e);
+    return "free";
+  }
+}
+
 async function setUserFromSess(sess){
   try{
     if(!sess || !sess.user) throw new Error("Invalid session");
-    var prof=null;
 
-    if(sb){
-        try{
-            // Attempt to fetch user plan details
-            var r=await sb.from('users').select('plan,is_premium,is_lifetime').eq('id',sess.user.id).single();
-            
-            if(r.error && r.error.code === '42P17') {
-                 console.warn('%c[HeloXAi] Supabase RLS Error (42P17): Infinite recursion in policy. "users" table policy needs fixing. Defaulting to Free.', 'color:#ef4444;font-weight:bold');
-                 prof = null; 
-            } else if(!r.error && r.data) {
-                prof = r.data;
-                console.log('[HeloXAi] Plan Verified from DB:', prof);
-            } else if (r.error) {
-                console.warn('[HeloXAi] DB Query Error:', r.error);
-            }
-        } catch(dbErr){
-            console.error('[HeloXAi] DB Connection Failed:', dbErr);
-        }
-    }
-    
-    // Construct User Object
+    // 1. Call the robust plan fetcher
+    var currentPlan = await getUserPlan();
+    console.log('[HeloXAi] Final Plan Detected:', currentPlan);
+
+    // 2. Construct User Object based on the normalized plan
     var u={ 
         id:sess.user.id, 
         email:sess.user.email, 
@@ -734,17 +807,25 @@ async function setUserFromSess(sess){
         is_lifetime:false 
     };
 
-    // If profile fetch was successful, update plan status
-    if(prof){ 
-        u.plan=prof.plan||'free'; 
-        u.is_premium=!!prof.is_premium; 
-        u.is_lifetime=!!prof.is_lifetime; 
+    // Mapping logic to match index.html internal booleans
+    if (currentPlan === 'lifetime') {
+        u.plan = 'lifetime';
+        u.is_lifetime = true;
+        u.is_premium = true;
+    } else if (currentPlan === 'yearly') {
+        u.plan = 'ultimate_yearly';
+        u.is_premium = true;
+        u.is_lifetime = false;
+    } else if (currentPlan === 'monthly') {
+        u.plan = 'ultimate_monthly';
+        u.is_premium = true;
+        u.is_lifetime = false;
     } else {
-        // If DB failed (42P17 or other), we stick to 'free' defaults 
-        // but keep the user logged in so they can still use the app.
-        console.log('[HeloXAi] Could not fetch plan from DB. Using default Free plan.');
+        u.plan = 'free';
+        u.is_premium = false;
+        u.is_lifetime = false;
     }
-    
+
     S.user=u;
     safeSetItem('helox-last-login',Date.now());
     
@@ -1849,7 +1930,7 @@ function initEvents(){
       return;
     }
     var rmBtn=e.target.closest('[data-rm-idx]');
-    if(rmBtn){ var idx=parseInt(rmBtn.getAttribute('data-rm-idx'),10); rmPendingFile(idx);return; }
+    if(rmBtn){ var idx=parseInt(rmBtn.getAttribute('data-rm-idx'),10); rmPendingFile(idx);return; return; }
     var msgImg=e.target.closest('[data-msg-img]');
     if(msgImg){openLB(msgImg.getAttribute('data-msg-img'),false);return;}
     var ab=e.target.closest('.ma');
