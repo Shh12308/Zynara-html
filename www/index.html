@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-title" content="H" />
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -25,20 +25,32 @@
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
+<!-- Mermaid for Diagrams -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
 
 <style>
 /* =========================================
-   CSS STYLES (Unchanged for brevity, assumed valid)
+   CORE CSS VARIABLES & RESET
    ========================================= */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;outline:none;}
 :root{
-  --font-display:'Space Grotesk',sans-serif;--font-body:'DM Sans',sans-serif;--radius:14px;--radius-sm:10px;--radius-lg:18px;--radius-xl:24px;--speed:.25s;--speed-slow:.4s;--ease:cubic-bezier(.4,0,.2,1);--ease-out:cubic-bezier(0,0,.2,1);--msg-max:840px;--sidebar-w:300px
+  --font-display:'Space Grotesk',sans-serif;--font-body:'DM Sans',sans-serif;--font-code:'Fira Code', monospace;
+  --radius:14px;--radius-sm:10px;--radius-lg:18px;--radius-xl:24px;--speed:.25s;--speed-slow:.4s;--ease:cubic-bezier(.4,0,.2,1);--ease-out:cubic-bezier(0,0,.2,1);--msg-max:840px;--sidebar-w:300px
 }
 [data-theme="dark"]{
   --bg-primary:#08080c;--bg-secondary:#111116;--bg-tertiary:#1a1a22;--bg-quaternary:#22222c;--bg-user-bubble:rgba(16,185,129,.08);--bg-user-bubble-border:rgba(16,185,129,.15);--bg-sidebar:#0c0c10;--bg-input:#14141a;--bg-hover:#1e1e28;--bg-code:#0d0d14;--bg-inline-code:rgba(255,255,255,.06);--text-primary:#eeeef2;--text-secondary:#9494a6;--text-muted:#55556a;--accent:#10b981;--accent-hover:#059669;--accent-dim:rgba(16,185,129,.06);--border:rgba(255,255,255,.06);--border-active:rgba(16,185,129,.3);--shadow-sm:0 1px 3px rgba(0,0,0,.3);--shadow:0 4px 20px rgba(0,0,0,.4);--glow:0 0 60px rgba(16,185,129,.06);--success:#10b981;--danger:#ef4444;--warning:#f59e0b;
+  /* Admonition Colors */
+  --adm-note-bg: rgba(59, 130, 246, 0.1); --adm-note-border: rgba(59, 130, 246, 0.3); --adm-note-text: #60a5fa;
+  --adm-tip-bg: rgba(16, 185, 129, 0.1); --adm-tip-border: rgba(16, 185, 129, 0.3); --adm-tip-text: #34d399;
+  --adm-warn-bg: rgba(245, 158, 11, 0.1); --adm-warn-border: rgba(245, 158, 11, 0.3); --adm-warn-text: #fbbf24;
+  --adm-err-bg: rgba(239, 68, 68, 0.1); --adm-err-border: rgba(239, 68, 68, 0.3); --adm-err-text: #f87171;
 }
 [data-theme="light"]{
   --bg-primary:#fafafa;--bg-secondary:#f0f0f2;--bg-tertiary:#e6e6ea;--bg-quaternary:#dddde2;--bg-user-bubble:rgba(5,150,105,.06);--bg-user-bubble-border:rgba(5,150,105,.15);--bg-sidebar:#f4f4f6;--bg-input:#f0f0f2;--bg-hover:#e4e4e8;--bg-code:#1e1e2e;--bg-inline-code:rgba(0,0,0,.06);--text-primary:#111114;--text-secondary:#555566;--text-muted:#999aaa;--accent:#059669;--accent-hover:#047857;--accent-dim:rgba(5,150,105,.04);--border:rgba(0,0,0,.07);--border-active:rgba(5,150,105,.3);--shadow-sm:0 1px 3px rgba(0,0,0,.04);--shadow:0 4px 20px rgba(0,0,0,.06);--glow:none;--success:#047857;--danger:#dc2626;--warning:#d97706;
+  --adm-note-bg: rgba(59, 130, 246, 0.15); --adm-note-border: rgba(59, 130, 246, 0.4); --adm-note-text: #2563eb;
+  --adm-tip-bg: rgba(5, 150, 105, 0.15); --adm-tip-border: rgba(5, 150, 105, 0.4); --adm-tip-text: #059669;
+  --adm-warn-bg: rgba(245, 158, 11, 0.15); --adm-warn-border: rgba(245, 158, 11, 0.4); --adm-warn-text: #d97706;
+  --adm-err-bg: rgba(220, 38, 38, 0.15); --adm-err-border: rgba(220, 38, 38, 0.4); --adm-err-text: #dc2626;
 }
 [data-theme="gold"]{
   --bg-primary:#1c1c14;--bg-secondary:#242419;--bg-tertiary:#2e2e23;--bg-quaternary:#3a3a2d;--bg-user-bubble:rgba(197,160,89,.15);--bg-user-bubble-border:rgba(197,160,89,.3);--bg-sidebar:#161610;--bg-input:#22221a;--bg-hover:#2e2e22;--bg-code:#12120e;--bg-inline-code:rgba(197,160,89,.1);--text-primary:#f0e6d2;--text-secondary:#b0a880;--text-muted:#7c7559;--accent:#c5a059;--accent-hover:#d48c2f;--accent-dim:rgba(197,160,89,.15);--border:rgba(197,160,89,.2);--border-active:rgba(197,160,89,.5);--shadow-sm:0 1px 3px rgba(0,0,0,.3);--shadow:0 4px 20px rgba(0,0,0,.4);--glow:0 0 60px rgba(197,160,89,.2)
@@ -50,6 +62,10 @@
 html, body { width: 100%; height: 100dvh; margin: 0; padding: 0; overflow: hidden; -webkit-overflow-scrolling: touch; overscroll-behavior: none; background: var(--bg-primary); }
 body { font-family: var(--font-body); color: var(--text-primary); transition: background var(--speed-slow), color var(--speed-slow); -webkit-font-smoothing: antialiased; display: flex; flex-direction: column; position: relative; }
 body::before { content:''; position:fixed; inset:0; pointer-events:none; z-index:9999; opacity:.35; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E"); background-repeat: repeat; background-size: 200px; }
+
+/* =========================================
+   LAYOUT & COMPONENTS
+   ========================================= */
 .sb-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:90;opacity:0;pointer-events:none;transition:opacity .35s var(--ease);backdrop-filter:blur(4px)}.sb-overlay.on{opacity:1;pointer-events:all}
 .sidebar{ background:var(--bg-sidebar); border-right:1px solid var(--border); z-index:100; display:flex;flex-direction:column;overflow:hidden; width:var(--sidebar-w); height: 100dvh; flex-shrink:0; transition:transform .35s var(--ease); padding-top: env(safe-area-inset-top); }
 .sb-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
@@ -99,8 +115,13 @@ main{ flex:1; display:flex;flex-direction:column; width:100%; position:relative;
 .model-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;cursor:pointer;transition:all var(--speed);touch-action:manipulation}.model-item:hover{background:var(--bg-hover)}.model-item.active{background:var(--accent-dim)}
 .model-item .mi-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}.model-item .mi-info{flex:1}.model-item .mi-name{font-size:13px;font-weight:600;color:var(--text-primary)}.model-item .mi-desc{font-size:11px;color:var(--text-muted);margin-top:2px}.model-item .mi-check{font-size:13px;color:var(--accent);opacity:0}.model-item.active .mi-check{opacity:1}
 .gpt-icon{background:linear-gradient(135deg,#74aa9c,#10a37f);color:#fff}.z-icon{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff}.default-icon{background:var(--bg-quaternary);color:var(--accent)}
+
 .msgs-wrap{ flex:1; overflow-y:auto; overflow-x:hidden; position:relative; display:flex;flex-direction:column; min-height:0; touch-action: pan-y; scroll-padding-bottom: 140px; scroll-behavior: smooth; }
 .msgs-inner{max-width:var(--msg-max);margin:0 auto;padding:24px 24px 12px;width:100%;flex:1;min-height:0}
+
+/* =========================================
+   WELCOME & MESSAGES
+   ========================================= */
 .welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:40px 24px;position:relative;overflow:hidden;width:100%;box-sizing:border-box}
 .welcome::before{content:'';position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,var(--accent-dim),transparent 70%);top:50%;left:50%;transform:translate(-50%,-60%);pointer-events:none;animation:wg 8s ease-in-out infinite alternate}
 @keyframes wg{0%{opacity:.3;transform:translate(-50%,-60%) scale(1)}100%{opacity:.6;transform:translate(-50%,-55%) scale(1.15)}}
@@ -133,18 +154,78 @@ main{ flex:1; display:flex;flex-direction:column; width:100%; position:relative;
 .msg-text-wrapper.collapsed { max-height: 180px; -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%); mask-image: linear-gradient(to bottom, black 50%, transparent 100%); }
 .msg-toggle-btn { background: none; border: none; color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; padding: 6px 0 2px 0; width: 100%; text-align: left; display: none; transition: opacity 0.2s var(--ease); opacity: 0.9; }
 .msg-toggle-btn:hover { opacity: 1; }
+
+/* =========================================
+   ADVANCED MARKDOWN STYLES
+   ========================================= */
 .msg-ct{font-size:15px;line-height:1.8;color:var(--text-primary);word-break:break-word;overflow-wrap:break-word}
-.msg-ct p{margin:0 0 14px 0}.msg-ct p:last-child{margin-bottom:0}.msg-ct p:only-child{margin-bottom:0}.msg-ct ul,.msg-ct ol{margin:10px 0 14px 0;padding-left:28px}.msg-ct li{margin-bottom:6px;line-height:1.75}.msg-ct li:last-child{margin-bottom:0}.msg-ct li::marker{color:var(--accent)}.msg-ct code:not(.hljs){background:var(--bg-inline-code);border:1px solid var(--border);padding:3px 8px;border-radius:6px;font-family:'Fira Code','Cascadia Code','SF Mono',monospace;font-size:.88em;color:var(--accent);word-break:break-word}
+.msg-ct p{margin:0 0 14px 0}.msg-ct p:last-child{margin-bottom:0}.msg-ct p:only-child{margin-bottom:0}.msg-ct ul,.msg-ct ol{margin:10px 0 14px 0;padding-left:28px}.msg-ct li{margin-bottom:6px;line-height:1.75}.msg-ct li::marker{color:var(--accent)}.msg-ct code:not(.hljs){background:var(--bg-inline-code);border:1px solid var(--border);padding:3px 8px;border-radius:6px;font-family:var(--font-code);font-size:.88em;color:var(--accent);word-break:break-word}
 .msg-ct blockquote{border-left:3px solid var(--accent);padding:12px 18px;margin:14px 0;color:var(--text-secondary);background:var(--accent-dim);border-radius:0 var(--radius-sm) var(--radius-sm) 0}.msg-ct blockquote p{margin:4px 0}.msg-ct blockquote p:last-child{margin-bottom:0}
 .msg-ct a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent;transition:border-color var(--speed)}.msg-ct a:hover{border-bottom-color:var(--accent);text-decoration:underline}
 .msg-ct h1,.msg-ct h2,.msg-ct h3{font-family:var(--font-display);font-weight:700;margin:24px 0 10px;letter-spacing:-.3px;color:var(--text-primary);line-height:1.3}.msg-ct h1{font-size:24px}.msg-ct h2{font-size:20px}.msg-ct h3{font-size:16px}.msg-ct .katex-display{margin:14px 0;overflow-x:auto;padding:8px 0}.msg-ct .katex{font-size:1.1em}
-.code-blk{margin:16px 0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:var(--bg-code);transition:border-color var(--speed)}.code-blk:hover{border-color:var(--border-active)}.code-hd{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--bg-tertiary);border-bottom:1px solid var(--border);font-size:12px;color:var(--text-muted);font-weight:500;user-select:none}
-.cp-btn{background:none;border:none;color:var(--text-muted);font-size:11px;cursor:pointer;padding:4px 10px;border-radius:6px;display:flex;align-items:center;gap:6px;font-family:var(--font-body);transition:all var(--speed);font-weight:500;touch-action:manipulation}.cp-btn:hover{color:var(--text-primary);background:var(--bg-hover)}.cp-btn.copied{color:var(--accent)}
-.code-blk pre{margin:0;padding:16px 18px;overflow-x:auto;background:var(--bg-code)!important;position:relative;-webkit-overflow-scrolling:touch}.code-blk pre code{white-space:pre;display:block;min-width:100%;background:none!important;padding:0!important}
-.code-blk code,.msg-ct pre code{font-family:'Fira Code','Cascadia Code','SF Mono',monospace;font-size:13px;line-height:1.7}
+
+/* Tables */
+.msg-ct table { border-collapse: collapse; width: 100%; margin: 16px 0; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); font-size: 14px; display: block; overflow-x: auto; white-space: nowrap; }
+.msg-ct th, .msg-ct td { padding: 10px 14px; border: 1px solid var(--border); text-align: left; }
+.msg-ct th { background: var(--bg-tertiary); font-weight: 600; color: var(--text-primary); }
+.msg-ct tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+.msg-ct tr:hover { background: var(--bg-hover); }
+
+/* Task Lists */
+.msg-ct ul.contains-task-list { list-style: none; padding-left: 0; }
+.msg-ct .task-list-item { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+.msg-ct input[type="checkbox"] { margin-top: 5px; accent-color: var(--accent); cursor: pointer; }
+.msg-ct input[type="checkbox"]:checked + span { text-decoration: line-through; color: var(--text-muted); }
+
+/* Admonitions */
+.admonition { margin: 16px 0; padding: 12px 16px; border-radius: var(--radius-sm); border-left: 4px solid; display: flex; gap: 12px; font-size: 14px; line-height: 1.6; background: var(--bg-secondary); }
+.admonition-icon { flex-shrink: 0; font-size: 16px; margin-top: 2px; }
+.adm-note { border-color: var(--adm-note-border); background: var(--adm-note-bg); color: var(--adm-note-text); }
+.adm-tip { border-color: var(--adm-tip-border); background: var(--adm-tip-bg); color: var(--adm-tip-text); }
+.adm-warn { border-color: var(--adm-warn-border); background: var(--adm-warn-bg); color: var(--adm-warn-text); }
+.adm-err { border-color: var(--adm-err-border); background: var(--adm-err-bg); color: var(--adm-err-text); }
+.adm-title { font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; margin-bottom: 2px; display: block; }
+
+/* Search Result Card Style (Simulated) */
+.search-card { display: flex; gap: 12px; margin: 12px 0; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-tertiary); text-decoration: none; color: var(--text-primary); transition: background .2s; }
+.search-card:hover { background: var(--bg-hover); border-color: var(--border-active); }
+.search-thumb { width: 80px; height: 80px; border-radius: 6px; object-fit: cover; background: var(--bg-quaternary); flex-shrink: 0; }
+.search-info { flex: 1; min-width: 0; }
+.search-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; color: var(--accent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.search-link { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.search-snippet { font-size: 13px; color: var(--text-secondary); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Code Blocks */
+.code-blk{margin:16px 0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:var(--bg-code);transition:border-color var(--speed);position:relative}
+.code-blk:hover{border-color:var(--border-active)}
+.code-hd{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg-tertiary);border-bottom:1px solid var(--border);font-size:11px;color:var(--text-muted);font-weight:500;user-select:none;position:relative;z-index:2}
+.code-lang-badge{display:flex;align-items:center;gap:6px;text-transform:uppercase;font-size:10px;font-weight:700;letter-spacing:0.5px}
+.code-lang-badge i{color:var(--accent)}
+.cp-btn{background:none;border:none;color:var(--text-muted);font-size:10px;cursor:pointer;padding:4px 8px;border-radius:4px;display:flex;align-items:center;gap:6px;font-family:var(--font-body);transition:all var(--speed);font-weight:500;touch-action:manipulation;z-index:3;position:relative}.cp-btn:hover{color:var(--text-primary);background:var(--bg-hover)}.cp-btn.copied{color:var(--success)}.cp-btn.copied i{animation:checkPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)}
+@keyframes checkPop{0%{transform:scale(0.5)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+
+.code-blk pre{margin:0;padding:16px;overflow-x:auto;background:var(--bg-code)!important;position:relative;-webkit-overflow-scrolling:touch}
+.code-blk pre code{white-space:pre;display:block;min-width:100%;background:none!important;padding:0!important;font-family:var(--font-code)!important;font-size:13px;line-height:1.6}
+/* Line numbers via CSS */
+.hljs { position: relative; }
+.line-numbers .hljs { padding-left: 3.5em; }
+.line-numbers .line-numbers-rows { position: absolute; top: 0; left: 0; width: 3em; letter-spacing: -1px; border-right: 1px solid var(--border); user-select: none; text-align: right; color: var(--text-muted); font-size: 12px; line-height: 1.6; padding-top: 16px; padding-bottom: 16px; background: var(--bg-tertiary); }
+.line-numbers-rows > span { display: block; padding-right: 0.5em; }
+
+/* Mermaid Diagrams */
+.mermaid { background: var(--bg-secondary); padding: 10px; border-radius: var(--radius-sm); margin: 16px 0; text-align: center; }
+.mermaid svg { max-width: 100%; height: auto; }
+
+/* Embeds */
+.embed-youtube { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: var(--radius); margin: 16px 0; border: 1px solid var(--border); }
+.embed-youtube iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+
+/* Images & Gallery */
 .img-wrap{margin:14px 0;border-radius:var(--radius);overflow:hidden;position:relative;display:inline-block;max-width:100%;border:1px solid var(--border)}.img-wrap img,.img-wrap video{display:block;max-width:100%;border-radius:var(--radius)}.msg-imgs{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}.msg-imgs:only-child{margin-top:0}
 .msg-img-item{position:relative;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);cursor:pointer;transition:transform .2s var(--ease),border-color .2s var(--ease);flex-shrink:0;touch-action:manipulation}
 .msg-img-item:hover{transform:scale(1.02);border-color:var(--border-active)}.msg-img-item img{display:block;object-fit:cover;border-radius:var(--radius)}.msg-img-item.single{max-width:300px}.msg-img-item.single img{max-width:300px;max-height:360px}.msg-img-item.multi{width:140px;height:140px}.msg-img-item.multi img{width:140px;height:140px}
+
+/* UI Components */
 .em-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;opacity:0;pointer-events:none;transition:opacity .3s var(--ease);backdrop-filter:blur(4px)}.em-overlay.on{opacity:1;pointer-events:all}
 .em-modal{position:fixed;top:0;right:0;bottom:0;width:480px;background:var(--bg-secondary);border-left:1px solid var(--border);box-shadow:var(--shadow);z-index:201;transform:translateX(100%);transition:transform .3s cubic-bezier(.16,1,.3,1);display:flex;flex-direction:column; max-width: 90vw;}
 .em-modal.on{transform:translateX(0)}.em-head{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--border);background:var(--bg-primary);flex-shrink:0; padding-top: max(18px, env(safe-area-inset-top));}
@@ -386,12 +467,11 @@ main{ flex:1; display:flex;flex-direction:column; width:100%; position:relative;
         SUPABASE_ANON_KEY,
         FREE_AI_URL,
         PREMIUM_AI_URL,
-        BACKEND_URL // Ensure we capture BACKEND_URL from env.js
+        BACKEND_URL 
     } = window.__ENV__;
 
     console.log('[HeloXAi] Environment configuration loaded.');
 
-    // Example usage
     window.APP_CONFIG = {
         SUPABASE_URL,
         SUPABASE_ANON_KEY,
@@ -660,10 +740,8 @@ function apiUrl(){
   try {
     var base = getEnvVar('FREE_AI_URL');
     
-    // Check if user has valid premium status
     if(S.user && (S.user.is_lifetime || S.user.is_premium)){
       var p = getEnvVar('PREMIUM_AI_URL');
-      // Validate Premium URL exists before switching
       if(p && p.indexOf('http')===0) {
         base = p;
         console.log('[HeloXAi] Using Premium API Endpoint');
@@ -700,10 +778,9 @@ function guestId(){
 }
 
 /* =========================================
-   AUTH & PLAN VERIFICATION (UPDATED MATCHING PREMIUM.HTML)
+   AUTH & PLAN VERIFICATION
    ========================================= */
 
-// --- Helper: getUserPlan (Copied from premium.html/settings.html) ---
 async function getUserPlan() {
   if (!sb) return "free";
   
@@ -711,7 +788,6 @@ async function getUserPlan() {
     const { data: { user }, error: authError } = await sb.auth.getUser();
     if (authError || !user) return "free";
 
-    // --- ATTEMPT 1: Read from Supabase (Users Table) ---
     try {
       const { data: mainData, error: mainError } = await sb
         .from('users')
@@ -719,7 +795,6 @@ async function getUserPlan() {
         .eq('id',user.id)
         .maybeSingle();
 
-      // Check for the Infinite Recursion Error specifically
       if (mainError && mainError.code === '42P17') {
            console.warn("⚠️ RLS Error (42P17) detected. Switching to Backend Fallback.");
            throw new Error("RLS_RECURSION");
@@ -736,18 +811,16 @@ async function getUserPlan() {
          return planStr || 'free';
       }
     } catch (e) {
-      if (e.message !== "RLS_RECURSION") throw e; // Re-throw if not the specific RLS error
+      if (e.message !== "RLS_RECURSION") throw e; 
     }
 
-    // --- ATTEMPT 2: Backend Fallback (Bypasses RLS) ---
-    var backendUrl = getEnvVar('BACKEND_URL'); // Uses the function which checks window.__ENV__
+    var backendUrl = getEnvVar('BACKEND_URL'); 
     if (backendUrl) {
       try {
         const { data: { session } } = await sb.auth.getSession();
         if (!session) return "free";
 
         console.log("Fetching plan from Backend (Fallback)...");
-        // We call the same endpoint used for updates, but we assume it can return the current plan
         const res = await fetch(`${backendUrl}/user/plan`, {
             method: "GET", 
             headers: { "Authorization": `Bearer ${session.access_token}` }
@@ -756,7 +829,6 @@ async function getUserPlan() {
         let data;
         if (res.ok) {
             data = await res.json();
-            // Normalize backend response
             const p = (data.plan || '').toLowerCase();
             if (p === 'ultimate_monthly') return 'monthly';
             if (p === 'ultimate_yearly') return 'yearly';
@@ -768,7 +840,6 @@ async function getUserPlan() {
       }
     }
 
-    // --- ATTEMPT 3: Legacy Profile Table ---
     const { data: profileData, error: profileError } = await sb
       .from('user_profiles')
       .select('plan')
@@ -792,12 +863,9 @@ async function getUserPlan() {
 async function setUserFromSess(sess){
   try{
     if(!sess || !sess.user) throw new Error("Invalid session");
-
-    // 1. Call the robust plan fetcher
     var currentPlan = await getUserPlan();
     console.log('[HeloXAi] Final Plan Detected:', currentPlan);
 
-    // 2. Construct User Object based on the normalized plan
     var u={ 
         id:sess.user.id, 
         email:sess.user.email, 
@@ -807,7 +875,6 @@ async function setUserFromSess(sess){
         is_lifetime:false 
     };
 
-    // Mapping logic to match index.html internal booleans
     if (currentPlan === 'lifetime') {
         u.plan = 'lifetime';
         u.is_lifetime = true;
@@ -829,14 +896,12 @@ async function setUserFromSess(sess){
     S.user=u;
     safeSetItem('helox-last-login',Date.now());
     
-    // Greeting based on final resolved plan
     if(u.is_lifetime) toast('Welcome back, Lifetime Member!', 'ok');
     else if(u.is_premium) toast('Welcome back, Premium User', 'ok');
     else toast('Welcome back', 'ok');
     
   }catch(e){ 
     console.error("SetUser Error", e);
-    // Fallback to Free plan if anything crashes
     if(sess && sess.user) {
         S.user={ 
             id:sess.user.id, 
@@ -1008,52 +1073,156 @@ async function delConv(cid){
 function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('data-theme',window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');else document.documentElement.setAttribute('data-theme',t)}catch(e){handleError(e, 'Set Theme', false);}S.theme=t;try{localStorage.setItem('helox-theme',t)}catch(e){}document.querySelectorAll('.t-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-t')===t)})}
 function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'dark'}catch(e){}setTheme(s);try{window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(S.theme==='system')setTheme('system')})}catch(e){}}
 
-/* ========== MARKDOWN ========== */
+/* =========================================
+   ADVANCED MARKDOWN & RENDERING
+   ========================================= */
 let mdCache = new Map();
 
 function initMarked() {
   if (typeof marked === 'undefined') { S._mdOk = false; return; }
+  if (typeof mermaid !== 'undefined') {
+      mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
+  }
+
   try {
     const renderer = new marked.Renderer();
+
+    // Advanced Code Block Rendering
     renderer.code = function(code, infostring) {
-      var text = String(code || '');
+      var text = String(code || '').replace(/\r\n/g, '\n'); // Normalize line endings
       var langArr = (infostring || '').trim().split(/\s+/);
       var language = langArr[0] || '';
       var validLang = '';
+
+      // Determine language for highlight.js
       if (typeof hljs !== 'undefined' && typeof hljs.getLanguage === 'function') {
         if (language && hljs.getLanguage(language)) validLang = language;
       }
+
       var highlighted = '';
       try {
         if (typeof hljs !== 'undefined') {
           if (text.length > 100000) text = text.slice(0, 100000);
           if (validLang) highlighted = hljs.highlight(text, { language: validLang, ignoreIllegals: true }).value;
           else highlighted = hljs.highlightAuto(text).value;
-          if (!highlighted || typeof highlighted !== 'string') highlighted = esc(text);
-        } else { highlighted = esc(text); }
+          
+          // Line Numbers Injection
+          if (highlighted && typeof highlighted === 'string') {
+             var lines = highlighted.split('\n');
+             var lineNumsHtml = '<div class="line-numbers-rows">';
+             lines.forEach(function() { lineNumsHtml += '<span></span>'; });
+             lineNumsHtml += '</div>';
+             highlighted = lineNumsHtml + highlighted;
+             validLang = validLang || 'plaintext';
+          }
+        } else { 
+            highlighted = esc(text); 
+            validLang = 'text';
+        }
       } catch (e) { highlighted = esc(text); }
-      var displayLang = validLang || 'plaintext';
+
+      // Buttons HTML (Copy, Run)
       var btnsHtml = '';
-      if (validLang && (validLang.toLowerCase() === 'html' || validLang.toLowerCase() === 'xml')) {
-        btnsHtml += '<button type="button" class="cp-btn" data-action="run-html" style="margin-right:5px;">Run</button>';
+      if (validLang) {
+          if (validLang.toLowerCase() === 'html' || validLang.toLowerCase() === 'xml') {
+            btnsHtml += '<button type="button" class="cp-btn" data-action="run-html" style="margin-right:5px;"><i class="fa-solid fa-play"></i> Run</button>';
+          }
       }
-      btnsHtml += '<button type="button" class="cp-btn" data-action="copy-code">Copy</button>';
+      btnsHtml += '<button type="button" class="cp-btn" data-action="copy-code"><i class="fa-regular fa-copy"></i> Copy</button>';
+
+      // Language Icon map
+      var langIcon = 'fa-code';
+      if(['js','javascript'].includes(validLang)) langIcon = 'fa-brands fa-js';
+      else if(['ts','typescript'].includes(validLang)) langIcon = 'fa-brands fa-js'; // TS uses JS icon usually
+      else if(['python','py'].includes(validLang)) langIcon = 'fa-brands fa-python';
+      else if(['html','xml'].includes(validLang)) langIcon = 'fa-brands fa-html5';
+      else if(['css'].includes(validLang)) langIcon = 'fa-brands fa-css3-alt';
+      else if(['java'].includes(validLang)) langIcon = 'fa-brands fa-java';
+      else if(['bash','shell','sh'].includes(validLang)) langIcon = 'fa-solid fa-terminal';
+
       return (
-        '<div class="code-blk">' +
-        '<div class="code-hd"><span>' + esc(displayLang) + '</span>' + btnsHtml + '</div>' +
-        '<pre><code class="hljs language-' + esc(displayLang) + '">' + highlighted + '</code></pre></div>'
+        '<div class="code-blk line-numbers">' +
+        '<div class="code-hd"><div class="code-lang-badge"><i class="'+langIcon+'"></i> ' + esc(validLang || 'text') + '</div>' + btnsHtml + '</div>' +
+        '<pre><code class="hljs language-' + esc(validLang) + '">' + highlighted + '</code></pre></div>'
       );
     };
+
+    // Image Handling
     renderer.image = function(href, title, text) {
       return '<div class="img-wrap"><img src="' + esc(href) + '" alt="' + esc(text || title || 'Image') + '" title="' + esc(title || text || 'Click to view') + '" loading="lazy" data-msg-img="' + esc(href) + '"></div>';
     };
+
+    // Link Handling (Security)
     renderer.link = function(href, title, text) {
       var titleAttr = title ? ' title="' + esc(title) + '"' : '';
       return '<a href="' + esc(href) + '" target="_blank" rel="noopener noreferrer"' + titleAttr + '>' + text + '</a>';
     };
+    
+    // Blockquotes (Handle Admonitions here if simple, or post-process)
+    // We will use a post-processor for complex Admonitions to keep renderer clean.
+
     marked.use({ breaks: true, gfm: true, renderer: renderer });
     S._mdOk = true;
   } catch (e) { console.error('Marked init failed:', e); S._mdOk = false; }
+}
+
+function processAdmonitions(html) {
+    // Regex for: > [!TYPE] Content...
+    // Simple implementation: Wrap blockquotes starting with [!NOTE] etc.
+    // Since regex on HTML is tricky, this is a best-effort parser for the specific blockquote structure.
+    return html.replace(
+        /<blockquote>\s*\[\!([A-Z]+)\]\s*([^\n]*)\n([\s\S]*?)<\/blockquote>/g,
+        function(match, type, title, content) {
+            var cls = 'adm-note';
+            var icon = 'fa-info-circle';
+            var t = type.toLowerCase();
+            if(t==='tip' || t==='success' || t==='check') { cls='adm-tip'; icon='fa-lightbulb'; }
+            else if(t==='warning' || t==='caution' || t==='important') { cls='adm-warn'; icon='fa-triangle-exclamation'; }
+            else if(t==='error' || t==='danger' || t==='fail') { cls='adm-err'; icon='fa-circle-xmark'; }
+            
+            // Clean up content <p> tags
+            var cleanContent = content.replace(/^<p>|<\/p>$/g, '');
+            
+            return '<div class="admonition ' + cls + '">' +
+                   '<div class="admonition-icon"><i class="fa-solid ' + icon + '"></i></div>' +
+                   '<div><span class="adm-title">' + (title || type) + '</span>' + cleanContent + '</div>' +
+                   '</div>';
+        }
+    );
+}
+
+function processEmbeds(html) {
+    // YouTube
+    html = html.replace(
+        /<a href="(https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+))"[^>]*>.*?<\/a>/g,
+        '<div class="embed-youtube"><iframe src="https://www.youtube.com/embed/$4" frameborder="0" allowfullscreen></iframe></div>'
+    );
+    return html;
+}
+
+function processMermaid(element) {
+    if (!window.mermaid) return;
+    var codeElements = element.querySelectorAll('code.language-mermaid');
+    codeElements.forEach(function(block) {
+        var pre = block.parentElement;
+        var code = block.textContent;
+        var id = 'mermaid-' + Math.random().toString(36).substr(2, 9);
+        
+        // Replace code block with mermaid div
+        try {
+            mermaid.render(id, code).then(function(result){
+                var div = document.createElement('div');
+                div.className = 'mermaid';
+                div.innerHTML = result.svg;
+                pre.parentElement.replaceWith(div);
+            }).catch(function(err){
+                console.warn("Mermaid render error", err);
+                // Fallback to code block
+            });
+        } catch(e) {
+            console.warn("Mermaid error", e);
+        }
+    });
 }
 
 function md(text) {
@@ -1061,12 +1230,19 @@ function md(text) {
   try {
     if (mdCache.has(text)) return mdCache.get(text);
     var html = '';
-    if (S._mdOk && typeof marked !== 'undefined') { html = marked.parse(String(text)); }
+    if (S._mdOk && typeof marked !== 'undefined') { 
+        html = marked.parse(String(text)); 
+        
+        // Post-processors
+        html = processAdmonitions(html);
+        html = processEmbeds(html);
+    }
     else { html = esc(String(text)).replace(/\n/g, '<br>'); }
+    
     if (typeof DOMPurify !== 'undefined') {
       html = DOMPurify.sanitize(html, {
-        ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'strong', 'em', 'a', 'code', 'pre', 'span', 'div', 'ul', 'ol', 'li', 'sup', 'sub', 'del', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'blockquote', 'img'],
-        ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'id', 'title', 'alt', 'data-action', 'src', 'loading', 'width', 'height']
+        ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'strong', 'em', 'a', 'code', 'pre', 'span', 'div', 'ul', 'ol', 'li', 'sup', 'sub', 'del', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'blockquote', 'img', 'details', 'summary', 'input', 'iframe', 'svg', 'path'],
+        ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'id', 'title', 'alt', 'data-action', 'src', 'loading', 'width', 'height', 'type', 'checked', 'frameborder', 'allowfullscreen', 'viewBox', 'd', 'fill', 'xmlns']
       });
     }
     mdCache.set(text, html);
@@ -1447,7 +1623,11 @@ function renderAll(){
         if(m.role==='assistant'){
             var el=$('mc-'+i); 
             var miEl=$('mi-'+i); 
-            if(el) { el.innerHTML = md(m.content); applyMath(el); }
+            if(el) { 
+                el.innerHTML = md(m.content); 
+                applyMath(el);
+                processMermaid(el); // Process diagrams after HTML insertion
+            }
             if(miEl && m.images && m.images.length) {
                 miEl.innerHTML = buildImgHtml(m.images).replace('<div class="msg-imgs">','').replace('</div>','');
             }
@@ -1472,7 +1652,11 @@ function renderAll(){
 function updateLastAI(content){
   var i=S.msgs.length-1;if(i<0||S.msgs[i].role!=='assistant')return;
   S.msgs[i].content=content;var el=$('mc-'+i);
-  if(el){el.innerHTML=md(content);applyMath(el);}
+  if(el){
+      el.innerHTML = md(content); 
+      // For streaming, we only apply math (fast). Mermaid waits for full stop usually.
+      applyMath(el);
+  }
   var w=$('msgsWrap');
   if(w){
     var dist = w.scrollHeight - w.scrollTop - w.clientHeight;
@@ -1657,14 +1841,12 @@ function sendWithFiles(text,imgs,files){
   }).catch(function(e){
     rmTyping();
     if(e.name==='AbortError'){
-        // FIX: Keep message on page even if stopped
         var lastIdx = S.msgs.length-1;
         if(full && full.trim().length > 0){
             S.msgs[lastIdx].content = full;
             saveChatHistory(S.chatId, S.msgs).catch(function(){});
             updateLastAI(full);
         } else {
-            // Stopped immediately, don't pop, just mark stopped
             S.msgs[lastIdx].content = "_Generation stopped by user._";
         }
         renderAll();
@@ -1729,18 +1911,21 @@ function sendToAI(text){
       return res.json().then(function(d){var c=d.response||d.content||d.result||d.message||JSON.stringify(d);var ai={id:uid(),role:'assistant',content:c,liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();addGal(c);saveChatHistory(S.chatId, S.msgs);if(S.chatId)updateTs(S.chatId);});
     }
     var ai={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();
-    return streamRes(res,function(chunk){full+=chunk;updateLastAI(full);},function(){S.msgs[S.msgs.length-1].content=full;saveChatHistory(S.chatId, S.msgs);if(S.chatId)updateTs(S.chatId);}, onMedia, onStatus);
+    return streamRes(res,function(chunk){full+=chunk;updateLastAI(full);},function(){
+        S.msgs[S.msgs.length-1].content=full;
+        saveChatHistory(S.chatId, S.msgs);if(S.chatId)updateTs(S.chatId);
+        // Trigger Mermaid rendering after streaming is complete for this message
+        var i=S.msgs.length-1; var el=$('mc-'+i); if(el) processMermaid(el);
+    }, onMedia, onStatus);
   }).catch(function(e){
     rmTyping();
     if(e.name==='AbortError'){
-        // FIX: Keep message on page even if stopped
         var lastIdx = S.msgs.length-1;
         if(full && full.trim().length > 0){
             S.msgs[lastIdx].content = full;
             saveChatHistory(S.chatId, S.msgs).catch(function(){});
             updateLastAI(full);
         } else {
-            // Stopped immediately, don't pop, just mark stopped
             S.msgs[lastIdx].content = "_Generation stopped by user._";
         }
         renderAll();
