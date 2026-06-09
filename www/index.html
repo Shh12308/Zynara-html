@@ -1093,6 +1093,9 @@ function initMarked() {
       var langArr = (infostring || '').trim().split(/\s+/);
       var language = langArr[0] || '';
       var validLang = '';
+      
+      // FIX: Store raw code for the copy button to use later
+      var rawCodeEscaped = text.replace(/"/g, '&quot;');
 
       // Determine language for highlight.js
       if (typeof hljs !== 'undefined' && typeof hljs.getLanguage === 'function') {
@@ -1133,7 +1136,7 @@ function initMarked() {
       // Language Icon map
       var langIcon = 'fa-code';
       if(['js','javascript'].includes(validLang)) langIcon = 'fa-brands fa-js';
-      else if(['ts','typescript'].includes(validLang)) langIcon = 'fa-brands fa-js'; // TS uses JS icon usually
+      else if(['ts','typescript'].includes(validLang)) langIcon = 'fa-brands fa-js'; 
       else if(['python','py'].includes(validLang)) langIcon = 'fa-brands fa-python';
       else if(['html','xml'].includes(validLang)) langIcon = 'fa-brands fa-html5';
       else if(['css'].includes(validLang)) langIcon = 'fa-brands fa-css3-alt';
@@ -1143,7 +1146,8 @@ function initMarked() {
       return (
         '<div class="code-blk line-numbers">' +
         '<div class="code-hd"><div class="code-lang-badge"><i class="'+langIcon+'"></i> ' + esc(validLang || 'text') + '</div>' + btnsHtml + '</div>' +
-        '<pre><code class="hljs language-' + esc(validLang) + '">' + highlighted + '</code></pre></div>'
+        // FIX: Added data-raw-code attribute here
+        '<pre><code class="hljs language-' + esc(validLang) + '" data-raw-code="' + rawCodeEscaped + '">' + highlighted + '</code></pre></div>'
       );
     };
 
@@ -1158,20 +1162,16 @@ function initMarked() {
       return '<a href="' + esc(href) + '" target="_blank" rel="noopener noreferrer"' + titleAttr + '>' + text + '</a>';
     };
     
-    // Blockquotes (Handle Admonitions here if simple, or post-process)
-    // We will use a post-processor for complex Admonitions to keep renderer clean.
-
     marked.use({ breaks: true, gfm: true, renderer: renderer });
     S._mdOk = true;
   } catch (e) { console.error('Marked init failed:', e); S._mdOk = false; }
 }
 
 function processAdmonitions(html) {
-    // Regex for: > [!TYPE] Content...
-    // Simple implementation: Wrap blockquotes starting with [!NOTE] etc.
-    // Since regex on HTML is tricky, this is a best-effort parser for the specific blockquote structure.
+    // FIX: Improved Regex to handle marked.js GFM blockquotes which wrap lines in <p>
+    // Looks for <blockquote><p>[!TYPE] Title</p>...content...</blockquote>
     return html.replace(
-        /<blockquote>\s*\[\!([A-Z]+)\]\s*([^\n]*)\n([\s\S]*?)<\/blockquote>/g,
+        /<blockquote>\s*<p>\s*\[\!([A-Z]+)\]\s*(.*?)<\/p>\s*([\s\S]*?)<\/blockquote>/g,
         function(match, type, title, content) {
             var cls = 'adm-note';
             var icon = 'fa-info-circle';
@@ -1180,9 +1180,11 @@ function processAdmonitions(html) {
             else if(t==='warning' || t==='caution' || t==='important') { cls='adm-warn'; icon='fa-triangle-exclamation'; }
             else if(t==='error' || t==='danger' || t==='fail') { cls='adm-err'; icon='fa-circle-xmark'; }
             
-            // Clean up content <p> tags
-            var cleanContent = content.replace(/^<p>|<\/p>$/g, '');
-            
+            // Clean up surrounding <p> tags from content if they exist
+            // The content capture group usually contains other <p> tags from subsequent lines
+            // We strip the opening/closing <p> of the first line via regex, but content might contain nested paragraphs
+            var cleanContent = content;
+
             return '<div class="admonition ' + cls + '">' +
                    '<div class="admonition-icon"><i class="fa-solid ' + icon + '"></i></div>' +
                    '<div><span class="adm-title">' + (title || type) + '</span>' + cleanContent + '</div>' +
@@ -1217,7 +1219,6 @@ function processMermaid(element) {
                 pre.parentElement.replaceWith(div);
             }).catch(function(err){
                 console.warn("Mermaid render error", err);
-                // Fallback to code block
             });
         } catch(e) {
             console.warn("Mermaid error", e);
@@ -1242,7 +1243,7 @@ function md(text) {
     if (typeof DOMPurify !== 'undefined') {
       html = DOMPurify.sanitize(html, {
         ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'strong', 'em', 'a', 'code', 'pre', 'span', 'div', 'ul', 'ol', 'li', 'sup', 'sub', 'del', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'blockquote', 'img', 'details', 'summary', 'input', 'iframe', 'svg', 'path'],
-        ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'id', 'title', 'alt', 'data-action', 'src', 'loading', 'width', 'height', 'type', 'checked', 'frameborder', 'allowfullscreen', 'viewBox', 'd', 'fill', 'xmlns']
+        ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'id', 'title', 'alt', 'data-action', 'src', 'loading', 'width', 'height', 'type', 'checked', 'frameborder', 'allowfullscreen', 'viewBox', 'd', 'fill', 'xmlns', 'data-raw-code']
       });
     }
     mdCache.set(text, html);
@@ -2097,7 +2098,9 @@ function initEvents(){
       var blk=cpBtn.closest('.code-blk');
       var codeEl=blk?blk.querySelector('code'):null;
       if(codeEl){
-        navigator.clipboard.writeText(codeEl.textContent).then(function(){
+        // FIX: Prioritize data-raw-code for clean copy
+        var textToCopy = codeEl.getAttribute('data-raw-code') || codeEl.textContent;
+        navigator.clipboard.writeText(textToCopy).then(function(){
           var orig = cpBtn.innerHTML;
           cpBtn.innerHTML='<i class="fa-solid fa-check"></i> Copied';
           cpBtn.classList.add('copied');
