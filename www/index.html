@@ -1093,9 +1093,6 @@ function initMarked() {
       var langArr = (infostring || '').trim().split(/\s+/);
       var language = langArr[0] || '';
       var validLang = '';
-      
-      // FIX: Store raw code for the copy button to use later
-      var rawCodeEscaped = text.replace(/"/g, '&quot;');
 
       // Determine language for highlight.js
       if (typeof hljs !== 'undefined' && typeof hljs.getLanguage === 'function') {
@@ -1146,8 +1143,7 @@ function initMarked() {
       return (
         '<div class="code-blk line-numbers">' +
         '<div class="code-hd"><div class="code-lang-badge"><i class="'+langIcon+'"></i> ' + esc(validLang || 'text') + '</div>' + btnsHtml + '</div>' +
-        // FIX: Added data-raw-code attribute here
-        '<pre><code class="hljs language-' + esc(validLang) + '" data-raw-code="' + rawCodeEscaped + '">' + highlighted + '</code></pre></div>'
+        '<pre><code class="hljs language-' + esc(validLang) + '">' + highlighted + '</code></pre></div>'
       );
     };
 
@@ -1181,8 +1177,6 @@ function processAdmonitions(html) {
             else if(t==='error' || t==='danger' || t==='fail') { cls='adm-err'; icon='fa-circle-xmark'; }
             
             // Clean up surrounding <p> tags from content if they exist
-            // The content capture group usually contains other <p> tags from subsequent lines
-            // We strip the opening/closing <p> of the first line via regex, but content might contain nested paragraphs
             var cleanContent = content;
 
             return '<div class="admonition ' + cls + '">' +
@@ -1243,7 +1237,7 @@ function md(text) {
     if (typeof DOMPurify !== 'undefined') {
       html = DOMPurify.sanitize(html, {
         ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'strong', 'em', 'a', 'code', 'pre', 'span', 'div', 'ul', 'ol', 'li', 'sup', 'sub', 'del', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'blockquote', 'img', 'details', 'summary', 'input', 'iframe', 'svg', 'path'],
-        ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'id', 'title', 'alt', 'data-action', 'src', 'loading', 'width', 'height', 'type', 'checked', 'frameborder', 'allowfullscreen', 'viewBox', 'd', 'fill', 'xmlns', 'data-raw-code']
+        ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'id', 'title', 'alt', 'data-action', 'src', 'loading', 'width', 'height', 'type', 'checked', 'frameborder', 'allowfullscreen', 'viewBox', 'd', 'fill', 'xmlns']
       });
     }
     mdCache.set(text, html);
@@ -2096,16 +2090,26 @@ function initEvents(){
     if(cpBtn){
       e.stopPropagation();
       var blk=cpBtn.closest('.code-blk');
-      var codeEl=blk?blk.querySelector('code'):null;
-      if(codeEl){
-        // FIX: Prioritize data-raw-code for clean copy
-        var textToCopy = codeEl.getAttribute('data-raw-code') || codeEl.textContent;
-        navigator.clipboard.writeText(textToCopy).then(function(){
-          var orig = cpBtn.innerHTML;
-          cpBtn.innerHTML='<i class="fa-solid fa-check"></i> Copied';
-          cpBtn.classList.add('copied');
-          setTimeout(function(){cpBtn.innerHTML=orig;cpBtn.classList.remove('copied');},2000);
-        }).catch(function(){toast('Copy failed','err');});
+      if(blk) {
+          // Clone the block to avoid modifying the UI
+          var clone = blk.cloneNode(true);
+          // Remove line numbers from the clone
+          var lineNumbers = clone.querySelector('.line-numbers-rows');
+          if (lineNumbers) lineNumbers.remove();
+          
+          var codeClone = clone.querySelector('code');
+          if (codeClone) {
+              var textToCopy = codeClone.textContent;
+              navigator.clipboard.writeText(textToCopy).then(function(){
+                var orig = cpBtn.innerHTML;
+                cpBtn.innerHTML='<i class="fa-solid fa-check"></i> Copied';
+                cpBtn.classList.add('copied');
+                setTimeout(function(){cpBtn.innerHTML=orig;cpBtn.classList.remove('copied');},2000);
+              }).catch(function(err){
+                  console.error('Copy failed', err);
+                  toast('Copy failed. Press Ctrl+C manually.', 'err');
+              });
+          }
       }
       return;
     }
