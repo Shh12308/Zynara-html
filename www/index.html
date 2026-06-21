@@ -2438,12 +2438,33 @@ function regenAI(){
   if(lastUser) sendToAI(lastUser);
 }
 
-function stopGen(){
-    if(S.abort) S.abort.abort(); 
-    if(S.currentAudio) {
-        try { S.currentAudio.pause(); S.currentAudio.currentTime = 0; } catch(e) {}
-        S.currentAudio = null;
+function stopGen() {
+  if (S.abort) {
+    try { S.abort.abort(); } catch(e) {}
+    S.abort = null;
+  }
+  S.streaming = false;
+  rmTyping();
+
+  // Guard: only update if the last message actually exists and is from assistant
+  var lastIdx = S.msgs.length - 1;
+  if (lastIdx >= 0 && S.msgs[lastIdx] && S.msgs[lastIdx].role === 'assistant' && S.msgs[lastIdx].content) {
+    S.msgs[lastIdx].content += '\n\n_Generation stopped by user._';
+    var el = $('mc-' + lastIdx);
+    if (el) {
+      el.innerHTML = md(S.msgs[lastIdx].content);
+      applyMath(el);
+      RichRenderer.postProcess(el);
     }
+  }
+
+  // Reset UI buttons
+  var sendBtn = $('sendBtn');
+  var stopBtn = $('stopBtn');
+  if (sendBtn) sendBtn.classList.remove('hide');
+  if (stopBtn) stopBtn.classList.add('hide');
+  updateCB();
+  scrollBot(true);
 }
 
 /* ========== CHATBAR STATE ========== */
