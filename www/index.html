@@ -28,7 +28,12 @@
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
 <!-- Mermaid for Diagrams -->
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
-                                                 
+  <!-- Leaflet Maps (free, no API key needed) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>                                               
                                   
 <style>
 /* =========================================
@@ -218,6 +223,246 @@ main{ flex:1; display:flex;flex-direction:column; width:100%; position:relative;
 .mermaid { background: var(--bg-secondary); padding: 10px; border-radius: var(--radius-sm); margin: 16px 0; text-align: center; }
 .mermaid svg { max-width: 100%; height: auto; }
 
+  /* =========================================
+   RICH COMPONENTS — Maps, Charts, Progress, Code Run
+   ========================================= */
+
+/* Interactive Map */
+.rich-map {
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin: 16px 0;
+  position: relative;
+  background: var(--bg-tertiary);
+  transition: border-color var(--speed);
+}
+.rich-map:hover { border-color: var(--border-active); }
+.rich-map-label {
+  position: absolute;
+  top: 10px; left: 10px;
+  z-index: 1000;
+  background: rgba(0,0,0,.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  border: 1px solid rgba(255,255,255,.1);
+  display: flex; align-items: center; gap: 6px;
+  pointer-events: none;
+}
+.rich-map-label i { color: var(--accent); font-size: 11px; }
+.rich-map-attribution {
+  position: absolute;
+  bottom: 4px; right: 8px;
+  z-index: 1000;
+  font-size: 9px;
+  color: rgba(255,255,255,.35);
+  pointer-events: none;
+}
+
+/* Chart Container */
+.rich-chart {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin: 16px 0;
+  position: relative;
+  transition: border-color var(--speed);
+}
+.rich-chart:hover { border-color: var(--border-active); }
+.rich-chart canvas { max-height: 300px; }
+.rich-chart-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 12px;
+  display: flex; align-items: center; gap: 6px;
+}
+.rich-chart-title i { color: var(--accent); }
+
+/* Progress Bar */
+.rich-progress { margin: 16px 0; }
+.rich-progress-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.rich-progress-label { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.rich-progress-value { font-size: 13px; font-weight: 700; color: var(--accent); }
+.rich-progress-track {
+  height: 10px;
+  background: var(--bg-tertiary);
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.rich-progress-fill {
+  height: 100%;
+  border-radius: 5px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-hover));
+  width: 0%;
+  transition: width 1.2s cubic-bezier(.16,1,.3,1);
+  position: relative;
+}
+.rich-progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.15) 50%, transparent 100%);
+  animation: progressShimmer 2s infinite;
+}
+@keyframes progressShimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.rich-progress-fill.complete {
+  background: linear-gradient(90deg, var(--success), #34d399);
+}
+
+/* Code Run Button & Output */
+.code-run-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-body);
+  transition: all var(--speed);
+  font-weight: 600;
+  touch-action: manipulation;
+  z-index: 3;
+  position: relative;
+}
+.code-run-btn:hover {
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+.code-run-btn:active { transform: scale(.95); }
+.code-run-btn.running {
+  color: var(--warning);
+  pointer-events: none;
+}
+.code-run-btn.running i { animation: spin 1s linear infinite; }
+
+.code-output {
+  background: var(--bg-primary);
+  border-top: 1px solid var(--border);
+  padding: 14px 16px;
+  font-family: var(--font-code);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--success);
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 240px;
+  overflow-y: auto;
+  display: none;
+  -webkit-overflow-scrolling: touch;
+}
+.code-output.visible { display: block; animation: slideUpFade .25s var(--ease-out); }
+.code-output.error { color: var(--danger); }
+.code-output.warn { color: var(--warning); }
+
+/* Enhanced Mermaid */
+.mermaid-container {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin: 16px 0;
+  overflow-x: auto;
+  text-align: center;
+  transition: border-color var(--speed);
+}
+.mermaid-container:hover { border-color: var(--border-active); }
+.mermaid-container svg { max-width: 100%; height: auto; margin: 0 auto; display: block; }
+
+/* Collapsible Map/Chart (optional mobile optimization) */
+.rich-collapsible-toggle {
+  display: none;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: all var(--speed);
+  margin-bottom: 8px;
+  text-align: center;
+}
+.rich-collapsible-toggle:hover {
+  border-color: var(--border-active);
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+/* Embed cards for links */
+.rich-embed {
+  margin: 14px 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--bg-secondary);
+  transition: border-color var(--speed);
+}
+.rich-embed:hover { border-color: var(--border-active); }
+.rich-embed-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-tertiary);
+  font-size: 11px; color: var(--text-muted);
+}
+.rich-embed-head img {
+  width: 16px; height: 16px; border-radius: 3px;
+}
+.rich-embed-body { padding: 14px; }
+.rich-embed-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+.rich-embed-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+.rich-embed-img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
+
+/* Stat cards (for data responses) */
+.rich-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+.rich-stat {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  transition: all var(--speed);
+}
+.rich-stat:hover { border-color: var(--border-active); transform: translateY(-2px); }
+.rich-stat-value { font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--text-primary); }
+.rich-stat-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; font-weight: 600; }
+.rich-stat-change { font-size: 11px; margin-top: 4px; font-weight: 600; }
+.rich-stat-change.up { color: var(--success); }
+.rich-stat-change.down { color: var(--danger); }
+
+@media(max-width:640px) {
+  .rich-stats { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .rich-stat-value { font-size: 20px; }
+  .rich-chart { padding: 14px; }
+}
+  
 /* Embeds */
 .embed-youtube { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: var(--radius); margin: 16px 0; border: 1px solid var(--border); }
 .embed-youtube iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
@@ -946,6 +1191,7 @@ async function setupAuth(){
 }
 
 function doSignOut(){ 
+RichRenderer.cleanup(); 
     S.user=null; S.msgs=[]; S.chatId=null; S.chatListData=[]; S.gallery=[]; 
     refreshUI(); renderAll(); renderChatList(); renderGallery(); 
     toast('Signed out','inf'); 
@@ -962,6 +1208,7 @@ async function loadChatList(){
 }
 async function startNewChat(){
   if(S.streaming) stopGen();
+  RichRenderer.cleanup(); // <-- ADD THIS LINE
   S.chatId = uid();
   S.msgs = [];
   S.gallery = []; 
@@ -1080,6 +1327,241 @@ function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'da
    ========================================= */
 let mdCache = new Map();
 
+  /* =========================================
+   RICH COMPONENT RENDERER (Maps, Charts, Progress, Stats, Code Run)
+   ========================================= */
+var RichRenderer = (function() {
+  var mapCount = 0, chartCount = 0;
+  var pending = { maps: [], charts: [] };
+
+  function processMaps(html) {
+    return html.replace(/!map\(([^,]+),\s*([^,]+),\s*([^,)]+)(?:,\s*(\d+))?\)/g,
+      function(_, lat, lng, label, zoom) {
+        var id = 'rmap-' + (mapCount++);
+        pending.maps.push({ id: id, lat: +lat, lng: +lng, label: label, zoom: +(zoom || 13) });
+        return '<div class="rich-map" id="' + id + '" style="height:280px"><div class="rich-map-label"><i class="fas fa-map-marker-alt"></i> ' + esc(label) + '</div></div>';
+      }
+    );
+  }
+
+  function processCharts(html) {
+    return html.replace(/<pre><code class="hljs language-chart">([\s\S]*?)<\/code><\/pre>/g,
+      function(_, raw) {
+        var id = 'rchart-' + (chartCount++);
+        try {
+          var clean = raw.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
+          var config = JSON.parse(clean);
+          pending.charts.push({ id: id, config: config });
+          var title = config.title || (config.datasets && config.datasets[0] && config.datasets[0].label) || 'Chart';
+          return '<div class="rich-chart"><div class="rich-chart-title"><i class="fas fa-chart-bar"></i> ' + esc(title) + '</div><canvas id="' + id + '"></canvas></div>';
+        } catch(e) {
+          return '<div class="admonition adm-err"><div class="admonition-icon"><i class="fa-solid fa-exclamation-triangle"></i></div><div><span class="adm-title">Chart Error</span>Invalid chart JSON</div></div>';
+        }
+      }
+    );
+  }
+
+  function processProgress(html) {
+    return html.replace(/!progress\((\d+),\s*([^)]+)\)/g,
+      function(_, val, label) {
+        var v = Math.min(100, Math.max(0, +val));
+        return '<div class="rich-progress"><div class="rich-progress-header"><span class="rich-progress-label">' + esc(label) + '</span><span class="rich-progress-value">' + v + '%</span></div><div class="rich-progress-track"><div class="rich-progress-fill' + (v >= 100 ? ' complete' : '') + '" data-target="' + v + '"></div></div></div>';
+      }
+    );
+  }
+
+  function processStats(html) {
+    return html.replace(/((?:!stat\([^)]+\)\s*\n?)+)/g, function(block) {
+      var items = [];
+      var re = /!stat\(([^,]+),\s*([^,]+)(?:,\s*([^)]*))?\)/g;
+      var m;
+      while ((m = re.exec(block)) !== null) {
+        var value = m[1].trim(), label = m[2].trim(), change = m[3] ? m[3].trim() : '';
+        var isUp = change.charAt(0) === '+', isDown = change.charAt(0) === '-';
+        var changeHtml = change ? '<div class="rich-stat-change ' + (isUp ? 'up' : isDown ? 'down' : '') + '">' + (isUp ? '↑' : isDown ? '↓' : '') + ' ' + esc(change) + '</div>' : '';
+        items.push('<div class="rich-stat"><div class="rich-stat-value">' + esc(value) + '</div><div class="rich-stat-label">' + esc(label) + '</div>' + changeHtml + '</div>');
+      }
+      return items.length ? '<div class="rich-stats">' + items.join('') + '</div>' : '';
+    });
+  }
+
+  function addRunButtons(el) {
+    el.querySelectorAll('.code-blk').forEach(function(blk) {
+      if (blk.querySelector('.code-run-btn')) return;
+      var badge = blk.querySelector('.code-lang-badge');
+      if (!badge) return;
+      var lang = (badge.textContent || '').toLowerCase().trim();
+      if (['javascript','js','python','py'].indexOf(lang) === -1) return;
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'code-run-btn';
+      btn.innerHTML = '<i class="fas fa-play"></i> Run';
+      btn.setAttribute('data-action', 'run-code');
+      var existingBtn = blk.querySelector('.cp-btn');
+      if (existingBtn) existingBtn.parentNode.insertBefore(btn, existingBtn);
+      var output = document.createElement('div');
+      output.className = 'code-output';
+      blk.appendChild(output);
+    });
+  }
+
+  function runCodeBlock(btn) {
+    var blk = btn.closest('.code-blk');
+    var code = blk.querySelector('pre code');
+    if (!code) return;
+    var codeText = code.textContent;
+    var output = blk.querySelector('.code-output');
+    if (!output) return;
+    var badge = blk.querySelector('.code-lang-badge');
+    var lang = badge ? badge.textContent.toLowerCase().trim() : '';
+
+    output.classList.add('visible');
+    output.classList.remove('error', 'warn');
+    output.textContent = 'Running...\n';
+    btn.classList.add('running');
+    btn.innerHTML = '<i class="fas fa-spinner"></i> Running';
+
+    if (lang === 'javascript' || lang === 'js') {
+      var logs = [];
+      var oL = console.log, oW = console.warn, oE = console.error, oT = console.table;
+      console.log = function() { logs.push([].slice.call(arguments).map(function(v){ return typeof v==='object' ? JSON.stringify(v,null,2) : String(v); }).join(' ')); };
+      console.warn = function() { logs.push('[warn] ' + [].slice.call(arguments).join(' ')); };
+      console.error = function() { logs.push('[error] ' + [].slice.call(arguments).join(' ')); };
+      console.table = function(d) { logs.push(JSON.stringify(d, null, 2)); };
+      setTimeout(function() {
+        try {
+          var result = new Function(codeText)();
+          if (result !== undefined && !logs.length) logs.push('→ ' + (typeof result==='object' ? JSON.stringify(result,null,2) : String(result)));
+          output.textContent = logs.join('\n') || '(no output)';
+          output.classList.remove('error');
+        } catch(e) { output.textContent = 'Error: ' + e.message; output.classList.add('error'); }
+        console.log=oL; console.warn=oW; console.error=oE; console.table=oT;
+        btn.classList.remove('running');
+        btn.innerHTML = '<i class="fas fa-play"></i> Run';
+      }, 60);
+    } else {
+      setTimeout(function() {
+        output.textContent = 'Python requires a backend connection.\n\nOptions:\n  1. Pyodide (WebAssembly) — pyodide.org\n  2. WebSocket to Python sandbox\n  3. Serverless function';
+        output.classList.add('warn');
+        btn.classList.remove('running');
+        btn.innerHTML = '<i class="fas fa-play"></i> Run';
+      }, 60);
+    }
+  }
+
+  function initMaps() {
+    pending.maps.forEach(function(m) {
+      var el = document.getElementById(m.id);
+      if (!el || el.dataset.init) return;
+      el.dataset.init = '1';
+      try {
+        var map = L.map(m.id, { zoomControl: true, attributionControl: false }).setView([m.lat, m.lng], m.zoom);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+        L.marker([m.lat, m.lng]).addTo(map).bindPopup('<b>' + m.label + '</b>').openPopup();
+        setTimeout(function() { map.invalidateSize(); }, 200);
+        el._leafletMap = map;
+      } catch(e) {
+        el.innerHTML = '<div style="padding:20px;color:var(--danger);font-size:13px"><i class="fas fa-exclamation-triangle"></i> Map load failed</div>';
+      }
+    });
+    pending.maps = [];
+  }
+
+  function initCharts() {
+    var cs = getComputedStyle(document.documentElement);
+    var txtM = cs.getPropertyValue('--text-muted').trim() || '#55556a';
+    var brd = cs.getPropertyValue('--border').trim() || 'rgba(255,255,255,.06)';
+    var acc = cs.getPropertyValue('--accent').trim() || '#10b981';
+
+    pending.charts.forEach(function(c) {
+      var canvas = document.getElementById(c.id);
+      if (!canvas || canvas.dataset.init) return;
+      canvas.dataset.init = '1';
+      try {
+        var type = c.config.type || 'bar';
+        var data = {
+          labels: c.config.labels || [],
+          datasets: (c.config.datasets || []).map(function(ds) {
+            return Object.assign({}, ds, {
+              borderColor: ds.borderColor || (type==='line' ? acc : undefined),
+              borderWidth: ds.borderWidth || (type==='line' ? 2 : 0),
+              tension: ds.tension !== undefined ? ds.tension : 0.3,
+              pointRadius: ds.pointRadius || (type==='line' ? 4 : 0),
+              pointHoverRadius: ds.pointHoverRadius || 6
+            });
+          })
+        };
+        new Chart(canvas, {
+          type: type, data: data,
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            animation: { duration: 800, easing: 'easeOutQuart' },
+            plugins: {
+              legend: { display: data.datasets.length > 1, labels: { color: txtM, font: { family: "'DM Sans',sans-serif", size: 12 }, boxWidth: 12, boxHeight: 12, borderRadius: 3 } },
+              tooltip: { backgroundColor: 'rgba(0,0,0,.8)', cornerRadius: 8, padding: 10 }
+            },
+            scales: type !== 'pie' && type !== 'doughnut' ? {
+              x: { ticks: { color: txtM, font: { size: 11 } }, grid: { color: brd, drawBorder: false } },
+              y: { ticks: { color: txtM, font: { size: 11 } }, grid: { color: brd, drawBorder: false }, beginAtZero: true }
+            } : undefined
+          }
+        });
+      } catch(e) {
+        canvas.parentElement.innerHTML = '<div style="padding:20px;color:var(--danger);font-size:13px"><i class="fas fa-exclamation-triangle"></i> Chart error</div>';
+      }
+    });
+    pending.charts = [];
+  }
+
+  function animateProgress(el) {
+    el.querySelectorAll('.rich-progress-fill[data-target]').forEach(function(bar) {
+      if (bar.dataset.animated) return;
+      bar.dataset.animated = '1';
+      setTimeout(function() { bar.style.width = bar.dataset.target + '%'; }, 60);
+    });
+  }
+
+  function enhanceMermaid(el) {
+    el.querySelectorAll('.mermaid').forEach(function(m) {
+      if (m.parentElement && m.parentElement.classList.contains('mermaid-container')) return;
+      var wrapper = document.createElement('div');
+      wrapper.className = 'mermaid-container';
+      m.parentNode.insertBefore(wrapper, m);
+      wrapper.appendChild(m);
+    });
+  }
+
+  function postProcess(containerEl) {
+    if (!containerEl) return;
+    enhanceMermaid(containerEl);
+    addRunButtons(containerEl);
+    animateProgress(containerEl);
+    initMaps();
+    initCharts();
+  }
+
+  function preRender(htmlString) {
+    var out = htmlString;
+    out = processMaps(out);
+    out = processProgress(out);
+    out = processStats(out);
+    // Charts are processed AFTER highlight.js runs (in postProcess)
+    return out;
+  }
+
+  function cleanup() {
+    document.querySelectorAll('.rich-map').forEach(function(el) {
+      if (el._leafletMap) { el._leafletMap.remove(); el._leafletMap = null; }
+    });
+    document.querySelectorAll('.rich-chart canvas').forEach(function(c) {
+      var chart = Chart.getChart(c);
+      if (chart) chart.destroy();
+    });
+  }
+
+    return { postProcess: postProcess, preRender: preRender, processCharts: processCharts, cleanup: cleanup, runCodeBlock: runCodeBlock };
+})();
+
 function initMarked() {
   if (typeof marked === 'undefined') { S._mdOk = false; return; }
   if (typeof mermaid !== 'undefined') {
@@ -1124,12 +1606,14 @@ function initMarked() {
       } catch (e) { highlighted = esc(text); }
 
       // Buttons HTML (Copy, Run)
-      var btnsHtml = '';
+       var btnsHtml = '';
       if (validLang) {
           if (validLang.toLowerCase() === 'html' || validLang.toLowerCase() === 'xml') {
             btnsHtml += '<button type="button" class="cp-btn" data-action="run-html" style="margin-right:5px;"><i class="fa-solid fa-play"></i> Run</button>';
           }
+          // Don't add run buttons for JS/Python here — RichRenderer handles it post-DOM-insert
       }
+
       btnsHtml += '<button type="button" class="cp-btn" data-action="copy-code"><i class="fa-regular fa-copy"></i> Copy</button>';
 
       // Language Icon map
@@ -1227,19 +1711,21 @@ function md(text) {
   try {
     if (mdCache.has(text)) return mdCache.get(text);
     var html = '';
-    if (S._mdOk && typeof marked !== 'undefined') { 
+        if (S._mdOk && typeof marked !== 'undefined') { 
         html = marked.parse(String(text)); 
         
-        // Post-processors
+        // Post-processors (order matters)
         html = processAdmonitions(html);
         html = processEmbeds(html);
+        html = RichRenderer.preRender(html); // Maps, progress, stats
+        html = RichRenderer.processCharts ? RichRenderer.processCharts(html) : html; // Charts (after hljs)
     }
     else { html = esc(String(text)).replace(/\n/g, '<br>'); }
     
     if (typeof DOMPurify !== 'undefined') {
       html = DOMPurify.sanitize(html, {
-        ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'strong', 'em', 'a', 'code', 'pre', 'span', 'div', 'ul', 'ol', 'li', 'sup', 'sub', 'del', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'blockquote', 'img', 'details', 'summary', 'input', 'iframe', 'svg', 'path'],
-        ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'id', 'title', 'alt', 'data-action', 'src', 'loading', 'width', 'height', 'type', 'checked', 'frameborder', 'allowfullscreen', 'viewBox', 'd', 'fill', 'xmlns']
+                ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'strong', 'em', 'a', 'code', 'pre', 'span', 'div', 'ul', 'ol', 'li', 'sup', 'sub', 'del', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'blockquote', 'img', 'details', 'summary', 'input', 'iframe', 'svg', 'path', 'canvas', 'button', 'section'],
+                ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'id', 'title', 'alt', 'data-action', 'data-target', 'data-init', 'src', 'loading', 'width', 'height', 'type', 'checked', 'frameborder', 'allowfullscreen', 'viewBox', 'd', 'fill', 'xmlns', 'style', 'role']
       });
     }
     mdCache.set(text, html);
@@ -1616,14 +2102,15 @@ function renderAll(){
     }
     msgsEl.innerHTML = html;
 
-    S.msgs.forEach(function(m, i){
+        S.msgs.forEach(function(m, i){
         if(m.role==='assistant'){
             var el=$('mc-'+i); 
             var miEl=$('mi-'+i); 
             if(el) { 
                 el.innerHTML = md(m.content); 
                 applyMath(el);
-                processMermaid(el); // Process diagrams after HTML insertion
+                processMermaid(el);
+                RichRenderer.postProcess(el); // Initialize maps, charts, progress, run buttons
             }
             if(miEl && m.images && m.images.length) {
                 miEl.innerHTML = buildImgHtml(m.images).replace('<div class="msg-imgs">','').replace('</div>','');
@@ -1649,10 +2136,13 @@ function renderAll(){
 function updateLastAI(content){
   var i=S.msgs.length-1;if(i<0||S.msgs[i].role!=='assistant')return;
   S.msgs[i].content=content;var el=$('mc-'+i);
-  if(el){
+    if(el){
       el.innerHTML = md(content); 
-      // For streaming, we only apply math (fast). Mermaid waits for full stop usually.
       applyMath(el);
+      // During streaming, only animate progress bars (cheap). Maps/charts init on final render.
+      el.querySelectorAll('.rich-progress-fill[data-target]').forEach(function(bar) {
+        if (!bar.dataset.animated) { bar.dataset.animated = '1'; bar.style.width = bar.dataset.target + '%'; }
+      });
   }
   var w=$('msgsWrap');
   if(w){
