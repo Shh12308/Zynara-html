@@ -1,8 +1,8 @@
 window.__ENV__ = {
   SUPABASE_URL: "https://acbnqeeukfxewiqswgbw.supabase.co",
   SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjYm5xZWV1a2Z4ZXdpcXN3Z2J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMDY5MzIsImV4cCI6MjA4OTg4MjkzMn0.bwkZs0yqNAooAh6cV16dcwZwNz_5H5xvAu7eiQtR4wE",
-  FREE_AI_URL:"https://web-production-99cba.up.railway.app",
-  PREMIUM_AI_URL:"https://web-production-99cba.up.railway.ap",
+  FREE_AI_URL:"https://heloxai2.onrender.com",
+  PREMIUM_AI_URL:"https://web-production-99cba.up.railway.app",
   TURNSTILE_SITE_KEY:"0x4AAAAAACxvfQw84rEK9JtR",
   BACKEND_URL:"https://payment-production-8d70.up.railway.app",
   STRIPE_PAYMENT_LINK:"https://buy.stripe.com/eVq4gzbXL8Srdig0oB53O06",
