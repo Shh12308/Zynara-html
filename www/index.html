@@ -156,14 +156,6 @@ main{ flex:1; display:flex;flex-direction:column; width:100%; position:relative;
 .msg-toggle-btn:hover { opacity: 1; }
 
 /* =========================================
-   ADVANCED MARKDOWN STYLES
-   ========================================= */
-.msg-ct{font-size:15px;line-height:1.8;color:var(--text-primary);word-break:break-word;overflow-wrap:break-word}
-.msg-ct p{margin:0 0 14px 0}.msg-ct p:last-child{margin-bottom:0}.msg-ct p:only-child{margin-bottom:0}.msg-ct ul,.msg-ct ol{margin:10px 0 14px 0;padding-left:28px}.msg-ct li{margin-bottom:6px;line-height:1.75}.msg-ct li::marker{color:var(--accent)}.msg-ct code:not(.hljs){background:var(--bg-inline-code);border:1px solid var(--border);padding:3px 8px;border-radius:6px;font-family:var(--font-code);font-size:.88em;color:var(--accent);word-break:break-word}
-.msg-ct blockquote{border-left:3px solid var(--accent);padding:12px 18px;margin:14px 0;color:var(--text-secondary);background:var(--accent-dim);border-radius:0 var(--radius-sm) var(--radius-sm) 0}.msg-ct blockquote p{margin:4px 0}.msg-ct blockquote p:last-child{margin-bottom:0}
-.msg-ct a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent;transition:border-color var(--speed)}.msg-ct a:hover{border-bottom-color:var(--accent);text-decoration:underline}
-.msg-ct h1,.msg-ct h2,.msg-ct h3{font-family:var(--font-display);font-weight:700;margin:24px 0 10px;letter-spacing:-.3px;color:var(--text-primary);line-height:1.3}.msg-ct h1{font-size:24px}.msg-ct h2{font-size:20px}.msg-ct h3{font-size:16px}.msg-ct .katex-display{margin:14px 0;overflow-x:auto;padding:8px 0}.msg-ct .katex{font-size:1.1em}
-/* =========================================
    ADVANCED MARKDOWN STYLES (ChatGPT-Level)
    ========================================= */
 .msg-ct {
@@ -1526,6 +1518,25 @@ main{ flex:1; display:flex;flex-direction:column; width:100%; position:relative;
 .msg-img-item{position:relative;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);cursor:pointer;transition:transform .2s var(--ease),border-color .2s var(--ease);flex-shrink:0;touch-action:manipulation}
 .msg-img-item:hover{transform:scale(1.02);border-color:var(--border-active)}.msg-img-item img{display:block;object-fit:cover;border-radius:var(--radius)}.msg-img-item.single{max-width:300px}.msg-img-item.single img{max-width:300px;max-height:360px}.msg-img-item.multi{width:140px;height:140px}.msg-img-item.multi img{width:140px;height:140px}
 
+   /* =========================================
+   KATEX SAFETY GUARDS
+   ========================================= */
+code .katex, code .katex-html,
+pre .katex, pre .katex-html,
+.code-blk .katex, .code-blk .katex-html,
+.hljs .katex, .hljs .katex-html,
+.mermaid .katex, .mermaid .katex-html,
+svg .katex, svg .katex-html,
+.code-hd .katex, .code-hd .katex-html {
+  display: none !important;
+  font-size: 0 !important;
+  height: 0 !important;
+  width: 0 !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+   
 /* UI Components */
 .em-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;opacity:0;pointer-events:none;transition:opacity .3s var(--ease);backdrop-filter:blur(4px)}.em-overlay.on{opacity:1;pointer-events:all}
 .em-modal{position:fixed;top:0;right:0;bottom:0;width:480px;background:var(--bg-secondary);border-left:1px solid var(--border);box-shadow:var(--shadow);z-index:201;transform:translateX(100%);transition:transform .3s cubic-bezier(.16,1,.3,1);display:flex;flex-direction:column; max-width: 90vw;}
@@ -1749,7 +1760,93 @@ main{ flex:1; display:flex;flex-direction:column; width:100%; position:relative;
 <div class="toast-ct" id="toastCt"></div>
 
 <script src="./env.js"></script>
+<!-- KaTeX Safe Renderer — MUST load before app.js -->
+<script>
+(function() {
+  'use strict';
 
+  // Override renderMathInElement globally with a safe version
+  window.safeRenderMath = function(container) {
+    if (!container || !container.isConnected) return;
+    if (typeof renderMathInElement !== 'function') return;
+
+    // Don't render inside these containers
+    var blockedParents = ['.code-blk', '.mermaid', '.map-preview', '.map-embed', '.embed-youtube', 'svg', '.sb-overlay', '.sidebar', '.modal-ov', '.cookie-banner'];
+    for (var i = 0; i < blockedParents.length; i++) {
+      if (container.closest && container.closest(blockedParents[i])) return;
+    }
+
+    try {
+      renderMathInElement(container, {
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "\\[", right: "\\]", display: true },
+          { left: "$", right: "$", display: false },
+          { left: "\\(", right: "\\)", display: false }
+        ],
+        throwOnError: false,
+        ignoredTags: [
+          "script", "noscript", "style", "textarea", "pre", "code",
+          "option", "svg", "math", "iframe", "object", "embed",
+          "template", "slot", "select", "button", "input", "label"
+        ],
+        ignoredClasses: [
+          "hljs", "katex", "no-katex", "code-hd", "cp-btn",
+          "code-lang-badge", "line-numbers-rows", "mermaid",
+          "map-preview", "map-pin", "map-overlay-btn",
+          "search-thumb", "source-chip-img", "img-wrap",
+          "msg-img-item", "gen-img-card", "embed-tweet",
+          "w-card", "cl-item", "sb-logo", "hdr-title"
+        ],
+        strict: false,
+        trust: false
+      });
+    } catch (e) {
+      // Silently swallow NotSupportedError — this is the fix for code 9
+      if (e.name !== 'NotSupportedError' && e.code !== 9) {
+        console.warn('KaTeX:', e.message);
+      }
+    }
+  };
+
+  // Batch render all message containers
+  window.renderAllMath = function() {
+    var els = document.querySelectorAll('.msg-ct');
+    for (var i = 0; i < els.length; i++) {
+      if (els[i].isConnected) {
+        window.safeRenderMath(els[i]);
+      }
+    }
+  };
+
+  // Monkey-patch: if anything calls renderMathInElement directly,
+  // intercept it to prevent the crash
+  var _originalRenderMath = window.renderMathInElement;
+  if (_originalRenderMath) {
+    window.renderMathInElement = function(elem, opts) {
+      if (!elem || !elem.isConnected) return;
+      // Block rendering on non-HTML elements
+      if (elem.nodeType !== 1) return;
+      var tag = (elem.tagName || '').toLowerCase();
+      if (tag === 'svg' || tag === 'math' || tag === 'script' || tag === 'style') return;
+      // Block if inside a code block or mermaid
+      if (elem.closest && (elem.closest('.code-blk') || elem.closest('.mermaid') || elem.closest('pre') || elem.closest('svg'))) return;
+      try {
+        return _originalRenderMath.call(this, elem, opts || {
+          throwOnError: false,
+          ignoredTags: ["script","noscript","style","textarea","pre","code","option","svg","math","iframe","object","embed","template","slot","select","button","input"],
+          ignoredClasses: ["hljs","katex","no-katex","code-hd","cp-btn","code-lang-badge","line-numbers-rows","mermaid","map-preview","search-thumb","img-wrap","msg-img-item"],
+          strict: false
+        });
+      } catch (e) {
+        if (e.name !== 'NotSupportedError' && e.code !== 9) {
+          console.warn('KaTeX intercepted:', e.message);
+        }
+      }
+    };
+  }
+})();
+</script>
 <script>
 /* =========================================
    CONFIGURATION & ENVIRONMENT
