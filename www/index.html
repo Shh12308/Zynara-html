@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>HeloXAi - ChatGPT Alternative with Web Search & Coding Help</title>
-
-<meta name="description" content="HeloXAi is an AI assistant for chat, coding, and web search. Get instant answers, code help, and research results in one place." />
+<title>HeloXAi - Advanced AI Companion</title>
+<meta name="description" content="Stop switching between ChatGPT, Google, and Midjourney. Use one AI instead.">
 
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%2310b981'/%3E%3Cstop offset='100%25' style='stop-color:%23059669'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23g)'/%3E%3Ctext x='50' y='68' font-family='Arial, sans-serif' font-size='60' font-weight='bold' fill='white' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E" />
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%2310b981'/%3E%3Cstop offset='100%25' style='stop-color:%23059669'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='20' fill='url(%23g)'/%3E%3Ctext x='50' y='68' font-family='Arial, sans-serif' font-size='60' font-weight='bold' fill='white' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E" />
@@ -28,8 +27,7 @@
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
 <!-- Mermaid for Diagrams -->
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
-                                                 
-                                  
+
 <style>
 /* =========================================
    CORE CSS VARIABLES & RESET
@@ -1135,7 +1133,7 @@ function initMarked() {
       // Language Icon map
       var langIcon = 'fa-code';
       if(['js','javascript'].includes(validLang)) langIcon = 'fa-brands fa-js';
-      else if(['ts','typescript'].includes(validLang)) langIcon = 'fa-brands fa-js'; 
+      else if(['ts','typescript'].includes(validLang)) langIcon = 'fa-brands fa-js'; // TS uses JS icon usually
       else if(['python','py'].includes(validLang)) langIcon = 'fa-brands fa-python';
       else if(['html','xml'].includes(validLang)) langIcon = 'fa-brands fa-html5';
       else if(['css'].includes(validLang)) langIcon = 'fa-brands fa-css3-alt';
@@ -1160,16 +1158,20 @@ function initMarked() {
       return '<a href="' + esc(href) + '" target="_blank" rel="noopener noreferrer"' + titleAttr + '>' + text + '</a>';
     };
     
+    // Blockquotes (Handle Admonitions here if simple, or post-process)
+    // We will use a post-processor for complex Admonitions to keep renderer clean.
+
     marked.use({ breaks: true, gfm: true, renderer: renderer });
     S._mdOk = true;
   } catch (e) { console.error('Marked init failed:', e); S._mdOk = false; }
 }
 
 function processAdmonitions(html) {
-    // FIX: Improved Regex to handle marked.js GFM blockquotes which wrap lines in <p>
-    // Looks for <blockquote><p>[!TYPE] Title</p>...content...</blockquote>
+    // Regex for: > [!TYPE] Content...
+    // Simple implementation: Wrap blockquotes starting with [!NOTE] etc.
+    // Since regex on HTML is tricky, this is a best-effort parser for the specific blockquote structure.
     return html.replace(
-        /<blockquote>\s*<p>\s*\[\!([A-Z]+)\]\s*(.*?)<\/p>\s*([\s\S]*?)<\/blockquote>/g,
+        /<blockquote>\s*\[\!([A-Z]+)\]\s*([^\n]*)\n([\s\S]*?)<\/blockquote>/g,
         function(match, type, title, content) {
             var cls = 'adm-note';
             var icon = 'fa-info-circle';
@@ -1178,9 +1180,9 @@ function processAdmonitions(html) {
             else if(t==='warning' || t==='caution' || t==='important') { cls='adm-warn'; icon='fa-triangle-exclamation'; }
             else if(t==='error' || t==='danger' || t==='fail') { cls='adm-err'; icon='fa-circle-xmark'; }
             
-            // Clean up surrounding <p> tags from content if they exist
-            var cleanContent = content;
-
+            // Clean up content <p> tags
+            var cleanContent = content.replace(/^<p>|<\/p>$/g, '');
+            
             return '<div class="admonition ' + cls + '">' +
                    '<div class="admonition-icon"><i class="fa-solid ' + icon + '"></i></div>' +
                    '<div><span class="adm-title">' + (title || type) + '</span>' + cleanContent + '</div>' +
@@ -1215,6 +1217,7 @@ function processMermaid(element) {
                 pre.parentElement.replaceWith(div);
             }).catch(function(err){
                 console.warn("Mermaid render error", err);
+                // Fallback to code block
             });
         } catch(e) {
             console.warn("Mermaid error", e);
@@ -2092,26 +2095,14 @@ function initEvents(){
     if(cpBtn){
       e.stopPropagation();
       var blk=cpBtn.closest('.code-blk');
-      if(blk) {
-          // Clone the block to avoid modifying the UI
-          var clone = blk.cloneNode(true);
-          // Remove line numbers from the clone
-          var lineNumbers = clone.querySelector('.line-numbers-rows');
-          if (lineNumbers) lineNumbers.remove();
-          
-          var codeClone = clone.querySelector('code');
-          if (codeClone) {
-              var textToCopy = codeClone.textContent;
-              navigator.clipboard.writeText(textToCopy).then(function(){
-                var orig = cpBtn.innerHTML;
-                cpBtn.innerHTML='<i class="fa-solid fa-check"></i> Copied';
-                cpBtn.classList.add('copied');
-                setTimeout(function(){cpBtn.innerHTML=orig;cpBtn.classList.remove('copied');},2000);
-              }).catch(function(err){
-                  console.error('Copy failed', err);
-                  toast('Copy failed. Press Ctrl+C manually.', 'err');
-              });
-          }
+      var codeEl=blk?blk.querySelector('code'):null;
+      if(codeEl){
+        navigator.clipboard.writeText(codeEl.textContent).then(function(){
+          var orig = cpBtn.innerHTML;
+          cpBtn.innerHTML='<i class="fa-solid fa-check"></i> Copied';
+          cpBtn.classList.add('copied');
+          setTimeout(function(){cpBtn.innerHTML=orig;cpBtn.classList.remove('copied');},2000);
+        }).catch(function(){toast('Copy failed','err');});
       }
       return;
     }
