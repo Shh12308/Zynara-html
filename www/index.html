@@ -2598,29 +2598,42 @@ function processEmbeds(html) {
     return html;
 }
 
+var _mermaidRunning = false;
 function processMermaid(element) {
-    if (!window.mermaid) return;
+    if (!window.mermaid || !element || !element.isConnected) return;
+    if (_mermaidRunning) return;
     var codeElements = element.querySelectorAll('code.language-mermaid');
-    codeElements.forEach(function(block) {
+    if (!codeElements.length) return;
+    _mermaidRunning = true;
+    var pending = Array.from(codeElements);
+    
+    function next() {
+        if (!pending.length) { _mermaidRunning = false; return; }
+        var block = pending.shift();
         var pre = block.parentElement;
-        var code = block.textContent;
+        if (!pre || !pre.parentElement || !pre.isConnected) { next(); return; }
+        var code = block.textContent.trim();
+        if (!code) { next(); return; }
         var id = 'mermaid-' + Math.random().toString(36).substr(2, 9);
-        
-        // Replace code block with mermaid div
         try {
-            mermaid.render(id, code).then(function(result){
-                var div = document.createElement('div');
-                div.className = 'mermaid';
-                div.innerHTML = result.svg;
-                pre.parentElement.replaceWith(div);
-            }).catch(function(err){
-                console.warn("Mermaid render error", err);
-                // Fallback to code block
+            mermaid.render(id, code).then(function(result) {
+                if (pre && pre.parentElement && pre.isConnected) {
+                    var div = document.createElement('div');
+                    div.className = 'mermaid mermaid-rendered';
+                    div.innerHTML = result.svg;
+                    pre.parentElement.replaceWith(div);
+                }
+                next();
+            }).catch(function(err) {
+                console.warn("Mermaid render error:", err && err.message ? err.message : err);
+                next();
             });
-        } catch(e) {
-            console.warn("Mermaid error", e);
+        } catch (e) {
+            console.warn("Mermaid error:", e && e.message ? e.message : e);
+            next();
         }
-    });
+    }
+    next();
 }
 
 function md(text) {
@@ -2639,8 +2652,8 @@ function md(text) {
     
     if (typeof DOMPurify !== 'undefined') {
       html = DOMPurify.sanitize(html, {
-        ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'strong', 'em', 'a', 'code', 'pre', 'span', 'div', 'ul', 'ol', 'li', 'sup', 'sub', 'del', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'blockquote', 'img', 'details', 'summary', 'input', 'iframe', 'svg', 'path'],
-        ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'id', 'title', 'alt', 'data-action', 'src', 'loading', 'width', 'height', 'type', 'checked', 'frameborder', 'allowfullscreen', 'viewBox', 'd', 'fill', 'xmlns']
+                ALLOWED_TAGS: ['p','br','b','i','strong','em','a','code','pre','span','div','ul','ol','li','sup','sub','del','s','h1','h2','h3','h4','h5','h6','hr','table','thead','tbody','tr','td','th','blockquote','img','details','summary','input','iframe','svg','path','dl','dt','dd','kbd','mark','figure','figcaption','math','semantics','annotation','msup','msub','mfrac','msqrt','mrow','mi','mo','mn','mtext','mover','munder','munderover','mtable','mtr','mtd','mspace','mpadded'],
+                ALLOWED_ATTR: ['href','target','rel','class','id','title','alt','data-action','src','loading','width','height','type','checked','frameborder','allowfullscreen','viewBox','d','fill','xmlns','data-msg-img','data-rm-idx','data-gid','data-i','data-act','data-tip','data-model','data-t','data-mode','data-cid','data-del-cid','open','style','role','aria-label','tabindex','disabled','for','name','value','placeholder','rows','cols','autocapitalize','autocomplete','spellcheck']
       });
     }
     mdCache.set(text, html);
@@ -2648,14 +2661,57 @@ function md(text) {
   } catch (e) { console.error('Markdown parse error:', e); return esc(String(text)).replace(/\n/g, '<br>'); }
 }
 
+/* --- KaTeX Safety: Monkey-patch BEFORE any calls --- */
+(function() {
+  var _orig = window.renderMathInElement;
+  if (_orig) {
+    window.renderMathInElement = function(elem, opts) {
+      if (!elem || !elem.isConnected || elem.nodeType !== 1) return;
+      var tag = (elem.tagName || '').toLowerCase();
+      if (tag === 'svg' || tag === 'math' || tag === 'script' || tag === 'style' || tag === 'iframe') return;
+      if (elem.closest && (elem.closest('.code-blk') || elem.closest('.mermaid') || elem.closest('pre') || elem.closest('svg') || elem.closest('.map-preview') || elem.closest('.embed-youtube'))) return;
+      var safeOpts = {
+        throwOnError: false,
+        ignoredTags: ["script","noscript","style","textarea","pre","code","option","svg","math","iframe","object","embed","template","slot","select","button","input","label","video","audio","source","canvas"],
+        ignoredClasses: ["hljs","katex","no-katex","code-hd","cp-btn","code-lang-badge","line-numbers-rows","mermaid","mermaid-rendered","map-preview","map-pin","search-thumb","source-chip-img","img-wrap","msg-img-item","gen-img-card","embed-tweet","w-card","cl-item","sb-logo","hdr-title","typing-dots","gal-item"],
+        strict: false,
+        trust: false
+      };
+      if (opts) {
+        if (opts.delimiters) safeOpts.delimiters = opts.delimiters;
+        if (opts.macros) safeOpts.macros = opts.macros;
+      } else {
+        safeOpts.delimiters = [
+          { left: "$$", right: "$$", display: true },
+          { left: "\\[", right: "\\]", display: true },
+          { left: "$", right: "$", display: false },
+          { left: "\\(", right: "\\)", display: false }
+        ];
+      }
+      try { return _orig.call(this, elem, safeOpts); }
+      catch (e) { if (e.name !== 'NotSupportedError' && e.code !== 9) console.warn('KaTeX:', e.message); }
+    };
+  }
+})();
+
 function applyMath(el) {
+  if (!el || !el.isConnected) return;
   if (typeof renderMathInElement !== 'undefined') {
     try {
       renderMathInElement(el, {
-        delimiters: [{ left: '$$', right: '$$', display: true }, { left: '$', right: '$', display: false }, { left: '\\(', right: '\\)', display: false }, { left: '\\[', right: '\\]', display: true }],
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "\\[", right: "\\]", display: true },
+          { left: "$", right: "$", display: false },
+          { left: "\\(", right: "\\)", display: false }
+        ],
         throwOnError: false
       });
-    } catch (e) { console.warn("Math render error:", e); }
+    } catch (e) {
+      if (e.name !== 'NotSupportedError' && e.code !== 9) {
+        console.warn("Math render error:", e);
+      }
+    }
   }
 }
 
@@ -3010,21 +3066,25 @@ function renderAll(){
     if (!S.msgs.length) { showWelcome(); return; }
     showMsgs();
     var msgsEl = $('msgsEl');
-    msgsEl.innerHTML = ''; 
     var html = '';
     for (var i = 0; i < S.msgs.length; i++) {
         html += buildMessageHtml(S.msgs[i], i);
     }
     msgsEl.innerHTML = html;
 
+    var mermaidQueue = [];
     S.msgs.forEach(function(m, i){
         if(m.role==='assistant'){
             var el=$('mc-'+i); 
             var miEl=$('mi-'+i); 
             if(el) { 
                 el.innerHTML = md(m.content); 
+                // Math first (fast, inline)
                 applyMath(el);
-                processMermaid(el); // Process diagrams after HTML insertion
+                // Queue mermaid for sequential processing
+                if (el.querySelectorAll('code.language-mermaid').length) {
+                    mermaidQueue.push(el);
+                }
             }
             if(miEl && m.images && m.images.length) {
                 miEl.innerHTML = buildImgHtml(m.images).replace('<div class="msg-imgs">','').replace('</div>','');
@@ -3033,27 +3093,46 @@ function renderAll(){
             var wrapper = $('mtw-'+m.id);
             var btn = $('mtb-'+m.id);
             if(wrapper && btn) {
-                if(wrapper.scrollHeight > 180) {
-                    wrapper.classList.add('collapsed');
-                    btn.style.display = 'block';
-                    btn.textContent = 'Show more';
-                } else {
-                    wrapper.classList.remove('collapsed');
-                    btn.style.display = 'none';
-                }
+                // Use requestAnimationFrame so scrollHeight is accurate
+                requestAnimationFrame(function() {
+                    if (wrapper.scrollHeight > 180) {
+                        wrapper.classList.add('collapsed');
+                        btn.style.display = 'block';
+                        btn.textContent = 'Show more';
+                    } else {
+                        wrapper.classList.remove('collapsed');
+                        btn.style.display = 'none';
+                    }
+                });
             }
         }
     });
+
+    // Process mermaid diagrams sequentially after all HTML is in DOM
+    function processNextMermaid() {
+        if (!mermaidQueue.length) return;
+        var el = mermaidQueue.shift();
+        processMermaid(el);
+        // Small delay between diagrams to avoid stack overflow
+        setTimeout(processNextMermaid, 50);
+    }
+    if (mermaidQueue.length) setTimeout(processNextMermaid, 100);
+
     if (S.isAutoScrolling) scrollBot(true);
 }
 
+var _lastMathTime = 0;
 function updateLastAI(content){
   var i=S.msgs.length-1;if(i<0||S.msgs[i].role!=='assistant')return;
   S.msgs[i].content=content;var el=$('mc-'+i);
   if(el){
       el.innerHTML = md(content); 
-      // For streaming, we only apply math (fast). Mermaid waits for full stop usually.
-      applyMath(el);
+      // Throttle math during streaming — only re-render every 300ms
+      var now = Date.now();
+      if (now - _lastMathTime > 300) {
+          _lastMathTime = now;
+          applyMath(el);
+      }
   }
   var w=$('msgsWrap');
   if(w){
@@ -3371,6 +3450,19 @@ function updateCB(){
     if(!S.recording){ mic.classList.remove('hide'); voice.classList.remove('hide'); }
     ss.classList.add('hide'); ss.classList.remove('send','stop');
   }
+}
+
+function finalizeLastMessage() {
+    var i = S.msgs.length - 1;
+    if (i < 0 || S.msgs[i].role !== 'assistant') return;
+    var el = $('mc-' + i);
+    if (!el || !el.isConnected) return;
+    // Final full math render (no throttle)
+    applyMath(el);
+    // Final mermaid render
+    processMermaid(el);
+    // Invalidate cache for this content so next render is fresh
+    mdCache.delete(S.msgs[i].content);
 }
 
 async function loadVoices() {
