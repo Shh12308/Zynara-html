@@ -890,1523 +890,920 @@ code .katex,code .katex-html,pre .katex,pre .katex-html,.code-blk .katex,.code-b
   if(_orig){window.renderMathInElement=function(elem,opts){if(!elem||!elem.isConnected)return;if(elem.nodeType!==1)return;var tag=(elem.tagName||'').toLowerCase();if(tag==='svg'||tag==='math'||tag==='script'||tag==='style')return;if(elem.closest&&(elem.closest('.code-blk')||elem.closest('.mermaid')||elem.closest('pre')||elem.closest('svg')))return;var so={throwOnError:false,ignoredTags:["script","noscript","style","textarea","pre","code","option","svg","math","iframe","object","embed","template","slot","select","button","input"],ignoredClasses:["hljs","katex","no-katex","code-hd","cp-btn","code-lang-badge","line-numbers-rows","mermaid","map-preview","search-thumb","img-wrap","msg-img-item"],strict:false};if(opts){if(opts.delimiters)so.delimiters=opts.delimiters;if(opts.macros)so.macros=opts.macros;}else{so.delimiters=[{left:"$$",right:"$$",display:true},{left:"\\[",right:"\\]",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false}];}try{return _orig.call(this,elem,so);}catch(e){if(e.name!=='NotSupportedError'&&e.code!==9)console.warn('KaTeX intercepted:',e.message);}};}
 })();
 </script>
-<!-- ═══════════════════════════════════════════════════════════════
-     COMPLETE APP LOGIC — Supabase-Backed Global Chat Persistence
-     ═══════════════════════════════════════════════════════════════ -->
 <script>
-// ═══════════════════════════════════════════════════════════════
-// §1  CONFIGURATION — CHANGE THESE TWO VALUES
-// ═══════════════════════════════════════════════════════════════
-const SUPABASE_URL  = 'https://YOUR_PROJECT_ID.supabase.co';
-const SUPABASE_ANON = 'YOUR_ANON_KEY_HERE';
+/* =========================================
+   CONFIGURATION & ENVIRONMENT
+   ========================================= */
+(function(){
+  if(!window.__ENV__){console.error('[HeloXAi] env.js not loaded.');return;}
+  var{SUPABASE_URL,SUPABASE_ANON_KEY,FREE_AI_URL,PREMIUM_AI_URL,BACKEND_URL}=window.__ENV__;
+  console.log('[HeloXAi] Environment configuration loaded.');
+  window.APP_CONFIG={SUPABASE_URL,SUPABASE_ANON_KEY,FREE_AI_URL,PREMIUM_AI_URL,BACKEND_URL};
+})();
 
-// Your AI backend endpoint — replace with your actual API URL
-const API_BASE = '/api';   // e.g. 'https://your-backend.vercel.app/api'
+/* =========================================
+   CORE LOGIC
+   ========================================= */
+(function(){
+'use strict';
 
-// ═══════════════════════════════════════════════════════════════
-// §2  SUPABASE CLIENT & APP STATE
-// ═══════════════════════════════════════════════════════════════
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
-  auth: { persistSession: true, autoRefreshToken: true }
-});
+var SB_URL=getEnvVar('SUPABASE_URL'),SB_KEY=getEnvVar('SUPABASE_ANON_KEY');
+var sb=null;
+if(SB_URL&&SB_KEY&&SB_URL.indexOf('http')===0){try{sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storage:window.localStorage}});}catch(e){console.error('Supabase Init Error:',e);}}
 
-const state = {
-  user: null,
-  chats: [],           // [{id, title, mode, model, created_at, updated_at, _count}]
-  activeChatId: null,
-  messages: [],        // [{id, chat_id, role, content, images, search_results, map_data, created_at}]
-  mode: 'chat',        // chat | search | image
-  model: 'gpt-4o-mini',
-  theme: 'dark',
-  streaming: false,
-  abortCtrl: null,
-  searchQuery: '',
-  sidebarOpen: false,
-  modelDDOpen: false,
-  pendingUserMsg: null  // temp hold before chat exists
-};
+function $(id){try{return document.getElementById(id);}catch(e){return null;}}
+function esc(s){if(s==null)return '';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML;}
+function uid(){try{return crypto.randomUUID()}catch(e){return Date.now().toString(36)+Math.random().toString(36).slice(2)}}
+function now(){return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
+function ago(ts){if(!ts)return '';var s=Math.floor((Date.now()-new Date(ts))/1000);if(s<60)return 'just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago';}
+function fmtSize(b){if(b<1024)return b+' B';if(b<1048576)return (b/1024).toFixed(1)+' KB';return (b/1048576).toFixed(1)+' MB';}
+function isImgFile(f){return f&&f.type&&f.type.indexOf('image/')===0;}
+function isVidFile(f){return f&&f.type&&f.type.indexOf('video/')===0;}
+function readAsDataUrl(f){return new Promise(function(r,e){var x=new FileReader();x.onload=function(){r(x.result)};x.onerror=function(){e(new Error('Failed to read file'));};x.readAsDataURL(f);});}
+function dataUrlToFile(u,n){try{var p=u.split(','),m=p[0].match(/:(.*?);/)[1],b=atob(p[1]),l=b.length,a=new Uint8Array(l);while(l--)a[l]=b.charCodeAt(l);return new File([a],n,{type:m});}catch(e){return null;}}
 
-// ═══════════════════════════════════════════════════════════════
-// §3  DOM REFERENCES
-// ═══════════════════════════════════════════════════════════════
-const $ = (s, p = document) => p.querySelector(s);
-const $$ = (s, p = document) => [...p.querySelectorAll(s)];
+/* UI HELPERS */
+function toast(msg,type){var ic={ok:'fa-circle-check',err:'fa-circle-xmark',inf:'fa-circle-info',wrn:'fa-triangle-exclamation'};var el=document.createElement('div');el.className='toast '+(type||'inf');el.innerHTML='<i class="fa-solid '+(ic[type||'inf']||ic.inf)+'"></i> '+esc(msg);var ct=$('toastCt');if(ct)ct.appendChild(el);setTimeout(function(){if(el.parentNode)el.remove()},3200);}
+function handleError(err,context,showToast){var errString='';if(typeof err==='string')errString=err;else if(err&&err.message)errString=err.message;else if(err)errString=JSON.stringify(err);else errString='Unknown error';console.error('[HeloXAi] Error in '+(context||'Operation')+':',errString);if(showToast!==false){var msg='An unexpected error occurred.';if(errString.includes('API URL is not configured'))msg='API URL not found. Check env.js';else if(errString.includes('42P17'))msg='Database policy error. Using Free plan.';else if(errString.length<100)msg=errString;toast(msg,'err');}}
+function getEnvVar(k){try{return(window.__ENV__&&window.__ENV__[k])||'';}catch(e){return '';}}
 
-const dom = {
-  sidebar:     () => $('.sidebar'),
-  sbOverlay:   () => $('.sb-overlay'),
-  chatList:    () => $('.cl'),
-  newChatBtn:  () => $('.nc-btn'),
-  searchInput: () => $('.sb-search input'),
-  hdrTitle:    () => $('.hdr-title'),
-  msgsWrap:    () => $('.msgs-wrap'),
-  msgsInner:   () => $('.msgs-inner'),
-  welcome:     () => $('.welcome'),
-  inputArea:   () => $('.input-area'),
-  textarea:    () => $('#msgInput'),
-  sendBtn:     () => $('#sendBtn'),
-  stopBtn:     () => $('#stopBtn'),
-  userSection: () => $('.s-user'),
-  userName:    () => $('.s-user .nm'),
-  userPlan:    () => $('.s-user .pl'),
-  userAvatar:  () => $('.s-user .av'),
-  modelSel:    () => $('.model-sel'),
-  modelDD:     () => $('.model-dd'),
-  authModal:   () => $('#authModal'),
-  toast:       () => $('#toast'),
-};
+/* STATE */
+var S={user:null,msgs:[],chatId:null,chatListData:[],streaming:false,abort:null,theme:'dark',sbOpen:false,asOpen:false,vdOpen:false,mdOpen:false,recording:false,recorder:null,chunks:[],audio:null,gallery:[],view:'chat',_mdOk:false,pendingFiles:[],model:'helox',isAutoScrolling:true,scrollThreshold:200,selectedVoice:'alloy',activeLinkUrl:'',editingIndex:null,dailyImgLimit:6,dailyVidLimit:3,mode:'general',currentAudio:null,lbUrl:'',lbType:'',features:{mic:true,voice:true}};
+var IMG_KW=['generate image','create image','make image','draw me','render image'];
+var VID_KW=['generate video','create video','make video','render video'];
+function isImgQ(t){var l=t.toLowerCase();for(var i=0;i<IMG_KW.length;i++)if(l.indexOf(IMG_KW[i])!==-1)return true;return false;}
+function isVidQ(t){var l=t.toLowerCase();for(var i=0;i<VID_KW.length;i++)if(l.indexOf(VID_KW[i])!==-1)return true;return false;}
 
-// ═══════════════════════════════════════════════════════════════
-// §4  AUTHENTICATION
-// ═══════════════════════════════════════════════════════════════
-sb.auth.onAuthStateChange((event, session) => {
-  state.user = session?.user ?? null;
-  renderUserUI();
-  if (state.user) {
-    loadUserPrefs();
-    loadChats();
-    subscribeRealtime();
-  } else {
-    unsubscribeRealtime();
-    state.chats = [];
-    state.activeChatId = null;
-    state.messages = [];
-    renderChatList();
-    showWelcome();
-  }
-});
+function safeSetItem(key,value){try{localStorage.setItem(key,value);return true;}catch(e){if(e.name==='QuotaExceededError'){if(key.startsWith('helox_history_')){var keys=Object.keys(localStorage);var removed=0;for(var i=0;i<keys.length;i++){if(keys[i].startsWith('helox_history_')&&keys[i]!==key){localStorage.removeItem(keys[i]);removed++;if(removed>2)break;}}try{localStorage.setItem(key,value);return true;}catch(re){}}}return false;}}
+function saveActiveChat(id){safeSetItem('helox_active_chat',id);}
+function getActiveChat(){try{return localStorage.getItem('helox_active_chat');}catch(e){return null;}}
+function saveLocalChats(){try{S.chatListData.sort(function(a,b){return new Date(b.updated_at)-new Date(a.updated_at);});var meta=S.chatListData.map(function(c){return{id:c.id,title:c.title,updated_at:c.updated_at};});safeSetItem('helox_chats',JSON.stringify(meta));}catch(e){}}
+function loadLocalChats(){try{var raw=localStorage.getItem('helox_chats');if(raw){var meta=JSON.parse(raw);if(Array.isArray(meta)&&meta.length>0)return meta;}}catch(e){}return [];}
+function saveChatHistory(id,msgs){try{var toSave=msgs.slice(-50).map(function(m){var nm={...m};delete nm.dataUrl;if(nm.images){nm.images=nm.images.map(function(img){return{url:img.url.length>2000?null:img.url,name:img.name,type:img.type};}).filter(img=>img.url!==null);}return nm;});var serialized=JSON.stringify(toSave);if(serialized.length>4.5*1024*1024){toSave=toSave.slice(-20);serialized=JSON.stringify(toSave);}safeSetItem('helox_history_'+id,serialized);var c=S.chatListData.find(x=>x.id===id);if(c){c.updated_at=new Date().toISOString();saveLocalChats();renderChatList();}}catch(e){}}
+function loadChatHistory(id){try{var raw=localStorage.getItem('helox_history_'+id);if(raw)return JSON.parse(raw);}catch(e){}return [];}
+function getDailyUsage(key){try{var today=new Date().toDateString();var stored=localStorage.getItem('helox_usage_'+key);if(stored){var data=JSON.parse(stored);if(data.date===today)return data.count;}return 0;}catch(e){return 0;}}
+function incrementUsage(key){try{var today=new Date().toDateString();var count=getDailyUsage(key)+1;localStorage.setItem('helox_usage_'+key,JSON.stringify({date:today,count:count}));return count;}catch(e){}}
+function checkLimits(text){var isMedia=isImgQ(text)||isVidQ(text);if(isMedia&&!isAuthed())return{allowed:false,msg:'Please Sign In to generate images or videos.'};if(isAuthed()){if(isImgQ(text)){var c=getDailyUsage('images');if(c>=S.dailyImgLimit)return{allowed:false,msg:'Daily image limit (6) reached.'};}else if(isVidQ(text)){var c=getDailyUsage('videos');if(c>=S.dailyVidLimit)return{allowed:false,msg:'Daily video limit (3) reached.'};}}return{allowed:true,msg:''};}
 
-function renderUserUI() {
-  const sec = dom.userSection();
-  if (!sec) return;
-  if (state.user) {
-    sec.classList.add('show');
-    const meta = state.user.user_metadata || {};
-    const name = meta.full_name || meta.name || state.user.email?.split('@')[0] || 'User';
-    if (dom.userName()) dom.userName().textContent = name;
-    if (dom.userAvatar()) dom.userAvatar().textContent = name.charAt(0).toUpperCase();
-    if (dom.userPlan()) dom.userPlan().textContent = 'Free';
-  } else {
-    sec.classList.remove('show');
-  }
+function apiUrl(){try{var base=getEnvVar('FREE_AI_URL');if(S.user&&(S.user.is_lifetime||S.user.is_premium)){var p=getEnvVar('PREMIUM_AI_URL');if(p&&p.indexOf('http')===0){base=p;}}if(!base)return null;return base;}catch(e){handleError(e,'API Configuration',false);return null;}}
+function authH(){try{var h={'Content-Type':'application/json'};if(S.user&&S.user.token)h['Authorization']='Bearer '+S.user.token;else h['x-guest-id']=guestId();return h;}catch(e){return {};}}
+function isAuthed(){return !!S.user;}
+function canMedia(){return isAuthed();}
+function guestId(){try{var id=localStorage.getItem('helox_guest_id');if(!id){id=crypto.randomUUID();localStorage.setItem('helox_guest_id',id);}return id;}catch(e){return 'guest-error';}}
+
+/* AUTH & PLAN */
+async function getUserPlan(){if(!sb)return "free";try{const{data:{user},error:authError}=await sb.auth.getUser();if(authError||!user)return "free";try{const{data:mainData,error:mainError}=await sb.from('users').select('plan,is_premium,is_lifetime').eq('id',user.id).maybeSingle();if(mainError&&mainError.code==='42P17')throw new Error("RLS_RECURSION");if(!mainError&&mainData){var planStr=(mainData.plan||'').toLowerCase();if(mainData.is_lifetime)return 'lifetime';if(mainData.is_premium)return planStr==='ultimate_yearly'?'yearly':'monthly';if(planStr==='ultimate_yearly')return 'yearly';if(planStr==='ultimate_monthly')return 'monthly';return planStr||'free';}}catch(e){if(e.message!=="RLS_RECURSION")throw e;}var backendUrl=getEnvVar('BACKEND_URL');if(backendUrl){try{const{data:{session}}=await sb.auth.getSession();if(!session)return "free";const res=await fetch(backendUrl+'/user/plan',{method:"GET",headers:{"Authorization":"Bearer "+session.access_token}});if(res.ok){let data=await res.json();const p=(data.plan||'').toLowerCase();if(p==='ultimate_monthly')return 'monthly';if(p==='ultimate_yearly')return 'yearly';if(p==='lifetime')return 'lifetime';return p||'free';}}catch(err){}}const{data:profileData}=await sb.from('user_profiles').select('plan').eq('user_id',user.id).maybeSingle();if(profileData){var pp=(profileData.plan||'').toLowerCase();if(pp==='ultimate_yearly')return 'yearly';if(pp==='ultimate_monthly')return 'monthly';return pp||'free';}return "free";}catch(e){return "free";}}
+
+async function setUserFromSess(sess){try{if(!sess||!sess.user)throw new Error("Invalid session");var currentPlan=await getUserPlan();var u={id:sess.user.id,email:sess.user.email,token:sess.access_token,plan:'free',is_premium:false,is_lifetime:false};if(currentPlan==='lifetime'){u.plan='lifetime';u.is_lifetime=true;u.is_premium=true;}else if(currentPlan==='yearly'){u.plan='ultimate_yearly';u.is_premium=true;}else if(currentPlan==='monthly'){u.plan='ultimate_monthly';u.is_premium=true;}else{u.plan='free';}S.user=u;safeSetItem('helox-last-login',Date.now());if(u.is_lifetime)toast('Welcome back, Lifetime Member!','ok');else if(u.is_premium)toast('Welcome back, Premium User','ok');else toast('Welcome back','ok');}catch(e){if(sess&&sess.user){S.user={id:sess.user.id,email:sess.user.email,token:sess.access_token,plan:'free',is_premium:false,is_lifetime:false};}}}
+
+async function setupAuth(){if(!sb){S.user=null;refreshUI();return;}try{var{data:{session},error}=await sb.auth.getSession();if(error)throw error;if(session&&session.user){await setUserFromSess(session);refreshUI();}else{S.user=null;refreshUI();}}catch(e){S.user=null;refreshUI();}sb.auth.onAuthStateChange(async function(ev,sess){try{if(ev==='SIGNED_OUT'){doSignOut();return;}if(sess&&sess.user){await setUserFromSess(sess);refreshUI();if(ev==='SIGNED_IN')loadChatList();}else{S.user=null;refreshUI();}}catch(e){}});}
+
+function doSignOut(){S.user=null;S.msgs=[];S.chatId=null;S.chatListData=[];S.gallery=[];refreshUI();renderAll();renderChatList();renderGallery();toast('Signed out','inf');}
+async function signOut(){if(sb)try{await sb.auth.signOut()}catch(e){}doSignOut();}
+
+/* DATA & CHAT HISTORY */
+async function loadChatList(){S.chatListData=loadLocalChats();renderChatList();}
+async function startNewChat(){if(S.streaming)stopGen();S.chatId=uid();S.msgs=[];S.gallery=[];var newTitle='New Chat '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});S.chatListData.unshift({id:S.chatId,title:newTitle,updated_at:new Date().toISOString()});saveLocalChats();saveActiveChat(S.chatId);saveChatHistory(S.chatId,S.msgs);$('hdrTitle').textContent=newTitle;renderAll();if(S.sbOpen)toggleSB(false);try{var url=apiUrl();if(!url)throw new Error("API not configured");var r=await fetch(url+'/newchat',{method:'POST',headers:authH(),credentials:'include',body:JSON.stringify({model:S.model})});if(r.ok){var d=await r.json();if(d&&d.conversation_id&&d.conversation_id!==S.chatId){localStorage.removeItem('helox_history_'+S.chatId);S.chatId=d.conversation_id;saveActiveChat(S.chatId);saveLocalChats();}}}catch(e){}}
+async function loadConv(cid){S.msgs=[];showWelcome();$('hdrTitle').textContent='Loading...';var msgs=loadChatHistory(cid);if(msgs.length>0){S.msgs=msgs;var chat=S.chatListData.find(c=>c.id===cid);if(chat)$('hdrTitle').textContent=chat.title;}else{if(sb&&cid){try{var res=await sb.from('messages').select('*').eq('conversation_id',cid).order('created_at',{ascending:true});if(!res.error&&res.data){S.msgs=res.data.map(function(m){var imgs=m.media_url?[{url:m.media_url,name:'Generated'}]:[];return{id:m.id,role:m.role,content:m.content,content_type:m.content_type||'text',media_url:m.media_url||null,images:imgs,time:new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),liked:false,disliked:false};});saveChatHistory(cid,S.msgs);}}catch(e){}}}S.gallery=[];S.msgs.forEach(function(m){if(m.role==='assistant'){if(m.images&&m.images.length){m.images.forEach(function(i){var type=(i.url&&(i.url.includes('.mp4')||i.url.includes('.webm')))?'video':'image';if(!S.gallery.some(function(g){return g.url===i.url}))S.gallery.unshift({type:type,url:i.url,prompt:'Generated',id:uid()});});}else{addGal(m.content);}}});S.chatId=cid;saveActiveChat(cid);renderChatList();renderAll();switchView('chat');}
+async function saveMsg(m){saveChatHistory(S.chatId,S.msgs);if(!sb||!S.user||!S.chatId)return;try{await sb.from('messages').insert({conversation_id:S.chatId,role:m.role,content:m.content,content_type:m.content_type||'text',media_url:m.media_url||null,metadata:m.metadata||{}});}catch(e){}}
+async function updateTs(cid){saveChatHistory(cid,S.msgs);if(!sb||!cid)return;try{await sb.from('conversations').update({updated_at:new Date().toISOString()}).eq('id',cid);}catch(e){}}
+async function delConv(cid){if(!confirm('Delete this chat?'))return;try{localStorage.removeItem('helox_history_'+cid);S.chatListData=S.chatListData.filter(function(c){return c.id!==cid;});saveLocalChats();}catch(e){}if(S.chatId===cid)saveActiveChat(null);try{var url=apiUrl();if(url)await fetch(url+'/chats/'+cid,{method:'DELETE',headers:authH(),credentials:'include'});}catch(e){}if(!sb||!cid)return;try{await sb.from('messages').delete().eq('conversation_id',cid);await sb.from('conversations').delete().eq('id',cid);}catch(e){}if(S.chatId===cid){S.msgs=[];S.chatId=null;$('hdrTitle').textContent='HeloXAi';renderAll();}renderChatList();toast('Deleted','inf');}
+
+/* THEME */
+function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('data-theme',window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');else document.documentElement.setAttribute('data-theme',t);}catch(e){}S.theme=t;try{localStorage.setItem('helox-theme',t);}catch(e){}document.querySelectorAll('.t-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-t')===t);});}
+function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'dark';}catch(e){}setTheme(s);try{window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(S.theme==='system')setTheme('system');});}catch(e){}}
+
+/* =========================================
+   CHATGPT-STYLE MARKDOWN RENDERING
+   ========================================= */
+var mdCache=new Map();
+
+/* Pre-process: ==highlight== → <mark>...</mark> */
+function preprocessHighlight(text){
+  return text.replace(/==([^=]+)==/g,function(match,content){
+    return '<mark>'+content+'</mark>';
+  });
 }
 
-async function loadUserPrefs() {
-  if (!state.user) return;
-  const meta = state.user.user_metadata || {};
-  if (meta.theme) setTheme(meta.theme, false);
-  if (meta.preferred_model) {
-    state.model = meta.preferred_model;
-    updateModelUI();
-  }
+/* Pre-process: bare URLs → auto-linked (only if not already in markdown syntax) */
+function preprocessAutoLinks(text){
+  return text.replace(/(?<!\()(?<!\[)(?<!["'])(https?:\/\/[^\s<>"')\]]+)/g,function(url){
+    return '<'+url+'>';
+  });
 }
 
-async function saveUserPrefs(updates) {
-  if (!state.user) return;
-  try {
-    await sb.auth.updateUser({ data: updates });
-  } catch (e) { console.warn('Failed to save prefs:', e); }
+/* Pre-process: Definition lists (Term\n: Definition) */
+function preprocessDefLists(text){
+  return text.replace(/^([^\n:]+)\n:\s+(.+)$/gm,function(match,term,def){
+    return '<dt>'+term.trim()+'</dt>\n<dd>'+def.trim()+'</dd>';
+  });
 }
 
-function showAuthModal(mode = 'login') {
-  let modal = dom.authModal();
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'authModal';
-    document.body.appendChild(modal);
-  }
-  const isLogin = mode === 'login';
-  modal.innerHTML = `
-    <div class="auth-backdrop" onclick="closeAuthModal()"></div>
-    <div class="auth-card">
-      <button class="auth-close ib" onclick="closeAuthModal()"><i class="fa-solid fa-xmark"></i></button>
-      <div class="auth-logo">HeloXAi</div>
-      <p class="auth-sub">${isLogin ? 'Sign in to sync your chats across all devices' : 'Create an account to get started'}</p>
-      <div id="authError" class="auth-error" style="display:none"></div>
-      <form id="authForm" onsubmit="handleAuth(event, '${mode}')">
-        ${!isLogin ? '<input type="text" id="authName" placeholder="Full name" autocomplete="name" required>' : ''}
-        <input type="email" id="authEmail" placeholder="Email address" autocomplete="email" required>
-        <input type="password" id="authPass" placeholder="Password" autocomplete="${isLogin ? 'current-password' : 'new-password'}" minlength="6" required>
-        <button type="submit" class="auth-submit">${isLogin ? 'Sign In' : 'Create Account'}</button>
-      </form>
-      <p class="auth-toggle">${isLogin ? "Don't have an account?" : 'Already have an account?'}
-        <button onclick="showAuthModal('${isLogin ? 'signup' : 'login'}')">${isLogin ? 'Sign Up' : 'Sign In'}</button>
-      </p>
-    </div>
-  `;
-  // Inject auth modal styles if not present
-  if (!document.getElementById('authStyles')) {
-    const s = document.createElement('style');
-    s.id = 'authStyles';
-    s.textContent = `
-      .auth-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;backdrop-filter:blur(6px);animation:fadeIn .2s}
-      .auth-card{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-xl);padding:36px 32px;width:90%;max-width:400px;z-index:201;box-shadow:0 24px 80px rgba(0,0,0,.5);animation:authPop .3s cubic-bezier(.16,1,.3,1)}
-      @keyframes authPop{from{opacity:0;transform:translate(-50%,-50%) scale(.92)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
-      @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-      .auth-close{position:absolute;top:14px;right:14px}
-      .auth-logo{font-family:var(--font-display);font-size:28px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--text-primary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-align:center;margin-bottom:6px}
-      .auth-sub{color:var(--text-secondary);font-size:14px;text-align:center;margin-bottom:24px;line-height:1.5}
-      .auth-error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px}
-      .auth-card form{display:flex;flex-direction:column;gap:12px}
-      .auth-card input{padding:12px 14px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .2s}
-      .auth-card input:focus{border-color:var(--border-active)}
-      .auth-submit{padding:13px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-family:var(--font-body);font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:4px}
-      .auth-submit:hover{filter:brightness(1.1);transform:translateY(-1px)}
-      .auth-submit:active{transform:translateY(0)}
-      .auth-toggle{text-align:center;color:var(--text-muted);font-size:13px;margin-top:18px}
-      .auth-toggle button{background:none;border:none;color:var(--accent);font-weight:600;cursor:pointer;font-family:var(--font-body);font-size:13px}
-      .auth-toggle button:hover{text-decoration:underline}
-    `;
-    document.head.appendChild(s);
-  }
-}
-
-function closeAuthModal() {
-  const m = dom.authModal();
-  if (m) m.remove();
-}
-
-async function handleAuth(e, mode) {
-  e.preventDefault();
-  const email = $('#authEmail')?.value?.trim();
-  const pass  = $('#authPass')?.value;
-  const name  = $('#authName')?.value?.trim();
-  const errEl = $('#authError');
-  if (errEl) errEl.style.display = 'none';
-
-  try {
-    if (mode === 'login') {
-      const { error } = await sb.auth.signInWithPassword({ email, password: pass });
-      if (error) throw error;
-    } else {
-      const { error } = await sb.auth.signUp({
-        email,
-        password: pass,
-        options: { data: { full_name: name, theme: state.theme, preferred_model: state.model } }
-      });
-      if (error) throw error;
-      toast('Check your email to verify your account', 'info');
+/* Pre-process: Footnotes [^N] and [^N]: */
+function preprocessFootnotes(text){
+  var fnMap={};
+  var body=text.replace(/\[\^(\w+)\]:\s*(.+)$/gm,function(match,id,content){
+    fnMap[id]=content.trim();
+    return '';
+  });
+  body=body.replace(/\[\^(\w+)\]/g,function(match,id){
+    return '<sup class="footnote-ref" data-fn="'+id+'">['+id+']</sup>';
+  });
+  if(Object.keys(fnMap).length>0){
+    body+='\n<div class="footnotes"><ol>';
+    var idx=1;
+    for(var k in fnMap){
+      body+='<li id="fn-'+k+'">'+fnMap[k]+' <a class="footnote-backref" href="#fnref-'+k+'">↩</a></li>';
+      idx++;
     }
-    closeAuthModal();
-  } catch (err) {
-    if (errEl) {
-      errEl.textContent = err.message || 'Authentication failed';
-      errEl.style.display = 'block';
-    }
+    body+='</ol></div>';
   }
+  return body;
 }
 
-async function signOut() {
-  await sb.auth.signOut();
-  state.chats = [];
-  state.activeChatId = null;
-  state.messages = [];
-  renderChatList();
-  showWelcome();
-  toast('Signed out', 'info');
-}
+function initMarked(){
+  if(typeof marked==='undefined'){S._mdOk=false;return;}
+  if(typeof mermaid!=='undefined'){mermaid.initialize({startOnLoad:false,theme:'dark',securityLevel:'loose'});}
 
-// ═══════════════════════════════════════════════════════════════
-// §5  CHAT CRUD — Supabase
-// ═══════════════════════════════════════════════════════════════
-async function loadChats() {
-  if (!state.user) return;
-  try {
-    const { data, error } = await sb
-      .from('chats')
-      .select('id, title, mode, model, created_at, updated_at, messages(count)')
-      .eq('user_id', state.user.id)
-      .order('updated_at', { ascending: false });
+  try{
+    var renderer=new marked.Renderer();
 
-    if (error) throw error;
-    state.chats = (data || []).map(c => ({
-      ...c,
-      _count: c.messages?.[0]?.count ?? 0
-    }));
-    renderChatList();
-  } catch (e) {
-    console.error('Failed to load chats:', e);
-    toast('Failed to load chats', 'error');
-  }
-}
-
-async function createChat(title = 'New Chat', mode = null, model = null) {
-  if (!state.user) {
-    showAuthModal('login');
-    return null;
-  }
-  try {
-    const { data, error } = await sb
-      .from('chats')
-      .insert({
-        user_id: state.user.id,
-        title: title.slice(0, 200),
-        mode: mode || state.mode,
-        model: model || state.model
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    state.chats.unshift({ ...data, _count: 0 });
-    renderChatList();
-    return data;
-  } catch (e) {
-    console.error('Failed to create chat:', e);
-    toast('Failed to create chat', 'error');
-    return null;
-  }
-}
-
-async function deleteChat(chatId) {
-  try {
-    // Messages are cascade-deleted by the foreign key
-    const { error } = await sb
-      .from('chats')
-      .delete()
-      .eq('id', chatId)
-      .eq('user_id', state.user.id);
-
-    if (error) throw error;
-    state.chats = state.chats.filter(c => c.id !== chatId);
-    if (state.activeChatId === chatId) {
-      state.activeChatId = null;
-      state.messages = [];
-      showWelcome();
-    }
-    renderChatList();
-  } catch (e) {
-    console.error('Failed to delete chat:', e);
-    toast('Failed to delete chat', 'error');
-  }
-}
-
-async function renameChat(chatId, newTitle) {
-  try {
-    const { error } = await sb
-      .from('chats')
-      .update({ title: newTitle.slice(0, 200) })
-      .eq('id', chatId)
-      .eq('user_id', state.user.id);
-
-    if (error) throw error;
-    const chat = state.chats.find(c => c.id === chatId);
-    if (chat) chat.title = newTitle;
-    renderChatList();
-    if (state.activeChatId === chatId && dom.hdrTitle()) {
-      dom.hdrTitle().textContent = newTitle;
-    }
-  } catch (e) {
-    console.error('Failed to rename chat:', e);
-  }
-}
-
-async function touchChat(chatId) {
-  // Fire-and-forget updated_at bump
-  sb.from('chats')
-    .update({ updated_at: new Date().toISOString() })
-    .eq('id', chatId)
-    .eq('user_id', state.user?.id)
-    .then(() => {
-      // Move to top of list locally
-      const idx = state.chats.findIndex(c => c.id === chatId);
-      if (idx > 0) {
-        const [chat] = state.chats.splice(idx, 1);
-        chat.updated_at = new Date().toISOString();
-        state.chats.unshift(chat);
-        renderChatList();
+    /* Code blocks */
+    renderer.code=function(code,infostring){
+      var text=String(code||'').replace(/\r\n/g,'\n');
+      var langArr=(infostring||'').trim().split(/\s+/);
+      var language=langArr[0]||'';
+      var validLang='';
+      if(typeof hljs!=='undefined'&&typeof hljs.getLanguage==='function'){
+        if(language&&hljs.getLanguage(language))validLang=language;
       }
-    });
-}
+      var highlighted='';
+      try{
+        if(typeof hljs!=='undefined'){
+          if(text.length>100000)text=text.slice(0,100000);
+          if(validLang)highlighted=hljs.highlight(text,{language:validLang,ignoreIllegals:true}).value;
+          else highlighted=hljs.highlightAuto(text).value;
+          if(highlighted&&typeof highlighted==='string'){
+            var lines=highlighted.split('\n');
+            var lineNumsHtml='<div class="line-numbers-rows">';
+            lines.forEach(function(){lineNumsHtml+='<span></span>';});
+            lineNumsHtml+='</div>';
+            highlighted=lineNumsHtml+highlighted;
+            validLang=validLang||'plaintext';
+          }
+        }else{highlighted=esc(text);validLang='text';}
+      }catch(e){highlighted=esc(text);}
 
-// ═══════════════════════════════════════════════════════════════
-// §6  MESSAGE CRUD — Supabase
-// ═══════════════════════════════════════════════════════════════
-async function loadMessages(chatId) {
-  if (!state.user) return;
-  try {
-    const { data, error } = await sb
-      .from('messages')
-      .select('*')
-      .eq('chat_id', chatId)
-      .order('created_at', { ascending: true });
+      var btnsHtml='';
+      if(validLang){
+        if(validLang.toLowerCase()==='html'||validLang.toLowerCase()==='xml'){
+          btnsHtml+='<button type="button" class="cp-btn" data-action="run-html" style="margin-right:5px;"><i class="fa-solid fa-play"></i> Run</button>';
+        }
+      }
+      btnsHtml+='<button type="button" class="cp-btn" data-action="copy-code"><i class="fa-regular fa-copy"></i> Copy</button>';
 
-    if (error) throw error;
-    state.messages = data || [];
-  } catch (e) {
-    console.error('Failed to load messages:', e);
-    state.messages = [];
-  }
-}
+      var langIcon='fa-code';
+      if(['js','javascript'].includes(validLang))langIcon='fa-brands fa-js';
+      else if(['ts','typescript'].includes(validLang))langIcon='fa-brands fa-js';
+      else if(['python','py'].includes(validLang))langIcon='fa-brands fa-python';
+      else if(['html','xml'].includes(validLang))langIcon='fa-brands fa-html5';
+      else if(['css'].includes(validLang))langIcon='fa-brands fa-css3-alt';
+      else if(['java'].includes(validLang))langIcon='fa-brands fa-java';
+      else if(['bash','shell','sh'].includes(validLang))langIcon='fa-solid fa-terminal';
 
-async function saveMessage(chatId, role, content, extras = {}) {
-  if (!state.user || !chatId) return null;
-  try {
-    const row = {
-      chat_id: chatId,
-      role,
-      content: content || '',
-      images: extras.images || [],
-      search_results: extras.search_results || null,
-      map_data: extras.map_data || null,
+      return '<div class="code-blk line-numbers"><div class="code-hd"><div class="code-lang-badge"><i class="'+langIcon+'"></i> '+esc(validLang||'text')+'</div>'+btnsHtml+'</div><pre><code class="hljs language-'+esc(validLang)+'">'+highlighted+'</code></pre></div>';
     };
-    const { data, error } = await sb
-      .from('messages')
-      .insert(row)
-      .select()
-      .single();
 
-    if (error) throw error;
-    // Add to local state
-    state.messages.push(data);
-    // Update count in chat list
-    const chat = state.chats.find(c => c.id === chatId);
-    if (chat) chat._count = (chat._count || 0) + 1;
-    renderChatList();
-    return data;
-  } catch (e) {
-    console.error('Failed to save message:', e);
-    return null;
-  }
-}
+    /* Images */
+    renderer.image=function(href,title,text){
+      return '<div class="img-wrap"><img src="'+esc(href)+'" alt="'+esc(text||title||'Image')+'" title="'+esc(title||text||'Click to view')+'" loading="lazy" data-msg-img="'+esc(href)+'"></div>';
+    };
 
-async function updateMessageContent(msgId, content, extras = {}) {
-  if (!msgId) return;
-  const update = { content: content || '' };
-  if (extras.search_results !== undefined) update.search_results = extras.search_results;
-  if (extras.map_data !== undefined) update.map_data = extras.map_data;
-  if (extras.images !== undefined) update.images = extras.images;
+    /* Links */
+    renderer.link=function(href,title,text){
+      var titleAttr=title?' title="'+esc(title)+'"':'';
+      return '<a href="'+esc(href)+'" target="_blank" rel="noopener noreferrer"'+titleAttr+'>'+text+'</a>';
+    };
 
-  try {
-    const { error } = await sb
-      .from('messages')
-      .update(update)
-      .eq('id', msgId);
-
-    if (error) throw error;
-    // Update local
-    const msg = state.messages.find(m => m.id === msgId);
-    if (msg) Object.assign(msg, update);
-  } catch (e) {
-    console.error('Failed to update message:', e);
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════
-// §7  REALTIME SUBSCRIPTIONS (multi-tab / multi-device sync)
-// ═══════════════════════════════════════════════════════════════
-let chatSub = null;
-let msgSub  = null;
-
-function subscribeRealtime() {
-  if (!state.user) return;
-  unsubscribeRealtime();
-
-  // Listen for chat changes (rename, delete, new from other tab)
-  chatSub = sb
-    .channel('chats:' + state.user.id)
-    .on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'chats',
-      filter: `user_id=eq.${state.user.id}`
-    }, (payload) => {
-      if (payload.eventType === 'INSERT') {
-        if (!state.chats.find(c => c.id === payload.new.id)) {
-          state.chats.unshift({ ...payload.new, _count: 0 });
-          state.chats.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
-          renderChatList();
-        }
-      } else if (payload.eventType === 'UPDATE') {
-        const chat = state.chats.find(c => c.id === payload.new.id);
-        if (chat) {
-          Object.assign(chat, payload.new);
-          renderChatList();
-          if (state.activeChatId === chat.id && dom.hdrTitle()) {
-            dom.hdrTitle().textContent = chat.title;
-          }
-        }
-      } else if (payload.eventType === 'DELETE') {
-        const id = payload.old.id;
-        state.chats = state.chats.filter(c => c.id !== id);
-        if (state.activeChatId === id) {
-          state.activeChatId = null;
-          state.messages = [];
-          showWelcome();
-        }
-        renderChatList();
+    /* Task list item — render proper checkbox + span */
+    renderer.listitem=function(text,task,checked){
+      if(task){
+        return '<li class="task-list-item"><input type="checkbox" disabled'+(checked?' checked':'')+'><span>'+text+'</span></li>';
       }
-    })
-    .subscribe();
+      return '<li>'+text+'</li>';
+    };
 
-  // Listen for message changes in active chat
-  msgSub = sb
-    .channel('messages:' + state.activeChatId)
-    .on('postgres_changes', {
-      event: 'INSERT',
-      schema: 'public',
-      table: 'messages',
-      filter: state.activeChatId ? `chat_id=eq.${state.activeChatId}` : undefined
-    }, async (payload) => {
-      if (!state.activeChatId || payload.new.chat_id !== state.activeChatId) return;
-      if (state.messages.find(m => m.id === payload.new.id)) return;
-      state.messages.push(payload.new);
-      // Re-sub if chat changed
-      if (payload.new.chat_id !== state.activeChatId) {
-        subscribeMessages();
-      }
-    })
-    .subscribe();
+    /* Table with alignment support */
+    renderer.table=function(header,body){
+      return '<table><thead>'+header+'</thead><tbody>'+body+'</tbody></table>';
+    };
+    renderer.tablerow=function(content){
+      return '<tr>'+content+'</tr>';
+    };
+    renderer.tablecell=function(content,flags){
+      var tag=flags.header?'th':'td';
+      var align=flags.align?' style="text-align:'+flags.align+'"':'';
+      return '<'+tag+align+'>'+content+'</'+tag+'>';
+    };
+
+    marked.use({breaks:true,gfm:true,renderer:renderer});
+    S._mdOk=true;
+  }catch(e){console.error('Marked init failed:',e);S._mdOk=false;}
 }
 
-function subscribeMessages() {
-  if (msgSub) {
-    sb.removeChannel(msgSub);
-    msgSub = null;
-  }
-  if (!state.user || !state.activeChatId) return;
-  msgSub = sb
-    .channel('messages:' + state.activeChatId)
-    .on('postgres_changes', {
-      event: 'INSERT',
-      schema: 'public',
-      table: 'messages',
-      filter: `chat_id=eq.${state.activeChatId}`
-    }, (payload) => {
-      if (state.messages.find(m => m.id === payload.new.id)) return;
-      state.messages.push(payload.new);
-      appendMessageDOM(payload.new);
-      scrollToBottom();
-    })
-    .subscribe();
-}
-
-function unsubscribeRealtime() {
-  if (chatSub) { sb.removeChannel(chatSub); chatSub = null; }
-  if (msgSub)  { sb.removeChannel(msgSub);  msgSub = null; }
-}
-
-// ═══════════════════════════════════════════════════════════════
-// §8  SIDEBAR & CHAT LIST RENDERING
-// ═══════════════════════════════════════════════════════════════
-function renderChatList() {
-  const container = dom.chatList();
-  if (!container) return;
-
-  const q = state.searchQuery.toLowerCase().trim();
-  const filtered = q
-    ? state.chats.filter(c => c.title.toLowerCase().includes(q))
-    : state.chats;
-
-  if (filtered.length === 0) {
-    container.innerHTML = `
-      <div style="padding:32px 16px;text-align:center;color:var(--text-muted);font-size:13px;">
-        <i class="fa-regular fa-comment-dots" style="font-size:28px;display:block;margin-bottom:10px;opacity:.4"></i>
-        ${q ? 'No matching chats' : (state.user ? 'No chats yet' : 'Sign in to save chats')}
-      </div>`;
-    return;
-  }
-
-  // Group by date
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const yesterday = new Date(today - 86400000);
-  const weekAgo = new Date(today - 7 * 86400000);
-  const monthAgo = new Date(today - 30 * 86400000);
-
-  const groups = { today: [], yesterday: [], week: [], month: [], older: [] };
-  filtered.forEach(c => {
-    const d = new Date(c.updated_at);
-    if (d >= today) groups.today.push(c);
-    else if (d >= yesterday) groups.yesterday.push(c);
-    else if (d >= weekAgo) groups.week.push(c);
-    else if (d >= monthAgo) groups.month.push(c);
-    else groups.older.push(c);
+function processAdmonitions(html){
+  return html.replace(/<blockquote>\s*\[\!([A-Z]+)\]\s*([^\n]*)\n([\s\S]*?)<\/blockquote>/g,function(match,type,title,content){
+    var cls='adm-note',icon='fa-info-circle';
+    var t=type.toLowerCase();
+    if(t==='tip'||t==='success'||t==='check'){cls='adm-tip';icon='fa-lightbulb';}
+    else if(t==='warning'||t==='caution'||t==='important'){cls='adm-warn';icon='fa-triangle-exclamation';}
+    else if(t==='error'||t==='danger'||t==='fail'){cls='adm-err';icon='fa-circle-xmark';}
+    var cleanContent=content.replace(/^<p>|<\/p>$/g,'');
+    return '<div class="admonition '+cls+'"><div class="admonition-icon"><i class="fa-solid '+icon+'"></i></div><div><span class="adm-title">'+(title||type)+'</span>'+cleanContent+'</div></div>';
   });
-
-  let html = '';
-  const renderGroup = (label, items) => {
-    if (!items.length) return '';
-    let h = `<div class="cl-label">${label}</div>`;
-    items.forEach(c => {
-      const active = c.id === state.activeChatId ? ' active' : '';
-      const time = formatTime(c.updated_at);
-      const icon = c.mode === 'search' ? 'fa-magnifying-glass' :
-                   c.mode === 'image'  ? 'fa-image' : 'fa-regular fa-comment';
-      h += `
-        <button class="cl-item${active}" data-chat-id="${c.id}" onclick="switchChat('${c.id}')">
-          <i class="${icon}"></i>
-          <span class="cl-title">${escHtml(c.title)}</span>
-          <span class="cl-time">${time}</span>
-          <span class="cl-del" onclick="event.stopPropagation();confirmDeleteChat('${c.id}')" title="Delete chat">
-            <i class="fa-regular fa-trash-can"></i>
-          </span>
-        </button>`;
-    });
-    return h;
-  };
-
-  html += renderGroup('Today', groups.today);
-  html += renderGroup('Yesterday', groups.yesterday);
-  html += renderGroup('Previous 7 Days', groups.week);
-  html += renderGroup('Previous 30 Days', groups.month);
-  html += renderGroup('Older', groups.older);
-
-  container.innerHTML = html;
 }
 
-function formatTime(iso) {
-  if (!iso) return '';
-  const d = new Date(iso);
-  const now = new Date();
-  const diff = now - d;
-  if (diff < 60000) return 'Just now';
-  if (diff < 3600000) return Math.floor(diff / 60000) + 'm';
-  if (diff < 86400000) return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
-}
-
-function confirmDeleteChat(chatId) {
-  const chat = state.chats.find(c => c.id === chatId);
-  if (!chat) return;
-  // Use a simple inline confirm instead of alert/confirm
-  const btn = document.querySelector(`.cl-item[data-chat-id="${chatId}"] .cl-del`);
-  if (!btn || btn.dataset.confirming) {
-    // Second click — actually delete
-    deleteChat(chatId);
-    return;
-  }
-  btn.dataset.confirming = '1';
-  btn.innerHTML = '<i class="fa-solid fa-check" style="color:var(--danger)"></i>';
-  btn.title = 'Click again to confirm deletion';
-  setTimeout(() => {
-    if (btn) {
-      delete btn.dataset.confirming;
-      btn.innerHTML = '<i class="fa-regular fa-trash-can"></i>';
-      btn.title = 'Delete chat';
-    }
-  }, 3000);
-}
-
-// ═══════════════════════════════════════════════════════════════
-// §9  CHAT SWITCHING & WELCOME SCREEN
-// ═══════════════════════════════════════════════════════════════
-async function switchChat(chatId) {
-  if (state.streaming) return;
-  if (state.activeChatId === chatId) return;
-
-  state.activeChatId = chatId;
-  const chat = state.chats.find(c => c.id === chatId);
-
-  // Update header
-  if (dom.hdrTitle()) dom.hdrTitle().textContent = chat?.title || 'Chat';
-
-  // Update mode tabs
-  if (chat?.mode) {
-    state.mode = chat.mode;
-    $$('.htab').forEach(t => {
-      t.classList.toggle('active', t.dataset.mode === state.mode);
-    });
-  }
-
-  // Update model
-  if (chat?.model && chat.model !== state.model) {
-    state.model = chat.model;
-    updateModelUI();
-  }
-
-  renderChatList();
-  subscribeMessages();
-
-  // Show loading then load messages
-  const inner = dom.msgsInner();
-  if (inner) {
-    inner.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--text-muted)">
-      <i class="fa-solid fa-spinner fa-spin" style="margin-right:8px"></i> Loading...
-    </div>`;
-  }
-  if (dom.welcome()) dom.welcome().style.display = 'none';
-
-  await loadMessages(chatId);
-  renderMessages();
-  closeSidebar();
-}
-
-function showWelcome() {
-  if (dom.welcome()) dom.welcome().style.display = '';
-  const inner = dom.msgsInner();
-  if (inner) inner.innerHTML = '';
-  if (dom.hdrTitle()) dom.hdrTitle().textContent = 'HeloXAi';
-  state.activeChatId = null;
-}
-
-// ═══════════════════════════════════════════════════════════════
-// §10  MESSAGE RENDERING
-// ═══════════════════════════════════════════════════════════════
-function renderMessages() {
-  const inner = dom.msgsInner();
-  if (!inner) return;
-  if (dom.welcome()) dom.welcome().style.display = 'none';
-
-  if (state.messages.length === 0) {
-    inner.innerHTML = '';
-    if (!state.activeChatId) showWelcome();
-    return;
-  }
-
-  inner.innerHTML = state.messages.map(m => buildMessageHTML(m)).join('');
-  postRenderMessages(inner);
-  scrollToBottom();
-}
-
-function appendMessageDOM(msg) {
-  const inner = dom.msgsInner();
-  if (!inner) return;
-  if (dom.welcome()) dom.welcome().style.display = 'none';
-  const div = document.createElement('div');
-  div.innerHTML = buildMessageHTML(msg);
-  const msgEl = div.firstElementChild;
-  inner.appendChild(msgEl);
-  postRenderMessages(msgEl);
-  scrollToBottom();
-}
-
-function buildMessageHTML(msg) {
-  const isUser = msg.role === 'user';
-  const cls = isUser ? 'msg user-msg' : 'msg ai-msg';
-
-  let label = '';
-  if (isUser) {
-    label = `<div class="msg-label">You</div>`;
-  } else {
-    label = `<div class="msg-label">
-      <span class="ai-dot"></span> HeloXAi
-    </div>`;
-  }
-
-  let content = '';
-  if (isUser) {
-    content = `<div class="msg-bubble">${formatUserContent(msg)}</div>`;
-  } else {
-    content = `<div class="msg-text-wrapper"><div class="msg-ct">${renderMarkdown(msg.content || '')}</div></div>`;
-    if (msg.search_results) {
-      content += renderSearchResults(msg.search_results);
-    }
-    if (msg.map_data) {
-      content += renderMapData(msg.map_data);
-    }
-  }
-
-  const acts = isUser ? `
-    <div class="msg-acts" style="display:flex;gap:4px;margin-top:8px;">
-      <button class="ib" onclick="editMessage('${msg.id}')" title="Edit"><i class="fa-regular fa-pen-to-square"></i></button>
-      <button class="ib" onclick="copyMsgText(this, \`${escAttr(msg.content || '')}\`)" title="Copy"><i class="fa-regular fa-copy"></i></button>
-    </div>` : `
-    <div class="msg-acts" style="display:flex;gap:4px;margin-top:8px;">
-      <button class="ib" onclick="copyMsgText(this, this.closest('.msg').querySelector('.msg-ct')?.innerText || '')" title="Copy"><i class="fa-regular fa-copy"></i></button>
-    </div>`;
-
-  return `<div class="${cls}" data-msg-id="${msg.id}">
-    <div class="msg-inner">${label}${content}${acts}</div>
-  </div>`;
-}
-
-function formatUserContent(msg) {
-  let html = escHtml(msg.content || '');
-  if (msg.images && msg.images.length) {
-    html += '<div class="msg-imgs">';
-    msg.images.forEach(url => {
-      html += `<div class="msg-img-item single" onclick="openImageViewer('${escAttr(url)}')">
-        <img src="${escAttr(url)}" alt="Uploaded image" loading="lazy">
-      </div>`;
-    });
-    html += '</div>';
-  }
+function processEmbeds(html){
+  html=html.replace(/<a href="(https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+))"[^>]*>.*?<\/a>/g,'<div class="embed-youtube"><iframe src="https://www.youtube.com/embed/$4" frameborder="0" allowfullscreen></iframe></div>');
   return html;
 }
 
-function postRenderMessages(root) {
-  // Render KaTeX
-  if (window.renderMathInElement) {
-    try {
-      renderMathInElement(root, {
-        delimiters: [
-          { left: '$$', right: '$$', display: true },
-          { left: '$', right: '$', display: false },
-          { left: '\\(', right: '\\)', display: false },
-          { left: '\\[', right: '\\]', display: true }
-        ],
-        throwOnError: false
-      });
-    } catch(e) {}
-  }
-  // Render Mermaid
-  $$('.language-mermaid', root).forEach(async el => {
-    const code = el.textContent;
-    try {
-      const { svg } = await mermaid.render('mmd-' + Math.random().toString(36).slice(2,8), code);
-      el.parentElement.outerHTML = `<div class="mermaid">${svg}</div>`;
-    } catch(e) {
-      el.parentElement.outerHTML = `<div class="code-blk"><div class="code-hd"><span class="code-lang-badge"><i class="fa-solid fa-diagram-project"></i> Mermaid</span></div><pre><code>${escHtml(code)}</code></pre></div>`;
-    }
-  });
-  // Highlight code blocks
-  root.querySelectorAll('pre code:not(.hljs)').forEach(block => {
-    hljs.highlightElement(block);
-  });
-  // Make source chips clickable
-  $$('.search-qa-item', root).forEach(item => {
-    item.addEventListener('click', () => item.classList.toggle('open'));
-  });
+var _mermaidRunning=false;
+function processMermaid(element){
+  if(!window.mermaid||!element||!element.isConnected)return;
+  if(_mermaidRunning)return;
+  var codeElements=element.querySelectorAll('code.language-mermaid');
+  if(!codeElements.length)return;
+  _mermaidRunning=true;
+  var pending=Array.from(codeElements);
+  function next(){if(!pending.length){_mermaidRunning=false;return;}var block=pending.shift();var pre=block.parentElement;if(!pre||!pre.parentElement||!pre.isConnected){next();return;}var code=block.textContent.trim();if(!code){next();return;}var id='mermaid-'+Math.random().toString(36).substr(2,9);try{mermaid.render(id,code).then(function(result){if(pre&&pre.parentElement&&pre.isConnected){var div=document.createElement('div');div.className='mermaid mermaid-rendered';div.innerHTML=result.svg;pre.parentElement.replaceWith(div);}next();}).catch(function(err){next();});}catch(e){next();}}
+  next();
 }
 
-function scrollToBottom() {
-  requestAnimationFrame(() => {
-    const w = dom.msgsWrap();
-    if (w) w.scrollTop = w.scrollHeight;
-  });
-}
+function md(text){
+  if(text==null)return '';
+  try{
+    if(mdCache.has(text))return mdCache.get(text);
+    var html='';
+    if(S._mdOk&&typeof marked!=='undefined'){
+      /* Pre-processing pipeline */
+      var processed=String(text);
+      processed=preprocessHighlight(processed);
+      processed=preprocessAutoLinks(processed);
+      processed=preprocessDefLists(processed);
+      processed=preprocessFootnotes(processed);
 
-// ═══════════════════════════════════════════════════════════════
-// §11  MARKDOWN RENDERING (Marked + DOMPurify)
-// ═══════════════════════════════════════════════════════════════
-const mdRenderer = new marked.Renderer();
+      html=marked.parse(processed);
+      html=processAdmonitions(html);
+      html=processEmbeds(html);
+    }else{html=esc(String(text)).replace(/\n/g,'<br>');}
 
-// Admonition support
-mdRenderer.paragraph = function(text) {
-  const admMatch = text.match(/^\[!(note|tip|warning|danger)\]\s*([\s\S]*)/i);
-  if (admMatch) {
-    const type = admMatch[1].toLowerCase();
-    const body = admMatch[2];
-    const cls = type === 'note' ? 'adm-note' : type === 'tip' ? 'adm-tip' : type === 'warning' ? 'adm-warn' : 'adm-err';
-    const icon = type === 'note' ? 'fa-circle-info' : type === 'tip' ? 'fa-lightbulb' : type === 'warning' ? 'fa-triangle-exclamation' : 'fa-circle-xmark';
-    return `<div class="admonition ${cls}"><div class="admonition-icon"><i class="fa-solid ${icon}"></i></div><div><span class="adm-title">${type}</span>${body}</div></div>`;
-  }
-  return `<p>${text}</p>`;
-};
-
-marked.setOptions({
-  renderer: mdRenderer,
-  gfm: true,
-  breaks: false,
-  pedantic: false,
-});
-
-function renderMarkdown(text) {
-  if (!text) return '';
-  try {
-    let html = marked.parse(text);
-    // Sanitize
-    if (window.DOMPurify) {
-      html = DOMPurify.sanitize(html, {
-        ADD_TAGS: ['iframe'],
-        ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'target', 'rel', 'loading', 'srcdoc'],
-        FORBID_TAGS: ['style', 'form', 'input'],
-        ALLOW_DATA_ATTR: false
+    if(typeof DOMPurify!=='undefined'){
+      html=DOMPurify.sanitize(html,{
+        ALLOWED_TAGS:['p','br','b','i','strong','em','a','code','pre','span','div','ul','ol','li','sup','sub','del','s','h1','h2','h3','h4','h5','h6','hr','table','thead','tbody','tr','td','th','blockquote','img','details','summary','input','iframe','svg','path','dl','dt','dd','kbd','mark','figure','figcaption','math','semantics','annotation','msup','msub','mfrac','msqrt','mrow','mi','mo','mn','mtext','mover','munder','munderover','mtable','mtr','mtd','mspace','mpadded'],
+        ALLOWED_ATTR:['href','target','rel','class','id','title','alt','data-action','src','loading','width','height','type','checked','frameborder','allowfullscreen','viewBox','d','fill','xmlns','data-msg-img','data-rm-idx','data-gid','data-i','data-act','data-tip','data-model','data-t','data-mode','data-cid','data-del-cid','data-fn','open','style','role','aria-label','tabindex','disabled','for','name','value','placeholder','rows','cols','autocapitalize','autocomplete','spellcheck']
       });
     }
+    mdCache.set(text,html);
     return html;
-  } catch(e) {
-    return `<p>${escHtml(text)}</p>`;
+  }catch(e){console.error('Markdown parse error:',e);return esc(String(text)).replace(/\n/g,'<br>');}
+}
+
+function applyMath(el){
+  if(!el||!el.isConnected)return;
+  if(typeof renderMathInElement!=='undefined'){
+    try{renderMathInElement(el,{delimiters:[{left:"$$",right:"$$",display:true},{left:"\\[",right:"\\]",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false}],throwOnError:false});}catch(e){if(e.name!=='NotSupportedError'&&e.code!==9)console.warn("Math render error:",e);}
   }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// §12  SEARCH RESULTS & MAP DATA RENDERERS
-// ═══════════════════════════════════════════════════════════════
-function renderSearchResults(data) {
-  if (!data) return '';
-  let html = '';
-  if (data.sources && data.sources.length) {
-    html += `<div class="search-sources-bar"><i class="fa-solid fa-globe"></i> Sources: `;
-    data.sources.forEach((s, i) => {
-      html += `<a class="source-chip" href="${escAttr(s.url || '#')}" target="_blank" rel="noopener">
-        ${s.favicon ? `<img class="source-chip-img" src="${escAttr(s.favicon)}" alt="">` : ''}
-        ${escHtml(s.title || s.url || `Source ${i+1}`)}
-      </a>`;
-    });
-    html += '</div>';
-  }
-  if (data.results && data.results.length) {
-    data.results.forEach(r => {
-      html += `<a class="search-card" href="${escAttr(r.url || '#')}" target="_blank" rel="noopener">
-        ${r.thumbnail ? `<img class="search-thumb" src="${escAttr(r.thumbnail)}" alt="" loading="lazy">` : ''}
-        <div class="search-info">
-          <div class="search-title">${escHtml(r.title || 'Untitled')}</div>
-          <div class="search-link"><span class="search-link-favicon"></span>${escHtml(r.url || '')}</div>
-          <div class="search-snippet">${r.snippet ? escHtml(r.snippet) : ''}</div>
-        </div>
-      </a>`;
-    });
-  }
-  if (data.qa && data.qa.length) {
-    html += '<div class="search-group"><div class="search-group-title"><i class="fa-solid fa-circle-question"></i> People Also Ask</div>';
-    data.qa.forEach(qa => {
-      html += `<div class="search-qa-item">
-        <div class="search-qa-q"><i class="fa-solid fa-chevron-right"></i> ${escHtml(qa.question || '')}</div>
-        <div class="search-qa-a">${escHtml(qa.answer || '')}</div>
-      </div>`;
-    });
-    html += '</div>';
+function toggleSB(open){S.sbOpen=typeof open==='boolean'?open:!S.sbOpen;$('sidebar').classList.toggle('open',S.sbOpen);$('sbOv').classList.toggle('on',S.sbOpen);}
+function openLinkModal(url){S.activeLinkUrl=url;$('lmUrlText').textContent=url;$('lmOpenExternal').href=url;$('linkModal').classList.add('on');}
+function closeLinkModal(){$('linkModal').classList.remove('on');S.activeLinkUrl='';}
+function openHtmlPreview(code){var modal=$('htmlPreviewModal');var frame=$('htmlPreviewFrame');if(!modal||!frame)return;modal.classList.add('on');var doc=frame.contentWindow.document;doc.open();doc.write(code);doc.close();}
+
+function selectMode(m){S.mode=m;try{localStorage.setItem('helox-mode',m);}catch(e){}document.querySelectorAll('.mode-btn').forEach(function(btn){btn.classList.toggle('active',btn.getAttribute('data-mode')===m);});var map={general:'General',search:'Web Search',code:'Code',finance:'Finance'};if(map[m])toast('Mode: '+map[m],'ok');}
+
+function renderImgPreview(){var strip=$('imgPreviewStrip');if(!strip)return;var imgs=S.pendingFiles.filter(function(f){return f.type==='image'||f.type==='video';});if(!imgs.length){strip.style.display='none';strip.innerHTML='';return;}strip.style.display='flex';var html='';imgs.forEach(function(img,idx){var isVideo=img.type==='video';var src=img.dataUrl;var thumb=isVideo?'<i class="fa-solid fa-play" style="color:white;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:20px;z-index:1;"></i>':'';html+='<div class="msg-img-item single" style="width:60px;height:60px;position:relative;flex-shrink:0;" data-rm-idx="'+idx+'"><img src="'+src+'" style="width:100%;height:100%;object-fit:cover;">'+thumb+'<button type="button" style="position:absolute;top:-4px;right:-4px;background:rgba(0,0,0,.8);color:#fff;border:none;width:18px;height:18px;border-radius:50%;cursor:pointer;font-size:10px;z-index:2;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 4px rgba(0,0,0,.3);" title="Remove">×</button></div>';});strip.innerHTML=html;}
+function rmPendingFile(idx){if(idx>=0&&idx<S.pendingFiles.length){S.pendingFiles.splice(idx,1);renderImgPreview();updateCB();}}
+function clearPending(){S.pendingFiles=[];renderImgPreview();updateCB();var fi=$('fileInput');if(fi)fi.value='';}
+
+function openEdit(idx){if(idx<0||idx>=S.msgs.length)return;var m=S.msgs[idx];S.editingIndex=idx;$('emTextarea').value=m.content;$('emModal').classList.add('on');$('emOverlay').classList.add('on');}
+function closeEdit(){$('emModal').classList.remove('on');$('emOverlay').classList.remove('on');S.editingIndex=null;$('emTextarea').value='';}
+function saveEdit(){var idx=S.editingIndex;var txt=$('emTextarea').value.trim();if(idx===null||idx<0||idx>=S.msgs.length||!txt)return;S.msgs=S.msgs.slice(0,idx);clearPending();closeEdit();$('cbInput').value=txt;sendMsg();}
+
+function toggleAS(open){S.asOpen=typeof open==='boolean'?open:!S.asOpen;$('asSheet').classList.toggle('open',S.asOpen);$('asOv').classList.toggle('on',S.asOpen);}
+function toggleVD(open){S.vdOpen=typeof open==='boolean'?open:!S.vdOpen;$('voiceDd').classList.toggle('on',S.vdOpen);}
+
+function actCopy(idx){var m=S.msgs[idx];if(!m||!m.content)return;var txt=m.content.replace(/<[^>]*>/g,'');navigator.clipboard.writeText(txt).then(function(){toast('Copied','ok');}).catch(function(){toast('Copy failed','err');});}
+function actLike(idx,type){var m=S.msgs[idx];if(!m)return;if(type==='like'){m.liked=!m.liked;m.disliked=false;}else{m.disliked=!m.disliked;m.liked=false;}renderAll();if(m.liked)toast('Liked','ok');if(m.disliked)toast('Feedback received','ok');}
+
+async function actVoice(idx){var m=S.msgs[idx];if(!m||!m.content)return;toast('Generating audio...','inf');var textToRead=m.content.replace(/<[^>]*>/g,'').substring(0,4000);if(isAuthed()&&apiUrl()){try{var r=await fetch(apiUrl()+'/tts',{method:'POST',headers:authH(),body:JSON.stringify({text:textToRead,voice:S.selectedVoice||'alloy'})});if(!r.ok)throw new Error('TTS failed');var blob=await r.blob();var audioUrl=URL.createObjectURL(blob);var audio=new Audio(audioUrl);S.currentAudio=audio;audio.onended=function(){URL.revokeObjectURL(audioUrl);S.currentAudio=null;};audio.onerror=function(){toast('Audio playback error','err');S.currentAudio=null;};audio.play();toast('Playing audio','ok');return;}catch(e){handleError(e,'Voice Generation',false);toast('Backend voice unavailable','wrn');}}if('speechSynthesis' in window){try{window.speechSynthesis.cancel();var utterance=new SpeechSynthesisUtterance(textToRead);utterance.rate=1.0;utterance.pitch=1.0;window.speechSynthesis.speak(utterance);toast('Reading locally...','ok');}catch(e){toast('Voice unavailable','err');}}else{toast('Voice not supported','err');}}
+
+function actRegen(idx){var lastIdx=S.msgs.length-1;if(lastIdx>=0&&S.msgs[lastIdx].role==='assistant'){S.msgs.pop();renderAll();}var lastUser='';for(var i=S.msgs.length-1;i>=0;i--){if(S.msgs[i].role==='user'){lastUser=S.msgs[i].content;break;}}if(lastUser)sendToAI(lastUser);}
+
+function refreshUI(){var u=$('sUser'),sl=$('signInLink'),hp=$('hdrPlan');if(!u||!sl||!hp)return;var signedIn=!!S.user;$('newChatBtn').classList.toggle('locked',false);$('micBtn').classList.toggle('locked',!S.features.mic);$('voiceBtn').classList.toggle('locked',!S.features.voice);var lockedItems=[{id:'asImg',lockId:'asLockImg'},{id:'asVid',lockId:'asLockVid'},{id:'wcImgGen',lockId:null},{id:'wcVidGen',lockId:null}];lockedItems.forEach(function(item){var el=$(item.id);if(el){if(signedIn){el.classList.remove('locked');var span=el.querySelector('.w-lock');if(span)span.style.display='none';}else{el.classList.add('locked');var span=el.querySelector('.w-lock');if(span)span.style.display='flex';}}});var bc='free',bt='FREE';if(S.user){if(S.user.is_lifetime){bc='lifetime';bt='LIFETIME';}else if(S.user.is_premium){bc='premium';bt='PREMIUM';}}if(S.user){u.classList.add('show');$('uAv').textContent=(S.user.email||'U')[0].toUpperCase();$('uNm').textContent=S.user.email;$('uPl').textContent=bt.charAt(0)+bt.slice(1).toLowerCase()+' Plan';sl.innerHTML='<i class="fa-solid fa-right-from-bracket"></i> Log Out';sl.href='#';sl.style.cursor='pointer';hp.textContent=bt;hp.className='hdr-plan ptag '+bc;}else{u.classList.remove('show');sl.innerHTML='<i class="fa-brands fa-google"></i> Sign In';sl.href='auth.html';sl.style.cursor='pointer';hp.textContent='FREE';hp.className='hdr-plan ptag free';}}
+
+function updateModelUI(){var icon=$('modelIcon'),name=$('modelName');var map={helox:{n:'HeloXAi',c:'default-icon',t:'H'},chatgpt:{n:'ChatGPT',c:'gpt-icon',t:'G'},chatz:{n:'Chat.Z',c:'z-icon',t:'Z'}};var m=map[S.model]||map.helox;if(icon){icon.className='m-icon '+m.c;icon.textContent=m.t;}if(name)name.textContent=m.n;document.querySelectorAll('.model-item').forEach(function(i){i.classList.toggle('active',i.getAttribute('data-model')===S.model);});}
+function selectModel(m){S.model=m;try{localStorage.setItem('helox-model',m);}catch(e){}updateModelUI();toggleMD(false);toast('Switched to '+(m==='helox'?'HeloXAi':m),'ok');}
+function toggleMD(open){S.mdOpen=typeof open==='boolean'?open:!S.mdOpen;$('modelSel').classList.toggle('open',S.mdOpen);$('modelDd').classList.toggle('on',S.mdOpen);}
+function initModel(){var s='helox';try{s=localStorage.getItem('helox-model')||'helox';}catch(e){}S.model=s;updateModelUI();}
+
+function switchView(v){S.view=v;$('chatView').style.display=v==='chat'?'block':'none';$('galleryView').style.display=v==='gallery'?'block':'none';$('cbContainer').style.display=v==='chat'?'block':'none';$('chatTab').classList.toggle('active',v==='chat');$('galleryTab').classList.toggle('active',v==='gallery');if(v==='gallery')renderGallery();}
+function extractMedia(c){var found=[],m,r=/!\[([^\]]*)\]\(([^)]+)\)/g;while((m=r.exec(c))!==null)found.push({type:/\.(mp4|webm|mov)/i.test(m[2])?'video':'image',url:m[2],prompt:m[1]||'',id:uid()});return found;}
+function addGal(c){extractMedia(c).forEach(function(i){if(!S.gallery.some(function(g){return g.url===i.url}))S.gallery.unshift(i);});if(c.indexOf('![')>-1||c.indexOf('data:image')>-1)incrementUsage('images');if(c.indexOf('video')>-1||c.indexOf('.mp4')>-1)incrementUsage('videos');}
+function renderGallery(){var grid=$('galGrid'),empty=$('galEmpty'),count=$('galCount');if(!grid)return;count.textContent=S.gallery.length+' item'+(S.gallery.length!==1?'s':'');if(!S.gallery.length){grid.innerHTML='';empty.style.display='block';return;}empty.style.display='none';var html='';S.gallery.forEach(function(g){var inner=g.type==='video'?'<video src="'+g.url+'" muted preload="metadata"></video><span class="gal-type">Video</span>':'<img src="'+g.url+'" alt="'+esc(g.prompt)+'" loading="lazy"><span class="gal-type">Image</span>';html+='<div class="gal-item" data-gid="'+g.id+'">'+inner+'<div class="gal-overlay"><div class="gal-prompt">'+esc(g.prompt||'Generated')+'</div></div></div>';});grid.innerHTML=html;}
+function openLB(src,isV){S.lbUrl=src;S.lbType=isV?'video':'image';$('lbContent').innerHTML=isV?'<video src="'+src+'" controls autoplay style="max-width:90vw;max-height:85vh;border-radius:18px">':'<img src="'+src+'" style="max-width:90vw;max-height:85vh;border-radius:18px">';$('lightbox').classList.add('on');}
+function closeLB(){$('lightbox').classList.remove('on');$('lbContent').innerHTML='';S.lbUrl='';}
+async function downloadResource(url){if(!url)return;toast('Downloading...','inf');try{const response=await fetch(url);if(!response.ok)throw new Error("Network error");const blob=await response.blob();const blobUrl=window.URL.createObjectURL(blob);const link=document.createElement('a');link.href=blobUrl;let ext='bin';const type=blob.type||'';if(type.includes('jpeg')||type.includes('jpg'))ext='jpg';else if(type.includes('png'))ext='png';else if(type.includes('gif'))ext='gif';else if(type.includes('webp'))ext='webp';else if(type.includes('mp4'))ext='mp4';else if(type.includes('webm'))ext='webm';link.download='heloxai-'+Date.now()+'.'+ext;document.body.appendChild(link);link.click();document.body.removeChild(link);window.URL.revokeObjectURL(blobUrl);}catch(error){toast('Download failed','err');window.open(url,'_blank');}}
+
+/* RENDER MESSAGES */
+function showWelcome(){$('welcomeEl').style.display='flex';$('msgsEl').style.display='none';}
+function showMsgs(){$('welcomeEl').style.display='none';$('msgsEl').style.display='block';}
+function renderChatList(){var el=$('chatListItems');if(!el)return;if(!S.chatListData.length){el.innerHTML='<span style="color:var(--text-muted);font-size:12px;padding:6px 12px;display:block">No conversations yet</span>';return;}var html='';S.chatListData.forEach(function(c){html+='<button class="cl-item'+(c.id===S.chatId?' active':'')+'" data-cid="'+c.id+'"><i class="fa-regular fa-message"></i><span class="cl-title">'+esc(c.title)+'</span><span class="cl-time">'+ago(c.updated_at)+'</span><button type="button" class="cl-del" data-del-cid="'+c.id+'" aria-label="Delete"><i class="fa-solid fa-trash"></i></button></button>';});el.innerHTML=html;}
+
+function buildImgHtml(imgs){
+  if(!imgs||!imgs.length)return '';
+  var cls=imgs.length===1?'single':'multi';
+  var html='<div class="msg-imgs">';
+  imgs.forEach(function(img){var src=img.dataUrl||img.url;var isVideo=(img.type==='video'||(img.url&&(img.url.includes('.mp4')||img.url.includes('.webm'))));if(isVideo){html+='<div class="msg-img-item '+cls+'"><video src="'+src+'" controls autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover"></video></div>';}else{html+='<div class="msg-img-item '+cls+'" data-msg-img="'+esc(src)+'"><img src="'+src+'" alt="'+esc(img.name||'Image')+'" loading="lazy"></div>';}});return html+'</div>';
+}
+
+function buildMessageHtml(m,i){
+  var isAi=m.role==='assistant';var roleClass=isAi?'ai-msg':'user-msg';var name=isAi?'AI':'You';var html='';
+  if(isAi){
+    html+='<div class="msg '+roleClass+'"><div class="msg-inner"><div class="msg-label"><span class="ai-dot"></span> AI <span id="ai-status-'+i+'" class="ai-status"></span></div><div id="mc-'+i+'" class="msg-ct"></div><div id="mi-'+i+'" class="msg-imgs"></div><div class="msg-acts"><button class="ma" data-act="copy" data-i="'+i+'"><i class="fa-regular fa-copy"></i></button><button class="ma'+(m.liked?' liked':'')+'" data-act="like" data-i="'+i+'"><i class="fa-regular fa-thumbs-up"></i></button><button class="ma'+(m.disliked?' disliked':'')+'" data-act="dislike" data-i="'+i+'"><i class="fa-regular fa-thumbs-down"></i></button><button class="ma'+(isAuthed()?'':' locked')+'" data-act="voice" data-i="'+i+'" data-tip="Read Aloud"><i class="fa-solid fa-volume-high"></i></button><button class="ma" data-act="regen" data-i="'+i+'"><i class="fa-solid fa-rotate-right"></i></button></div><div class="msg-time">'+m.time+'</div></div></div>';
+  }else{
+    html+='<div class="msg '+roleClass+'"><div class="msg-inner"><div class="msg-label">'+name+'</div><div class="msg-bubble"><div class="msg-text-wrapper" id="mtw-'+m.id+'">'+esc(m.content)+'</div><button class="msg-toggle-btn" id="mtb-'+m.id+'">Show more</button>';if(m.images&&m.images.length)html+=buildImgHtml(m.images);html+='</div><div class="msg-acts"><button class="ma" data-act="copy" data-i="'+i+'"><i class="fa-regular fa-copy"></i></button><button class="ma" data-act="edit" data-i="'+i+'"><i class="fa-solid fa-pen"></i></button></div><div class="msg-time">'+m.time+'</div></div></div>';
   }
   return html;
 }
 
-function renderMapData(data) {
-  if (!data) return '';
-  if (data.places && data.places.length) {
-    return `<div class="map-list">${data.places.map((p, i) => `
-      <a class="map-list-item" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + ' ' + (p.address || ''))}" target="_blank" rel="noopener">
-        <div class="map-list-num">${i + 1}</div>
-        <div class="map-list-info">
-          <div class="map-list-name">${escHtml(p.name || '')}</div>
-          <div class="map-list-addr">${escHtml(p.address || '')}</div>
-        </div>
-        ${p.distance ? `<div class="map-list-dist">${escHtml(p.distance)}</div>` : ''}
-      </a>`).join('')}</div>`;
-  }
-  if (data.lat && data.lng) {
-    return `<iframe class="map-embed" src="https://www.google.com/maps?q=${data.lat},${data.lng}&z=14&output=embed" allowfullscreen loading="lazy"></iframe>`;
-  }
-  return '';
+function renderAll(){
+  if(!S.msgs.length){showWelcome();return;}
+  showMsgs();var msgsEl=$('msgsEl');var html='';for(var i=0;i<S.msgs.length;i++){html+=buildMessageHtml(S.msgs[i],i);}msgsEl.innerHTML=html;
+  var mermaidQueue=[];
+  S.msgs.forEach(function(m,i){
+    if(m.role==='assistant'){var el=$('mc-'+i);var miEl=$('mi-'+i);if(el){el.innerHTML=md(m.content);applyMath(el);if(el.querySelectorAll('code.language-mermaid').length)mermaidQueue.push(el);}if(miEl&&m.images&&m.images.length){miEl.innerHTML=buildImgHtml(m.images).replace('<div class="msg-imgs">','').replace('</div>','');}}
+    else{var wrapper=$('mtw-'+m.id);var btn=$('mtb-'+m.id);if(wrapper&&btn){requestAnimationFrame(function(){if(wrapper.scrollHeight>180){wrapper.classList.add('collapsed');btn.style.display='block';btn.textContent='Show more';}else{wrapper.classList.remove('collapsed');btn.style.display='none';}});}}
+  });
+  function processNextMermaid(){if(!mermaidQueue.length)return;var el=mermaidQueue.shift();processMermaid(el);setTimeout(processNextMermaid,50);}
+  if(mermaidQueue.length)setTimeout(processNextMermaid,100);
+  if(S.isAutoScrolling)scrollBot(true);
 }
 
-// ═══════════════════════════════════════════════════════════════
-// §13  MESSAGE SENDING & STREAMING
-// ═══════════════════════════════════════════════════════════════
-async function handleSend(overrideText) {
-  const textarea = dom.textarea();
-  const text = (overrideText || textarea?.value || '').trim();
-  if (!text && !state.pendingUserMsg?.images?.length) return;
-  if (state.streaming) return;
+var _lastMathTime=0;
+function updateLastAI(content){var i=S.msgs.length-1;if(i<0||S.msgs[i].role!=='assistant')return;S.msgs[i].content=content;var el=$('mc-'+i);if(el){el.innerHTML=md(content);var now=Date.now();if(now-_lastMathTime>300){_lastMathTime=now;applyMath(el);}}var w=$('msgsWrap');if(w){var dist=w.scrollHeight-w.scrollTop-w.clientHeight;if(S.isAutoScrolling||dist<S.scrollThreshold){scrollBot(true);}else{checkScrollBtn();}}}
 
-  if (!state.user) {
-    showAuthModal('login');
-    return;
-  }
+function addTyping(){var d=document.createElement('div');d.className='msg ai-msg';d.id='typMsg';d.innerHTML='<div class="msg-inner"><div class="msg-label"><span class="ai-dot"></span> AI <span id="ai-status-typing" class="ai-status">Thinking...</span></div><div class="typing-wrap"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>';$('msgsEl').appendChild(d);if(S.isAutoScrolling)scrollBot(true);}
+function rmTyping(){var e=$('typMsg');if(e)e.remove();}
 
-  // Clear input
-  if (textarea) textarea.value = '';
-  autoResizeTextarea();
-  updateSendBtn();
+function checkScrollBtn(){var w=$('msgsWrap');if(!w)return;var dist=w.scrollHeight-w.scrollTop-w.clientHeight;if(dist<S.scrollThreshold){S.isAutoScrolling=true;$('scrollBot').classList.remove('vis');}else{S.isAutoScrolling=false;$('scrollBot').classList.add('vis');}}
+function scrollBot(force){if(force||S.isAutoScrolling){requestAnimationFrame(function(){var w=$('msgsWrap');if(w){w.scrollTop=w.scrollHeight;S.isAutoScrolling=true;$('scrollBot').classList.remove('vis');}});}}
 
-  // Get images if any
-  const images = state.pendingUserMsg?.images || [];
-  state.pendingUserMsg = null;
+/* MIC / STT */
+function toggleMic(){if(!S.user){toast('Sign in to use voice input','wrn');return;}if(S.recording){if(S.recorder)S.recorder.stop();S.recording=false;$('micBtn').classList.remove('mic-on');updateCB();return;}if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('Microphone not supported','err');return;}navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){S.chunks=[];S.recorder=new MediaRecorder(stream);S.recorder.ondataavailable=function(e){if(e.data.size>0)S.chunks.push(e.data);};S.recorder.onstop=function(){stream.getTracks().forEach(function(t){t.stop();});doSTT(new Blob(S.chunks,{type:'audio/webm'}));};S.recorder.start();S.recording=true;$('micBtn').classList.add('mic-on');toast('Listening...','inf');}).catch(function(e){if(e.name==='NotAllowedError')toast('Microphone permission denied','wrn');else toast('Microphone error','err');});}
+function doSTT(blob){toast('Processing voice...','inf');var fd=new FormData();fd.append('file',blob,'recording.webm');var h={};if(S.user&&S.user.token)h['Authorization']='Bearer '+S.user.token;fetch(apiUrl()+'/stt',{method:'POST',headers:h,credentials:'include',body:fd}).then(function(r){if(!r.ok)throw new Error('STT failed');return r.json();}).then(function(d){if(d.text){$('cbInput').value=d.text;autoH($('cbInput'));updateCB();toast('Recognized','ok');setTimeout(function(){sendMsg();},600);}else{toast('No speech detected','err');}}).catch(function(e){handleError(e,'Voice Recognition');});}
 
-  // Create chat if needed
-  let chatId = state.activeChatId;
-  if (!chatId) {
-    const title = text.length > 60 ? text.slice(0, 57) + '...' : text || 'New Chat';
-    const chat = await createChat(title);
-    if (!chat) return;
-    chatId = chat.id;
-    state.activeChatId = chatId;
-    if (dom.hdrTitle()) dom.hdrTitle().textContent = title;
-    if (dom.welcome()) dom.welcome().style.display = 'none';
-    subscribeMessages();
-    renderChatList();
-  }
+/* STREAMING */
+function streamRes(res,onChunk,onDone,onMedia,onStatus){
+  if(!res.body||typeof res.body.getReader!=='function'){return res.text().then(function(t){onChunk(t);onDone();});}
+  var reader=res.body.getReader();var decoder=new TextDecoder('utf-8');var buffer='';var finished=false;
+  function processChunk(line){line=line.trim();if(!line)return;if(line.startsWith('data:')){line=line.slice(5).trim();}if(line==='[DONE]'){onDone();finished=true;return;}try{var json=JSON.parse(line);if(json.type==='media'&&typeof onMedia==='function'){onMedia(json);return;}if(json.type==='status'&&typeof onStatus==='function'){onStatus(json.message);return;}var text=json.token||json.text||json.content||(json.delta&&json.delta.content)||'';if(text){onChunk(text);}}catch(e){}}
+  function pump(){return reader.read().then(function(result){if(result.done){if(buffer.trim()&&!finished){processChunk(buffer);}if(!finished)onDone();return;}buffer+=decoder.decode(result.value,{stream:true});var parts=buffer.split('\n\n');buffer=parts.pop();parts.forEach(processChunk);return pump();}).catch(function(err){console.error('Stream read error:',err);if(!finished)onDone();});}
+  return pump();
+}
 
-  // Auto-rename if chat still has default title
-  const chat = state.chats.find(c => c.id === chatId);
-  if (chat && (chat.title === 'New Chat' || chat._count === 0) && text) {
-    const newTitle = text.length > 60 ? text.slice(0, 57) + '...' : text;
-    renameChat(chatId, newTitle);
-  }
+/* SEND MESSAGES */
+async function sendMsg(text){var t=text||$('cbInput').value.trim();if((!t&&!S.pendingFiles.length)||S.streaming)return;var limitCheck=checkLimits(t);if(!limitCheck.allowed){toast(limitCheck.msg,'wrn');return;}if(!S.chatId)await startNewChat();var imgs=S.pendingFiles.filter(function(f){return f.type==='image';}).map(function(f){return{dataUrl:f.dataUrl,name:f.name};});var files=S.pendingFiles.filter(function(f){return f.type!=='image';});var msg={id:uid(),role:'user',content:t,images:imgs,time:now()};S.msgs.push(msg);saveChatHistory(S.chatId,S.msgs);if(S.msgs.length===1){var newTitle=(t||'Image/File Chat').substring(0,30)+(t&&t.length>30?'...':'');var c=S.chatListData.find(x=>x.id===S.chatId);if(c){c.title=newTitle;c.updated_at=new Date().toISOString();saveLocalChats();renderChatList();$('hdrTitle').textContent=newTitle;}}if(S.user&&S.chatId){saveMsg({role:'user',content:t||'[Image/File attached]',metadata:{has_images:imgs.length>0}});}clearPending();$('cbInput').value='';autoH($('cbInput'));updateCB();S.isAutoScrolling=true;scrollBot(true);renderAll();if(imgs.length||files.length){sendWithFiles(t,imgs.map(function(img){var f=dataUrlToFile(img.dataUrl,img.name);return f?{type:'image',dataUrl:img.dataUrl,name:img.name,file:f}:null;}).filter(Boolean),files);}else{sendToAI(t);}}
 
-  // Save user message to Supabase
-  const userMsg = await saveMessage(chatId, 'user', text, { images });
-  if (userMsg) appendMessageDOM(userMsg);
+function sendWithFiles(text,imgs,files){S.streaming=true;S.abort=new AbortController();addTyping();updateCB();var fd=new FormData();fd.append('prompt',text||'What is in this image?');var pf=null,pn='file.bin';if(imgs.length>0){pf=imgs[0].file;pn=imgs[0].name;}else if(files.length>0){pf=files[0].file;pn=files[0].name;}if(pf)fd.append('file',pf,pn);var h={};if(S.user&&S.user.token)h['Authorization']='Bearer '+S.user.token;var full='';var onMedia=function(data){var idx=S.msgs.length-1;if(data.type==='image'){if(!S.msgs[idx].images)S.msgs[idx].images=[];data.data.forEach(function(img){S.msgs[idx].images.push(img);});renderAll();}};fetch(apiUrl()+'/analysis',{method:'POST',headers:h,credentials:'include',signal:S.abort.signal,body:fd}).then(function(res){if(!res.ok)throw new Error('HTTP '+res.status);rmTyping();var ct=(res.headers.get('content-type')||'').toLowerCase();if(ct.indexOf('application/json')!==-1){return res.json().then(function(d){var c=d.response||d.content||d.result||d.message||JSON.stringify(d);var ai={id:uid(),role:'assistant',content:c,liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();addGal(c);saveChatHistory(S.chatId,S.msgs);if(S.chatId)updateTs(S.chatId);});}var ai={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();return streamRes(res,function(chunk){full+=chunk;requestAnimationFrame(function(){updateLastAI(full);});},function(){S.msgs[S.msgs.length-1].content=full;addGal(full);saveChatHistory(S.chatId,S.msgs);if(S.chatId)updateTs(S.chatId);},onMedia);}).catch(function(e){rmTyping();if(e.name==='AbortError'){var lastIdx=S.msgs.length-1;if(full&&full.trim().length>0){S.msgs[lastIdx].content=full;saveChatHistory(S.chatId,S.msgs).catch(function(){});updateLastAI(full);}else{S.msgs[lastIdx].content='_Generation stopped by user._';}renderAll();toast('Stopped','inf');}else{S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});renderAll();toast('Request failed','err');}}).finally(function(){S.streaming=false;S.abort=null;updateCB();});}
 
-  // Start AI response
-  state.streaming = true;
-  updateSendBtn();
-
-  // Create placeholder AI message in DOM
-  const aiMsgId = 'temp-' + Date.now();
-  const aiEl = document.createElement('div');
-  aiEl.className = 'msg ai-msg';
-  aiEl.dataset.msgId = aiMsgId;
-  aiEl.innerHTML = `
-    <div class="msg-inner">
-      <div class="msg-label"><span class="ai-dot"></span> HeloXAi <span class="ai-status">thinking...</span></div>
-      <div class="msg-text-wrapper"><div class="msg-ct" id="${aiMsgId}-content"></div></div>
-    </div>`;
-  const inner = dom.msgsInner();
-  if (inner) inner.appendChild(aiEl);
-  scrollToBottom();
-
-  let fullContent = '';
-  let searchResults = null;
-  let mapData = null;
-
-  try {
-    state.abortCtrl = new AbortController();
-
-    // ═══════════════════════════════════════════
-    // API CALL — Replace this with your actual backend
-    // Expected: Server-Sent Events stream
-    // ═══════════════════════════════════════════
-    const response = await fetch(`${API_BASE}/chat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${state.user.id}`, // or your auth scheme
-      },
-      body: JSON.stringify({
-        message: text,
-        images: images,
-        mode: state.mode,
-        model: state.model,
-        chat_id: chatId,
-        history: state.messages.slice(-10).map(m => ({ role: m.role, content: m.content }))
-      }),
-      signal: state.abortCtrl.signal
-    });
-
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
-    }
-
-    const contentType = response.headers.get('content-type') || '';
-
-    if (contentType.includes('text/event-stream') || contentType.includes('stream')) {
-      // SSE streaming
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-      const statusEl = aiEl.querySelector('.ai-status');
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed || !trimmed.startsWith('data:')) continue;
-          const dataStr = trimmed.slice(5).trim();
-          if (dataStr === '[DONE]') continue;
-
-          try {
-            const data = JSON.parse(dataStr);
-
-            if (data.type === 'search_results' && data.data) {
-              searchResults = data.data;
-              // Inject search results above the text
-              const existingSR = aiEl.querySelector('.search-sources-bar');
-              if (!existingSR) {
-                const srHtml = renderSearchResults(searchResults);
-                const ct = aiEl.querySelector('.msg-ct');
-                if (ct && srHtml) ct.insertAdjacentHTML('beforebegin', srHtml);
-              }
-              continue;
-            }
-            if (data.type === 'map_data' && data.data) {
-              mapData = data.data;
-              continue;
-            }
-
-            // Text delta
-            const chunk = data.content || data.text || data.delta || '';
-            if (chunk) {
-              fullContent += chunk;
-              const ct = document.getElementById(aiMsgId + '-content');
-              if (ct) {
-                ct.innerHTML = renderMarkdown(fullContent);
-                if (statusEl) statusEl.textContent = 'typing...';
-                postRenderMessages(ct);
-                scrollToBottom();
-              }
-            }
-          } catch (parseErr) {
-            // Not JSON — treat as plain text chunk
-            fullContent += dataStr;
-            const ct = document.getElementById(aiMsgId + '-content');
-            if (ct) {
-              ct.innerHTML = renderMarkdown(fullContent);
-              scrollToBottom();
-            }
-          }
-        }
+function sendToAI(text){if(!text)return;S.streaming=true;S.abort=new AbortController();addTyping();updateCB();var full='';var url=apiUrl();if(!url){toast('Backend API URL not found.','err');S.streaming=false;rmTyping();updateCB();return;}var onMedia=function(data){var idx=S.msgs.length-1;if(!S.msgs[idx])return;if(!S.msgs[idx].images)S.msgs[idx].images=[];var mediaType='image';if(data.media_type==='video'||(data.url&&(data.url.includes('.mp4')||data.url.includes('.webm'))))mediaType='video';if(data.type==='image'){data.data.forEach(function(img){var url=img.url||img;              S.msgs[idx].images.push({url: url, name: 'Generated', type: mediaType});
+              if(!S.gallery.some(function(g){return g.url===url})) S.gallery.unshift({type:mediaType, url:url, prompt:'Generated', id:uid()});
+              incrementUsage('images');
+              var el=$('mi-'+idx);
+              if(el) { el.insertAdjacentHTML('beforeend', '<div class="msg-img-item single"><img src="'+url+'" loading="lazy"></div>'); }
+          });
+      } else if (data.type === 'video') {
+          var vidObj = {type:mediaType, url:data.url};
+          S.msgs[idx].images.push(vidObj);
+          if(!S.gallery.some(function(g){return g.url===data.url})) S.gallery.unshift({type:mediaType, url:data.url, prompt:'Generated', id:uid()});
+          incrementUsage('videos');
+          var el=$('mi-'+idx);
+          if(el) el.insertAdjacentHTML('beforeend', '<div class="msg-img-item single"><video src="'+data.url+'" controls autoplay loop muted playsinline></video></div>');
       }
-    } else {
-      // Non-streaming JSON response
-      const data = await response.json();
-      fullContent = data.content || data.text || data.message || JSON.stringify(data);
-      if (data.search_results) searchResults = data.search_results;
-      if (data.map_data) mapData = data.map_data;
-      const ct = document.getElementById(aiMsgId + '-content');
-      if (ct) ct.innerHTML = renderMarkdown(fullContent);
-    }
-
-  } catch (err) {
-    if (err.name === 'AbortError') {
-      fullContent += '\n\n*[Response stopped]*';
-    } else {
-      console.error('AI request failed:', err);
-      fullContent = `Sorry, something went wrong. Please try again.\n\n\`${err.message}\``;
-    }
-    const ct = document.getElementById(aiMsgId + '-content');
-    if (ct) ct.innerHTML = renderMarkdown(fullContent);
-  }
-
-  // Finalize: save AI message to Supabase
-  state.streaming = false;
-  state.abortCtrl = null;
-  updateSendBtn();
-
-  // Remove temp ID, save to DB, replace DOM element
-  const savedMsg = await saveMessage(chatId, 'assistant', fullContent, {
-    search_results: searchResults,
-    map_data: mapData
-  });
-
-  if (savedMsg) {
-    // Replace the temp element with a properly rendered one
-    aiEl.outerHTML = buildMessageHTML(savedMsg);
-    const newEl = document.querySelector(`[data-msg-id="${savedMsg.id}"]`);
-    if (newEl) postRenderMessages(newEl);
-  }
-
-  touchChat(chatId);
-  scrollToBottom();
-}
-
-function stopStreaming() {
-  if (state.abortCtrl) state.abortCtrl.abort();
-}
-
-// ═══════════════════════════════════════════════════════════════
-// §14  NEW CHAT HANDLER
-// ═══════════════════════════════════════════════════════════════
-async function handleNewChat() {
-  if (state.streaming) return;
-  if (!state.user) {
-    showAuthModal('login');
-    return;
-  }
-  state.activeChatId = null;
-  state.messages = [];
-  showWelcome();
-  renderChatList();
-  closeSidebar();
-  if (dom.textarea()) dom.textarea().focus();
-}
-
-// ═══════════════════════════════════════════════════════════════
-// §15  THEME MANAGEMENT
-// ═══════════════════════════════════════════════════════════════
-function setTheme(theme, save = true) {
-  state.theme = theme;
-  document.documentElement.setAttribute('data-theme', theme);
-  $$('.t-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === theme));
-  const metaTheme = document.querySelector('meta[name="theme-color"]');
-  if (metaTheme) {
-    const colors = { dark: '#08080c', light: '#fafafa', gold: '#1c1c14', cyber: '#000000' };
-    metaTheme.content = colors[theme] || '#08080c';
-  }
-  if (save && state.user) saveUserPrefs({ theme });
-}
-
-// ═══════════════════════════════════════════════════════════════
-// §16  MODEL SELECTION
-// ═══════════════════════════════════════════════════════════════
-const MODELS = [
-  { id: 'gpt-4o-mini',   name: 'GPT-4o Mini',   desc: 'Fast & capable',    cat: 'OpenAI', icon: 'gpt-icon', letter: '4' },
-  { id: 'gpt-4o',        name: 'GPT-4o',         desc: 'Most capable',      cat: 'OpenAI', icon: 'gpt-icon', letter: '4' },
-  { id: 'gpt-4-turbo',   name: 'GPT-4 Turbo',    desc: 'Powerful & fast',   cat: 'OpenAI', icon: 'gpt-icon', letter: '4' },
-  { id: 'claude-3.5-sonnet', name: 'Claude 3.5 Sonnet', desc: 'Best for analysis', cat: 'Anthropic', icon: 'z-icon', letter: 'C' },
-  { id: 'claude-3-haiku', name: 'Claude 3 Haiku', desc: 'Fast & cheap',      cat: 'Anthropic', icon: 'z-icon', letter: 'C' },
-];
-
-function buildModelDropdown() {
-  const dd = dom.modelDD();
-  if (!dd) return;
-  const cats = [...new Set(MODELS.map(m => m.cat))];
-  dd.innerHTML = cats.map(cat => {
-    const items = MODELS.filter(m => m.cat === cat);
-    return `<div class="model-cat">${cat}</div>` +
-      items.map(m => `
-        <div class="model-item${m.id === state.model ? ' active' : ''}" data-model="${m.id}" onclick="selectModel('${m.id}')">
-          <div class="mi-icon ${m.icon}">${m.letter}</div>
-          <div class="mi-info">
-            <div class="mi-name">${m.name}</div>
-            <div class="mi-desc">${m.desc}</div>
-          </div>
-          <i class="fa-solid fa-check mi-check"></i>
-        </div>`).join('');
-  }).join('');
-}
-
-function selectModel(modelId) {
-  state.model = modelId;
-  updateModelUI();
-  toggleModelDD(false);
-  if (state.user) saveUserPrefs({ preferred_model: modelId });
-}
-
-function updateModelUI() {
-  const sel = dom.modelSel();
-  if (!sel) return;
-  const m = MODELS.find(x => x.id === state.model) || MODELS[0];
-  sel.querySelector('.m-icon').className = `m-icon ${m.icon}`;
-  sel.querySelector('.m-icon').textContent = m.letter;
-  sel.querySelector('.m-name').textContent = m.name;
-  // Update dropdown active state
-  $$('.model-item').forEach(el => {
-    el.classList.toggle('active', el.dataset.model === state.model);
-  });
-}
-
-function toggleModelDD(force) {
-  const sel = dom.modelSel();
-  const dd = dom.modelDD();
-  if (!sel || !dd) return;
-  const open = force !== undefined ? force : !dd.classList.contains('on');
-  dd.classList.toggle('on', open);
-  sel.classList.toggle('open', open);
-}
-
-// ═══════════════════════════════════════════════════════════════
-// §17  MODE TABS
-// ═══════════════════════════════════════════════════════════════
-function setMode(mode) {
-  state.mode = mode;
-  $$('.htab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
-  $$('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
-  // Update placeholder
-  const ta = dom.textarea();
-  if (ta) {
-    ta.placeholder = mode === 'search' ? 'Search the web...' :
-                     mode === 'image'  ? 'Describe the image you want...' :
-                     'Message HeloXAi...';
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════
-// §18  SIDEBAR TOGGLE (mobile)
-// ═══════════════════════════════════════════════════════════════
-function openSidebar() {
-  state.sidebarOpen = true;
-  const sb = dom.sidebar();
-  const ov = dom.sbOverlay();
-  if (sb) sb.style.transform = 'translateX(0)';
-  if (ov) ov.classList.add('on');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeSidebar() {
-  state.sidebarOpen = false;
-  const sb = dom.sidebar();
-  const ov = dom.sbOverlay();
-  // Only close on mobile (sidebar not visible by default)
-  if (window.innerWidth < 768) {
-    if (sb) sb.style.transform = '';
-    if (ov) ov.classList.remove('on');
-    document.body.style.overflow = '';
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════
-// §19  UTILITY FUNCTIONS
-// ═══════════════════════════════════════════════════════════════
-function escHtml(str) {
-  const d = document.createElement('div');
-  d.textContent = str;
-  return d.innerHTML;
-}
-
-function escAttr(str) {
-  return str.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function copyMsgText(btn, text) {
-  navigator.clipboard.writeText(text).then(() => {
-    const icon = btn.querySelector('i');
-    if (icon) {
-      icon.className = 'fa-solid fa-check';
-      icon.style.color = 'var(--success)';
-      setTimeout(() => { icon.className = 'fa-regular fa-copy'; icon.style.color = ''; }, 1500);
-    }
-  });
-}
-
-function editMessage(msgId) {
-  const msg = state.messages.find(m => m.id === msgId);
-  if (!msg || msg.role !== 'user') return;
-  const ta = dom.textarea();
-  if (ta) {
-    ta.value = msg.content || '';
-    autoResizeTextarea();
-    updateSendBtn();
-    ta.focus();
-  }
-}
-
-function openImageViewer(src) {
-  const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:300;display:flex;align-items:center;justify-content:center;cursor:zoom-out;animation:fadeIn .2s';
-  overlay.onclick = () => overlay.remove();
-  const img = document.createElement('img');
-  img.src = src;
-  img.style.cssText = 'max-width:90vw;max-height:90vh;border-radius:var(--radius);object-fit:contain';
-  overlay.appendChild(img);
-  document.body.appendChild(overlay);
-}
-
-function autoResizeTextarea() {
-  const ta = dom.textarea();
-  if (!ta) return;
-  ta.style.height = 'auto';
-  ta.style.height = Math.min(ta.scrollHeight, 200) + 'px';
-}
-
-function updateSendBtn() {
-  const send = dom.sendBtn();
-  const stop = dom.stopBtn();
-  const ta = dom.textarea();
-  const hasText = ta && ta.value.trim().length > 0;
-  if (send) send.style.display = state.streaming ? 'none' : (hasText ? '' : 'none');
-  if (stop) stop.style.display = state.streaming ? '' : 'none';
-}
-
-function toast(message, type = 'info') {
-  let t = dom.toast();
-  if (!t) {
-    t = document.createElement('div');
-    t.id = 'toast';
-    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);padding:12px 24px;border-radius:12px;font-size:13px;font-weight:600;z-index:500;transition:transform .35s cubic-bezier(.16,1,.3,1),opacity .35s;opacity:0;pointer-events:none;font-family:var(--font-body);white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.4)';
-    document.body.appendChild(t);
-  }
-  const colors = {
-    info: 'background:var(--bg-tertiary);color:var(--text-primary);border:1px solid var(--border)',
-    success: 'background:rgba(16,185,129,.15);color:#34d399;border:1px solid rgba(16,185,129,.3)',
-    error: 'background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3)',
+      renderAll(); scrollBot(true);
   };
-  t.style.cssText += ';' + (colors[type] || colors.info);
-  t.textContent = message;
-  requestAnimationFrame(() => {
-    t.style.transform = 'translateX(-50%) translateY(0)';
-    t.style.opacity = '1';
-  });
-  clearTimeout(t._timer);
-  t._timer = setTimeout(() => {
-    t.style.transform = 'translateX(-50%) translateY(80px)';
-    t.style.opacity = '0';
-  }, 3000);
-}
 
-// ═══════════════════════════════════════════════════════════════
-// §20  COOKIE BANNER
-// ═══════════════════════════════════════════════════════════════
-function initCookieBanner() {
-  if (localStorage.getItem('cookies_accepted') !== null) return;
-  const banner = document.createElement('div');
-  banner.className = 'cookie-banner';
-  banner.innerHTML = `
-    <p>We use cookies to keep you signed in and sync your chats across devices. <a href="#">Learn more</a></p>
-    <div class="cookie-actions">
-      <button class="cookie-decline" onclick="declineCookies()">Decline</button>
-      <button class="cookie-accept" onclick="acceptCookies()">Accept</button>
-    </div>`;
-  document.body.appendChild(banner);
-  requestAnimationFrame(() => banner.classList.add('visible'));
-}
-function acceptCookies() {
-  localStorage.setItem('cookies_accepted', '1');
-  const b = document.querySelector('.cookie-banner');
-  if (b) b.remove();
-}
-function declineCookies() {
-  localStorage.setItem('cookies_accepted', '0');
-  const b = document.querySelector('.cookie-banner');
-  if (b) b.remove();
-}
+  var onStatus = function(msg){
+      var typing = document.getElementById('ai-status-typing');
+      if(typing) typing.textContent = msg;
+      var realIdx = S.msgs.length - 1;
+      var el=$('ai-status-'+realIdx);
+      if(el) { el.textContent = msg; el.style.display = 'inline-block'; }
+  };
 
-// ═══════════════════════════════════════════════════════════════
-// §21  EVENT LISTENERS
-// ═══════════════════════════════════════════════════════════════
-function initEventListeners() {
-  // New chat button
-  document.addEventListener('click', e => {
-    const nc = e.target.closest('.nc-btn');
-    if (nc && !nc.classList.contains('locked')) {
-      handleNewChat();
+  fetch(url+'/ask/universal',{
+      method:'POST', headers:authH(), credentials:'include', signal:S.abort.signal,
+      body:JSON.stringify({ prompt:text, conversation_id:S.chatId, mode: S.mode, model: S.model })
+  }).then(function(res){
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    rmTyping();
+    var ct=(res.headers.get('content-type')||'').toLowerCase();
+    if(ct.indexOf('application/json')!==-1){
+      return res.json().then(function(d){
+        var c=d.response||d.content||d.result||d.message||JSON.stringify(d);
+        var ai={id:uid(),role:'assistant',content:c,liked:false,disliked:false,time:now()};
+        S.msgs.push(ai);
+        renderAll();
+        addGal(c);
+        saveChatHistory(S.chatId, S.msgs);
+        if(S.chatId) updateTs(S.chatId);
+      });
     }
-  });
+    var ai={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};
+    S.msgs.push(ai);
+    renderAll();
+    return streamRes(res, function(chunk){
+      full+=chunk;
+      updateLastAI(full);
+    }, function(){
+        S.msgs[S.msgs.length-1].content=full;
+        saveChatHistory(S.chatId, S.msgs);
+        if(S.chatId) updateTs(S.chatId);
+        // Final mermaid render after streaming completes
+        var i=S.msgs.length-1;
+        var el=$('mc-'+i);
+        if(el) processMermaid(el);
+    }, onMedia, onStatus);
+  }).catch(function(e){
+    rmTyping();
+    if(e.name==='AbortError'){
+        var lastIdx = S.msgs.length-1;
+        if(full && full.trim().length > 0){
+            S.msgs[lastIdx].content = full;
+            saveChatHistory(S.chatId, S.msgs).catch(function(){});
+            updateLastAI(full);
+        } else {
+            S.msgs[lastIdx].content = "_Generation stopped by user._";
+        }
+        renderAll();
+        toast('Stopped','inf');
+    } else {
+        S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});
+        renderAll();
+        handleError(e, 'AI Generation');
+    }
+  }).finally(function(){S.streaming=false;S.abort=null;updateCB();});
+}
 
-  // Sidebar overlay close
-  document.addEventListener('click', e => {
-    if (e.target.classList.contains('sb-overlay')) closeSidebar();
-  });
-
-  // Search filter
-  const si = dom.searchInput();
-  if (si) {
-    si.addEventListener('input', () => {
-      state.searchQuery = si.value;
-      renderChatList();
-    });
+function regenAI(){
+  var lastIdx = S.msgs.length-1;
+  if(lastIdx>=0 && S.msgs[lastIdx].role === 'assistant'){
+      S.msgs.pop();
+      renderAll();
   }
+  var lastUser = '';
+  for(var i=S.msgs.length-1;i>=0;i--){
+      if(S.msgs[i].role==='user'){ lastUser=S.msgs[i].content; break; }
+  }
+  if(lastUser) sendToAI(lastUser);
+}
 
-  // Textarea input
-  const ta = dom.textarea();
-  if (ta) {
-    ta.addEventListener('input', () => {
-      autoResizeTextarea();
-      updateSendBtn();
-    });
-    ta.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
-        e.preventDefault();
-        handleSend();
+function stopGen(){
+    if(S.abort) S.abort.abort();
+    if(S.currentAudio) {
+        try { S.currentAudio.pause(); S.currentAudio.currentTime = 0; } catch(e) {}
+        S.currentAudio = null;
+    }
+}
+
+/* ========== CHATBAR STATE ========== */
+function autoH(el){
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight, 200)+'px';
+}
+
+function updateCB(){
+  var hasText=$('cbInput').value.trim().length>0, hasFiles=S.pendingFiles.length>0;
+  var mic=$('micBtn'), voice=$('voiceBtn'), ss=$('sendStopBtn');
+  if(S.streaming){
+    mic.classList.add('hide');
+    voice.classList.add('hide');
+    ss.classList.remove('hide','send');
+    ss.classList.add('stop');
+    ss.innerHTML='<i class="fa-solid fa-stop"></i>';
+    ss.setAttribute('aria-label','Stop generating');
+  } else if(hasText||hasFiles){
+    if(!S.recording){ mic.classList.add('hide'); voice.classList.add('hide'); }
+    ss.classList.remove('hide','stop');
+    ss.classList.add('send');
+    ss.innerHTML='<i class="fa-solid fa-arrow-up"></i>';
+    ss.setAttribute('aria-label','Send message');
+  } else {
+    if(!S.recording){ mic.classList.remove('hide'); voice.classList.remove('hide'); }
+    ss.classList.add('hide');
+    ss.classList.remove('send','stop');
+  }
+}
+
+function finalizeLastMessage(){
+  var i = S.msgs.length - 1;
+  if(i < 0 || S.msgs[i].role !== 'assistant') return;
+  var el = $('mc-'+i);
+  if(!el || !el.isConnected) return;
+  applyMath(el);
+  processMermaid(el);
+  mdCache.delete(S.msgs[i].content);
+}
+
+/* ========== VOICE LIST ========== */
+async function loadVoices(){
+  var list=$('voiceList');
+  if(!list) return;
+  list.innerHTML = '<div style="padding:10px;color:var(--text-muted);font-size:12px;">Loading voices...</div>';
+  try {
+    if(!apiUrl()) throw new Error("API not configured");
+    var r = await fetch(apiUrl()+'/tts/voices');
+    if(r.ok){
+      var d = await r.json();
+      list.innerHTML = '';
+      if(d.voices && d.voices.length > 0) {
+        d.voices.forEach(function(v){
+          var el=document.createElement('div');
+          el.className='v-item'+(v.id===S.selectedVoice?' active':'');
+          el.textContent=v.name;
+          el.dataset.v=v.id;
+          el.addEventListener('click',function(){
+            S.selectedVoice=v.id;
+            document.querySelectorAll('.v-item').forEach(function(i){i.classList.remove('active')});
+            el.classList.add('active');
+            toggleVD(false);
+            toast('Voice: '+v.name, 'ok');
+          });
+          list.appendChild(el);
+        });
+      } else {
+        list.innerHTML = '<div style="padding:10px;color:var(--text-muted);font-size:12px;">No voices found</div>';
       }
-    });
+    } else {
+      throw new Error('HTTP '+r.status);
+    }
+  } catch(e) {
+    console.error(e);
+    list.innerHTML = '<div style="padding:10px;color:var(--danger);font-size:12px;">Failed to load voices</div>';
   }
+}
 
-  // Send / Stop buttons
-  const send = dom.sendBtn();
-  if (send) send.addEventListener('click', () => handleSend());
-  const stop = dom.stopBtn();
-  if (stop) stop.addEventListener('click', stopStreaming);
+/* ========== EVENT LISTENERS ========== */
+function initEvents(){
+  /* Sidebar */
+  $('menuBtn').addEventListener('click', function(){ toggleSB(); });
+  $('sbClose').addEventListener('click', function(e){ e.stopPropagation(); toggleSB(false); });
+  $('sbOv').addEventListener('click', function(){ toggleSB(false); });
+  $('newChatBtn').addEventListener('click', function(e){ e.stopPropagation(); startNewChat(); });
+  $('signInLink').addEventListener('click', function(e){
+    if(S.user){ e.preventDefault(); signOut(); }
+  });
+  $('contactLink').addEventListener('click', function(e){
+    e.stopPropagation(); toggleSB(false); $('contactModal').classList.add('on');
+  });
+  $('sbSearch').addEventListener('input', function(){
+    var q=this.value.toLowerCase();
+    document.querySelectorAll('#chatListItems .cl-item').forEach(function(el){
+      var t=el.querySelector('.cl-title');
+      if(t) t=t.textContent.toLowerCase();
+      el.style.display=(!q||t.indexOf(q)!==-1)?'flex':'none';
+    });
+  });
 
-  // Model dropdown
-  document.addEventListener('click', e => {
-    const ms = e.target.closest('.model-sel');
-    if (ms) {
-      e.stopPropagation();
-      toggleModelDD();
+  /* Theme */
+  $('themeGrid').addEventListener('click', function(e){
+    var b=e.target.closest('.t-btn');
+    if(b){ e.stopPropagation(); setTheme(b.getAttribute('data-t')); }
+  });
+
+  /* Model selector */
+  $('modelSel').addEventListener('click', function(e){ e.stopPropagation(); toggleMD(); });
+  $('modelDd').addEventListener('click', function(e){
+    e.stopPropagation();
+    var item=e.target.closest('.model-item');
+    if(item) selectModel(item.getAttribute('data-model'));
+  });
+
+  /* Modes */
+  $('modesContainer').addEventListener('click', function(e){
+    var btn = e.target.closest('.mode-btn');
+    if(btn) selectMode(btn.getAttribute('data-mode'));
+  });
+
+  /* Header tabs */
+  $('chatTab').addEventListener('click', function(){ switchView('chat'); });
+  $('galleryTab').addEventListener('click', function(){ switchView('gallery'); });
+
+  /* Action sheet */
+  $('asBtn').addEventListener('click', function(e){ e.stopPropagation(); toggleAS(); });
+  $('asClose').addEventListener('click', function(e){ e.stopPropagation(); toggleAS(false); });
+  $('asOv').addEventListener('click', function(){ toggleAS(false); });
+  $('asSheet').addEventListener('click', function(e){
+    var o=e.target.closest('.as-opt');
+    if(!o) return;
+    if(o.classList.contains('locked')){ toast('Sign in required', 'wrn'); return; }
+    e.stopPropagation();
+    var rawPrompt = o.getAttribute('data-prompt');
+    var cleanPrompt = rawPrompt.replace(/\\n\\n/g, '').replace(/\n\n/g, '');
+    $('cbInput').value = cleanPrompt;
+    $('cbInput').focus();
+    autoH($('cbInput'));
+    updateCB();
+    toggleAS(false);
+  });
+
+  /* Voice dropdown */
+  $('voiceBtn').addEventListener('click', function(e){
+    e.stopPropagation();
+    if(!S.user){ toast('Sign in to use voice', 'wrn'); return; }
+    toggleVD();
+    if(S.vdOpen && $('voiceList').children.length === 0) loadVoices();
+  });
+
+  /* File Upload — max 2 files */
+  $('fileBtn').addEventListener('click', function(e){ e.stopPropagation(); $('fileInput').click(); });
+  $('fileInput').addEventListener('change', function(){
+    var files=this.files;
+    if(!files||!files.length) return;
+    if(files.length > 2) {
+      toast('Only 2 files allowed at a time', 'wrn');
+      files = Array.from(files).slice(0, 2);
+    }
+    var promises=[];
+    for(var i=0;i<files.length;i++){
+      (function(file){
+        if(isImgFile(file)){
+          promises.push(readAsDataUrl(file).then(function(url){
+            S.pendingFiles.push({type:'image',dataUrl:url,name:file.name,size:file.size,file:file});
+          }));
+        } else if(isVidFile(file)){
+          promises.push(readAsDataUrl(file).then(function(url){
+            S.pendingFiles.push({type:'video',dataUrl:url,name:file.name,size:file.size,file:file});
+          }));
+        } else {
+          S.pendingFiles.push({type:'file',name:file.name,size:file.size,file:file});
+        }
+      })(files[i]);
+    }
+    Promise.all(promises).then(function(){ renderImgPreview(); updateCB(); });
+    this.value='';
+  });
+
+  /* Delegated Clicks — handles all dynamic elements */
+  document.addEventListener('click', function(e){
+    /* External links in messages */
+    var linkEl = e.target.closest('.msg-ct a');
+    if(linkEl){
+      e.preventDefault();
+      var url = linkEl.getAttribute('href');
+      if(url && (url.startsWith('http') || url.startsWith('/'))) { openLinkModal(url); }
       return;
     }
-    if (dom.modelDD()?.contains(e.target)) return;
-    toggleModelDD(false);
+
+    /* User message show more/less toggle */
+    var tgBtn = e.target.closest('.msg-toggle-btn');
+    if(tgBtn){
+      e.stopPropagation();
+      var btnId = tgBtn.id.replace('mtb-', '');
+      var wrapper = $('mtw-'+btnId);
+      if(wrapper) {
+        wrapper.classList.toggle('collapsed');
+        tgBtn.textContent = wrapper.classList.contains('collapsed') ? 'Show more' : 'Show less';
+      }
+      return;
+    }
+
+    /* Lightbox download */
+    if(e.target.closest('#lbDl')){
+      e.preventDefault(); e.stopPropagation();
+      downloadResource(S.lbUrl);
+      return;
+    }
+
+    /* Code block copy button */
+    var cpBtn = e.target.closest('[data-action="copy-code"]');
+    if(cpBtn){
+      e.stopPropagation();
+      var blk = cpBtn.closest('.code-blk');
+      var codeEl = blk ? blk.querySelector('code') : null;
+      if(codeEl){
+        navigator.clipboard.writeText(codeEl.textContent).then(function(){
+          var orig = cpBtn.innerHTML;
+          cpBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied';
+          cpBtn.classList.add('copied');
+          setTimeout(function(){ cpBtn.innerHTML=orig; cpBtn.classList.remove('copied'); }, 2000);
+        }).catch(function(){ toast('Copy failed','err'); });
+      }
+      return;
+    }
+
+    /* Code block run HTML button */
+    var runBtn = e.target.closest('[data-action="run-html"]');
+    if(runBtn){
+      e.stopPropagation();
+      var blk = runBtn.closest('.code-blk');
+      var codeEl = blk ? blk.querySelector('code') : null;
+      if(codeEl) openHtmlPreview(codeEl.textContent);
+      return;
+    }
+
+    /* Remove pending file preview */
+    var rmBtn = e.target.closest('[data-rm-idx]');
+    if(rmBtn){
+      var idx = parseInt(rmBtn.getAttribute('data-rm-idx'), 10);
+      rmPendingFile(idx);
+      return;
+    }
+
+    /* Message image → lightbox */
+    var msgImg = e.target.closest('[data-msg-img]');
+    if(msgImg){ openLB(msgImg.getAttribute('data-msg-img'), false); return; }
+
+    /* Message action buttons */
+    var ab = e.target.closest('.ma');
+    if(ab){
+      if(ab.classList.contains('locked')) return;
+      var act = ab.getAttribute('data-act');
+      var idx = parseInt(ab.getAttribute('data-i'), 10);
+      if(isNaN(idx)||idx<0||idx>=S.msgs.length) return;
+      if(act==='copy') actCopy(idx);
+      else if(act==='like') actLike(idx,'like');
+      else if(act==='dislike') actLike(idx,'dislike');
+      else if(act==='edit') openEdit(idx);
+      else if(act==='regen') actRegen(idx);
+      else if(act==='voice') actVoice(idx);
+      return;
+    }
+
+    /* Welcome cards */
+    var wCard = e.target.closest('.w-card');
+    if(wCard){
+      if(wCard.classList.contains('locked')){ toast('Sign in to use this feature', 'wrn'); return; }
+      sendMsg(wCard.getAttribute('data-prompt'));
+      return;
+    }
+
+    /* Gallery items */
+    var galItem = e.target.closest('.gal-item');
+    if(galItem){
+      var gid = galItem.getAttribute('data-gid');
+      var g = S.gallery.find(function(x){ return x.id===gid; });
+      if(g) openLB(g.url, g.type==='video');
+      return;
+    }
   });
 
-  // Mode tabs
-  document.addEventListener('click', e => {
-    const tab = e.target.closest('.htab');
-    if (tab && tab.dataset.mode) setMode(tab.dataset.mode);
-    const mb = e.target.closest('.mode-btn');
-    if (mb && mb.dataset.mode) setMode(mb.dataset.mode);
+  /* Chat input */
+  var inp = $('cbInput');
+  inp.addEventListener('input', function(){ autoH(inp); updateCB(); });
+  inp.addEventListener('keydown', function(e){
+    if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendMsg(); }
   });
 
-  // Theme buttons
-  document.addEventListener('click', e => {
-    const tb = e.target.closest('.t-btn');
-    if (tb && tb.dataset.theme) setTheme(tb.dataset.theme);
+  /* Mic button */
+  $('micBtn').addEventListener('click', function(e){
+    e.stopPropagation();
+    if(!this.classList.contains('locked')) toggleMic();
   });
 
-  // Sign out
-  document.addEventListener('click', e => {
-    if (e.target.closest('[data-action="signout"]')) signOut();
+  /* Send / Stop button */
+  $('sendStopBtn').addEventListener('click', function(e){
+    e.stopPropagation();
+    if(S.streaming) stopGen();
+    else sendMsg();
   });
 
-  // Welcome cards
-  document.addEventListener('click', e => {
-    const card = e.target.closest('.w-card');
-    if (card && !card.classList.contains('locked')) {
-      const text = card.querySelector('.w-text')?.textContent || '';
-      if (text && dom.textarea()) {
-        dom.textarea().value = text;
-        autoResizeTextarea();
-        updateSendBtn();
-        handleSend(text);
+  /* Scroll detection */
+  $('msgsWrap').addEventListener('scroll', checkScrollBtn);
+  $('scrollBot').addEventListener('click', function(e){ e.stopPropagation(); scrollBot(true); });
+
+  /* Lightbox */
+  $('lbClose').addEventListener('click', function(e){ e.stopPropagation(); closeLB(); });
+  $('lightbox').addEventListener('click', function(e){ if(e.target===$('lightbox')) closeLB(); });
+
+  /* Link modal follow-up */
+  $('lmFollowUp').addEventListener('click', function(e){
+    e.stopPropagation();
+    if(S.activeLinkUrl){ sendMsg('Tell me more about this link: '+S.activeLinkUrl); closeLinkModal(); }
+  });
+
+  /* Edit message modal */
+  $('emClose').addEventListener('click', closeEdit);
+  $('emCancel').addEventListener('click', closeEdit);
+  $('emOverlay').addEventListener('click', closeEdit);
+  $('emSave').addEventListener('click', saveEdit);
+
+  /* HTML preview modal */
+  $('closeHtmlPrev').addEventListener('click', function(){ $('htmlPreviewModal').classList.remove('on'); });
+  $('htmlPreviewModal').addEventListener('click', function(e){ if(e.target===$('htmlPreviewModal')) $('htmlPreviewModal').classList.remove('on'); });
+
+  /* Chat list — load & delete */
+  $('chatList').addEventListener('click', function(e){
+    var delBtn = e.target.closest('[data-del-cid]');
+    if(delBtn){
+      e.stopPropagation();
+      delConv(delBtn.getAttribute('data-del-cid'));
+      return;
+    }
+    var item = e.target.closest('.cl-item');
+    if(item){
+      var cid = item.getAttribute('data-cid');
+      loadConv(cid);
+      renderChatList();
+      toggleSB(false);
+    }
+  });
+
+  /* Global click — close dropdowns, modals */
+  document.addEventListener('click', function(e){
+    /* Modal close buttons */
+    var cb = e.target.closest('[data-close]');
+    if(cb){ e.stopPropagation(); var target=$(cb.getAttribute('data-close')); if(target) target.classList.remove('on'); return; }
+
+    /* Click on overlay background */
+    var ov = e.target.closest('.modal-ov');
+    if(ov && e.target===ov){ ov.classList.remove('on'); return; }
+
+    /* Close dropdowns when clicking outside */
+    if(S.vdOpen && !e.target.closest('#voiceDd') && !e.target.closest('#voiceBtn')) toggleVD(false);
+    if(S.mdOpen && !e.target.closest('#modelSel') && !e.target.closest('#modelDd')) toggleMD(false);
+  });
+
+  /* Escape key — close everything */
+  document.addEventListener('keydown', function(e){
+    if(e.key!=='Escape') return;
+    if($('lightbox').classList.contains('on')){ closeLB(); return; }
+    if($('htmlPreviewModal').classList.contains('on')){ $('htmlPreviewModal').classList.remove('on'); return; }
+    if(S.asOpen){ toggleAS(false); return; }
+    if(S.vdOpen){ toggleVD(false); return; }
+    if(S.sbOpen){ toggleSB(false); return; }
+    if(S.mdOpen){ toggleMD(false); return; }
+    if($('emModal').classList.contains('on')){ closeEdit(); return; }
+    document.querySelectorAll('.modal-ov.on').forEach(function(m){ m.classList.remove('on'); });
+  });
+
+  /* Paste — handle image pasting */
+  document.addEventListener('paste', function(e){
+    if(S.streaming) return;
+    var items = e.clipboardData && e.clipboardData.items;
+    if(!items) return;
+    for(var i=0;i<items.length;i++){
+      if(items[i].type.indexOf('image/')===0){
+        e.preventDefault();
+        var file = items[i].getAsFile();
+        if(!file) continue;
+        var name = 'pasted-'+Date.now()+'.'+(file.type.split('/')[1]||'png');
+        (function(f, n){
+          readAsDataUrl(f).then(function(url){
+            S.pendingFiles.push({type:'image',dataUrl:url,name:n,size:f.size,file:new File([f],n,{type:f.type})});
+            renderImgPreview();
+            updateCB();
+          });
+        })(file, name);
+        break;
       }
     }
   });
-
-  // Global keyboard shortcuts
-  document.addEventListener('keydown', e => {
-    // Ctrl/Cmd + K = new chat
-    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-      e.preventDefault();
-      handleNewChat();
-    }
-    // Escape = close dropdowns / sidebar
-    if (e.key === 'Escape') {
-      toggleModelDD(false);
-      closeSidebar();
-      closeAuthModal();
-    }
-  });
-
-  // Window resize — handle sidebar visibility
-  window.addEventListener('resize', () => {
-    if (window.innerWidth >= 768) {
-      const sb = dom.sidebar();
-      if (sb) sb.style.transform = '';
-      const ov = dom.sbOverlay();
-      if (ov) ov.classList.remove('on');
-      document.body.style.overflow = '';
-    }
-  });
-
-  // Before unload — warn if streaming
-  window.addEventListener('beforeunload', e => {
-    if (state.streaming) {
-      e.preventDefault();
-      e.returnValue = '';
-    }
-  });
 }
 
-// ═══════════════════════════════════════════════════════════════
-// §22  INITIALIZATION
-// ═══════════════════════════════════════════════════════════════
-async function init() {
-  // Init Mermaid
-  if (window.mermaid) {
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: 'dark',
-      securityLevel: 'loose',
-      fontFamily: 'var(--font-body)'
-    });
+/* ========== INIT ========== */
+async function init(){
+  initTheme();
+  initMarked();
+  initModel();
+  initEvents();
+
+  /* Disable mic button if not supported */
+  if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)){
+    $('micBtn').classList.add('locked');
   }
 
-  // Build model dropdown
-  buildModelDropdown();
-  updateModelUI();
+  setupAuth();
+  renderAll();
+  updateCB();
 
-  // Set initial theme
-  setTheme(state.theme, false);
+  await loadChatList();
 
-  // Check auth session
-  try {
-    const { data: { session } } = await sb.auth.getSession();
-    state.user = session?.user ?? null;
-    renderUserUI();
-    if (state.user) {
-      loadUserPrefs();
-      loadChats();
-      subscribeRealtime();
-    }
-  } catch (e) {
-    console.warn('Auth session check failed:', e);
+  /* Restore last active chat */
+  var lastActiveId = getActiveChat();
+  if(lastActiveId && S.chatListData.find(function(c){ return c.id===lastActiveId; })){
+    await loadConv(lastActiveId);
+  } else {
+    showWelcome();
   }
-
-  // Event listeners
-  initEventListeners();
-
-  // Cookie banner
-  initCookieBanner();
-
-  // Initial UI state
-  updateSendBtn();
-  renderChatList();
 }
 
-// Boot
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
-} else {
-  init();
-}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init);
+else init();
+
+})();
 </script>
 </body>
 </html>
