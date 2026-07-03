@@ -1518,6 +1518,265 @@ main{ flex:1; display:flex;flex-direction:column; width:100%; position:relative;
 .msg-img-item:hover{transform:scale(1.02);border-color:var(--border-active)}.msg-img-item img{display:block;object-fit:cover;border-radius:var(--radius)}.msg-img-item.single{max-width:300px}.msg-img-item.single img{max-width:300px;max-height:360px}.msg-img-item.multi{width:140px;height:140px}.msg-img-item.multi img{width:140px;height:140px}
 
    /* =========================================
+   IMAGE STREAMING BLUR EFFECT (ChatGPT-style)
+   ========================================= */
+
+/* Base streaming state — colorful blurred placeholder */
+.img-wrap.streaming,
+.msg-img-item.streaming,
+.gen-img-card.streaming {
+  position: relative;
+  overflow: hidden;
+}
+.img-wrap.streaming img,
+.msg-img-item.streaming img,
+.gen-img-card.streaming img {
+  filter: blur(40px) saturate(2.5) brightness(1.1);
+  transform: scale(1.15);
+  opacity: 1;
+  transition: none;
+}
+.img-wrap.streaming:hover img,
+.msg-img-item.streaming:hover img,
+.gen-img-card.streaming:hover img {
+  transform: scale(1.15);
+}
+
+/* Colorful ambient glow behind the blurred image */
+.img-wrap.streaming::before,
+.msg-img-item.streaming::before,
+.gen-img-card.streaming::before {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  background: inherit;
+  filter: blur(60px) saturate(3) brightness(1.3);
+  opacity: 0.7;
+  z-index: 0;
+  animation: streamPulse 2s ease-in-out infinite alternate;
+  pointer-events: none;
+  border-radius: 50%;
+}
+.img-wrap.streaming::after,
+.msg-img-item.streaming::after,
+.gen-img-card.streaming::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.08),
+    rgba(236, 72, 153, 0.08),
+    rgba(14, 165, 233, 0.08),
+    rgba(16, 185, 129, 0.08)
+  );
+  background-size: 300% 300%;
+  animation: streamColorShift 3s ease-in-out infinite;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: inherit;
+  mix-blend-mode: overlay;
+}
+
+@keyframes streamPulse {
+  0% { opacity: 0.5; transform: scale(0.95); }
+  100% { opacity: 0.8; transform: scale(1.05); }
+}
+@keyframes streamColorShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Mid-stream — blur reducing, colors settling */
+.img-wrap.stream-mid img,
+.msg-img-item.stream-mid img,
+.gen-img-card.stream-mid img {
+  filter: blur(18px) saturate(1.8) brightness(1.05);
+  transform: scale(1.08);
+  transition: filter 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.img-wrap.stream-mid::before,
+.msg-img-item.stream-mid::before,
+.gen-img-card.stream-mid::before {
+  opacity: 0.4;
+  filter: blur(40px) saturate(2) brightness(1.1);
+  transition: opacity 1.2s ease, filter 1.2s ease;
+}
+.img-wrap.stream-mid::after,
+.msg-img-item.stream-mid::after,
+.gen-img-card.stream-mid::after {
+  opacity: 0.5;
+  transition: opacity 1.2s ease;
+}
+
+/* Near-final — almost clear */
+.img-wrap.stream-near img,
+.msg-img-item.stream-near img,
+.gen-img-card.stream-near img {
+  filter: blur(6px) saturate(1.2) brightness(1);
+  transform: scale(1.03);
+  transition: filter 1s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.img-wrap.stream-near::before,
+.msg-img-item.stream-near::before,
+.gen-img-card.stream-near::before {
+  opacity: 0.15;
+  filter: blur(30px) saturate(1.3);
+  transition: opacity 1s ease, filter 1s ease;
+}
+.img-wrap.stream-near::after,
+.msg-img-item.stream-near::after,
+.gen-img-card.stream-near::after {
+  opacity: 0.15;
+  transition: opacity 1s ease;
+}
+
+/* Final revealed state — crisp image */
+.img-wrap.stream-done,
+.msg-img-item.stream-done,
+.gen-img-card.stream-done {
+  overflow: visible;
+}
+.img-wrap.stream-done img,
+.msg-img-item.stream-done img,
+.gen-img-card.stream-done img {
+  filter: blur(0px) saturate(1) brightness(1);
+  transform: scale(1);
+  transition: filter 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.img-wrap.stream-done::before,
+.msg-img-item.stream-done::before,
+.gen-img-card.stream-done::before {
+  opacity: 0;
+  filter: blur(0px);
+  transition: opacity 0.6s ease, filter 0.6s ease;
+}
+.img-wrap.stream-done::after,
+.msg-img-item.stream-done::after,
+.gen-img-card.stream-done::after {
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+/* Restore normal hover on done state */
+.img-wrap.stream-done:hover img,
+.msg-img-item.stream-done:hover img {
+  transform: scale(1.01);
+  transition: transform 0.4s var(--ease);
+}
+
+/* Replace the old .img-wrap.loading with this: */
+.img-wrap.loading {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-tertiary);
+}
+.img-wrap.loading::before {
+  content: '';
+  position: absolute;
+  inset: -30%;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    #8b5cf6, #ec4899, #0ea5e9, #10b981, #f59e0b, #8b5cf6
+  );
+  filter: blur(50px) saturate(2.5);
+  opacity: 0.5;
+  animation: streamLoadSpin 4s linear infinite, streamPulse 2s ease-in-out infinite alternate;
+  z-index: 0;
+  pointer-events: none;
+}
+.img-wrap.loading::after {
+  content: '\f03e';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  font-size: 28px;
+  color: var(--text-muted);
+  opacity: 0.4;
+  z-index: 1;
+  position: relative;
+}
+@keyframes streamLoadSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Loading skeleton with colorful blur for multi-image items */
+.msg-img-item.loading {
+  background: var(--bg-tertiary);
+  min-height: 150px;
+  position: relative;
+  overflow: hidden;
+}
+.msg-img-item.loading::before {
+  content: '';
+  position: absolute;
+  inset: -40%;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 45deg,
+    #ec4899, #8b5cf6, #0ea5e9, #10b981, #ec4899
+  );
+  filter: blur(40px) saturate(3);
+  opacity: 0.4;
+  animation: streamLoadSpin 5s linear infinite, streamPulse 2.5s ease-in-out infinite alternate;
+  z-index: 0;
+  pointer-events: none;
+}
+.msg-img-item.loading::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.03) 50%, transparent 70%);
+  background-size: 200% 100%;
+  animation: imgShimmer 1.5s linear infinite;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Generated image card loading state */
+.gen-img-card.loading {
+  min-height: 260px;
+  position: relative;
+  overflow: hidden;
+}
+.gen-img-card.loading::before {
+  content: '';
+  position: absolute;
+  inset: -25%;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 90deg,
+    #0ea5e9, #10b981, #f59e0b, #ec4899, #8b5cf6, #0ea5e9
+  );
+  filter: blur(55px) saturate(2.8);
+  opacity: 0.45;
+  animation: streamLoadSpin 6s linear infinite, streamPulse 3s ease-in-out infinite alternate;
+  z-index: 0;
+  pointer-events: none;
+}
+.gen-img-card.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 48px;
+  height: 48px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  z-index: 1;
+}
+   /* =========================================
    KATEX SAFETY GUARDS
    ========================================= */
 code .katex, code .katex-html,
@@ -3106,6 +3365,183 @@ function renderAll(){
             }
         }
     });
+
+   /**
+ * ChatGPT-style image streaming blur reveal
+ * Progressive blur reduction: streaming → stream-mid → stream-near → stream-done
+ */
+function streamRevealImage(container, imgUrl, options = {}) {
+  const {
+    stages = [1800, 2800, 1200],  // ms per stage: mid, near, done
+    onError = null
+  } = options;
+
+  // Ensure streaming class is on
+  container.classList.add('streaming');
+  container.classList.remove('stream-mid', 'stream-near', 'stream-done', 'loading');
+
+  // Create or get the image element
+  let img = container.tagName === 'IMG' ? container : container.querySelector('img');
+  const isSelf = container.tagName === 'IMG';
+
+  if (!img) {
+    img = document.createElement('img');
+    img.alt = options.alt || 'Generated image';
+    if (!isSelf) {
+      // Insert img as first child (before ::before/::after pseudo-elements)
+      const firstChild = container.firstChild;
+      if (firstChild) {
+        container.insertBefore(img, firstChild);
+      } else {
+        container.appendChild(img);
+      }
+    }
+  }
+
+  img.style.position = 'relative';
+  img.style.zIndex = '2';
+
+  // Start loading the real image
+  const tempImg = new Image();
+  tempImg.crossOrigin = 'anonymous';
+
+  tempImg.onload = () => {
+    img.src = imgUrl;
+
+    // Small delay so the browser paints the blurred version first
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        // Stage 1: mid-blur
+        setTimeout(() => {
+          container.classList.remove('streaming');
+          container.classList.add('stream-mid');
+        }, stages[0]);
+
+        // Stage 2: near-clear
+        setTimeout(() => {
+          container.classList.remove('stream-mid');
+          container.classList.add('stream-near');
+        }, stages[0] + stages[1]);
+
+        // Stage 3: fully revealed
+        setTimeout(() => {
+          container.classList.remove('stream-near');
+          container.classList.add('stream-done');
+          // Clean up inline styles after transition
+          setTimeout(() => {
+            img.style.position = '';
+            img.style.zIndex = '';
+          }, 1000);
+        }, stages[0] + stages[1] + stages[2]);
+      });
+    });
+  };
+
+  tempImg.onerror = () => {
+    container.classList.remove('streaming', 'stream-mid', 'stream-near');
+    container.classList.add('stream-done');
+    if (onError) onError();
+  };
+
+  // For streaming: set a tiny colorful placeholder or start loading immediately
+  tempImg.src = imgUrl;
+
+  return img;
+}
+
+/**
+ * Simulate streaming for an image that's already in the DOM
+ * (e.g., after receiving a message with images from API)
+ */
+function animateExistingImages(container) {
+  const wrappers = container.querySelectorAll('.img-wrap, .msg-img-item, .gen-img-card');
+  wrappers.forEach(wrap => {
+    const img = wrap.querySelector('img');
+    if (!img || !img.src || img.complete === false) return;
+    if (wrap.classList.contains('stream-done')) return;
+
+    // Add streaming class, then progressively reveal
+    wrap.classList.add('streaming');
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          wrap.classList.remove('streaming');
+          wrap.classList.add('stream-mid');
+        }, 800);
+
+        setTimeout(() => {
+          wrap.classList.remove('stream-mid');
+          wrap.classList.add('stream-near');
+        }, 2200);
+
+        setTimeout(() => {
+          wrap.classList.remove('stream-near');
+          wrap.classList.add('stream-done');
+        }, 3200);
+      });
+    });
+  });
+}
+
+/**
+ * Show a colorful blur loading placeholder before the real image arrives
+ */
+function showStreamPlaceholder(container, type = 'single') {
+  container.classList.remove('stream-done', 'stream-mid', 'stream-near', 'streaming');
+  container.classList.add('loading');
+
+  // For gen-img-card, ensure min-height
+  if (type === 'gen') {
+    container.style.minHeight = '280px';
+  }
+}
+
+/**
+ * Replace placeholder with streaming reveal
+ */
+function revealStreamImage(container, imgUrl, type = 'single') {
+  container.classList.remove('loading');
+  if (type === 'gen') {
+    container.style.minHeight = '';
+  }
+  return streamRevealImage(container, imgUrl, {
+    stages: type === 'gen' ? [2200, 3200, 1400] : [1800, 2800, 1200]
+  });
+}
+
+// --- Intersection Observer: animate images when they scroll into view ---
+const streamObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const el = entry.target;
+      if (!el.classList.contains('stream-done') && !el.classList.contains('streaming') && !el.classList.contains('loading')) {
+        const img = el.querySelector('img');
+        if (img && img.complete && img.naturalWidth > 0) {
+          animateExistingImages(el);
+        }
+      }
+      streamObserver.unobserve(el);
+    }
+  });
+}, { threshold: 0.2 });
+
+// Auto-observe all image containers added to the DOM
+const streamMutationObs = new MutationObserver((mutations) => {
+  mutations.forEach(m => {
+    m.addedNodes.forEach(node => {
+      if (node.nodeType !== 1) return;
+      // Direct match
+      if (node.matches && node.matches('.img-wrap, .msg-img-item, .gen-img-card')) {
+        streamObserver.observe(node);
+      }
+      // Children match
+      const children = node.querySelectorAll ? node.querySelectorAll('.img-wrap, .msg-img-item, .gen-img-card') : [];
+      children.forEach(c => streamObserver.observe(c));
+    });
+  });
+});
+streamMutationObs.observe(document.body, { childList: true, subtree: true });
 
     // Process mermaid diagrams sequentially after all HTML is in DOM
     function processNextMermaid() {
