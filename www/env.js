@@ -4,7 +4,7 @@ window.__ENV__ = {
   FREE_AI_URL:"https://zynara1-production-accf.up.railway.app",
   PREMIUM_AI_URL:"https://billy-free-ai-production.up.railway.app",
   TURNSTILE_SITE_KEY:"0x4AAAAAACxvfQw84rEK9JtR",
-  BACKEND_URL:"https://https://vidmint-withdraw-production.up.railway.app",
+  BACKEND_URL:"https://vidmint-withdraw-production.up.railway.app",
   STRIPE_PAYMENT_LINK:"https://buy.stripe.com/eVq4gzbXL8Srdig0oB53O06",
   RECAPTCHA_SITE_KEY:"6Le6lZksAAAAAJrbiMWvHD4zUC3lHiNFCTLeAJgC",
   ONESIGNAL_APP_ID: "7fad2e88-14b3-42b4-84f6-19d924af5b1e",
