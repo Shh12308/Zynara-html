@@ -368,272 +368,6 @@ main{ flex:1; display:flex;flex-direction:column; width:100%; position:relative;
   font-size: 0.85em;
 }
 
-   /* ========== WIDGET BASE ========== */
-.genui-widget {
-  margin: 12px 0;
-  border-radius: 12px;
-  overflow: hidden;
-  background: var(--bg-tertiary, rgba(255,255,255,0.04));
-  border: 1px solid var(--border-color, rgba(255,255,255,0.08));
-}
-.widget-error, .widget-loading {
-  padding: 20px;
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 13px;
-}
-.widget-error i { margin-right: 6px; color: var(--danger, #f87171); }
-.widget-err-sub { font-size: 11px; margin-top: 4px; opacity: 0.6; }
-
-/* ========== CLOCK WIDGET ========== */
-.clock-widget {
-  padding: 20px 24px;
-  text-align: center;
-}
-.clock-time {
-  font-size: 2.4rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 2px;
-  color: var(--text-primary, #fff);
-  line-height: 1.1;
-}
-.clock-date {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin-top: 6px;
-}
-.clock-tz {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-top: 4px;
-  opacity: 0.7;
-}
-.clock-tz i { margin-right: 4px; }
-
-/* ========== WEATHER WIDGET ========== */
-.weather-widget { padding: 20px 24px; }
-.weather-header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 4px;
-}
-.weather-icon { font-size: 2.6rem; color: #fbbf24; }
-.weather-temp {
-  font-size: 2.6rem;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--text-primary, #fff);
-}
-.weather-unit {
-  font-size: 1.2rem;
-  font-weight: 400;
-  color: var(--text-muted);
-  vertical-align: super;
-}
-.weather-desc {
-  font-size: 0.95rem;
-  color: var(--text-secondary, #ccc);
-  margin-bottom: 8px;
-}
-.weather-loc {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin-bottom: 14px;
-}
-.weather-loc i { margin-right: 4px; }
-.weather-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-.weather-detail {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  background: rgba(255,255,255,0.03);
-  padding: 8px 10px;
-  border-radius: 8px;
-}
-.weather-detail i { width: 14px; text-align: center; font-size: 0.72rem; opacity: 0.7; }
-
-/* ========== CALCULATOR WIDGET ========== */
-.calc-widget { padding: 12px; }
-.calc-display {
-  background: rgba(0,0,0,0.3);
-  border-radius: 10px;
-  padding: 12px 16px;
-  margin-bottom: 10px;
-  text-align: right;
-  min-height: 64px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-}
-.calc-expr {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  min-height: 18px;
-  margin-bottom: 2px;
-}
-.calc-val {
-  font-size: 1.8rem;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  color: var(--text-primary, #fff);
-  line-height: 1.1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.calc-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-}
-.calc-btn {
-  border: none;
-  border-radius: 8px;
-  padding: 14px 0;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  background: rgba(255,255,255,0.06);
-  color: var(--text-primary, #fff);
-  transition: background 0.15s, transform 0.1s;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-}
-.calc-btn:hover { background: rgba(255,255,255,0.1); }
-.calc-btn:active, .calc-btn.calc-press { transform: scale(0.93); background: rgba(255,255,255,0.14); }
-.calc-btn.fn { color: var(--accent, #60a5fa); }
-.calc-btn.op { background: rgba(96,165,250,0.15); color: var(--accent, #60a5fa); }
-.calc-btn.op:hover { background: rgba(96,165,250,0.25); }
-.calc-btn.eq { background: var(--accent, #3b82f6); color: #fff; font-weight: 700; }
-.calc-btn.eq:hover { filter: brightness(1.15); }
-.calc-btn.zero { grid-column: span 2; }
-
-/* ========== TASK LISTS ========== */
-.task-list-item {
-  list-style: none;
-  margin-left: -1.2em;
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 2px 0;
-}
-.task-list-item input[type="checkbox"] {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
-  min-width: 16px;
-  border: 2px solid var(--border-color, rgba(255,255,255,0.25));
-  border-radius: 4px;
-  margin-top: 4px;
-  cursor: default;
-  position: relative;
-  background: transparent;
-}
-.task-list-item input[type="checkbox"]:checked {
-  background: var(--accent, #3b82f6);
-  border-color: var(--accent, #3b82f6);
-}
-.task-list-item input[type="checkbox"]:checked::after {
-  content: '✓';
-  position: absolute;
-  top: -1px;
-  left: 2px;
-  font-size: 11px;
-  color: #fff;
-  font-weight: 700;
-}
-.task-list-item:has(input:checked) + li,
-.task-list-item:has(input:checked) {
-  opacity: 0.6;
-}
-
-/* ========== STICKY TABLE HEADERS ========== */
-.table-wrap {
-  overflow-x: auto;
-  margin: 12px 0;
-  border-radius: 10px;
-  border: 1px solid var(--border-color, rgba(255,255,255,0.08));
-  max-height: 420px;
-  overflow-y: auto;
-}
-.table-wrap table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.88rem;
-}
-.table-wrap thead {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-}
-.table-wrap th {
-  background: var(--bg-tertiary, rgba(255,255,255,0.06));
-  padding: 10px 14px;
-  text-align: left;
-  font-weight: 600;
-  font-size: 0.82rem;
-  color: var(--text-secondary, #ccc);
-  border-bottom: 2px solid var(--border-color, rgba(255,255,255,0.12));
-  white-space: nowrap;
-}
-.table-wrap td {
-  padding: 9px 14px;
-  border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.05));
-  color: var(--text-primary, #eee);
-}
-.table-wrap tr:hover td { background: rgba(255,255,255,0.02); }
-
-/* ========== FOOTNOTES ========== */
-.footnotes {
-  margin-top: 20px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border-color, rgba(255,255,255,0.1));
-  font-size: 0.8rem;
-  color: var(--text-muted);
-}
-.footnotes hr { display: none; }
-.footnotes ol { padding-left: 1.4em; margin: 0; }
-.footnote-item { margin-bottom: 6px; }
-.fn-link { color: var(--accent, #60a5fa); text-decoration: none; font-weight: 600; }
-.fn-link:hover { text-decoration: underline; }
-.fn-ref { color: var(--text-muted); text-decoration: none; margin-left: 4px; }
-.fn-ref:hover { color: var(--accent, #60a5fa); }
-
-/* ========== COPY BUTTON SUCCESS ANIMATION ========== */
-.cp-btn {
-  transition: all 0.25s ease;
-}
-.cp-btn.copied {
-  color: #4ade80 !important;
-  background: rgba(74, 222, 128, 0.12) !important;
-}
-
-/* ========== COLLAPSIBLE CODE BLOCKS ========== */
-.code-blk.code-collapsed pre {
-  max-height: 200px;
-  overflow: hidden;
-  position: relative;
-}
-.code-blk.code-collapsed pre::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 80px;
-  background: linear-gradient(transparent, var(--bg-secondary, #1a1a2e));
-  pointer-events: none;
-}
-
 /* --- Definition Lists --- */
 .msg-ct dl {
   margin: 14px 0;
@@ -2998,41 +2732,7 @@ function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'da
 /* =========================================
    ADVANCED MARKDOWN & RENDERING
    ========================================= */
-update let mdCache = new Map();
-
-/* ========== EMOJI SHORTCODE MAP ========== */
-var EMOJI_MAP = {
-  'rocket':'🚀','fire':'🔥','star':'⭐','heart':'❤️','thumbsup':'👍','thumbs_down':'👎',
-  'check':'✅','x':'❌','warning':'⚠️','info':'ℹ️','bulb':'💡','zap':'⚡','sparkles':'✨',
-  'party':'🎉','tada':'🎊','thinking':'🤔','eyes':'👀','wave':'👋','pray':'🙏',
-  'muscle':'💪','brain':'🧠','robot':'🤖','computer':'💻','bug':'🐛','lock':'🔒',
-  'key':'🔑','shield':'🛡️','gear':'⚙️','wrench':'🔧','link':'🔗','memo':'📝',
-  'clipboard':'📋','book':'📖','books':'📚','graduation':'🎓','trophy':'🏆','medal':'🏅',
-  'chart':'📊','graph':'📈','money':'💰','dollar':'💵','clock':'🕐','timer':'⏱️',
-  'hourglass':'⏳','calendar':'📅','world':'🌍','globe':'🌐','pin':'📍','flag':'🚩',
-  'clap':'👏','handshake':'🤝','rocket':'🚀','point_up':'☝️','point_down':'👇',
-  '100':'💯','white_check_mark':'✔️','heavy_multiplication_x':'✖️','plus':'➕','minus':'➖',
-  'question':'❓','exclamation':'❗','balloon':'🎈','gift':'🎁','hammer':'🔨',
-  'toolbox':'🧰','lightbulb':'💡','school':'🏫','folded_hands':'🙏'
-};
-
-/* ========== WIDGET INTERVAL TRACKING ========== */
-var _widgetIntervals = [];
-function cleanupWidgets() {
-  _widgetIntervals.forEach(function(id) { clearInterval(id); });
-  _widgetIntervals = [];
-}
-
-/* ========== PRE-PROCESS: :::widget SYNTAX ========== */
-function preProcessWidgets(text) {
-  return text.replace(
-    /^:::(\w+)\n([\s\S]*?)^:::$/gm,
-    function(match, id, opts) {
-      opts = opts.trim().replace(/\n/g, ' ');
-      return opts ? '{{' + id + ' ' + opts + '}}' : '{{' + id + '}}';
-    }
-  );
-}
+let mdCache = new Map();
 
 function initMarked() {
   if (typeof marked === 'undefined') { S._mdOk = false; return; }
@@ -3043,29 +2743,14 @@ function initMarked() {
   try {
     const renderer = new marked.Renderer();
 
-    // --- Task List Support ---
-    renderer.listitem = function(text) {
-      var m = text.match(/^\s*\[([ xX])\]\s*/);
-      if (m) {
-        var checked = m[1].toLowerCase() === 'x';
-        var content = text.replace(/^\s*\[([ xX])\]\s*/, '');
-        return '<li class="task-list-item"><input type="checkbox" disabled' + (checked ? ' checked' : '') + '> ' + content + '</li>\n';
-      }
-      return '<li>' + text + '</li>\n';
-    };
-
-    // --- Sticky Table Wrapper ---
-    renderer.table = function(header, body) {
-      return '<div class="table-wrap"><table><thead>' + header + '</thead><tbody>' + body + '</tbody></table></div>\n';
-    };
-
     // Advanced Code Block Rendering
     renderer.code = function(code, infostring) {
-      var text = String(code || '').replace(/\r\n/g, '\n');
+      var text = String(code || '').replace(/\r\n/g, '\n'); // Normalize line endings
       var langArr = (infostring || '').trim().split(/\s+/);
       var language = langArr[0] || '';
       var validLang = '';
 
+      // Determine language for highlight.js
       if (typeof hljs !== 'undefined' && typeof hljs.getLanguage === 'function') {
         if (language && hljs.getLanguage(language)) validLang = language;
       }
@@ -3077,6 +2762,7 @@ function initMarked() {
           if (validLang) highlighted = hljs.highlight(text, { language: validLang, ignoreIllegals: true }).value;
           else highlighted = hljs.highlightAuto(text).value;
           
+          // Line Numbers Injection
           if (highlighted && typeof highlighted === 'string') {
              var lines = highlighted.split('\n');
              var lineNumsHtml = '<div class="line-numbers-rows">';
@@ -3091,24 +2777,19 @@ function initMarked() {
         }
       } catch (e) { highlighted = esc(text); }
 
+      // Buttons HTML (Copy, Run)
       var btnsHtml = '';
       if (validLang) {
           if (validLang.toLowerCase() === 'html' || validLang.toLowerCase() === 'xml') {
             btnsHtml += '<button type="button" class="cp-btn" data-action="run-html" style="margin-right:5px;"><i class="fa-solid fa-play"></i> Run</button>';
           }
       }
-
-      // Collapsible button for long code blocks (>15 lines)
-      var lineCount = text.split('\n').length;
-      if (lineCount > 15) {
-        btnsHtml += '<button type="button" class="cp-btn code-collapse-btn" data-action="collapse"><i class="fa-solid fa-chevron-up"></i> Collapse</button>';
-      }
-
       btnsHtml += '<button type="button" class="cp-btn" data-action="copy-code"><i class="fa-regular fa-copy"></i> Copy</button>';
 
+      // Language Icon map
       var langIcon = 'fa-code';
       if(['js','javascript'].includes(validLang)) langIcon = 'fa-brands fa-js';
-      else if(['ts','typescript'].includes(validLang)) langIcon = 'fa-brands fa-js';
+      else if(['ts','typescript'].includes(validLang)) langIcon = 'fa-brands fa-js'; // TS uses JS icon usually
       else if(['python','py'].includes(validLang)) langIcon = 'fa-brands fa-python';
       else if(['html','xml'].includes(validLang)) langIcon = 'fa-brands fa-html5';
       else if(['css'].includes(validLang)) langIcon = 'fa-brands fa-css3-alt';
@@ -3133,12 +2814,18 @@ function initMarked() {
       return '<a href="' + esc(href) + '" target="_blank" rel="noopener noreferrer"' + titleAttr + '>' + text + '</a>';
     };
     
+    // Blockquotes (Handle Admonitions here if simple, or post-process)
+    // We will use a post-processor for complex Admonitions to keep renderer clean.
+
     marked.use({ breaks: true, gfm: true, renderer: renderer });
     S._mdOk = true;
   } catch (e) { console.error('Marked init failed:', e); S._mdOk = false; }
 }
 
 function processAdmonitions(html) {
+    // Regex for: > [!TYPE] Content...
+    // Simple implementation: Wrap blockquotes starting with [!NOTE] etc.
+    // Since regex on HTML is tricky, this is a best-effort parser for the specific blockquote structure.
     return html.replace(
         /<blockquote>\s*\[\!([A-Z]+)\]\s*([^\n]*)\n([\s\S]*?)<\/blockquote>/g,
         function(match, type, title, content) {
@@ -3149,6 +2836,7 @@ function processAdmonitions(html) {
             else if(t==='warning' || t==='caution' || t==='important') { cls='adm-warn'; icon='fa-triangle-exclamation'; }
             else if(t==='error' || t==='danger' || t==='fail') { cls='adm-err'; icon='fa-circle-xmark'; }
             
+            // Clean up content <p> tags
             var cleanContent = content.replace(/^<p>|<\/p>$/g, '');
             
             return '<div class="admonition ' + cls + '">' +
@@ -3159,92 +2847,13 @@ function processAdmonitions(html) {
     );
 }
 
-/* ========== POST-PROCESSOR: GitHub Task Lists ========== */
-function processTaskLists(html) {
-    return html.replace(
-        /<li>(?:<code>)?\[([ xX])\](?:<\/code>)?\s*(.*?)(<\/li>)/g,
-        function(match, check, content, close) {
-            var checked = check.toLowerCase() === 'x';
-            return '<li class="task-list-item"><input type="checkbox" disabled' + (checked ? ' checked' : '') + '> ' + content + close;
-        }
-    );
-}
-
 function processEmbeds(html) {
+    // YouTube
     html = html.replace(
         /<a href="(https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+))"[^>]*>.*?<\/a>/g,
         '<div class="embed-youtube"><iframe src="https://www.youtube.com/embed/$4" frameborder="0" allowfullscreen></iframe></div>'
     );
     return html;
-}
-
-/* ========== POST-PROCESSOR: Widgets ========== */
-function processWidgets(html) {
-    // Skip code blocks to avoid false matches
-    var parts = html.split(/(<pre[^>]*>[\s\S]*?<\/pre>|<code[^>]*>[\s\S]*?<\/code>)/g);
-    return parts.map(function(part) {
-        if (part.startsWith('<pre') || part.startsWith('<code')) return part;
-        // {{widget_id}} or {{widget_id key=value ...}}
-        part = part.replace(
-            /\{\{(\w+)(?:\s+([^\}]+))?\}\}/g,
-            function(match, id, opts) {
-                var attrs = 'data-widget-id="' + id + '"';
-                if (opts) attrs += ' data-widget-opts="' + esc(opts.trim()) + '"';
-                return '<div class="genui-widget" ' + attrs + '></div>';
-            }
-        );
-        // <widget id="..." key="value"></widget>
-        part = part.replace(
-            /<widget\s+id="([^"]+)"([^>]*)>\s*<\/widget>/gi,
-            function(match, id, rest) {
-                var attrs = 'data-widget-id="' + id + '"';
-                if (rest.trim()) attrs += ' data-widget-opts="' + esc(rest.trim()) + '"';
-                return '<div class="genui-widget" ' + attrs + '></div>';
-            }
-        );
-        return part;
-    }).join('');
-}
-
-/* ========== POST-PROCESSOR: Footnotes ========== */
-function processFootnotes(html) {
-    var defs = {};
-    // Match footnote definitions: <p>[^id]: text</p>
-    html = html.replace(
-        /<p>\[\^([^\]]+)\]:\s*(.*?)<\/p>\n?/g,
-        function(match, id, text) {
-            defs[id] = text;
-            return '';
-        }
-    );
-    if (!Object.keys(defs).length) return html;
-
-    var defHtml = '';
-    html = html.replace(
-        /\[\^([^\]]+)\]/g,
-        function(match, id) {
-            if (defs[id]) {
-                defHtml += '<div class="footnote-item" id="fn-' + id + '"><a href="#fnref-' + id + '" class="fn-ref" aria-label="Back to reference">↑</a> ' + defs[id] + '</div>';
-                return '<sup><a href="#fn-' + id + '" id="fnref-' + id + '" class="fn-link">[' + id + ']</a></sup>';
-            }
-            return match;
-        }
-    );
-    if (defHtml) {
-        html += '<div class="footnotes"><hr><ol>' + defHtml + '</ol></div>';
-    }
-    return html;
-}
-
-/* ========== POST-PROCESSOR: Emoji Shortcodes ========== */
-function processEmojis(html) {
-    var parts = html.split(/(<pre[^>]*>[\s\S]*?<\/pre>|<code[^>]*>[\s\S]*?<\/code>)/g);
-    return parts.map(function(part) {
-        if (part.startsWith('<pre') || part.startsWith('<code')) return part;
-        return part.replace(/:([a-z_]+):/g, function(match, name) {
-            return EMOJI_MAP[name] || match;
-        });
-    }).join('');
 }
 
 var _mermaidRunning = false;
@@ -3289,27 +2898,20 @@ function md(text) {
   if (text == null) return '';
   try {
     if (mdCache.has(text)) return mdCache.get(text);
-    var str = String(text);
     var html = '';
     if (S._mdOk && typeof marked !== 'undefined') { 
-        // Pre-process :::widget syntax
-        str = preProcessWidgets(str);
-        html = marked.parse(str); 
+        html = marked.parse(String(text)); 
         
-        // Post-processors in order
+        // Post-processors
         html = processAdmonitions(html);
-        html = processTaskLists(html);
         html = processEmbeds(html);
-        html = processWidgets(html);
-        html = processFootnotes(html);
-        html = processEmojis(html);
     }
-    else { html = esc(str).replace(/\n/g, '<br>'); }
+    else { html = esc(String(text)).replace(/\n/g, '<br>'); }
     
     if (typeof DOMPurify !== 'undefined') {
       html = DOMPurify.sanitize(html, {
-                ALLOWED_TAGS: ['p','br','b','i','strong','em','a','code','pre','span','div','ul','ol','li','sup','sub','del','s','h1','h2','h3','h4','h5','h6','hr','table','thead','tbody','tr','td','th','blockquote','img','details','summary','input','iframe','svg','path','dl','dt','dd','kbd','mark','figure','figcaption','math','semantics','annotation','msup','msub','mfrac','msqrt','mrow','mi','mo','mn','mtext','mover','munder','munderover','mtable','mtr','mtd','mspace','mpadded','button','label','ol'],
-                ALLOWED_ATTR: ['href','target','rel','class','id','title','alt','data-action','src','loading','width','height','type','checked','frameborder','allowfullscreen','viewBox','d','fill','xmlns','data-msg-img','data-rm-idx','data-gid','data-i','data-act','data-tip','data-model','data-t','data-mode','data-cid','data-del-cid','open','style','role','aria-label','tabindex','disabled','for','name','value','placeholder','rows','cols','autocapitalize','autocomplete','spellcheck','data-widget-id','data-widget-opts','data-val']
+                ALLOWED_TAGS: ['p','br','b','i','strong','em','a','code','pre','span','div','ul','ol','li','sup','sub','del','s','h1','h2','h3','h4','h5','h6','hr','table','thead','tbody','tr','td','th','blockquote','img','details','summary','input','iframe','svg','path','dl','dt','dd','kbd','mark','figure','figcaption','math','semantics','annotation','msup','msub','mfrac','msqrt','mrow','mi','mo','mn','mtext','mover','munder','munderover','mtable','mtr','mtd','mspace','mpadded'],
+                ALLOWED_ATTR: ['href','target','rel','class','id','title','alt','data-action','src','loading','width','height','type','checked','frameborder','allowfullscreen','viewBox','d','fill','xmlns','data-msg-img','data-rm-idx','data-gid','data-i','data-act','data-tip','data-model','data-t','data-mode','data-cid','data-del-cid','open','style','role','aria-label','tabindex','disabled','for','name','value','placeholder','rows','cols','autocapitalize','autocomplete','spellcheck']
       });
     }
     mdCache.set(text, html);
@@ -3325,11 +2927,11 @@ function md(text) {
       if (!elem || !elem.isConnected || elem.nodeType !== 1) return;
       var tag = (elem.tagName || '').toLowerCase();
       if (tag === 'svg' || tag === 'math' || tag === 'script' || tag === 'style' || tag === 'iframe') return;
-      if (elem.closest && (elem.closest('.code-blk') || elem.closest('.mermaid') || elem.closest('pre') || elem.closest('svg') || elem.closest('.map-preview') || elem.closest('.embed-youtube') || elem.closest('.genui-widget'))) return;
+      if (elem.closest && (elem.closest('.code-blk') || elem.closest('.mermaid') || elem.closest('pre') || elem.closest('svg') || elem.closest('.map-preview') || elem.closest('.embed-youtube'))) return;
       var safeOpts = {
         throwOnError: false,
         ignoredTags: ["script","noscript","style","textarea","pre","code","option","svg","math","iframe","object","embed","template","slot","select","button","input","label","video","audio","source","canvas"],
-        ignoredClasses: ["hljs","katex","no-katex","code-hd","cp-btn","code-lang-badge","line-numbers-rows","mermaid","mermaid-rendered","map-preview","map-pin","search-thumb","source-chip-img","img-wrap","msg-img-item","gen-img-card","embed-tweet","w-card","cl-item","sb-logo","hdr-title","typing-dots","gal-item","genui-widget","clock-widget","weather-widget","calc-widget","widget-error","widget-loading"],
+        ignoredClasses: ["hljs","katex","no-katex","code-hd","cp-btn","code-lang-badge","line-numbers-rows","mermaid","mermaid-rendered","map-preview","map-pin","search-thumb","source-chip-img","img-wrap","msg-img-item","gen-img-card","embed-tweet","w-card","cl-item","sb-logo","hdr-title","typing-dots","gal-item"],
         strict: false,
         trust: false
       };
@@ -3369,290 +2971,6 @@ function applyMath(el) {
       }
     }
   }
-}
-
-/* ========== WIDGET HYDRATION ========== */
-function hydrateWidgets(root) {
-    if (!root) return;
-    root.querySelectorAll('.genui-widget').forEach(function(el) {
-        if (el.children.length > 0) return; // Already hydrated
-        var id = el.dataset.widgetId;
-        var opts = el.dataset.widgetOpts || '';
-        switch(id) {
-            case 'clock': renderClock(el, opts); break;
-            case 'weather': renderWeather(el, opts); break;
-            case 'calculator': renderCalculator(el, opts); break;
-            default:
-                el.innerHTML = '<div class="widget-error"><i class="fa-solid fa-puzzle-piece"></i> Unknown widget: <code>' + esc(id) + '</code></div>';
-        }
-    });
-}
-
-/* ========== WIDGET: Live Clock ========== */
-function renderClock(el, opts) {
-    var tz = 'local';
-    if (opts) {
-        var m = opts.match(/timezone=([^\s]+)/i);
-        if (m) tz = m[1];
-    }
-    var tzLabel = tz !== 'local' ? tz.replace(/_/g, ' ').replace(/\//g, ' / ') : '';
-
-    function getTime() {
-        var now = new Date();
-        var timeStr, dateStr;
-        if (tz !== 'local') {
-            try {
-                timeStr = now.toLocaleTimeString('en-US', { timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                dateStr = now.toLocaleDateString('en-US', { timeZone: tz, weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-            } catch(e) {
-                tz = 'local';
-                timeStr = now.toLocaleTimeString();
-                dateStr = now.toDateString();
-            }
-        } else {
-            timeStr = now.toLocaleTimeString();
-            dateStr = now.toDateString();
-        }
-        return { time: timeStr, date: dateStr, tz: tzLabel };
-    }
-
-    function update() {
-        if (!el || !el.isConnected) { clearInterval(tid); return; }
-        var t = getTime();
-        el.innerHTML =
-            '<div class="clock-widget">' +
-            '<div class="clock-time">' + t.time + '</div>' +
-            '<div class="clock-date">' + t.date + '</div>' +
-            (t.tz ? '<div class="clock-tz"><i class="fa-solid fa-globe"></i> ' + esc(t.tz) + '</div>' : '') +
-            '</div>';
-    }
-    update();
-    var tid = setInterval(update, 1000);
-    _widgetIntervals.push(tid);
-}
-
-/* ========== WIDGET: Weather ========== */
-function renderWeather(el, opts) {
-    var location = 'auto:ip';
-    if (opts) {
-        var m = opts.match(/location=([^\s]+)/i);
-        if (m) location = m[1];
-        var mUnit = opts.match(/unit=(c|f)/i);
-    }
-
-    el.innerHTML = '<div class="widget-loading"><i class="fa-solid fa-cloud-sun fa-spin"></i> Loading weather...</div>';
-
-    var url = 'https://wttr.in/' + encodeURIComponent(location) + '?format=j1';
-    fetch(url)
-        .then(function(r) {
-            if (!r.ok) throw new Error('HTTP ' + r.status);
-            return r.json();
-        })
-        .then(function(data) {
-            if (!el.isConnected) return;
-            var c = data.current_condition[0];
-            var area = (data.nearest_area[0].areaName[0].value || 'Unknown');
-            var country = data.nearest_area[0].country[0].value || '';
-            var temp = c.temp_C;
-            var feelsLike = c.FeelsLikeC;
-            var desc = c.weatherDesc[0].value;
-            var humidity = c.humidity;
-            var wind = c.windspeedKmph;
-            var windDir = c.winddir16Point;
-            var pressure = c.pressure;
-            var uv = c.uvIndex;
-            var icon = 'fa-sun';
-            var code = parseInt(c.weatherCode) || 0;
-            if (code >= 200 && code < 300) icon = 'fa-cloud-bolt';
-            else if (code >= 300 && code < 400) icon = 'fa-cloud-rain';
-            else if (code >= 500 && code < 600) icon = 'fa-cloud-showers-heavy';
-            else if (code >= 600 && code < 700) icon = 'fa-snowflake';
-            else if (code >= 700 && code < 800) icon = 'fa-smog';
-            else if (code === 0 || code === 113) icon = 'fa-sun';
-            else if (code <= 116) icon = 'fa-cloud-sun';
-            else icon = 'fa-cloud';
-
-            el.innerHTML =
-                '<div class="weather-widget">' +
-                '<div class="weather-header"><i class="fa-solid ' + icon + ' weather-icon"></i><div class="weather-temp">' + temp + '°<span class="weather-unit">C</span></div></div>' +
-                '<div class="weather-desc">' + esc(desc) + '</div>' +
-                '<div class="weather-loc"><i class="fa-solid fa-location-dot"></i> ' + esc(area) + (country ? ', ' + esc(country) : '') + '</div>' +
-                '<div class="weather-grid">' +
-                '<div class="weather-detail"><i class="fa-solid fa-temperature-half"></i><span>Feels like ' + feelsLike + '°C</span></div>' +
-                '<div class="weather-detail"><i class="fa-solid fa-droplet"></i><span>Humidity ' + humidity + '%</span></div>' +
-                '<div class="weather-detail"><i class="fa-solid fa-wind"></i><span>' + wind + ' km/h ' + windDir + '</span></div>' +
-                '<div class="weather-detail"><i class="fa-solid fa-gauge-high"></i><span>' + pressure + ' hPa</span></div>' +
-                '</div>' +
-                '</div>';
-        })
-        .catch(function(err) {
-            if (!el.isConnected) return;
-            el.innerHTML = '<div class="widget-error"><i class="fa-solid fa-cloud-bolt"></i> Weather unavailable<div class="widget-err-sub">' + esc(err.message || 'Network error') + '</div></div>';
-        });
-}
-
-/* ========== WIDGET: Calculator ========== */
-function renderCalculator(el, opts) {
-    el.innerHTML =
-        '<div class="calc-widget">' +
-        '<div class="calc-display"><div class="calc-expr" id="calc-expr"></div><div class="calc-val" id="calc-val">0</div></div>' +
-        '<div class="calc-grid">' +
-        '<button class="calc-btn fn" data-val="C">C</button>' +
-        '<button class="calc-btn fn" data-val="CE">CE</button>' +
-        '<button class="calc-btn fn" data-val="%">%</button>' +
-        '<button class="calc-btn op" data-val="÷">÷</button>' +
-        '<button class="calc-btn" data-val="7">7</button>' +
-        '<button class="calc-btn" data-val="8">8</button>' +
-        '<button class="calc-btn" data-val="9">9</button>' +
-        '<button class="calc-btn op" data-val="×">×</button>' +
-        '<button class="calc-btn" data-val="4">4</button>' +
-        '<button class="calc-btn" data-val="5">5</button>' +
-        '<button class="calc-btn" data-val="6">6</button>' +
-        '<button class="calc-btn op" data-val="-">−</button>' +
-        '<button class="calc-btn" data-val="1">1</button>' +
-        '<button class="calc-btn" data-val="2">2</button>' +
-        '<button class="calc-btn" data-val="3">3</button>' +
-        '<button class="calc-btn op" data-val="+">+</button>' +
-        '<button class="calc-btn zero" data-val="0">0</button>' +
-        '<button class="calc-btn" data-val=".">.</button>' +
-        '<button class="calc-btn eq" data-val="=">=</button>' +
-        '</div></div>';
-
-    var display = el.querySelector('#calc-val');
-    var exprEl = el.querySelector('#calc-expr');
-    var current = '0', prev = '', op = '', resetNext = false, lastResult = '';
-
-    function fmt(n) {
-        if (n === 'Error') return 'Error';
-        var num = parseFloat(n);
-        if (isNaN(num)) return '0';
-        if (String(n).endsWith('.') || String(n).endsWith('.0')) return n;
-        if (Math.abs(num) > 999999999999) return num.toExponential(4);
-        var s = String(parseFloat(n.toPrecision(12)));
-        return s;
-    }
-
-    el.querySelector('.calc-grid').addEventListener('click', function(e) {
-        var btn = e.target.closest('.calc-btn');
-        if (!btn || !el.isConnected) return;
-        var v = btn.dataset.val;
-
-        // Visual feedback
-        btn.classList.add('calc-press');
-        setTimeout(function() { btn.classList.remove('calc-press'); }, 120);
-
-        if (v === 'C') {
-            current = '0'; prev = ''; op = ''; resetNext = false; lastResult = '';
-            exprEl.textContent = '';
-        } else if (v === 'CE') {
-            current = '0';
-        } else if (v === '±') {
-            if (current !== '0') current = String(-parseFloat(current));
-        } else if (v === '%') {
-            if (op && prev) {
-                current = String(parseFloat(prev) * parseFloat(current) / 100);
-            } else {
-                current = String(parseFloat(current) / 100);
-            }
-        } else if ('+-×÷'.includes(v)) {
-            if (op && prev && !resetNext) {
-                // Chain: evaluate previous operation first
-                var a = parseFloat(prev), b = parseFloat(current), r = 0;
-                if (op === '+') r = a + b;
-                else if (op === '-') r = a - b;
-                else if (op === '×') r = a * b;
-                else if (op === '÷') r = b !== 0 ? a / b : 'Error';
-                current = String(r);
-                prev = current;
-            } else {
-                prev = current;
-            }
-            op = v;
-            resetNext = true;
-            exprEl.textContent = fmt(prev) + ' ' + v;
-        } else if (v === '=') {
-            if (op && prev) {
-                var a2 = parseFloat(prev), b2 = parseFloat(current), r2 = 0;
-                exprEl.textContent = fmt(prev) + ' ' + op + ' ' + fmt(current) + ' =';
-                if (op === '+') r2 = a2 + b2;
-                else if (op === '-') r2 = a2 - b2;
-                else if (op === '×') r2 = a2 * b2;
-                else if (op === '÷') r2 = b2 !== 0 ? a2 / b2 : 'Error';
-                current = String(r2);
-                prev = ''; op = '';
-            }
-            resetNext = true;
-        } else {
-            if (resetNext) { current = ''; resetNext = false; }
-            if (v === '.' && current.includes('.')) return;
-            if (current === '0' && v !== '.') current = '';
-            current += v;
-        }
-        display.textContent = fmt(current);
-    });
-}
-
-/* ========== CODE BLOCK ACTIONS: Copy Animation + Collapse ========== */
-function initCodeBlockActions(root) {
-    if (!root) return;
-
-    root.querySelectorAll('.cp-btn[data-action="copy-code"]').forEach(function(btn) {
-        // Prevent duplicate listeners
-        if (btn._bound) return;
-        btn._bound = true;
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            var codeBlk = btn.closest('.code-blk');
-            if (!codeBlk) return;
-            var code = codeBlk.querySelector('code');
-            if (!code) return;
-            var text = code.textContent || code.innerText;
-            navigator.clipboard.writeText(text).then(function() {
-                btn.classList.add('copied');
-                var origHtml = btn.innerHTML;
-                btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
-                setTimeout(function() {
-                    btn.classList.remove('copied');
-                    btn.innerHTML = origHtml;
-                }, 2000);
-            }).catch(function() {
-                // Fallback: select text
-                var range = document.createRange();
-                range.selectNodeContents(code);
-                var sel = window.getSelection();
-                sel.removeAllRanges();
-                sel.addRange(range);
-                toast('Press Ctrl+C to copy', 'inf');
-            });
-        });
-    });
-
-    root.querySelectorAll('.cp-btn[data-action="run-html"]').forEach(function(btn) {
-        if (btn._bound) return;
-        btn._bound = true;
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            var codeBlk = btn.closest('.code-blk');
-            if (!codeBlk) return;
-            var code = codeBlk.querySelector('code');
-            if (!code) return;
-            openHtmlPreview(code.textContent || code.innerText);
-        });
-    });
-
-    root.querySelectorAll('.cp-btn[data-action="collapse"]').forEach(function(btn) {
-        if (btn._bound) return;
-        btn._bound = true;
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            var codeBlk = btn.closest('.code-blk');
-            if (!codeBlk) return;
-            var isCollapsed = codeBlk.classList.toggle('code-collapsed');
-            btn.innerHTML = isCollapsed
-                ? '<i class="fa-solid fa-chevron-down"></i> Expand'
-                : '<i class="fa-solid fa-chevron-up"></i> Collapse';
-        });
-    });
 }
 
 function toggleSB(open){S.sbOpen=typeof open==='boolean'?open:!S.sbOpen;$('sidebar').classList.toggle('open',S.sbOpen);$('sbOv').classList.toggle('on',S.sbOpen);}
@@ -4003,9 +3321,6 @@ function buildMessageHtml(m, i) {
 }
 
 function renderAll(){
-    // Clean up widget intervals from previous render
-    cleanupWidgets();
-
     if (!S.msgs.length) { showWelcome(); return; }
     showMsgs();
     var msgsEl = $('msgsEl');
@@ -4022,12 +3337,8 @@ function renderAll(){
             var miEl=$('mi-'+i); 
             if(el) { 
                 el.innerHTML = md(m.content); 
-                // Hydrate live widgets
-                hydrateWidgets(el);
-                // Math (fast, inline)
+                // Math first (fast, inline)
                 applyMath(el);
-                // Code block actions (copy animation, collapse, run)
-                initCodeBlockActions(el);
                 // Queue mermaid for sequential processing
                 if (el.querySelectorAll('code.language-mermaid').length) {
                     mermaidQueue.push(el);
@@ -4040,6 +3351,7 @@ function renderAll(){
             var wrapper = $('mtw-'+m.id);
             var btn = $('mtb-'+m.id);
             if(wrapper && btn) {
+                // Use requestAnimationFrame so scrollHeight is accurate
                 requestAnimationFrame(function() {
                     if (wrapper.scrollHeight > 180) {
                         wrapper.classList.add('collapsed');
@@ -4060,13 +3372,15 @@ function renderAll(){
  */
 function streamRevealImage(container, imgUrl, options = {}) {
   const {
-    stages = [1800, 2800, 1200],
+    stages = [1800, 2800, 1200],  // ms per stage: mid, near, done
     onError = null
   } = options;
 
+  // Ensure streaming class is on
   container.classList.add('streaming');
   container.classList.remove('stream-mid', 'stream-near', 'stream-done', 'loading');
 
+  // Create or get the image element
   let img = container.tagName === 'IMG' ? container : container.querySelector('img');
   const isSelf = container.tagName === 'IMG';
 
@@ -4074,6 +3388,7 @@ function streamRevealImage(container, imgUrl, options = {}) {
     img = document.createElement('img');
     img.alt = options.alt || 'Generated image';
     if (!isSelf) {
+      // Insert img as first child (before ::before/::after pseudo-elements)
       const firstChild = container.firstChild;
       if (firstChild) {
         container.insertBefore(img, firstChild);
@@ -4086,27 +3401,33 @@ function streamRevealImage(container, imgUrl, options = {}) {
   img.style.position = 'relative';
   img.style.zIndex = '2';
 
+  // Start loading the real image
   const tempImg = new Image();
   tempImg.crossOrigin = 'anonymous';
 
   tempImg.onload = () => {
     img.src = imgUrl;
 
+    // Small delay so the browser paints the blurred version first
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
+        // Stage 1: mid-blur
         setTimeout(() => {
           container.classList.remove('streaming');
           container.classList.add('stream-mid');
         }, stages[0]);
 
+        // Stage 2: near-clear
         setTimeout(() => {
           container.classList.remove('stream-mid');
           container.classList.add('stream-near');
         }, stages[0] + stages[1]);
 
+        // Stage 3: fully revealed
         setTimeout(() => {
           container.classList.remove('stream-near');
           container.classList.add('stream-done');
+          // Clean up inline styles after transition
           setTimeout(() => {
             img.style.position = '';
             img.style.zIndex = '';
@@ -4122,10 +3443,16 @@ function streamRevealImage(container, imgUrl, options = {}) {
     if (onError) onError();
   };
 
+  // For streaming: set a tiny colorful placeholder or start loading immediately
   tempImg.src = imgUrl;
+
   return img;
 }
 
+/**
+ * Simulate streaming for an image that's already in the DOM
+ * (e.g., after receiving a message with images from API)
+ */
 function animateExistingImages(container) {
   const wrappers = container.querySelectorAll('.img-wrap, .msg-img-item, .gen-img-card');
   wrappers.forEach(wrap => {
@@ -4133,6 +3460,7 @@ function animateExistingImages(container) {
     if (!img || !img.src || img.complete === false) return;
     if (wrap.classList.contains('stream-done')) return;
 
+    // Add streaming class, then progressively reveal
     wrap.classList.add('streaming');
 
     requestAnimationFrame(() => {
@@ -4156,14 +3484,22 @@ function animateExistingImages(container) {
   });
 }
 
+/**
+ * Show a colorful blur loading placeholder before the real image arrives
+ */
 function showStreamPlaceholder(container, type = 'single') {
   container.classList.remove('stream-done', 'stream-mid', 'stream-near', 'streaming');
   container.classList.add('loading');
+
+  // For gen-img-card, ensure min-height
   if (type === 'gen') {
     container.style.minHeight = '280px';
   }
 }
 
+/**
+ * Replace placeholder with streaming reveal
+ */
 function revealStreamImage(container, imgUrl, type = 'single') {
   container.classList.remove('loading');
   if (type === 'gen') {
@@ -4174,6 +3510,7 @@ function revealStreamImage(container, imgUrl, type = 'single') {
   });
 }
 
+// --- Intersection Observer: animate images when they scroll into view ---
 const streamObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
@@ -4189,13 +3526,16 @@ const streamObserver = new IntersectionObserver((entries) => {
   });
 }, { threshold: 0.2 });
 
+// Auto-observe all image containers added to the DOM
 const streamMutationObs = new MutationObserver((mutations) => {
   mutations.forEach(m => {
     m.addedNodes.forEach(node => {
       if (node.nodeType !== 1) return;
+      // Direct match
       if (node.matches && node.matches('.img-wrap, .msg-img-item, .gen-img-card')) {
         streamObserver.observe(node);
       }
+      // Children match
       const children = node.querySelectorAll ? node.querySelectorAll('.img-wrap, .msg-img-item, .gen-img-card') : [];
       children.forEach(c => streamObserver.observe(c));
     });
@@ -4203,10 +3543,12 @@ const streamMutationObs = new MutationObserver((mutations) => {
 });
 streamMutationObs.observe(document.body, { childList: true, subtree: true });
 
+    // Process mermaid diagrams sequentially after all HTML is in DOM
     function processNextMermaid() {
         if (!mermaidQueue.length) return;
         var el = mermaidQueue.shift();
         processMermaid(el);
+        // Small delay between diagrams to avoid stack overflow
         setTimeout(processNextMermaid, 50);
     }
     if (mermaidQueue.length) setTimeout(processNextMermaid, 100);
@@ -4220,15 +3562,12 @@ function updateLastAI(content){
   S.msgs[i].content=content;var el=$('mc-'+i);
   if(el){
       el.innerHTML = md(content); 
-      // Widgets are NOT hydrated during streaming to avoid flicker.
-      // They will be hydrated on the final renderAll() call.
+      // Throttle math during streaming — only re-render every 300ms
       var now = Date.now();
       if (now - _lastMathTime > 300) {
           _lastMathTime = now;
           applyMath(el);
       }
-      // Re-bind copy/collapse buttons for new code blocks
-      initCodeBlockActions(el);
   }
   var w=$('msgsWrap');
   if(w){
