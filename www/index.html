@@ -1776,6 +1776,680 @@ main{ flex:1; display:flex;flex-direction:column; width:100%; position:relative;
   animation: spin 0.8s linear infinite;
   z-index: 1;
 }
+
+   /* =========================================
+   LIVE CLOCK WIDGET (Timezone Clocks)
+   ========================================= */
+
+/* --- Live indicator dot (shared) --- */
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+@keyframes colonBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+@keyframes secondTick {
+  0% { transform: translateY(0); }
+  25% { transform: translateY(-1px); }
+  50% { transform: translateY(0); }
+}
+
+/* --- Single Clock Widget --- */
+.live-clock-widget {
+  margin: 18px 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--bg-secondary);
+  position: relative;
+  transition: border-color .3s var(--ease), box-shadow .3s var(--ease);
+  max-width: 400px;
+}
+.live-clock-widget:hover {
+  border-color: var(--border-active);
+  box-shadow: var(--glow);
+}
+
+/* Day/night ambient overlay on card */
+.lcw-ambient {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  transition: background .8s var(--ease);
+  opacity: 0.5;
+}
+.lcw-ambient.is-day {
+  background: linear-gradient(160deg, rgba(251, 191, 36, 0.06) 0%, transparent 60%);
+}
+.lcw-ambient.is-night {
+  background: linear-gradient(160deg, rgba(99, 102, 241, 0.08) 0%, transparent 60%);
+}
+.lcw-ambient.is-dawn {
+  background: linear-gradient(160deg, rgba(244, 114, 82, 0.08) 0%, rgba(251, 191, 36, 0.04) 50%, transparent 80%);
+}
+.lcw-ambient.is-dusk {
+  background: linear-gradient(160deg, rgba(168, 85, 247, 0.06) 0%, rgba(244, 114, 82, 0.04) 50%, transparent 80%);
+}
+
+/* Card inner content wrapper */
+.lcw-inner {
+  position: relative;
+  z-index: 1;
+  padding: 20px;
+}
+
+/* Header: city name + live badge + timezone */
+.lcw-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.lcw-city-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+.lcw-flag {
+  font-size: 22px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.lcw-city {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lcw-country {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Live badge */
+.lcw-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  font-size: 9px;
+  font-weight: 800;
+  color: #ef4444;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  flex-shrink: 0;
+}
+.lcw-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: livePulse 1.5s ease-in-out infinite;
+}
+
+/* Timezone badge */
+.lcw-tz-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  font-family: var(--font-code);
+  letter-spacing: 0.3px;
+}
+
+/* Main clock body */
+.lcw-body {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Day/Night visual indicator circle */
+.lcw-daynight {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .8s var(--ease), box-shadow .8s var(--ease);
+  overflow: hidden;
+}
+.lcw-daynight.is-day {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.25), inset 0 -4px 8px rgba(0,0,0,0.1);
+}
+.lcw-daynight.is-night {
+  background: linear-gradient(135deg, #312e81, #1e1b4b);
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.2), inset 0 -4px 8px rgba(0,0,0,0.2);
+}
+.lcw-daynight.is-dawn {
+  background: linear-gradient(135deg, #f97316, #fbbf24);
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.2), inset 0 -4px 8px rgba(0,0,0,0.1);
+}
+.lcw-daynight.is-dusk {
+  background: linear-gradient(135deg, #7c3aed, #f97316);
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.2), inset 0 -4px 8px rgba(0,0,0,0.15);
+}
+.lcw-daynight-icon {
+  font-size: 22px;
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+}
+/* Crescent moon shape for night */
+.lcw-daynight.is-night .lcw-daynight-icon::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: inherit;
+  z-index: 2;
+}
+
+/* Digital time display */
+.lcw-digital {
+  flex: 1;
+  min-width: 0;
+}
+.lcw-time {
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+  font-family: var(--font-code);
+  font-weight: 500;
+  line-height: 1;
+  color: var(--text-primary);
+}
+.lcw-time-hm {
+  font-size: 38px;
+  letter-spacing: -1px;
+}
+.lcw-time-colon {
+  font-size: 34px;
+  color: var(--accent);
+  animation: colonBlink 1s step-end infinite;
+  margin: 0 2px;
+  position: relative;
+  top: -2px;
+}
+.lcw-time-sec {
+  font-size: 20px;
+  color: var(--text-muted);
+  margin-left: 4px;
+  font-weight: 400;
+  min-width: 28px;
+}
+.lcw-time-ampm {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-left: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.lcw-time-24h .lcw-time-ampm { display: none; }
+
+/* Date line */
+.lcw-date {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.lcw-date-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* Footer: UTC offset + relative time */
+.lcw-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.lcw-utc {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-code);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.lcw-utc i { font-size: 10px; }
+.lcw-relative {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.lcw-relative .rel-ahead { color: var(--success); font-weight: 600; }
+.lcw-relative .rel-behind { color: var(--danger); font-weight: 600; }
+.lcw-relative .rel-same { color: var(--text-muted); font-weight: 600; }
+.lcw-dow {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 5px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+}
+
+/* --- Clock Groups (multiple clocks) --- */
+.live-clocks-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+  max-width: 100%;
+}
+.live-clocks-group .live-clock-widget {
+  margin: 0;
+  max-width: none;
+}
+/* When 2 clocks, make them side by side nicely */
+.live-clocks-group.lcg-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+/* When 3+ clocks */
+.live-clocks-group.lcg-many {
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+
+/* Group header */
+.lcg-header {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  padding-bottom: 4px;
+}
+.lcg-header i { color: var(--accent); font-size: 14px; }
+.lcg-header .lcg-count {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+  padding: 2px 8px;
+  background: var(--bg-tertiary);
+  border-radius: 5px;
+  border: 1px solid var(--border);
+}
+
+/* --- Clock Comparison View (two clocks side by side) --- */
+.live-clock-compare {
+  margin: 18px 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--bg-secondary);
+  display: flex;
+  flex-direction: column;
+}
+.lcc-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+.lcc-header i { color: var(--accent); font-size: 13px; }
+.lcc-body {
+  display: flex;
+  align-items: stretch;
+}
+.lcc-side {
+  flex: 1;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-width: 0;
+}
+.lcc-side:first-child {
+  border-right: 1px solid var(--border);
+}
+.lcc-city {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+.lcc-flag { font-size: 20px; margin-bottom: 6px; }
+.lcc-time {
+  font-family: var(--font-code);
+  font-size: 32px;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: baseline;
+}
+.lcc-time .lcw-time-colon {
+  font-size: 28px;
+  margin: 0 1px;
+}
+.lcc-time .lcw-time-sec {
+  font-size: 16px;
+  margin-left: 4px;
+}
+.lcc-date {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+.lcc-daynight {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lcc-daynight .lcw-daynight-icon { font-size: 16px; }
+
+/* Difference indicator in center */
+.lcc-diff {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  flex-shrink: 0;
+}
+.lcc-diff-arrow {
+  font-size: 16px;
+  color: var(--accent);
+  animation: livePulse 2s ease-in-out infinite;
+}
+.lcc-diff-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  letter-spacing: 0.5px;
+  margin-top: 8px;
+  white-space: nowrap;
+}
+.lcc-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--bg-tertiary);
+}
+.lcc-footer-diff {
+  font-weight: 700;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* --- Inline Time Mention (small, in-text) --- */
+.inline-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px 2px 6px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: var(--font-code);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  vertical-align: middle;
+  transition: border-color .2s;
+  white-space: nowrap;
+}
+.inline-time:hover {
+  border-color: var(--border-active);
+}
+.inline-time .it-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: livePulse 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+.inline-time .it-sec {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+/* --- World Clock Strip (horizontal scrolling) --- */
+.world-clock-strip {
+  display: flex;
+  gap: 10px;
+  margin: 18px 0;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.world-clock-strip::-webkit-scrollbar { display: none; }
+.wcs-card {
+  flex-shrink: 0;
+  width: 180px;
+  scroll-snap-align: start;
+  padding: 14px 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  text-align: center;
+  transition: border-color .2s, transform .2s;
+  cursor: default;
+}
+.wcs-card:hover {
+  border-color: var(--border-active);
+  transform: translateY(-2px);
+}
+.wcs-flag { font-size: 24px; margin-bottom: 6px; }
+.wcs-city {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wcs-time {
+  font-family: var(--font-code);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 8px 0 2px;
+  letter-spacing: -0.5px;
+}
+.wcs-time .lcw-time-colon {
+  font-size: 20px;
+  margin: 0 1px;
+}
+.wcs-time .lcw-time-sec {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-left: 2px;
+}
+.wcs-date {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.wcs-dow {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  padding: 2px 7px;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+  margin-top: 6px;
+}
+.wcs-daynight {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin: 6px auto 0;
+}
+.wcs-daynight.is-day { background: #fbbf24; box-shadow: 0 0 8px rgba(251,191,36,0.3); }
+.wcs-daynight.is-night { background: #6366f1; box-shadow: 0 0 8px rgba(99,102,241,0.3); }
+.wcs-daynight.is-dawn { background: #f97316; box-shadow: 0 0 8px rgba(249,115,22,0.3); }
+.wcs-daynight.is-dusk { background: #a855f7; box-shadow: 0 0 8px rgba(168,85,247,0.3); }
+
+/* --- Mini analog clock (optional addon) --- */
+.lcw-analog {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  position: relative;
+  flex-shrink: 0;
+  background: var(--bg-tertiary);
+}
+.lcw-analog-tick {
+  position: absolute;
+  width: 1px;
+  height: 6px;
+  background: var(--text-muted);
+  top: 3px;
+  left: 50%;
+  transform-origin: 50% 25px;
+  opacity: 0.5;
+}
+.lcw-analog-tick.major {
+  height: 8px;
+  width: 2px;
+  background: var(--text-secondary);
+  opacity: 0.8;
+  transform-origin: 50% 24px;
+}
+.lcw-analog-hand {
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  transform-origin: 50% 100%;
+  border-radius: 2px;
+}
+.lcw-analog-hour {
+  width: 3px;
+  height: 16px;
+  background: var(--text-primary);
+  margin-left: -1.5px;
+}
+.lcw-analog-minute {
+  width: 2px;
+  height: 22px;
+  background: var(--text-secondary);
+  margin-left: -1px;
+}
+.lcw-analog-second {
+  width: 1px;
+  height: 24px;
+  background: var(--accent);
+  margin-left: -0.5px;
+}
+.lcw-analog-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+/* --- Responsive --- */
+@media (max-width: 640px) {
+  .live-clocks-group {
+    grid-template-columns: 1fr !important;
+  }
+  .live-clock-compare .lcc-body {
+    flex-direction: column;
+  }
+  .lcc-side:first-child {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .lcc-diff {
+    flex-direction: row;
+    padding: 8px 0;
+  }
+  .lcc-diff-label {
+    writing-mode: horizontal-tb;
+    margin-top: 0;
+    margin-left: 8px;
+  }
+  .lcc-diff-arrow {
+    transform: rotate(90deg);
+  }
+  .lcw-time-hm { font-size: 30px; }
+  .lcw-time-sec { font-size: 16px; }
+  .lcw-time-colon { font-size: 26px; }
+  .lcw-daynight { width: 42px; height: 42px; }
+  .lcw-daynight-icon { font-size: 18px; }
+  .wcs-card { width: 160px; padding: 12px; }
+  .wcs-time { font-size: 18px; }
+}
    /* =========================================
    KATEX SAFETY GUARDS
    ========================================= */
