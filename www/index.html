@@ -4422,7 +4422,7 @@ function sendWithFiles(text,imgs,files){
     if(!res.ok)throw new Error('HTTP '+res.status);rmTyping();
     var ct=(res.headers.get('content-type')||'').toLowerCase();
     if(ct.indexOf('application/json')!==-1){
-      return res.json().then(function(d){var c=d.response||d.content||d.result||d.message||JSON.stringify(d);var ai={id:uid(),role:'assistant',content:c,liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();addGal(c);saveChatHistory(S.chatId, S.msgs);if(S.chatId)updateTs(S.chatId);});
+      return res.json().then(function(d){var c=d.response||d.reply ||d.content||d.result||d.message||JSON.stringify(d);var ai={id:uid(),role:'assistant',content:c,liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();addGal(c);saveChatHistory(S.chatId, S.msgs);if(S.chatId)updateTs(S.chatId);});
     }
     var ai={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();
     return streamRes(res,function(chunk){full+=chunk;requestAnimationFrame(function(){updateLastAI(full);});},function(){S.msgs[S.msgs.length-1].content=full;addGal(full);saveChatHistory(S.chatId, S.msgs);if(S.chatId)updateTs(S.chatId);}, onMedia);
