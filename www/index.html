@@ -4325,145 +4325,8 @@ function doSTT(blob){
     .catch(function(e){ handleError(e, 'Voice Recognition'); });
 }
 
-   /* =========================================
-   CHATGPT-STYLE IMAGE STREAMING
-   ========================================= */
-var _activePlaceholders = {};
-
-function onMediaStreamStart(data) {
-    var idx = S.msgs.length - 1;
-    if (idx < 0) return;
-    var el = $('mi-' + idx);
-    if (!el) return;
-
-    var phId = 'imgph-' + uid();
-    _activePlaceholders[phId] = { idx: idx, timer: null };
-
-    el.insertAdjacentHTML('beforeend',
-        '<div class="gen-img-card loading" id="' + phId + '" ' +
-        'style="min-height:320px;position:relative;overflow:hidden;">' +
-        '<div style="position:absolute;inset:-30%;border-radius:50%;' +
-        'background:conic-gradient(from 0deg,#8b5cf6,#ec4899,#0ea5e9,#10b981,#f59e0b,#8b5cf6);' +
-        'filter:blur(50px) saturate(2.5);opacity:0.5;' +
-        'animation:streamLoadSpin 6s linear infinite,streamPulse 2.5s ease-in-out infinite alternate;' +
-        'z-index:0;pointer-events:none;"></div>' +
-        '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;' +
-        'z-index:1;flex-direction:column;gap:12px;">' +
-        '<i class="fa-solid fa-wand-magic-sparkles" style="font-size:24px;color:var(--accent);animation:spin 2s linear infinite;"></i>' +
-        '<span style="font-size:12px;color:var(--text-muted);font-weight:600;">' + (data.message || 'Generating...') + '</span>' +
-        '</div></div>'
-    );
-    scrollBot(true);
-}
-
-function onMediaStreamProgress(data) {
-    if (!data.message) return;
-    // Update status text in the active placeholder
-    var phIds = Object.keys(_activePlaceholders);
-    if (phIds.length > 0) {
-        var ph = document.getElementById(phIds[phIds.length - 1]);
-        if (ph) {
-            var span = ph.querySelector('span');
-            if (span) span.textContent = data.message;
-        }
-    }
-}
-
-/* Override onMedia to use streaming blur reveal */
-var _origOnMedia = onMedia;
-onMedia = function(data) {
-    var idx = S.msgs.length - 1;
-    if (!S.msgs[idx]) return;
-    if (!S.msgs[idx].images) S.msgs[idx].images = [];
-
-    var mediaType = 'image';
-    if (data.media_type === 'video' || (data.url && (data.url.includes('.mp4') || data.url.includes('.webm')))) mediaType = 'video';
-
-    if (data.type === 'image' || data.media_type === 'image') {
-        (data.data || []).forEach(function(img) {
-            var url = img.url || img;
-            S.msgs[idx].images.push({url: url, name: img.name || 'Generated', type: mediaType});
-
-            if (!S.gallery.some(function(g) { return g.url === url; })) {
-                S.gallery.unshift({type: mediaType, url: url, prompt: data.prompt || 'Generated', id: uid()});
-                incrementUsage('images');
-            }
-
-            // Remove placeholder if exists
-            var phIds = Object.keys(_activePlaceholders);
-            phIds.forEach(function(phId) {
-                var ph = document.getElementById(phId);
-                if (ph) {
-                    ph.classList.remove('loading');
-                    ph.style.minHeight = '';
-                    delete _activePlaceholders[phId];
-                }
-            });
-
-            // Create the image card with streaming class for blur reveal
-            var el = $('mi-' + idx);
-            if (el) {
-                var cardId = 'gen-' + uid();
-                el.insertAdjacentHTML('beforeend',
-                    '<div class="gen-img-card streaming" id="' + cardId + '">' +
-                    '<img src="' + url + '" alt="' + esc(data.prompt || 'Generated Image') + '" loading="eager">' +
-                    '<div class="gen-img-meta">' +
-                    '<div class="gen-img-prompt"><strong>Prompt:</strong> ' + esc(data.prompt || 'Generated') + '</div>' +
-                    '<div class="gen-img-actions">' +
-                    '<button class="gen-img-btn" onclick="downloadResource(\'' + url.replace(/'/g, "\\'") + '\')" title="Download"><i class="fa-solid fa-download"></i></button>' +
-                    '<button class="gen-img-btn" onclick="openLB(\'' + url.replace(/'/g, "\\'") + '\', false)" title="Fullscreen"><i class="fa-solid fa-expand"></i></button>' +
-                    '</div></div>' +
-                    '</div>'
-                );
-
-                // Trigger progressive blur reveal after paint
-                var card = document.getElementById(cardId);
-                if (card) {
-                    requestAnimationFrame(function() {
-                        requestAnimationFrame(function() {
-                            // Phase 1: streaming → stream-mid (blur reducing)
-                            setTimeout(function() {
-                                if (!card || !card.isConnected) return;
-                                card.classList.remove('streaming');
-                                card.classList.add('stream-mid');
-
-                                // Phase 2: stream-mid → stream-near
-                                setTimeout(function() {
-                                    if (!card || !card.isConnected) return;
-                                    card.classList.remove('stream-mid');
-                                    card.classList.add('stream-near');
-
-                                    // Phase 3: stream-near → stream-done (crisp)
-                                    setTimeout(function() {
-                                        if (!card || !card.isConnected) return;
-                                        card.classList.remove('stream-near');
-                                        card.classList.add('stream-done');
-                                    }, IMAGE_STREAM_STAGES.near_to_done);
-                                }, IMAGE_STREAM_STAGES.mid_to_near);
-                            }, IMAGE_STREAM_STAGES.start_to_mid);
-                        });
-                    });
-                }
-            }
-        });
-    } else {
-        // Fallback for video or other media
-        _origOnMedia(data);
-    }
-
-    renderAll();
-    scrollBot(true);
-};
-
-var IMAGE_STREAM_STAGES = {
-    start_to_mid: 0,
-    mid_to_near: 1800,
-    near_to_done: 2800,
-    done_cleanup: 1000
-};
-
 /* ========== STREAMING ========== */
-function streamRes(res, onChunk, onDone, onMedia, onStatus, onMediaStreamStart, onMediaStreamProgress) {
+function streamRes(res, onChunk, onDone, onMedia, onStatus) {
     if (!res.body || typeof res.body.getReader !== 'function') {
         return res.text().then(function (t) { onChunk(t); onDone(); });
     }
@@ -4473,23 +4336,18 @@ function streamRes(res, onChunk, onDone, onMedia, onStatus, onMediaStreamStart, 
     var finished = false;
 
     function processChunk(line) {
-    line = line.trim();
-    if (!line) return;
-    if (line.startsWith('data:')) { line = line.slice(5).trim(); }
-    if (line === '[DONE]') { onDone(); finished = true; return; }
-    try {
-        var json = JSON.parse(line);
-        // ChatGPT-style image streaming: show loading placeholder
-        if (json.type === 'media_stream_start' && typeof onMediaStreamStart === 'function') { onMediaStreamStart(json); return; }
-        // Optional progress update
-        if (json.type === 'media_stream_progress' && typeof onMediaStreamProgress === 'function') { onMediaStreamProgress(json); return; }
-        // Image data arrived — trigger blur reveal
-        if (json.type === 'media' && typeof onMedia === 'function') { onMedia(json); return; }
-        if (json.type === 'status' && typeof onStatus === 'function') { onStatus(json.message); return; }
-        var text = json.token || json.text || json.content || (json.delta && json.delta.content) || '';
-        if (text) { onChunk(text); }
-    } catch (e) {}
-}
+        line = line.trim();
+        if (!line) return;
+        if (line.startsWith('data:')) { line = line.slice(5).trim(); }
+        if (line === '[DONE]') { onDone(); finished = true; return; }
+        try {
+            var json = JSON.parse(line);
+            if (json.type === 'media' && typeof onMedia === 'function') { onMedia(json); return; }
+            if (json.type === 'status' && typeof onStatus === 'function') { onStatus(json.message); return; }
+            var text = json.token || json.text || json.content || (json.delta && json.delta.content) || '';
+            if (text) { onChunk(text); }
+        } catch (e) {}
+    }
 
     function pump() {
         return reader.read().then(function (result) {
@@ -4646,7 +4504,7 @@ function sendToAI(text){
         saveChatHistory(S.chatId, S.msgs);if(S.chatId)updateTs(S.chatId);
         // Trigger Mermaid rendering after streaming is complete for this message
         var i=S.msgs.length-1; var el=$('mc-'+i); if(el) processMermaid(el);
-    }, onMedia, onStatus, onMediaStreamStart, onMediaStreamProgress);
+    }, onMedia, onStatus);
   }).catch(function(e){
     rmTyping();
     if(e.name==='AbortError'){
