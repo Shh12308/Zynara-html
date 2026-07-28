@@ -238,144 +238,6 @@ main{ flex:1; display:flex;flex-direction:column; width:100%; position:relative;
   text-decoration: underline;
 }
 
-/* =========================================
-   FILE UPLOAD PREVIEW
-   ========================================= */
-.file-upload-area {
-  padding: 0 16px;
-  margin-bottom: 4px;
-  animation: slideUpFade 0.2s var(--ease-out);
-}
-
-.file-preview-wrap {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-active);
-  border-radius: var(--radius-sm);
-  position: relative;
-  max-width: 320px;
-}
-
-.file-preview-img {
-  width: 60px;
-  height: 60px;
-  object-fit: cover;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  flex-shrink: 0;
-}
-
-.file-preview-doc {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  min-width: 0;
-}
-
-.file-preview-doc i {
-  font-size: 20px;
-  color: var(--accent);
-  margin-bottom: 2px;
-}
-
-.file-preview-doc span:first-of-type {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.file-preview-doc span:last-of-type {
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-.file-remove-btn {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--danger);
-  color: #fff;
-  border: 2px solid var(--bg-primary);
-  font-size: 10px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform .15s;
-  z-index: 2;
-}
-.file-remove-btn:hover { transform: scale(1.15); }
-.file-remove-btn:active { transform: scale(0.95); }
-
-/* Image generating loading state */
-.gen-img-loading {
-  margin: 16px 0;
-  padding: 40px 20px;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  color: var(--text-muted);
-  font-size: 14px;
-}
-.gen-img-loading .spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-.gen-img-loading .gen-img-prompt-preview {
-  font-size: 12px;
-  color: var(--text-secondary);
-  text-align: center;
-  max-width: 300px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Uploaded image in user bubble */
-.user-uploaded-img {
-  max-width: 240px;
-  max-height: 180px;
-  border-radius: 10px;
-  margin-bottom: 8px;
-  object-fit: cover;
-  border: 1px solid var(--border);
-  cursor: pointer;
-  transition: transform .2s var(--ease);
-}
-.user-uploaded-img:hover { transform: scale(1.02); }
-
-.user-file-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
-}
-.user-file-badge i { color: var(--accent); }
-
 /* --- Inline Code --- */
 .msg-ct code:not(.hljs) {
   background: var(--bg-inline-code);
@@ -2834,60 +2696,123 @@ svg .katex, svg .katex-html,
    <script src="./clock.js"></script>
 <!-- KaTeX Safe Renderer — MUST load before app.js -->
 <script>
-/* =========================================
-   KATEX SAFETY WRAPPER
-   ========================================= */
 (function() {
   'use strict';
+
+  // Override renderMathInElement globally with a safe version
   window.safeRenderMath = function(container) {
     if (!container || !container.isConnected) return;
     if (typeof renderMathInElement !== 'function') return;
-    var blockedParents = ['.code-blk','.mermaid','.map-preview','.map-embed','.embed-youtube','svg','.sb-overlay','.sidebar','.modal-ov','.cookie-banner'];
+
+    // Don't render inside these containers
+    var blockedParents = ['.code-blk', '.mermaid', '.map-preview', '.map-embed', '.embed-youtube', 'svg', '.sb-overlay', '.sidebar', '.modal-ov', '.cookie-banner'];
     for (var i = 0; i < blockedParents.length; i++) {
       if (container.closest && container.closest(blockedParents[i])) return;
     }
+
     try {
       renderMathInElement(container, {
-        delimiters: [{left:"$$",right:"$$",display:true},{left:"\\[",right:"\\]",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false}],
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "\\[", right: "\\]", display: true },
+          { left: "$", right: "$", display: false },
+          { left: "\\(", right: "\\)", display: false }
+        ],
         throwOnError: false,
-        ignoredTags: ["script","noscript","style","textarea","pre","code","option","svg","math","iframe","object","embed","template","slot","select","button","input","label"],
-        ignoredClasses: ["hljs","katex","no-katex","code-hd","cp-btn","code-lang-badge","line-numbers-rows","mermaid","map-preview","map-pin","map-overlay-btn","search-thumb","source-chip-img","img-wrap","msg-img-item","gen-img-card","embed-tweet","w-card","cl-item","sb-logo","hdr-title"],
-        strict: false, trust: false
+        ignoredTags: [
+          "script", "noscript", "style", "textarea", "pre", "code",
+          "option", "svg", "math", "iframe", "object", "embed",
+          "template", "slot", "select", "button", "input", "label"
+        ],
+        ignoredClasses: [
+          "hljs", "katex", "no-katex", "code-hd", "cp-btn",
+          "code-lang-badge", "line-numbers-rows", "mermaid",
+          "map-preview", "map-pin", "map-overlay-btn",
+          "search-thumb", "source-chip-img", "img-wrap",
+          "msg-img-item", "gen-img-card", "embed-tweet",
+          "w-card", "cl-item", "sb-logo", "hdr-title"
+        ],
+        strict: false,
+        trust: false
       });
-    } catch (e) { if (e.name !== 'NotSupportedError' && e.code !== 9) console.warn('KaTeX:', e.message); }
+    } catch (e) {
+      // Silently swallow NotSupportedError — this is the fix for code 9
+      if (e.name !== 'NotSupportedError' && e.code !== 9) {
+        console.warn('KaTeX:', e.message);
+      }
+    }
   };
+
+  // Batch render all message containers
   window.renderAllMath = function() {
     var els = document.querySelectorAll('.msg-ct');
-    for (var i = 0; i < els.length; i++) { if (els[i].isConnected) window.safeRenderMath(els[i]); }
+    for (var i = 0; i < els.length; i++) {
+      if (els[i].isConnected) {
+        window.safeRenderMath(els[i]);
+      }
+    }
   };
+
+  // Monkey-patch: if anything calls renderMathInElement directly,
+  // intercept it to prevent the crash
   var _originalRenderMath = window.renderMathInElement;
   if (_originalRenderMath) {
     window.renderMathInElement = function(elem, opts) {
-      if (!elem || !elem.isConnected || elem.nodeType !== 1) return;
+      if (!elem || !elem.isConnected) return;
+      // Block rendering on non-HTML elements
+      if (elem.nodeType !== 1) return;
       var tag = (elem.tagName || '').toLowerCase();
       if (tag === 'svg' || tag === 'math' || tag === 'script' || tag === 'style') return;
+      // Block if inside a code block or mermaid
       if (elem.closest && (elem.closest('.code-blk') || elem.closest('.mermaid') || elem.closest('pre') || elem.closest('svg'))) return;
       try {
-        return _originalRenderMath.call(this, elem, opts || { throwOnError:false, ignoredTags:["script","noscript","style","textarea","pre","code","option","svg","math","iframe","object","embed","template","slot","select","button","input"], ignoredClasses:["hljs","katex","no-katex","code-hd","cp-btn","code-lang-badge","line-numbers-rows","mermaid","map-preview","search-thumb","img-wrap","msg-img-item"], strict:false });
-      } catch (e) { if (e.name !== 'NotSupportedError' && e.code !== 9) console.warn('KaTeX intercepted:', e.message); }
+        return _originalRenderMath.call(this, elem, opts || {
+          throwOnError: false,
+          ignoredTags: ["script","noscript","style","textarea","pre","code","option","svg","math","iframe","object","embed","template","slot","select","button","input"],
+          ignoredClasses: ["hljs","katex","no-katex","code-hd","cp-btn","code-lang-badge","line-numbers-rows","mermaid","map-preview","search-thumb","img-wrap","msg-img-item"],
+          strict: false
+        });
+      } catch (e) {
+        if (e.name !== 'NotSupportedError' && e.code !== 9) {
+          console.warn('KaTeX intercepted:', e.message);
+        }
+      }
     };
   }
 })();
 </script>
-
 <script>
 /* =========================================
    CONFIGURATION & ENVIRONMENT
    ========================================= */
-(function () {
-  if (!window.__ENV__) { console.error('[HeloXAi] env.js not loaded.'); return; }
-  var cfg = window.__ENV__;
-  window.APP_CONFIG = { SUPABASE_URL: cfg.SUPABASE_URL, SUPABASE_ANON_KEY: cfg.SUPABASE_ANON_KEY, FREE_AI_URL: cfg.FREE_AI_URL, PREMIUM_AI_URL: cfg.PREMIUM_AI_URL, BACKEND_URL: cfg.BACKEND_URL };
-  console.log('[HeloXAi] Environment loaded.');
-})();
-</script>
 
-<script>
+(function () {
+    if (!window.__ENV__) {
+        console.error(
+            '[HeloXAi] env.js not loaded. Please ensure env.js is included before this script.'
+        );
+        return;
+    }
+
+    const {
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY,
+        FREE_AI_URL,
+        PREMIUM_AI_URL,
+        BACKEND_URL 
+    } = window.__ENV__;
+
+    console.log('[HeloXAi] Environment configuration loaded.');
+
+    window.APP_CONFIG = {
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY,
+        FREE_AI_URL,
+        PREMIUM_AI_URL,
+        BACKEND_URL
+    };
+})();
+
 /* =========================================
    CORE LOGIC
    ========================================= */
@@ -2897,44 +2822,99 @@ svg .katex, svg .katex-html,
 var SB_URL = getEnvVar('SUPABASE_URL'), SB_KEY = getEnvVar('SUPABASE_ANON_KEY');
 var sb = null;
 if (SB_URL && SB_KEY && SB_URL.indexOf('http') === 0) {
-  try { sb = window.supabase.createClient(SB_URL, SB_KEY, { auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true, storage:window.localStorage } }); } catch(e) { console.error('Supabase Init Error:', e); }
+  try { 
+    sb = window.supabase.createClient(SB_URL, SB_KEY, { 
+      auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true, storage:window.localStorage } 
+    }); 
+  } catch(e) { 
+    console.error('Supabase Init Error:', e);
+  }
 }
 
-function $(id){ try { return document.getElementById(id); } catch(e) { return null; } }
-function esc(s){ if(s==null) return ''; var d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; }
-function uid(){ try{return crypto.randomUUID()}catch(e){return Date.now().toString(36)+Math.random().toString(36).slice(2)} }
+function $(id){ 
+  try { return document.getElementById(id); } 
+  catch(e) { return null; } 
+}
+function esc(s){ 
+  if(s==null) return ''; 
+  var d=document.createElement('div'); 
+  d.textContent=String(s); 
+  return d.innerHTML; 
+}
+function uid(){ 
+  try{return crypto.randomUUID()}catch(e){return Date.now().toString(36)+Math.random().toString(36).slice(2)} 
+}
 function now(){ return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
-function ago(ts){ if(!ts) return ''; var s=Math.floor((Date.now()-new Date(ts))/1000); if(s<60) return 'just now'; if(s<3600) return Math.floor(s/60)+'m ago'; if(s<86400) return Math.floor(s/3600)+'h ago'; return Math.floor(s/86400)+'d ago'; }
-function fmtSize(b){ if(b<1024) return b+' B'; if(b<1048576) return (b/1024).toFixed(1)+' KB'; return (b/1048576).toFixed(1)+' MB'; }
+function ago(ts){ 
+  if(!ts) return ''; 
+  var s=Math.floor((Date.now()-new Date(ts))/1000); 
+  if(s<60) return 'just now'; 
+  if(s<3600) return Math.floor(s/60)+'m ago'; 
+  if(s<86400) return Math.floor(s/3600)+'h ago'; 
+  return Math.floor(s/86400)+'d ago'; 
+}
+function fmtSize(b){ 
+  if(b<1024) return b+' B'; 
+  if(b<1048576) return (b/1024).toFixed(1)+' KB'; 
+  return (b/1048576).toFixed(1)+' MB'; 
+}
 function isImgFile(f){ return f&&f.type&&f.type.indexOf('image/')===0; }
 function isVidFile(f){ return f&&f.type&&f.type.indexOf('video/')===0; }
-function readAsDataUrl(f){ return new Promise(function(r,e){ var x=new FileReader(); x.onload=function(){r(x.result)}; x.onerror=function(){e(new Error('Failed to read file'));}; x.readAsDataURL(f); }); }
-function dataUrlToFile(u,n){ try{ var p=u.split(','),m=p[0].match(/:(.*?);/)[1],b=atob(p[1]),l=b.length,a=new Uint8Array(l); while(l--)a[l]=b.charCodeAt(l); return new File([a],n,{type:m}); }catch(e){ return null; } }
+function readAsDataUrl(f){ 
+  return new Promise(function(r,e){ 
+    var x=new FileReader(); 
+    x.onload=function(){r(x.result)}; 
+    x.onerror=function(){e(new Error('Failed to read file'));}; 
+    x.readAsDataURL(f); 
+  }); 
+}
+function dataUrlToFile(u,n){ 
+  try{ 
+    var p=u.split(','),m=p[0].match(/:(.*?);/)[1],b=atob(p[1]),l=b.length,a=new Uint8Array(l); 
+    while(l--)a[l]=b.charCodeAt(l); 
+    return new File([a],n,{type:m}); 
+  }catch(e){ 
+    console.error('DataURL conversion failed', e);
+    return null;
+  } 
+}
 
-/* ========== UI HELPERS ========== */
+/* =========================================
+   UI HELPERS
+   ========================================= */
 function toast(msg,type){
   var ic={ok:'fa-circle-check',err:'fa-circle-xmark',inf:'fa-circle-info',wrn:'fa-triangle-exclamation'};
-  var el=document.createElement('div'); el.className='toast '+(type||'inf');
+  var el=document.createElement('div');el.className='toast '+(type||'inf');
   el.innerHTML='<i class="fa-solid '+(ic[type||'inf']||ic.inf)+'"></i> '+esc(msg);
-  var ct=$('toastCt'); if(ct) ct.appendChild(el);
+  var ct = $('toastCt');
+  if(ct) ct.appendChild(el);
   setTimeout(function(){if(el.parentNode)el.remove()},3200);
 }
-function handleError(err, context, showToast) {
+
+function handleError(err, context = 'Operation', showToast = true) {
   var errString = '';
   if (typeof err === 'string') errString = err;
   else if (err && err.message) errString = err.message;
   else if (err) errString = JSON.stringify(err);
   else errString = 'Unknown error';
-  console.error('[HeloXAi] Error in '+(context||'?')+':', errString);
-  if (showToast !== false) {
+
+  console.error(`[HeloXAi] Error in ${context}:`, errString);
+  
+  if (showToast) {
     var msg = 'An unexpected error occurred.';
     if (errString.includes('API URL is not configured')) msg = 'API URL not found. Check env.js';
     else if (errString.includes('42P17')) msg = 'Database policy error. Using Free plan.';
-    else if (errString.length < 120) msg = errString;
+    else if (errString.length < 100) msg = errString; 
+
     toast(msg, 'err');
   }
 }
-function getEnvVar(k){ try { return (window.__ENV__ && window.__ENV__[k]) || ''; } catch(e) { return ''; } }
+
+function getEnvVar(k) { 
+  try {
+    return (window.__ENV__ && window.__ENV__[k]) || ''; 
+  } catch(e) { return ''; }
+}
 
 /* ========== STATE ========== */
 var S = {
@@ -2944,896 +2924,939 @@ var S = {
   _mdOk:false, pendingFiles:[], model:'helox',
   isAutoScrolling:true, scrollThreshold:200, selectedVoice:'alloy',
   activeLinkUrl:'', editingIndex:null,
-  dailyImgLimit:6, dailyVidLimit:3,
-  mode:'general', currentAudio:null, lbUrl:'', lbType:'',
-  features:{ mic:true, voice:true }
+  dailyImgLimit: 6, dailyVidLimit: 3,
+  mode: 'general', 
+  currentAudio: null, 
+  lbUrl:'', 
+  lbType:'',
+  features: { mic: true, voice: true } 
 };
 
-var IMG_KW=['generate image','create image','make image','draw me','render image','generate an image','create an image','make an image','draw a','paint a','illustration of','picture of'];
+var IMG_KW=['generate image','create image','make image','draw me','render image'];
 var VID_KW=['generate video','create video','make video','render video'];
 
 function isImgQ(t){ var l=t.toLowerCase(); for(var i=0;i<IMG_KW.length;i++) if(l.indexOf(IMG_KW[i])!==-1) return true; return false; }
 function isVidQ(t){ var l=t.toLowerCase(); for(var i=0;i<VID_KW.length;i++) if(l.indexOf(VID_KW[i])!==-1) return true; return false; }
 
-/* ========== LOCAL STORAGE ========== */
+/* --- LOCAL STORAGE HELPERS --- */
 function safeSetItem(key, value) {
-  try { localStorage.setItem(key, value); return true; } catch (e) {
-    if (e.name === 'QuotaExceededError') {
-      if(key.startsWith('helox_history_')) {
-        var keys = Object.keys(localStorage), removed = 0;
-        for(var i=0; i<keys.length; i++) { if(keys[i].startsWith('helox_history_') && keys[i] !== key) { localStorage.removeItem(keys[i]); removed++; if(removed > 2) break; } }
-        try { localStorage.setItem(key, value); return true; } catch(retryE) { toast('Storage full.','wrn'); }
-      } else { toast('Storage full.','wrn'); }
+    try {
+        localStorage.setItem(key, value);
+        return true;
+    } catch (e) {
+        if (e.name === 'QuotaExceededError') {
+            console.warn('LocalStorage full. Attempting to clean up...');
+            if(key.startsWith('helox_history_')) {
+                var keys = Object.keys(localStorage);
+                var removed = 0;
+                for(var i=0; i<keys.length; i++) {
+                    if(keys[i].startsWith('helox_history_') && keys[i] !== key) {
+                        localStorage.removeItem(keys[i]);
+                        removed++;
+                        if(removed > 2) break; 
+                    }
+                }
+                try {
+                    localStorage.setItem(key, value);
+                    return true;
+                } catch (retryE) {
+                    console.error('Still cannot save to LocalStorage:', retryE);
+                    toast('Storage full. Chat history not saved.', 'wrn');
+                }
+            } else {
+                toast('Storage full.', 'wrn');
+            }
+        }
+        return false;
     }
-    return false;
-  }
-}
-function saveActiveChat(id){ safeSetItem('helox_active_chat', id); }
-function getActiveChat(){ try { return localStorage.getItem('helox_active_chat'); } catch(e) { return null; } }
-function saveLocalChats(){
-  try { S.chatListData.sort(function(a,b){ return new Date(b.updated_at)-new Date(a.updated_at); }); var meta=S.chatListData.map(function(c){ return {id:c.id,title:c.title,updated_at:c.updated_at}; }); safeSetItem('helox_chats', JSON.stringify(meta)); } catch(e){}
-}
-function loadLocalChats(){
-  try { var raw=localStorage.getItem('helox_chats'); if(raw){var meta=JSON.parse(raw); if(Array.isArray(meta)&&meta.length>0) return meta;} } catch(e){} return [];
-}
-function saveChatHistory(id, msgs){
-  try {
-    var toSave=msgs.slice(-50).map(function(m){ var nm={...m}; delete nm.dataUrl; if(nm.images){nm.images=nm.images.map(function(img){return {url:img.url&&img.url.length>2000?null:img.url,name:img.name,type:img.type};}).filter(function(img){return img.url!==null;});} return nm; });
-    var serialized=JSON.stringify(toSave);
-    if(serialized.length>4.5*1024*1024){toSave=toSave.slice(-20);serialized=JSON.stringify(toSave);}
-    safeSetItem('helox_history_'+id, serialized);
-    var c=S.chatListData.find(function(x){return x.id===id;});
-    if(c){c.updated_at=new Date().toISOString(); saveLocalChats(); renderChatList();}
-  } catch(e){}
-}
-function loadChatHistory(id){ try{var raw=localStorage.getItem('helox_history_'+id);if(raw)return JSON.parse(raw);}catch(e){} return []; }
-function getDailyUsage(key){ try{var today=new Date().toDateString(),stored=localStorage.getItem('helox_usage_'+key);if(stored){var data=JSON.parse(stored);if(data.date===today)return data.count;}return 0;}catch(e){return 0;} }
-function incrementUsage(key){ try{var today=new Date().toDateString(),count=getDailyUsage(key)+1;localStorage.setItem('helox_usage_'+key,JSON.stringify({date:today,count:count}));return count;}catch(e){} }
-
-function checkLimits(text){
-  if(isImgQ(text)&&!isAuthed()) return {allowed:false,msg:'Please Sign In to generate images.'};
-  if(isAuthed()){
-    if(isImgQ(text)){if(getDailyUsage('images')>=S.dailyImgLimit) return {allowed:false,msg:'Daily image limit ('+S.dailyImgLimit+') reached.'};}
-    if(isVidQ(text)){if(getDailyUsage('videos')>=S.dailyVidLimit) return {allowed:false,msg:'Daily video limit ('+S.dailyVidLimit+') reached.'};}
-  }
-  return {allowed:true,msg:''};
 }
 
-/* ========== API ROUTING ========== */
+function saveActiveChat(id) {
+    safeSetItem('helox_active_chat', id);
+}
+function getActiveChat() {
+    try { return localStorage.getItem('helox_active_chat'); } catch(e) { return null; }
+}
+function saveLocalChats() {
+    try {
+        S.chatListData.sort(function(a,b){ return new Date(b.updated_at) - new Date(a.updated_at); });
+        var meta = S.chatListData.map(function(c){ return { id: c.id, title: c.title, updated_at: c.updated_at }; });
+        safeSetItem('helox_chats', JSON.stringify(meta));
+    } catch(e) {}
+}
+function loadLocalChats() {
+    try {
+        var raw = localStorage.getItem('helox_chats');
+        if (raw) { var meta = JSON.parse(raw); if(Array.isArray(meta) && meta.length > 0) return meta; }
+    } catch(e) { console.error('Error loading local chats', e); }
+    return [];
+}
+
+function getSize(str) { return new Blob([str]).size; }
+function safeStringify(obj) { return JSON.stringify(obj); }
+
+function saveChatHistory(id, msgs) {
+    try {
+        var toSave = msgs.slice(-50).map(function(m) {
+            var nm = { ...m };
+            delete nm.dataUrl;
+            if (nm.images) {
+                nm.images = nm.images.map(function(img) {
+                    return {
+                        url: img.url.length > 2000 ? null : img.url,
+                        name: img.name,
+                        type: img.type
+                    };
+                }).filter(img => img.url !== null);
+            }
+            return nm;
+        });
+        var serialized = JSON.stringify(toSave);
+        if (serialized.length > 4.5 * 1024 * 1024) {
+            console.warn("Chat too large, trimming...");
+            toSave = toSave.slice(-20);
+            serialized = JSON.stringify(toSave);
+        }
+        safeSetItem('helox_history_' + id, serialized);
+        var c = S.chatListData.find(x => x.id === id);
+        if (c) {
+            c.updated_at = new Date().toISOString();
+            saveLocalChats();
+            renderChatList();
+        }
+    } catch (e) {
+        console.warn("Could not save chat history (Quota exceeded?)", e);
+    }
+}
+function loadChatHistory(id) {
+    try { var raw = localStorage.getItem('helox_history_' + id); if (raw) return JSON.parse(raw); } catch(e) {}
+    return [];
+}
+
+function getDailyUsage(key) {
+    try {
+        var today = new Date().toDateString();
+        var stored = localStorage.getItem('helox_usage_' + key);
+        if (stored) { var data = JSON.parse(stored); if (data.date === today) return data.count; }
+        return 0;
+    } catch(e) { return 0; }
+}
+function incrementUsage(key) {
+    try {
+        var today = new Date().toDateString();
+        var count = getDailyUsage(key) +1;
+        localStorage.setItem('helox_usage_' + key, JSON.stringify({ date: today, count: count }));
+        return count;
+    } catch(e) {}
+}
+
+function checkLimits(text) {
+    var isMedia = isImgQ(text) || isVidQ(text);
+    if (isMedia && !isAuthed()) { return { allowed: false, msg: 'Please Sign In to generate images or videos.' }; }
+    if (isAuthed()) {
+        if (isImgQ(text)) {
+            var current = getDailyUsage('images');
+            if (current >= S.dailyImgLimit) return { allowed: false, msg: 'Daily image limit (6) reached.' };
+        } else if (isVidQ(text)) {
+            var current = getDailyUsage('videos');
+            if (current >= S.dailyVidLimit) return { allowed: false, msg: 'Daily video limit (3) reached.' };
+        }
+    }
+    return { allowed: true, msg: '' };
+}
+
+/* 
+  FIX: Improved Plan Fetching & API URL Routing 
+*/
 function apiUrl(){
   try {
-    var base=getEnvVar('FREE_AI_URL');
-    if(S.user&&(S.user.is_lifetime||S.user.is_premium)){var p=getEnvVar('PREMIUM_AI_URL');if(p&&p.indexOf('http')===0){base=p;}}
-    if(!base){console.error('[HeloXAi] API URL not configured');return null;}
+    var base = getEnvVar('FREE_AI_URL');
+    
+    if(S.user && (S.user.is_lifetime || S.user.is_premium)){
+      var p = getEnvVar('PREMIUM_AI_URL');
+      if(p && p.indexOf('http')===0) {
+        base = p;
+        console.log('[HeloXAi] Using Premium API Endpoint');
+      }
+    }
+    
+    if(!base) {
+        console.error('[HeloXAi] API URL is not configured in env.js');
+        return null; 
+    }
     return base;
-  } catch(e){ handleError(e,'API Config',false); return null; }
+  } catch(e) {
+    handleError(e, 'API Configuration', false); 
+    return null;
+  }
 }
-function authH(){ try{var h={'Content-Type':'application/json'};if(S.user&&S.user.token)h['Authorization']='Bearer '+S.user.token;else h['x-guest-id']=guestId();return h;}catch(e){return {};}}
+
+function authH(){
+  try {
+    var h={'Content-Type':'application/json'};
+    if(S.user && S.user.token) h['Authorization']='Bearer '+S.user.token;
+    else h['x-guest-id']=guestId();
+    return h;
+  } catch(e) { return {}; }
+}
 function isAuthed(){ return !!S.user; }
-function guestId(){ try{var id=localStorage.getItem('helox_guest_id');if(!id){id=crypto.randomUUID();localStorage.setItem('helox_guest_id',id);}return id;}catch(e){return 'guest-error';} }
+function canMedia(){ return isAuthed(); }
+function guestId(){ 
+  try { 
+    var id=localStorage.getItem('helox_guest_id'); 
+    if(!id){id=crypto.randomUUID();localStorage.setItem('helox_guest_id',id);} 
+    return id; 
+  } catch(e) { return 'guest-error'; }
+}
 
 /* =========================================
-   AUTH & PLAN
+   AUTH & PLAN VERIFICATION
    ========================================= */
-async function getUserPlan(){
-  if(!sb) return "free";
+
+async function getUserPlan() {
+  if (!sb) return "free";
+  
   try {
-    var {data:{user},error:authError}=await sb.auth.getUser();
-    if(authError||!user) return "free";
+    const { data: { user }, error: authError } = await sb.auth.getUser();
+    if (authError || !user) return "free";
+
     try {
-      var {data:mainData,error:mainError}=await sb.from('users').select('plan,is_premium,is_lifetime').eq('id',user.id).maybeSingle();
-      if(mainError&&mainError.code==='42P17') throw new Error("RLS_RECURSION");
-      if(!mainError&&mainData){
-        var p=(mainData.plan||'').toLowerCase();
-        if(mainData.is_lifetime) return 'lifetime';
-        if(mainData.is_premium) return p==='ultimate_yearly'?'yearly':'monthly';
-        if(p==='ultimate_yearly') return 'yearly';
-        if(p==='ultimate_monthly') return 'monthly';
-        return p||'free';
+      const { data: mainData, error: mainError } = await sb
+        .from('users')
+        .select('plan,is_premium,is_lifetime')
+        .eq('id',user.id)
+        .maybeSingle();
+
+      if (mainError && mainError.code === '42P17') {
+           console.warn("⚠️ RLS Error (42P17) detected. Switching to Backend Fallback.");
+           throw new Error("RLS_RECURSION");
       }
-    } catch(e){ if(e.message!=="RLS_RECURSION") throw e; }
-    var backendUrl=getEnvVar('BACKEND_URL');
-    if(backendUrl){
-      try{
-        var {data:{session}}=await sb.auth.getSession();
-        if(!session) return "free";
-        var res=await fetch(backendUrl+'/user/plan',{method:"GET",headers:{"Authorization":"Bearer "+session.access_token}});
-        if(res.ok){var data=await res.json();var p=(data.plan||'').toLowerCase();if(p==='ultimate_yearly')return 'yearly';if(p==='ultimate_monthly')return 'monthly';if(p==='lifetime')return 'lifetime';return p||'free';}
-      }catch(err){console.warn("Backend fallback failed",err);}
+
+      if (!mainError && mainData) {
+         const planStr = (mainData.plan || '').toLowerCase();
+         if (mainData.is_lifetime) return 'lifetime';
+         if (mainData.is_premium) {
+           return planStr === 'ultimate_yearly' ? 'yearly' : 'monthly';
+         }
+         if (planStr === 'ultimate_yearly') return 'yearly';
+         if (planStr === 'ultimate_monthly') return 'monthly';
+         return planStr || 'free';
+      }
+    } catch (e) {
+      if (e.message !== "RLS_RECURSION") throw e; 
     }
-    var {data:profileData,error:profileError}=await sb.from('user_profiles').select('plan').eq('user_id',user.id).maybeSingle();
-    if(!profileError&&profileData){var p=(profileData.plan||'').toLowerCase();if(p==='ultimate_yearly')return 'yearly';if(p==='ultimate_monthly')return 'monthly';return p||'free';}
+
+    var backendUrl = getEnvVar('BACKEND_URL'); 
+    if (backendUrl) {
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session) return "free";
+
+        console.log("Fetching plan from Backend (Fallback)...");
+        const res = await fetch(`${backendUrl}/user/plan`, {
+            method: "GET", 
+            headers: { "Authorization": `Bearer ${session.access_token}` }
+        });
+
+        let data;
+        if (res.ok) {
+            data = await res.json();
+            const p = (data.plan || '').toLowerCase();
+            if (p === 'ultimate_monthly') return 'monthly';
+            if (p === 'ultimate_yearly') return 'yearly';
+            if (p === 'lifetime') return 'lifetime';
+            return p || 'free';
+        }
+      } catch (err) {
+          console.warn("Backend fallback failed", err);
+      }
+    }
+
+    const { data: profileData, error: profileError } = await sb
+      .from('user_profiles')
+      .select('plan')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!profileError && profileData) {
+       const pPlan = (profileData.plan || '').toLowerCase();
+       if (pPlan === 'ultimate_yearly') return 'yearly';
+       if (pPlan === 'ultimate_monthly') return 'monthly';
+       return pPlan || 'free';
+    }
+
     return "free";
-  } catch(e){ console.error("getUserPlan error:",e); return "free"; }
+  } catch (e) {
+    console.error("Unexpected error in getUserPlan:", e);
+    return "free";
+  }
 }
 
 async function setUserFromSess(sess){
   try{
-    if(!sess||!sess.user) throw new Error("Invalid session");
-    var currentPlan=await getUserPlan();
-    var u={id:sess.user.id,email:sess.user.email,token:sess.access_token,plan:'free',is_premium:false,is_lifetime:false};
-    if(currentPlan==='lifetime'){u.plan='lifetime';u.is_lifetime=true;u.is_premium=true;}
-    else if(currentPlan==='yearly'){u.plan='ultimate_yearly';u.is_premium=true;u.is_lifetime=false;}
-    else if(currentPlan==='monthly'){u.plan='ultimate_monthly';u.is_premium=true;u.is_lifetime=false;}
-    S.user=u; safeSetItem('helox-last-login',Date.now());
-    if(u.is_lifetime) toast('Welcome back, Lifetime Member!','ok');
-    else if(u.is_premium) toast('Welcome back, Premium User','ok');
-    else toast('Welcome back','ok');
-  }catch(e){
-    console.error("SetUser Error",e);
-    if(sess&&sess.user){S.user={id:sess.user.id,email:sess.user.email,token:sess.access_token,plan:'free',is_premium:false,is_lifetime:false};}
+    if(!sess || !sess.user) throw new Error("Invalid session");
+    var currentPlan = await getUserPlan();
+    console.log('[HeloXAi] Final Plan Detected:', currentPlan);
+
+    var u={ 
+        id:sess.user.id, 
+        email:sess.user.email, 
+        token:sess.access_token, 
+        plan:'free', 
+        is_premium:false, 
+        is_lifetime:false 
+    };
+
+    if (currentPlan === 'lifetime') {
+        u.plan = 'lifetime';
+        u.is_lifetime = true;
+        u.is_premium = true;
+    } else if (currentPlan === 'yearly') {
+        u.plan = 'ultimate_yearly';
+        u.is_premium = true;
+        u.is_lifetime = false;
+    } else if (currentPlan === 'monthly') {
+        u.plan = 'ultimate_monthly';
+        u.is_premium = true;
+        u.is_lifetime = false;
+    } else {
+        u.plan = 'free';
+        u.is_premium = false;
+        u.is_lifetime = false;
+    }
+
+    S.user=u;
+    safeSetItem('helox-last-login',Date.now());
+    
+    if(u.is_lifetime) toast('Welcome back, Lifetime Member!', 'ok');
+    else if(u.is_premium) toast('Welcome back, Premium User', 'ok');
+    else toast('Welcome back', 'ok');
+    
+  }catch(e){ 
+    console.error("SetUser Error", e);
+    if(sess && sess.user) {
+        S.user={ 
+            id:sess.user.id, 
+            email:sess.user.email, 
+            token:sess.access_token, 
+            plan:'free', 
+            is_premium:false, 
+            is_lifetime:false 
+        }; 
+    }
   }
 }
 
 async function setupAuth(){
-  if(!sb){S.user=null;refreshUI();return;}
-  try{
-    var {data:{session},error}=await sb.auth.getSession();
-    if(error) throw error;
-    if(session&&session.user){await setUserFromSess(session);refreshUI();}
-    else{S.user=null;refreshUI();}
-  }catch(e){handleError(e,'Session Check',false);S.user=null;refreshUI();}
+  if(!sb){ S.user = null; refreshUI(); return; }
+  try {
+      var { data: { session }, error } = await sb.auth.getSession();
+      if (error) throw error;
+      if (session && session.user) { await setUserFromSess(session); refreshUI(); }
+      else { S.user = null; refreshUI(); }
+  } catch(e) { 
+    handleError(e, 'Session Check', false); 
+    S.user=null; refreshUI(); 
+  }
   sb.auth.onAuthStateChange(async function(ev,sess){
     try{
-      if(ev==='SIGNED_OUT'){doSignOut();return;}
-      if(ev==='INITIAL_SESSION'||ev==='SIGNED_IN'||ev==='TOKEN_REFRESHED'){
-        if(sess&&sess.user){await setUserFromSess(sess);refreshUI();if(ev==='SIGNED_IN')loadChatList();}
-        else{S.user=null;refreshUI();}
-      }
-    }catch(e){handleError(e,'Auth State Change');}
+        if(ev==='SIGNED_OUT'){ doSignOut(); return; }
+        if(ev==='INITIAL_SESSION'||ev==='SIGNED_IN'||ev==='TOKEN_REFRESHED'){
+          if(sess&&sess.user){
+            await setUserFromSess(sess);
+            refreshUI();
+            if(ev==='SIGNED_IN') { loadChatList(); }
+          } else {
+            S.user=null;
+            refreshUI();
+          }
+        }
+    } catch(e) { handleError(e, 'Auth State Change'); }
   });
 }
-function doSignOut(){S.user=null;S.msgs=[];S.chatId=null;S.chatListData=[];S.gallery=[];refreshUI();renderAll();renderChatList();renderGallery();toast('Signed out','inf');}
-async function signOut(){if(sb)try{await sb.auth.signOut()}catch(e){handleError(e,'Sign Out');}doSignOut();}
+
+function doSignOut(){ 
+    S.user=null; S.msgs=[]; S.chatId=null; S.chatListData=[]; S.gallery=[]; 
+    refreshUI(); renderAll(); renderChatList(); renderGallery(); 
+    toast('Signed out','inf'); 
+}
+async function signOut(){ 
+    if(sb) try{await sb.auth.signOut()}catch(e){ handleError(e, 'Sign Out');} 
+    doSignOut(); 
+}
 
 /* ========== DATA & CHAT HISTORY ========== */
-async function loadChatList(){S.chatListData=loadLocalChats();renderChatList();}
-
+async function loadChatList(){
+  S.chatListData = loadLocalChats(); 
+  renderChatList();
+}
 async function startNewChat(){
   if(S.streaming) stopGen();
-  S.chatId=uid(); S.msgs=[]; S.gallery=[];
-  var newTitle='New Chat '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-  var newMeta={id:S.chatId,title:newTitle,updated_at:new Date().toISOString()};
-  S.chatListData.unshift(newMeta); saveLocalChats(); saveActiveChat(S.chatId); saveChatHistory(S.chatId,S.msgs);
-  $('hdrTitle').textContent=newTitle; renderAll();
+  S.chatId = uid();
+  S.msgs = [];
+  S.gallery = []; 
+  var newTitle = 'New Chat ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  var newMeta = { id: S.chatId, title: newTitle, updated_at: new Date().toISOString() };
+  S.chatListData.unshift(newMeta);
+  saveLocalChats();
+  saveActiveChat(S.chatId);
+  saveChatHistory(S.chatId, S.msgs);
+  $('hdrTitle').textContent = newTitle;
+  renderAll();
   if(S.sbOpen) toggleSB(false);
-  try{
-    var url=apiUrl(); if(!url) throw new Error("API not configured");
-    var r=await fetch(url+'/newchat',{method:'POST',headers:authH(),credentials:'include',body:JSON.stringify({model:S.model})});
-    if(r.ok){var d=await r.json();if(d&&d.conversation_id&&d.conversation_id!==S.chatId){localStorage.removeItem('helox_history_'+S.chatId);S.chatId=d.conversation_id;newMeta.id=S.chatId;saveActiveChat(S.chatId);saveLocalChats();}}
-  }catch(e){console.warn('New chat API failed, continuing offline.',e);}
+  
+  try {
+    var url = apiUrl();
+    if(!url) throw new Error("API not configured");
+    var r=await fetch(url+'/newchat',{
+      method:'POST', headers:authH(), credentials:'include', 
+      body:JSON.stringify({model:S.model})
+    });
+    if(r.ok){
+        var d=await r.json();
+        if(d&&d.conversation_id){ 
+          if(d.conversation_id !== S.chatId) {
+             localStorage.removeItem('helox_history_' + S.chatId); 
+             S.chatId = d.conversation_id;
+             newMeta.id = S.chatId;
+             saveActiveChat(S.chatId);
+             saveLocalChats();
+          }
+        }
+    }
+  }catch(e){ console.warn('New chat API failed, continuing offline.', e); }
 }
 
 async function loadConv(cid){
-  S.msgs=[]; showWelcome(); $('hdrTitle').textContent='Loading...';
-  var msgs=loadChatHistory(cid);
-  if(msgs.length>0){S.msgs=msgs;var chat=S.chatListData.find(function(c){return c.id===cid;});if(chat)$('hdrTitle').textContent=chat.title;}
-  else{
-    if(sb&&cid){
-      try{var res=await sb.from('messages').select('*').eq('conversation_id',cid).order('created_at',{ascending:true});
-      if(!res.error&&res.data){S.msgs=res.data.map(function(m){var imgs=m.media_url?[{url:m.media_url,name:'Generated'}]:[];return{id:m.id,role:m.role,content:m.content,content_type:m.content_type||'text',media_url:m.media_url||null,images:imgs,time:new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),liked:false,disliked:false};});saveChatHistory(cid,S.msgs);}}
-      catch(e){handleError(e,'Load Conv');}
-    }
+  S.msgs=[]; showWelcome();
+  $('hdrTitle').textContent = 'Loading...';
+  var msgs = loadChatHistory(cid);
+  if(msgs.length > 0) {
+      S.msgs = msgs;
+      var chat = S.chatListData.find(c=>c.id===cid);
+      if(chat) $('hdrTitle').textContent = chat.title;
+  } else {
+      if (sb && cid) {
+          try {
+              var res=await sb.from('messages').select('*').eq('conversation_id',cid).order('created_at',{ascending:true});
+              if(!res.error && res.data) {
+                 S.msgs=res.data.map(function(m){
+                     var imgs = m.media_url ? [{url:m.media_url, name:'Generated'}] : [];
+                     return { 
+                         id:m.id, role:m.role, content:m.content, content_type:m.content_type||'text', media_url:m.media_url||null, images: imgs, 
+                         time:new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}), liked:false, disliked:false 
+                     };
+                 });
+                 saveChatHistory(cid, S.msgs);
+              }
+          } catch(e) { handleError(e, 'Load Conversation from DB'); }
+      }
   }
   S.gallery=[];
-  S.msgs.forEach(function(m){if(m.role==='assistant'){if(m.images&&m.images.length){m.images.forEach(function(i){var type=(i.url&&(i.url.includes('.mp4')||i.url.includes('.webm')))?'video':'image';if(!S.gallery.some(function(g){return g.url===i.url;}))S.gallery.unshift({type:type,url:i.url,prompt:'Generated',id:uid()});});}else{addGal(m.content);}}});
-  S.chatId=cid; saveActiveChat(cid); renderChatList(); renderAll(); switchView('chat');
+  S.msgs.forEach(function(m){ 
+      if(m.role==='assistant') {
+          if(m.images && m.images.length) {
+              m.images.forEach(function(i){
+                  var type = (i.url && (i.url.includes('.mp4') || i.url.includes('.webm'))) ? 'video' : 'image';
+                  if(!S.gallery.some(function(g){return g.url===i.url})) S.gallery.unshift({type:type,url:i.url,prompt:'Generated',id:uid()});
+              });
+          } else { addGal(m.content); }
+      }
+  });
+  S.chatId=cid;
+  saveActiveChat(cid); 
+  renderChatList();
+  renderAll();
+  switchView('chat');
 }
 
-async function saveMsg(m){saveChatHistory(S.chatId,S.msgs);if(!sb||!S.user||!S.chatId)return;try{await sb.from('messages').insert({conversation_id:S.chatId,role:m.role,content:m.content,content_type:m.content_type||'text',media_url:m.media_url||null,metadata:m.metadata||{}});}catch(e){}}
-async function updateTs(cid){saveChatHistory(cid,S.msgs);if(!sb||!cid)return;try{await sb.from('conversations').update({updated_at:new Date().toISOString()}).eq('id',cid);}catch(e){}}
-
+async function saveMsg(m){
+  saveChatHistory(S.chatId, S.msgs);
+  if(!sb||!S.user||!S.chatId)return;
+  try{ await sb.from('messages').insert({ conversation_id:S.chatId, role:m.role, content:m.content, content_type:m.content_type||'text', media_url:m.media_url||null, metadata:m.metadata||{} }); }catch(e){}
+}
+async function updateTs(cid){
+  saveChatHistory(cid, S.msgs);
+  if(!sb||!cid)return;
+  try{ await sb.from('conversations').update({updated_at:new Date().toISOString()}).eq('id',cid); }catch(e){}
+}
 async function delConv(cid){
   if(!confirm('Delete this chat?')) return;
-  try{localStorage.removeItem('helox_history_'+cid);S.chatListData=S.chatListData.filter(function(c){return c.id!==cid;});saveLocalChats();}catch(e){}
-  if(S.chatId===cid) saveActiveChat(null);
-  try{var url=apiUrl();if(url)await fetch(url+'/chats/'+cid,{method:'DELETE',headers:authH(),credentials:'include'});}catch(e){}
-  if(sb&&cid){try{await sb.from('messages').delete().eq('conversation_id',cid);await sb.from('conversations').delete().eq('id',cid);}catch(e){}}
-  if(S.chatId===cid){S.msgs=[];S.chatId=null;$('hdrTitle').textContent='HeloXAi';renderAll();}
-  renderChatList(); toast('Deleted','inf');
+  try {
+      localStorage.removeItem('helox_history_' + cid);
+      S.chatListData = S.chatListData.filter(function(c){ return c.id !== cid; });
+      saveLocalChats();
+  } catch(e) { handleError(e, 'Delete Local'); }
+  if(S.chatId === cid) saveActiveChat(null);
+  try{ 
+      var url = apiUrl();
+      if(url) await fetch(url+'/chats/'+cid,{method:'DELETE',headers:authH(),credentials:'include'}); 
+  }catch(e){ handleError(e, 'Delete Chat (API)', false); }
+  if(!sb||!cid)return;
+  try{ await sb.from('messages').delete().eq('conversation_id',cid); await sb.from('conversations').delete().eq('id',cid); }catch(e){}
+  if(S.chatId===cid){
+      S.msgs=[]; S.chatId=null; $('hdrTitle').textContent='HeloXAi'; renderAll();
+  }
+  renderChatList();
+  toast('Deleted','inf');
 }
 
 /* ========== THEME ========== */
-function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('data-theme',window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');else document.documentElement.setAttribute('data-theme',t);}catch(e){}S.theme=t;try{localStorage.setItem('helox-theme',t);}catch(e){}document.querySelectorAll('.t-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-t')===t);});}
-function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'dark';}catch(e){}setTheme(s);try{window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(S.theme==='system')setTheme('system');});}catch(e){}}
+function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('data-theme',window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');else document.documentElement.setAttribute('data-theme',t)}catch(e){handleError(e, 'Set Theme', false);}S.theme=t;try{localStorage.setItem('helox-theme',t)}catch(e){}document.querySelectorAll('.t-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-t')===t)})}
+function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'dark'}catch(e){}setTheme(s);try{window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(S.theme==='system')setTheme('system')})}catch(e){}}
 
 /* =========================================
-   MARKDOWN & RENDERING
+   ADVANCED MARKDOWN & RENDERING
    ========================================= */
-var mdCache = new Map();
-function initMarked(){
-  if(typeof marked==='undefined'){S._mdOk=false;return;}
-  if(typeof mermaid!=='undefined') mermaid.initialize({startOnLoad:false,theme:'dark',securityLevel:'loose'});
-  try{
-    var renderer=new marked.Renderer();
-    renderer.code=function(code,infostring){
-      var text=String(code||'').replace(/\r\n/g,'\n');
-      var langArr=(infostring||'').trim().split(/\s+/), language=langArr[0]||'', validLang='';
-      if(typeof hljs!=='undefined'&&typeof hljs.getLanguage==='function'){if(language&&hljs.getLanguage(language))validLang=language;}
-      var highlighted='';
-      try{
-        if(typeof hljs!=='undefined'){
-          if(text.length>100000)text=text.slice(0,100000);
-          if(validLang)highlighted=hljs.highlight(text,{language:validLang,ignoreIllegals:true}).value;
-          else highlighted=hljs.highlightAuto(text).value;
-          if(highlighted&&typeof highlighted==='string'){var lines=highlighted.split('\n'),lineNumsHtml='<div class="line-numbers-rows">';lines.forEach(function(){lineNumsHtml+='<span></span>';});lineNumsHtml+='</div>';highlighted=lineNumsHtml+highlighted;validLang=validLang||'plaintext';}
-        }else{highlighted=esc(text);validLang='text';}
-      }catch(e){highlighted=esc(text);}
-      var btnsHtml='';
-      if(validLang){if(validLang.toLowerCase()==='html'||validLang.toLowerCase()==='xml')btnsHtml+='<button type="button" class="cp-btn" data-action="run-html" style="margin-right:5px;"><i class="fa-solid fa-play"></i> Run</button>';}
-      btnsHtml+='<button type="button" class="cp-btn" data-action="copy-code"><i class="fa-regular fa-copy"></i> Copy</button>';
-      var langIcon='fa-code';
-      if(['js','javascript'].indexOf(validLang)!==-1)langIcon='fa-brands fa-js';
-      else if(['python','py'].indexOf(validLang)!==-1)langIcon='fa-brands fa-python';
-      else if(['html','xml'].indexOf(validLang)!==-1)langIcon='fa-brands fa-html5';
-      else if(['css'].indexOf(validLang)!==-1)langIcon='fa-brands fa-css3-alt';
-      else if(['java'].indexOf(validLang)!==-1)langIcon='fa-brands fa-java';
-      else if(['bash','shell','sh'].indexOf(validLang)!==-1)langIcon='fa-solid fa-terminal';
-      return '<div class="code-blk line-numbers"><div class="code-hd"><div class="code-lang-badge"><i class="'+langIcon+'"></i> '+esc(validLang||'text')+'</div>'+btnsHtml+'</div><pre><code class="hljs language-'+esc(validLang)+'">'+highlighted+'</code></pre></div>';
-    };
-    renderer.image=function(href,title,text){return '<div class="img-wrap"><img src="'+esc(href)+'" alt="'+esc(text||title||'Image')+'" title="'+esc(title||text||'')+'" loading="lazy" data-msg-img="'+esc(href)+'"></div>';};
-    renderer.link=function(href,title,text){var t=title?' title="'+esc(title)+'"':'';return '<a href="'+esc(href)+'" target="_blank" rel="noopener noreferrer"'+t+'>'+text+'</a>';};
-    marked.use({breaks:true,gfm:true,renderer:renderer});
-    S._mdOk=true;
-  }catch(e){console.error('Marked init failed:',e);S._mdOk=false;}
-}
+let mdCache = new Map();
 
-function processAdmonitions(html){
-  return html.replace(/<blockquote>\s*\[\!([A-Z]+)\]\s*([^\n]*)\n([\s\S]*?)<\/blockquote>/g,function(match,type,title,content){
-    var cls='adm-note',icon='fa-info-circle',t=type.toLowerCase();
-    if(t==='tip'||t==='success'||t==='check'){cls='adm-tip';icon='fa-lightbulb';}
-    else if(t==='warning'||t==='caution'||t==='important'){cls='adm-warn';icon='fa-triangle-exclamation';}
-    else if(t==='error'||t==='danger'||t==='fail'){cls='adm-err';icon='fa-circle-xmark';}
-    var cleanContent=content.replace(/^<p>|<\/p>$/g,'');
-    return '<div class="admonition '+cls+'"><div class="admonition-icon"><i class="fa-solid '+icon+'"></i></div><div><span class="adm-title">'+(title||type)+'</span>'+cleanContent+'</div></div>';
-  });
-}
-function processEmbeds(html){
-  html=html.replace(/<a href="(https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+))"[^>]*>.*?<\/a>/g,'<div class="embed-youtube"><iframe src="https://www.youtube.com/embed/$4" frameborder="0" allowfullscreen></iframe></div>');
-  return html;
-}
-var _mermaidRunning=false;
-function processMermaid(element){
-  if(!window.mermaid||!element||!element.isConnected||_mermaidRunning) return;
-  var codeElements=element.querySelectorAll('code.language-mermaid');
-  if(!codeElements.length) return;
-  _mermaidRunning=true; var pending=Array.from(codeElements);
-  function next(){
-    if(!pending.length){_mermaidRunning=false;return;}
-    var block=pending.shift(),pre=block.parentElement;
-    if(!pre||!pre.parentElement||!pre.isConnected){next();return;}
-    var code=block.textContent.trim(); if(!code){next();return;}
-    var id='mermaid-'+Math.random().toString(36).substr(2,9);
-    try{mermaid.render(id,code).then(function(result){if(pre&&pre.parentElement&&pre.isConnected){var div=document.createElement('div');div.className='mermaid mermaid-rendered';div.innerHTML=result.svg;pre.parentElement.replaceWith(div);}next();}).catch(function(err){console.warn("Mermaid error:",err&&err.message?err.message:err);next();});}
-    catch(e){console.warn("Mermaid error:",e&&e.message?e.message:e);next();}
+function initMarked() {
+  if (typeof marked === 'undefined') { S._mdOk = false; return; }
+  if (typeof mermaid !== 'undefined') {
+      mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
   }
-  next();
+
+  try {
+    const renderer = new marked.Renderer();
+
+    // Advanced Code Block Rendering
+    renderer.code = function(code, infostring) {
+      var text = String(code || '').replace(/\r\n/g, '\n'); // Normalize line endings
+      var langArr = (infostring || '').trim().split(/\s+/);
+      var language = langArr[0] || '';
+      var validLang = '';
+
+      // Determine language for highlight.js
+      if (typeof hljs !== 'undefined' && typeof hljs.getLanguage === 'function') {
+        if (language && hljs.getLanguage(language)) validLang = language;
+      }
+
+      var highlighted = '';
+      try {
+        if (typeof hljs !== 'undefined') {
+          if (text.length > 100000) text = text.slice(0, 100000);
+          if (validLang) highlighted = hljs.highlight(text, { language: validLang, ignoreIllegals: true }).value;
+          else highlighted = hljs.highlightAuto(text).value;
+          
+          // Line Numbers Injection
+          if (highlighted && typeof highlighted === 'string') {
+             var lines = highlighted.split('\n');
+             var lineNumsHtml = '<div class="line-numbers-rows">';
+             lines.forEach(function() { lineNumsHtml += '<span></span>'; });
+             lineNumsHtml += '</div>';
+             highlighted = lineNumsHtml + highlighted;
+             validLang = validLang || 'plaintext';
+          }
+        } else { 
+            highlighted = esc(text); 
+            validLang = 'text';
+        }
+      } catch (e) { highlighted = esc(text); }
+
+      // Buttons HTML (Copy, Run)
+      var btnsHtml = '';
+      if (validLang) {
+          if (validLang.toLowerCase() === 'html' || validLang.toLowerCase() === 'xml') {
+            btnsHtml += '<button type="button" class="cp-btn" data-action="run-html" style="margin-right:5px;"><i class="fa-solid fa-play"></i> Run</button>';
+          }
+      }
+      btnsHtml += '<button type="button" class="cp-btn" data-action="copy-code"><i class="fa-regular fa-copy"></i> Copy</button>';
+
+      // Language Icon map
+      var langIcon = 'fa-code';
+      if(['js','javascript'].includes(validLang)) langIcon = 'fa-brands fa-js';
+      else if(['ts','typescript'].includes(validLang)) langIcon = 'fa-brands fa-js'; // TS uses JS icon usually
+      else if(['python','py'].includes(validLang)) langIcon = 'fa-brands fa-python';
+      else if(['html','xml'].includes(validLang)) langIcon = 'fa-brands fa-html5';
+      else if(['css'].includes(validLang)) langIcon = 'fa-brands fa-css3-alt';
+      else if(['java'].includes(validLang)) langIcon = 'fa-brands fa-java';
+      else if(['bash','shell','sh'].includes(validLang)) langIcon = 'fa-solid fa-terminal';
+
+      return (
+        '<div class="code-blk line-numbers">' +
+        '<div class="code-hd"><div class="code-lang-badge"><i class="'+langIcon+'"></i> ' + esc(validLang || 'text') + '</div>' + btnsHtml + '</div>' +
+        '<pre><code class="hljs language-' + esc(validLang) + '">' + highlighted + '</code></pre></div>'
+      );
+    };
+
+    // Image Handling
+    renderer.image = function(href, title, text) {
+      return '<div class="img-wrap"><img src="' + esc(href) + '" alt="' + esc(text || title || 'Image') + '" title="' + esc(title || text || 'Click to view') + '" loading="lazy" data-msg-img="' + esc(href) + '"></div>';
+    };
+
+    // Link Handling (Security)
+    renderer.link = function(href, title, text) {
+      var titleAttr = title ? ' title="' + esc(title) + '"' : '';
+      return '<a href="' + esc(href) + '" target="_blank" rel="noopener noreferrer"' + titleAttr + '>' + text + '</a>';
+    };
+    
+    // Blockquotes (Handle Admonitions here if simple, or post-process)
+    // We will use a post-processor for complex Admonitions to keep renderer clean.
+
+    marked.use({ breaks: true, gfm: true, renderer: renderer });
+    S._mdOk = true;
+  } catch (e) { console.error('Marked init failed:', e); S._mdOk = false; }
 }
 
-function md(text){
-  if(text==null) return '';
-  try{
-    if(mdCache.has(text)) return mdCache.get(text);
-    var html='';
-    if(S._mdOk&&typeof marked!=='undefined'){html=marked.parse(String(text));html=processAdmonitions(html);html=processEmbeds(html);}
-    else{html=esc(String(text)).replace(/\n/g,'<br>');}
-    if(typeof DOMPurify!=='undefined'){
-      html=DOMPurify.sanitize(html,{ALLOWED_TAGS:['p','br','b','i','strong','em','a','code','pre','span','div','ul','ol','li','sup','sub','del','s','h1','h2','h3','h4','h5','h6','hr','table','thead','tbody','tr','td','th','blockquote','img','details','summary','input','iframe','svg','path','dl','dt','dd','kbd','mark','figure','figcaption','math','semantics','annotation','msup','msub','mfrac','msqrt','mrow','mi','mo','mn','mtext','mover','munder','munderover','mtable','mtr','mtd','mspace','mpadded','video','source'],ALLOWED_ATTR:['href','target','rel','class','id','title','alt','data-action','src','loading','width','height','type','checked','frameborder','allowfullscreen','viewBox','d','fill','xmlns','data-msg-img','data-rm-idx','data-gid','data-i','data-act','data-tip','data-model','data-t','data-mode','data-cid','data-del-cid','open','style','role','aria-label','tabindex','disabled','for','name','value','placeholder','rows','cols','autocapitalize','autocomplete','spellcheck','controls','muted','loop','playsinline','autoplay','poster','preload']});
+function processAdmonitions(html) {
+    // Regex for: > [!TYPE] Content...
+    // Simple implementation: Wrap blockquotes starting with [!NOTE] etc.
+    // Since regex on HTML is tricky, this is a best-effort parser for the specific blockquote structure.
+    return html.replace(
+        /<blockquote>\s*\[\!([A-Z]+)\]\s*([^\n]*)\n([\s\S]*?)<\/blockquote>/g,
+        function(match, type, title, content) {
+            var cls = 'adm-note';
+            var icon = 'fa-info-circle';
+            var t = type.toLowerCase();
+            if(t==='tip' || t==='success' || t==='check') { cls='adm-tip'; icon='fa-lightbulb'; }
+            else if(t==='warning' || t==='caution' || t==='important') { cls='adm-warn'; icon='fa-triangle-exclamation'; }
+            else if(t==='error' || t==='danger' || t==='fail') { cls='adm-err'; icon='fa-circle-xmark'; }
+            
+            // Clean up content <p> tags
+            var cleanContent = content.replace(/^<p>|<\/p>$/g, '');
+            
+            return '<div class="admonition ' + cls + '">' +
+                   '<div class="admonition-icon"><i class="fa-solid ' + icon + '"></i></div>' +
+                   '<div><span class="adm-title">' + (title || type) + '</span>' + cleanContent + '</div>' +
+                   '</div>';
+        }
+    );
+}
+
+function processEmbeds(html) {
+    // YouTube
+    html = html.replace(
+        /<a href="(https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+))"[^>]*>.*?<\/a>/g,
+        '<div class="embed-youtube"><iframe src="https://www.youtube.com/embed/$4" frameborder="0" allowfullscreen></iframe></div>'
+    );
+    return html;
+}
+
+var _mermaidRunning = false;
+function processMermaid(element) {
+    if (!window.mermaid || !element || !element.isConnected) return;
+    if (_mermaidRunning) return;
+    var codeElements = element.querySelectorAll('code.language-mermaid');
+    if (!codeElements.length) return;
+    _mermaidRunning = true;
+    var pending = Array.from(codeElements);
+    
+    function next() {
+        if (!pending.length) { _mermaidRunning = false; return; }
+        var block = pending.shift();
+        var pre = block.parentElement;
+        if (!pre || !pre.parentElement || !pre.isConnected) { next(); return; }
+        var code = block.textContent.trim();
+        if (!code) { next(); return; }
+        var id = 'mermaid-' + Math.random().toString(36).substr(2, 9);
+        try {
+            mermaid.render(id, code).then(function(result) {
+                if (pre && pre.parentElement && pre.isConnected) {
+                    var div = document.createElement('div');
+                    div.className = 'mermaid mermaid-rendered';
+                    div.innerHTML = result.svg;
+                    pre.parentElement.replaceWith(div);
+                }
+                next();
+            }).catch(function(err) {
+                console.warn("Mermaid render error:", err && err.message ? err.message : err);
+                next();
+            });
+        } catch (e) {
+            console.warn("Mermaid error:", e && e.message ? e.message : e);
+            next();
+        }
     }
-    mdCache.set(text,html); return html;
-  }catch(e){console.error('Markdown error:',e);return esc(String(text)).replace(/\n/g,'<br>');}
+    next();
 }
 
-/* KaTeX inline monkey-patch */
-(function(){
-  var _orig=window.renderMathInElement;
-  if(_orig){
-    window.renderMathInElement=function(elem,opts){
-      if(!elem||!elem.isConnected||elem.nodeType!==1) return;
-      var tag=(elem.tagName||'').toLowerCase();
-      if(tag==='svg'||tag==='math'||tag==='script'||tag==='style'||tag==='iframe') return;
-      if(elem.closest&&(elem.closest('.code-blk')||elem.closest('.mermaid')||elem.closest('pre')||elem.closest('svg')||elem.closest('.map-preview')||elem.closest('.embed-youtube'))) return;
-      var safeOpts={throwOnError:false,ignoredTags:["script","noscript","style","textarea","pre","code","option","svg","math","iframe","object","embed","template","slot","select","button","input","label","video","audio","source","canvas"],ignoredClasses:["hljs","katex","no-katex","code-hd","cp-btn","code-lang-badge","line-numbers-rows","mermaid","mermaid-rendered","map-preview","map-pin","search-thumb","source-chip-img","img-wrap","msg-img-item","gen-img-card","embed-tweet","w-card","cl-item","sb-logo","hdr-title","typing-dots","gal-item"],strict:false,trust:false};
-      if(opts){if(opts.delimiters)safeOpts.delimiters=opts.delimiters;if(opts.macros)safeOpts.macros=opts.macros;}
-      else{safeOpts.delimiters=[{left:"$$",right:"$$",display:true},{left:"\\[",right:"\\]",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false}];}
-      try{return _orig.call(this,elem,safeOpts);}catch(e){if(e.name!=='NotSupportedError'&&e.code!==9)console.warn('KaTeX:',e.message);}
+function md(text) {
+  if (text == null) return '';
+  try {
+    if (mdCache.has(text)) return mdCache.get(text);
+    var html = '';
+    if (S._mdOk && typeof marked !== 'undefined') { 
+        html = marked.parse(String(text)); 
+        
+        // Post-processors
+        html = processAdmonitions(html);
+        html = processEmbeds(html);
+    }
+    else { html = esc(String(text)).replace(/\n/g, '<br>'); }
+    
+    if (typeof DOMPurify !== 'undefined') {
+      html = DOMPurify.sanitize(html, {
+                ALLOWED_TAGS: ['p','br','b','i','strong','em','a','code','pre','span','div','ul','ol','li','sup','sub','del','s','h1','h2','h3','h4','h5','h6','hr','table','thead','tbody','tr','td','th','blockquote','img','details','summary','input','iframe','svg','path','dl','dt','dd','kbd','mark','figure','figcaption','math','semantics','annotation','msup','msub','mfrac','msqrt','mrow','mi','mo','mn','mtext','mover','munder','munderover','mtable','mtr','mtd','mspace','mpadded'],
+                ALLOWED_ATTR: ['href','target','rel','class','id','title','alt','data-action','src','loading','width','height','type','checked','frameborder','allowfullscreen','viewBox','d','fill','xmlns','data-msg-img','data-rm-idx','data-gid','data-i','data-act','data-tip','data-model','data-t','data-mode','data-cid','data-del-cid','open','style','role','aria-label','tabindex','disabled','for','name','value','placeholder','rows','cols','autocapitalize','autocomplete','spellcheck']
+      });
+    }
+    mdCache.set(text, html);
+    return html;
+  } catch (e) { console.error('Markdown parse error:', e); return esc(String(text)).replace(/\n/g, '<br>'); }
+}
+
+/* --- KaTeX Safety: Monkey-patch BEFORE any calls --- */
+(function() {
+  var _orig = window.renderMathInElement;
+  if (_orig) {
+    window.renderMathInElement = function(elem, opts) {
+      if (!elem || !elem.isConnected || elem.nodeType !== 1) return;
+      var tag = (elem.tagName || '').toLowerCase();
+      if (tag === 'svg' || tag === 'math' || tag === 'script' || tag === 'style' || tag === 'iframe') return;
+      if (elem.closest && (elem.closest('.code-blk') || elem.closest('.mermaid') || elem.closest('pre') || elem.closest('svg') || elem.closest('.map-preview') || elem.closest('.embed-youtube'))) return;
+      var safeOpts = {
+        throwOnError: false,
+        ignoredTags: ["script","noscript","style","textarea","pre","code","option","svg","math","iframe","object","embed","template","slot","select","button","input","label","video","audio","source","canvas"],
+        ignoredClasses: ["hljs","katex","no-katex","code-hd","cp-btn","code-lang-badge","line-numbers-rows","mermaid","mermaid-rendered","map-preview","map-pin","search-thumb","source-chip-img","img-wrap","msg-img-item","gen-img-card","embed-tweet","w-card","cl-item","sb-logo","hdr-title","typing-dots","gal-item"],
+        strict: false,
+        trust: false
+      };
+      if (opts) {
+        if (opts.delimiters) safeOpts.delimiters = opts.delimiters;
+        if (opts.macros) safeOpts.macros = opts.macros;
+      } else {
+        safeOpts.delimiters = [
+          { left: "$$", right: "$$", display: true },
+          { left: "\\[", right: "\\]", display: true },
+          { left: "$", right: "$", display: false },
+          { left: "\\(", right: "\\)", display: false }
+        ];
+      }
+      try { return _orig.call(this, elem, safeOpts); }
+      catch (e) { if (e.name !== 'NotSupportedError' && e.code !== 9) console.warn('KaTeX:', e.message); }
     };
   }
 })();
 
-function applyMath(el){
-  if(!el||!el.isConnected) return;
-  if(typeof renderMathInElement!=='undefined'){
-    try{renderMathInElement(el,{delimiters:[{left:"$$",right:"$$",display:true},{left:"\\[",right:"\\]",display:true},{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false}],throwOnError:false});}catch(e){if(e.name!=='NotSupportedError'&&e.code!==9)console.warn("Math:",e);}
+function applyMath(el) {
+  if (!el || !el.isConnected) return;
+  if (typeof renderMathInElement !== 'undefined') {
+    try {
+      renderMathInElement(el, {
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "\\[", right: "\\]", display: true },
+          { left: "$", right: "$", display: false },
+          { left: "\\(", right: "\\)", display: false }
+        ],
+        throwOnError: false
+      });
+    } catch (e) {
+      if (e.name !== 'NotSupportedError' && e.code !== 9) {
+        console.warn("Math render error:", e);
+      }
+    }
   }
 }
 
 function toggleSB(open){S.sbOpen=typeof open==='boolean'?open:!S.sbOpen;$('sidebar').classList.toggle('open',S.sbOpen);$('sbOv').classList.toggle('on',S.sbOpen);}
 function openLinkModal(url){S.activeLinkUrl=url;$('lmUrlText').textContent=url;$('lmOpenExternal').href=url;$('linkModal').classList.add('on');}
 function closeLinkModal(){$('linkModal').classList.remove('on');S.activeLinkUrl='';}
-function openHtmlPreview(code){var modal=$('htmlPreviewModal'),frame=$('htmlPreviewFrame');if(!modal||!frame)return;modal.classList.add('on');var doc=frame.contentWindow.document;doc.open();doc.write(code);doc.close();}
+function openHtmlPreview(code){
+  var modal=$('htmlPreviewModal'); var frame=$('htmlPreviewFrame');
+  if(!modal||!frame)return; 
+  modal.classList.add('on');
+  var doc = frame.contentWindow.document; 
+  doc.open(); doc.write(code); doc.close();
+}
 
 /* ========== MODES ========== */
-function selectMode(m){S.mode=m;try{localStorage.setItem('helox-mode',m);}catch(e){}document.querySelectorAll('.mode-btn').forEach(function(btn){btn.classList.toggle('active',btn.getAttribute('data-mode')===m);});var map={general:'General',search:'Web Search',code:'Code',finance:'Finance'};if(map[m])toast('Mode: '+map[m],'ok');}
+function selectMode(m){
+    S.mode = m;
+    try{localStorage.setItem('helox-mode', m);}catch(e){}
+    document.querySelectorAll('.mode-btn').forEach(function(btn){
+        btn.classList.toggle('active', btn.getAttribute('data-mode') === m);
+    });
+    var map = {general:'General', search:'Web Search', code:'Code', finance:'Finance'};
+    if(map[m]) toast('Mode: ' + map[m], 'ok');
+}
 
-/* =========================================
-   FILE HANDLING (COMPLETE)
-   ========================================= */
-var MAX_UPLOAD_SIZE = 20*1024*1024;
-
+/* ========== FILE HANDLING ========== */
 function renderImgPreview(){
-  var strip=$('imgPreviewStrip'); if(!strip) return;
-  var imgs=S.pendingFiles.filter(function(f){return f.type==='image'||f.type==='video';});
+  var strip=$('imgPreviewStrip');
+  if(!strip) return;
+  var imgs=S.pendingFiles.filter(function(f){return f.type==='image' || f.type==='video';});
   if(!imgs.length){strip.style.display='none';strip.innerHTML='';return;}
   strip.style.display='flex';
   var html='';
   imgs.forEach(function(img,idx){
-    var isVideo=img.type==='video';
-    var src=img.dataUrl;
-    var thumb=isVideo?'<i class="fa-solid fa-play" style="color:white;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:20px;z-index:1;"></i>':'';
+    var isVideo = img.type === 'video';
+    var src = img.dataUrl;
+    var thumb = isVideo ? '<i class="fa-solid fa-play" style="color:white;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:20px;z-index:1;"></i>' : '';
     html+='<div class="msg-img-item single" style="width:60px;height:60px;position:relative;flex-shrink:0;" data-rm-idx="'+idx+'"><img src="'+src+'" style="width:100%;height:100%;object-fit:cover;">'+thumb+'<button type="button" style="position:absolute;top:-4px;right:-4px;background:rgba(0,0,0,.8);color:#fff;border:none;width:18px;height:18px;border-radius:50%;cursor:pointer;font-size:10px;z-index:2;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 4px rgba(0,0,0,.3);" title="Remove">×</button></div>';
   });
   strip.innerHTML=html;
 }
-
 function rmPendingFile(idx){
-  if(idx>=0&&idx<S.pendingFiles.length){S.pendingFiles.splice(idx,1);renderImgPreview();updateCB();}
-}
-function clearPending(){S.pendingFiles=[];renderImgPreview();updateCB();var fi=$('fileInput');if(fi)fi.value='';}
-
-async function handleFileSelect(files){
-  if(!files||!files.length) return;
-  for(var i=0;i<files.length;i++){
-    var f=files[i];
-    if(f.size>MAX_UPLOAD_SIZE){toast('File too large (max 20MB): '+f.name,'err');continue;}
-    var ftype=isImgFile(f)?'image':isVidFile(f)?'video':'document';
-    if(ftype==='image'||ftype==='video'){
-      try{var dataUrl=await readAsDataUrl(f);S.pendingFiles.push({file:f,dataUrl:dataUrl,type:ftype,name:f.name,size:f.size});}
-      catch(e){toast('Failed to read file','err');continue;}
-    } else {
-      S.pendingFiles.push({file:f,dataUrl:null,type:ftype,name:f.name,size:f.size});
-    }
-  }
-  renderImgPreview(); updateCB();
-}
-
-function updateCB(){
-  var cb=$('cbInput'); if(!cb) return;
-  var hasFiles=S.pendingFiles.length>0;
-  var ph=hasFiles?'Add a message about this file...':'Message HeloxAi...';
-  if(cb.getAttribute('placeholder')!==ph) cb.setAttribute('placeholder',ph);
-}
-
-/* =========================================
-   SEND MESSAGE (COMPLETE WITH FILE ROUTING)
-   ========================================= */
-async function sendMsg(){
-  var input=$('cbInput');
-  var text=(input?input.value:'').trim();
-  if(!text&&!S.pendingFiles.length) return;
-
-  var lim=checkLimits(text);
-  if(!lim.allowed){toast(lim.msg,'wrn');return;}
-
-  /* Build user message object */
-  var userMsg = {
-    id: uid(), role: 'user', content: text, content_type: 'text',
-    media_url: null, images: [], time: now(), liked: false, disliked: false
-  };
-
-  /* Attach file previews to user message */
-  if(S.pendingFiles.length){
-    userMsg.images = S.pendingFiles.map(function(f){
-      return {url: f.dataUrl, name: f.name, type: f.type};
-    });
-  }
-
-  S.msgs.push(userMsg);
-  if(input) input.value='';
-  var fileData = S.pendingFiles.slice(); /* copy before clearing */
-  clearPending();
-  showMsgs(); renderAll(); scrollToBottom();
-
-  /* Decide endpoint: analysis vs universal */
-  var hasImages = fileData.some(function(f){return f.type==='image';});
-  var hasDocs = fileData.some(function(f){return f.type==='document';});
-  var useAnalysis = hasImages || hasDocs;
-
-  if(useAnalysis && fileData.length){
-    await sendAnalysisRequest(fileData, text);
-  } else {
-    await sendUniversalRequest(text);
+  if(idx>=0&&idx<S.pendingFiles.length){
+    S.pendingFiles.splice(idx,1);
+    renderImgPreview();
+    updateCB();
   }
 }
-
-/* =========================================
-   ANALYSIS REQUEST (IMAGE/FILE UPLOAD STREAMING)
-   ========================================= */
-async function sendAnalysisRequest(files, promptText){
-  S.streaming=true; updateSendBtn();
-
-  /* Add placeholder AI message */
-  var aiMsg={id:uid(),role:'assistant',content:'',content_type:'text',media_url:null,images:[],time:now(),liked:false,disliked:false,_loading:true};
-  S.msgs.push(aiMsg);
-  renderAll(); scrollToBottom();
-
-  var url=apiUrl();
-  if(!url){aiMsg.content='API not configured. Check env.js.';aiMsg._loading=false;S.streaming=false;updateSendBtn();renderAll();return;}
-
-  try{
-    var response;
-    var imageFile = files.find(function(f){return f.type==='image';});
-    var docFile = files.find(function(f){return f.type==='document';});
-
-    if(imageFile){
-      /* Send image as JSON to /analysis/json */
-      var cleanBase64 = imageFile.dataUrl.includes(',') ? imageFile.dataUrl.split(',')[1] : imageFile.dataUrl;
-      response = await fetch(url+'/analysis/json', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        credentials:'include',
-        body:JSON.stringify({
-          image_base64: cleanBase64,
-          image_mime: imageFile.file.type || 'image/png',
-          filename: imageFile.name,
-          prompt: promptText || null,
-          conversation_id: S.chatId,
-          stream: true
-        })
-      });
-    } else if(docFile){
-      /* Send document as multipart to /analysis */
-      var formData=new FormData();
-      formData.append('file', docFile.file);
-      if(promptText) formData.append('prompt', promptText);
-      if(S.chatId) formData.append('conversation_id', S.chatId);
-      formData.append('stream','true');
-      formData.append('remember','true');
-
-      response = await fetch(url+'/analysis', {
-        method:'POST',
-        credentials:'include',
-        body: formData
-      });
-    } else {
-      throw new Error('No valid file to analyze');
-    }
-
-    if(!response.ok){var errText=await response.text();throw new Error(errText||'HTTP '+response.status);}
-
-    /* Stream SSE */
-    var reader=response.body.getReader();
-    var decoder=new TextDecoder();
-    var fullText='';
-    var buffer='';
-
-    while(true){
-      var {done,value}=await reader.read();
-      if(done) break;
-      buffer+=decoder.decode(value,{stream:true});
-      var lines=buffer.split('\n');
-      buffer=lines.pop()||'';
-
-      for(var li=0;li<lines.length;li++){
-        var line=lines[li];
-        if(!line.startsWith('data: ')) continue;
-        var payload=line.slice(6).trim();
-        if(payload==='[DONE]') continue;
-        try{
-          var data=JSON.parse(payload);
-          if(data.type==='conversation_id'){
-            if(!S.chatId||S.chatId===S.msgs[0].id){S.chatId=data.conversation_id;saveActiveChat(S.chatId);updateChatListId(S.chatId);}
-          } else if(data.type==='token'){
-            fullText+=data.text;
-            aiMsg.content=fullText;
-            updateStreamingMsg(aiMsg);
-            scrollToBottom();
-          } else if(data.type==='image'){
-            aiMsg.content='';
-            aiMsg.images=[{url:'data:image/png;base64,'+data.image,name:'Analyzed',type:'image'}];
-            aiMsg._loading=false;
-            renderAll(); scrollToBottom();
-            addGal('data:image/png;base64,'+data.image);
-          } else if(data.type==='error'){
-            aiMsg.content='Error: '+data.message;
-            aiMsg._loading=false;
-          } else if(data.type==='done'){
-            aiMsg._loading=false;
-          }
-        }catch(e){}
-      }
-    }
-    if(!aiMsg.content&&!aiMsg.images.length){aiMsg.content='(No response)';}
-    aiMsg._loading=false;
-    saveMsg(aiMsg); updateTs(S.chatId);
-  }catch(err){
-    console.error('Analysis error:',err);
-    aiMsg.content='Analysis failed: '+err.message;
-    aiMsg._loading=false;
-  }
-  S.streaming=false; updateSendBtn(); renderAll(); scrollToBottom();
-}
-
-/* =========================================
-   UNIVERSAL REQUEST (WITH IMAGE + SEARCH STREAMING)
-   ========================================= */
-async function sendUniversalRequest(text){
-  S.streaming=true; updateSendBtn();
-
-  var aiMsg={id:uid(),role:'assistant',content:'',content_type:'text',media_url:null,images:[],time:now(),liked:false,disliked:false,_loading:true,_searchHtml:'',_hasImage:false};
-  S.msgs.push(aiMsg);
-  renderAll(); scrollToBottom();
-
-  var url=apiUrl();
-  if(!url){aiMsg.content='API not configured.';aiMsg._loading=false;S.streaming=false;updateSendBtn();renderAll();return;}
-
-  /* Check if this is an image generation prompt — show loading card */
-  if(isImgQ(text)){
-    aiMsg._imgLoading=true;
-    renderAll(); scrollToBottom();
-  }
-
-  try{
-    var response=await fetch(url+'/ask/universal',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      credentials:'include',
-      body:JSON.stringify({
-        prompt:text,
-        conversation_id:S.chatId,
-        stream:true,
-        model:S.model,
-        image_size:'1024x1024',
-        image_quality:'medium'
-      })
-    });
-
-    if(!response.ok){var errText=await response.text();throw new Error(errText||'HTTP '+response.status);}
-
-    var reader=response.body.getReader();
-    var decoder=new TextDecoder();
-    var fullText='';
-    var buffer='';
-
-    while(true){
-      var {done,value}=await reader.read();
-      if(done) break;
-      buffer+=decoder.decode(value,{stream:true});
-      var lines=buffer.split('\n');
-      buffer=lines.pop()||'';
-
-      for(var li=0;li<lines.length;li++){
-        var line=lines[li];
-        if(!line.startsWith('data: ')) continue;
-        var payload=line.slice(6).trim();
-        if(payload==='[DONE]') continue;
-        try{
-          var data=JSON.parse(payload);
-
-          if(data.type==='conversation_id'){
-            if(!S.chatId||S.chatId===S.msgs[0].id){S.chatId=data.conversation_id;saveActiveChat(S.chatId);updateChatListId(S.chatId);}
-          }
-          else if(data.type==='search_results'){
-            aiMsg._searchHtml=data.html;
-            updateStreamingMsg(aiMsg);
-            scrollToBottom();
-          }
-          else if(data.type==='token'){
-            fullText+=data.text;
-            aiMsg.content=fullText;
-            updateStreamingMsg(aiMsg);
-            scrollToBottom();
-          }
-          else if(data.type==='image'){
-            /* === IMAGE GENERATION RESPONSE === */
-            aiMsg._hasImage=true;
-            aiMsg._imgLoading=false;
-            aiMsg.content='';
-            aiMsg.images=[{url:'data:image/png;base64,'+data.image,name:'Generated',type:'image'}];
-            aiMsg._imgPrompt=text;
-            renderAll(); scrollToBottom();
-            addGal('data:image/png;base64,'+data.image);
-            incrementUsage('images');
-          }
-          else if(data.type==='error'){
-            aiMsg._imgLoading=false;
-            aiMsg.content='Error: '+data.message;
-          }
-          else if(data.type==='done'){
-            aiMsg._loading=false;
-            aiMsg._imgLoading=false;
-          }
-        }catch(e){}
-      }
-    }
-
-    if(!aiMsg._hasImage&&!aiMsg.content){aiMsg.content='(No response)';}
-    aiMsg._loading=false; aiMsg._imgLoading=false;
-    saveMsg(aiMsg); updateTs(S.chatId);
-  }catch(err){
-    console.error('Chat error:',err);
-    aiMsg._imgLoading=false;
-    aiMsg.content='Failed: '+err.message;
-    aiMsg._loading=false;
-  }
-  S.streaming=false; updateSendBtn(); renderAll(); scrollToBottom();
-}
-
-/* Helper: update a streaming message in-place without full re-render */
-function updateStreamingMsg(aiMsg){
-  var el=document.querySelector('[data-msg-id="'+aiMsg.id+'"] .msg-ct');
-  if(!el) return;
-  var html='';
-  if(aiMsg._searchHtml) html+=aiMsg._searchHtml;
-  if(aiMsg.content) html+=md(aiMsg.content);
-  el.innerHTML=html;
-  applyMath(el);
-  processMermaid(el);
-  /* Re-bind code buttons */
-  bindCodeButtons(el);
-}
-
-function updateChatListId(newId){
-  var c=S.chatListData.find(function(x){return x.id===S.chatId;});
-  if(c){c.id=newId;saveLocalChats();renderChatList();}
-}
-
-/* =========================================
-   STOP GENERATION
-   ========================================= */
-function stopGen(){
-  if(S.abort){try{S.abort.abort();}catch(e){}}
-  S.streaming=false; updateSendBtn();
-  var last=S.msgs[S.msgs.length-1];
-  if(last&&last.role==='assistant'){last._loading=false;last._imgLoading=false;renderAll();}
-}
-
-function updateSendBtn(){
-  var btn=$('sendBtn'); if(!btn) return;
-  if(S.streaming){
-    btn.innerHTML='<i class="fa-solid fa-stop"></i>';
-    btn.setAttribute('data-act','stop');
-    btn.title='Stop generating';
-  } else {
-    btn.innerHTML='<i class="fa-solid fa-arrow-up"></i>';
-    btn.setAttribute('data-act','send');
-    btn.title='Send message';
-  }
-}
-
-/* =========================================
-   BUILD MESSAGE HTML (COMPLETE)
-   ========================================= */
-function buildImgHtml(imgs){
-  if(!imgs||!imgs.length) return '';
-  var cls=imgs.length===1?'single':'multi';
-  var html='<div class="msg-imgs">';
-  imgs.forEach(function(img){
-    var src=img.dataUrl||img.url;
-    if(!src) return;
-    var isVideo=(img.type==='video'||(src.includes('.mp4')||src.includes('.webm')));
-    if(isVideo){html+='<div class="msg-img-item '+cls+'"><video src="'+src+'" controls preload="metadata" playsinline style="width:100%;height:100%;object-fit:cover"></video></div>';}
-    else{html+='<div class="msg-img-item '+cls+'" data-msg-img="'+esc(src)+'"><img src="'+src+'" alt="'+esc(img.name||'Image')+'" loading="lazy"></div>';}
-  });
-  return html+'</div>';
-}
-
-function buildGenImgCard(img, promptText){
-  if(!img||!img.url) return '';
-  var src=img.dataUrl||img.url;
-  return '<div class="gen-img-card">'+
-    '<img src="'+src+'" alt="Generated image" class="generated-image" onclick="openLB(this.src,false)" loading="eager">'+
-    '<div class="gen-img-meta">'+
-      '<div class="gen-img-prompt"><strong>Prompt:</strong> '+esc(promptText||'Generated')+'</div>'+
-      '<div class="gen-img-actions">'+
-        '<button class="gen-img-btn" title="Download" onclick="downloadResource(\''+src.replace(/'/g,"\\'")+'\')"><i class="fa-solid fa-download"></i></button>'+
-        '<button class="gen-img-btn" title="Full size" onclick="openLB(this.closest(\'.gen-img-card\').querySelector(\'img\').src,false)"><i class="fa-solid fa-expand"></i></button>'+
-      '</div>'+
-    '</div>'+
-  '</div>';
-}
-
-function buildImgLoadingCard(){
-  return '<div class="gen-img-loading"><div class="spinner"></div><span>Generating image...</span></div>';
-}
-
-function buildMessageHtml(m, i){
-  var isAi=m.role==='assistant';
-  var roleLabel=isAi?'<div class="msg-label"><span class="ai-dot"></span> HeloxAi'+(m._loading?'<span class="ai-status">typing...</span>':'')+'</div>':'<div class="msg-label">You</div>';
-
-  var bodyHtml='';
-
-  if(isAi){
-    /* AI message body */
-    if(m._imgLoading){
-      bodyHtml=buildImgLoadingCard();
-    } else if(m._hasImage&&m.images&&m.images.length){
-      bodyHtml=buildGenImgCard(m.images[0], m._imgPrompt||'');
-      if(m.content) bodyHtml+='<div class="msg-ct" style="margin-top:12px;">'+md(m.content)+'</div>';
-    } else if(m.content){
-      var html='';
-      if(m._searchHtml) html+=m._searchHtml;
-      html+=md(m.content);
-      bodyHtml='<div class="msg-ct">'+html+'</div>';
-    } else if(m._loading){
-      bodyHtml='<div class="typing-indicator"><span></span><span></span><span></span></div>';
-    } else {
-      bodyHtml='<div class="msg-ct"><p style="color:var(--text-muted)">(No response)</p></div>';
-    }
-  } else {
-    /* User message body */
-    var bubbleContent='';
-    if(m.images&&m.images.length) bubbleContent+=buildImgHtml(m.images);
-    if(m.content) bubbleContent+='<div class="msg-ct">'+esc(m.content).replace(/\n/g,'<br>')+'</div>';
-    bodyHtml='<div class="msg-bubble">'+bubbleContent+'</div>';
-  }
-
-  /* Message actions */
-  var actsHtml='';
-  if(isAi&&!m._loading){
-    actsHtml='<div class="msg-acts">'+
-      '<button class="ib" title="Copy" onclick="actCopy('+i+')"><i class="fa-regular fa-copy"></i></button>'+
-      '<button class="ib" title="Voice" onclick="actVoice('+i+')"><i class="fa-solid fa-volume-high"></i></button>'+
-      '<button class="ib" title="Like" onclick="actLike('+i+',\'like\')" style="'+(m.liked?'color:var(--accent)':'')+'"><i class="fa-regular fa-thumbs-up"></i></button>'+
-      '<button class="ib" title="Dislike" onclick="actLike('+i+',\'dislike\')" style="'+(m.disliked?'color:var(--danger)':'')+'"><i class="fa-regular fa-thumbs-down"></i></button>'+
-      (i===S.msgs.length-1?'<button class="ib" title="Regenerate" onclick="actRegen('+i+')"><i class="fa-solid fa-rotate"></i></button>':'')+
-      '<span class="msg-time">'+esc(m.time)+'</span>'+
-    '</div>';
-  } else if(!isAi){
-    actsHtml='<div class="msg-acts"><button class="ib" title="Edit" onclick="openEdit('+i+')"><i class="fa-regular fa-pen-to-square"></i></button><span class="msg-time">'+esc(m.time)+'</span></div>';
-  }
-
-  return '<div class="msg '+(isAi?'ai-msg':'user-msg')+'" data-msg-id="'+m.id+'">'+
-    '<div class="msg-inner">'+roleLabel+bodyHtml+actsHtml+'</div></div>';
-}
-
-/* =========================================
-   RENDER ALL MESSAGES
-   ========================================= */
-function renderAll(){
-  var el=$('msgsEl');
-  if(!el) return;
-  if(!S.msgs.length){showWelcome();return;}
-  showMsgs();
-  var html='';
-  for(var i=0;i<S.msgs.length;i++){
-    html+=buildMessageHtml(S.msgs[i],i);
-  }
-  el.innerHTML=html;
-
-  /* Post-render: apply math, mermaid, code buttons, image click handlers */
-  var msgCts=el.querySelectorAll('.msg-ct');
-  for(var j=0;j<msgCts.length;j++){applyMath(msgCts[j]);processMermaid(msgCts[j]);}
-  bindCodeButtons(el);
-  bindImageClicks(el);
-}
-
-function bindCodeButtons(container){
-  if(!container) return;
-  container.querySelectorAll('.cp-btn').forEach(function(btn){
-    btn.onclick=function(e){
-      e.stopPropagation();
-      var action=this.getAttribute('data-action');
-      var codeBlk=this.closest('.code-blk');
-      if(!codeBlk) return;
-      var codeEl=codeBlk.querySelector('code');
-      if(!codeEl) return;
-      var text=codeEl.textContent;
-
-      if(action==='copy-code'){
-        navigator.clipboard.writeText(text).then(function(){toast('Code copied','ok');}).catch(function(){toast('Copy failed','err');});
-      } else if(action==='run-html'){
-        openHtmlPreview(text);
-      }
-    };
-  });
-}
-
-function bindImageClicks(container){
-  if(!container) return;
-  container.querySelectorAll('[data-msg-img]').forEach(function(img){
-    img.style.cursor='pointer';
-    img.onclick=function(){openLB(this.getAttribute('data-msg-img'),false);};
-  });
-}
-
-/* =========================================
-   SCROLL MANAGEMENT
-   ========================================= */
-function scrollToBottom(){
-  var wrap=$('msgsWrap'); if(!wrap) return;
-  S.isAutoScrolling=true;
-  wrap.scrollTop=wrap.scrollHeight;
-}
-
-function initScrollDetection(){
-  var wrap=$('msgsWrap'); if(!wrap) return;
-  wrap.addEventListener('scroll',function(){
-    var atBottom=(wrap.scrollHeight-wrap.scrollTop-wrap.clientHeight)<S.scrollThreshold;
-    S.isAutoScrolling=atBottom;
-  },{passive:true});
-}
-
-/* =========================================
-   MESSAGE ACTIONS
-   ========================================= */
-function actCopy(idx){
-  var m=S.msgs[idx]; if(!m||!m.content) return;
-  var txt=m.content.replace(/<[^>]*>/g,'');
-  navigator.clipboard.writeText(txt).then(function(){toast('Copied','ok');}).catch(function(){toast('Copy failed','err');});
-}
-function actLike(idx,type){
-  var m=S.msgs[idx]; if(!m) return;
-  if(type==='like'){m.liked=!m.liked;m.disliked=false;}
-  else{m.disliked=!m.disliked;m.liked=false;}
-  renderAll();
-  if(m.liked) toast('Liked','ok');
-  if(m.disliked) toast('Feedback received','ok');
-}
-
-async function actVoice(idx){
-  var m=S.msgs[idx]; if(!m||!m.content) return;
-  toast('Generating audio...','inf');
-  var textToRead=m.content.replace(/<[^>]*>/g,'').substring(0,4000);
-  if(isAuthed()&&apiUrl()){
-    try{
-      var r=await fetch(apiUrl()+'/tts',{method:'POST',headers:authH(),body:JSON.stringify({text:textToRead,voice:S.selectedVoice||'alloy'})});
-      if(!r.ok) throw new Error(await r.text()||'TTS failed');
-      var blob=await r.blob(); var audioUrl=URL.createObjectURL(blob); var audio=new Audio(audioUrl);
-      S.currentAudio=audio; audio.onended=function(){URL.revokeObjectURL(audioUrl);S.currentAudio=null;}; audio.onerror=function(){toast('Audio error','err');S.currentAudio=null;};
-      audio.play(); toast('Playing audio','ok'); return;
-    }catch(e){handleError(e,'Voice',false);toast('Backend voice unavailable','wrn');}
-  }
-  if('speechSynthesis' in window){
-    try{window.speechSynthesis.cancel();var utt=new SpeechSynthesisUtterance(textToRead);utt.rate=1.0;utt.pitch=1.0;window.speechSynthesis.speak(utt);toast('Reading locally...','ok');}catch(e){toast('Voice unavailable','err');}
-  } else { toast('Voice not supported','err'); }
-}
-
-function actRegen(idx){
-  var lastIdx=S.msgs.length-1;
-  if(lastIdx>=0&&S.msgs[lastIdx].role==='assistant'){S.msgs.pop();renderAll();}
-  var lastUser='';
-  for(var i=S.msgs.length-1;i>=0;i--){if(S.msgs[i].role==='user'){lastUser=S.msgs[i].content;break;}}
-  if(lastUser) sendUniversalRequest(lastUser);
+function clearPending(){
+  S.pendingFiles=[];
+  renderImgPreview();
+  updateCB();
+  var fi=$('fileInput');
+  if(fi) fi.value='';
 }
 
 /* ========== EDIT MESSAGE ========== */
 function openEdit(idx){
   if(idx<0||idx>=S.msgs.length) return;
-  S.editingIndex=idx; $('emTextarea').value=S.msgs[idx].content;
-  $('emModal').classList.add('on'); $('emOverlay').classList.add('on');
+  var m=S.msgs[idx];
+  S.editingIndex=idx;
+  $('emTextarea').value=m.content;
+  $('emModal').classList.add('on');
+  $('emOverlay').classList.add('on');
 }
-function closeEdit(){$('emModal').classList.remove('on');$('emOverlay').classList.remove('on');S.editingIndex=null;$('emTextarea').value='';}
+function closeEdit(){
+  $('emModal').classList.remove('on');
+  $('emOverlay').classList.remove('on');
+  S.editingIndex=null;
+  $('emTextarea').value='';
+}
 function saveEdit(){
-  var idx=S.editingIndex, txt=$('emTextarea').value.trim();
+  var idx=S.editingIndex;
+  var txt=$('emTextarea').value.trim();
   if(idx===null||idx<0||idx>=S.msgs.length||!txt) return;
-  S.msgs=S.msgs.slice(0,idx); clearPending(); closeEdit();
-  $('cbInput').value=txt; sendMsg();
+  S.msgs = S.msgs.slice(0, idx);
+  clearPending();
+  closeEdit();
+  $('cbInput').value = txt;
+  sendMsg();
 }
 
-/* ========== ACTION SHEET & VOICE DROPDOWN ========== */
-function toggleAS(open){S.asOpen=typeof open==='boolean'?open:!S.asOpen;$('asSheet').classList.toggle('open',S.asOpen);$('asOv').classList.toggle('on',S.asOpen);}
-function toggleVD(open){S.vdOpen=typeof open==='boolean'?open:!S.vdOpen;$('voiceDd').classList.toggle('on',S.vdOpen);}
+/* ========== ACTION SHEET ========== */
+function toggleAS(open){
+  S.asOpen=typeof open==='boolean'?open:!S.asOpen;
+  $('asSheet').classList.toggle('open',S.asOpen);
+  $('asOv').classList.toggle('on',S.asOpen);
+}
+function toggleVD(open){
+  S.vdOpen=typeof open==='boolean'?open:!S.vdOpen;
+  $('voiceDd').classList.toggle('on',S.vdOpen);
+}
 
-/* =========================================
-   REFRESH UI
-   ========================================= */
+/* ========== MESSAGE ACTIONS ========== */
+function actCopy(idx){
+  var m=S.msgs[idx];
+  if(!m||!m.content) return;
+  var txt=m.content.replace(/<[^>]*>/g,'');
+  navigator.clipboard.writeText(txt).then(function(){toast('Copied','ok');}).catch(function(){toast('Copy failed','err');});
+}
+function actLike(idx, type){
+  var m=S.msgs[idx];
+  if(!m) return;
+  if(type==='like'){m.liked=!m.liked;m.disliked=false;}
+  else{m.disliked=!m.disliked;m.liked=false;}
+  renderAll();
+  if(m.liked) toast('Liked', 'ok');
+  if(m.disliked) toast('Feedback received', 'ok');
+}
+
+async function actVoice(idx){
+  var m=S.msgs[idx];
+  if(!m||!m.content) return;  
+  toast('Generating audio...', 'inf');
+  var textToRead = m.content.replace(/<[^>]*>/g,'').substring(0, 4000); 
+
+  if(isAuthed() && apiUrl()) {
+      try {
+        var r = await fetch(apiUrl()+'/tts', {
+          method: 'POST',
+          headers: authH(),
+          body: JSON.stringify({ 
+            text: textToRead, 
+            voice: S.selectedVoice || 'alloy' 
+          })
+        });
+
+        if(!r.ok) {
+            var errText = await r.text();
+            console.warn('TTS API failed:', errText);
+            throw new Error(errText || 'TTS failed');
+        }
+
+        var blob = await r.blob();
+        var audioUrl = URL.createObjectURL(blob);
+        var audio = new Audio(audioUrl);
+        
+        S.currentAudio = audio;
+        audio.onended = function() { URL.revokeObjectURL(audioUrl); S.currentAudio = null; };
+        audio.onerror = function() { toast('Audio playback error', 'err'); S.currentAudio = null; };
+        
+        audio.play();
+        toast('Playing audio', 'ok');
+        return;
+      } catch(e) {
+          handleError(e, 'Voice Generation', false);
+          toast('Backend voice unavailable', 'wrn');
+      }
+  }
+
+  if ('speechSynthesis' in window) {
+      try {
+          window.speechSynthesis.cancel(); 
+          var utterance = new SpeechSynthesisUtterance(textToRead);
+          utterance.rate = 1.0;
+          utterance.pitch = 1.0;
+          window.speechSynthesis.speak(utterance);
+          toast('Reading locally...', 'ok');
+      } catch (e) {
+          toast('Voice unavailable', 'err');
+      }
+  } else {
+      toast('Voice not supported', 'err');
+  }
+}
+
+function actRegen(idx){
+  var lastIdx = S.msgs.length-1;
+  if(lastIdx>=0 && S.msgs[lastIdx].role === 'assistant'){
+      S.msgs.pop();
+      renderAll();
+  }
+  var lastUser = '';
+  for(var i=S.msgs.length-1;i>=0;i--){
+      if(S.msgs[i].role==='user'){ lastUser=S.msgs[i].content; break; }
+  }
+  if(lastUser) sendToAI(lastUser);
+}
+
+/* ========== REFRESH UI ========== */
 function refreshUI(){
   var u=$('sUser'),sl=$('signInLink'),hp=$('hdrPlan');if(!u||!sl||!hp)return;
   var signedIn=!!S.user;
   $('newChatBtn').classList.toggle('locked',false);
-  $('micBtn').classList.toggle('locked',!S.features.mic);
-  $('voiceBtn').classList.toggle('locked',!S.features.voice);
-
-  var lockedItems=[{id:'asImg',lockId:'asLockImg'},{id:'asVid',lockId:'asLockVid'},{id:'wcImgGen',lockId:null},{id:'wcVidGen',lockId:null}];
+  $('micBtn').classList.toggle('locked',!S.features.mic); 
+  $('voiceBtn').classList.toggle('locked',!S.features.voice); 
+  
+  var lockedItems = [
+    {id:'asImg',lockId:'asLockImg'},
+    {id:'asVid',lockId:'asLockVid'},
+    {id:'wcImgGen',lockId:null}, 
+    {id:'wcVidGen',lockId:null}
+  ];
   lockedItems.forEach(function(item){
-    var el=$(item.id); if(!el) return;
-    if(signedIn){el.classList.remove('locked');var span=el.querySelector('.w-lock');if(span)span.style.display='none';}
-    else{el.classList.add('locked');var span=el.querySelector('.w-lock');if(span)span.style.display='flex';}
+     var el = $(item.id);
+     if(el) {
+       if(signedIn) {
+         el.classList.remove('locked');
+         var span = el.querySelector('.w-lock');
+         if(span) span.style.display='none';
+       } else {
+         el.classList.add('locked');
+         var span = el.querySelector('.w-lock');
+         if(span) span.style.display='flex';
+       }
+     }
   });
-
   var bc='free',bt='FREE';
-  if(S.user){if(S.user.is_lifetime){bc='lifetime';bt='LIFETIME';}else if(S.user.is_premium){bc='premium';bt='PREMIUM';}}
+  if(S.user){
+    if(S.user.is_lifetime){bc='lifetime';bt='LIFETIME';}else if(S.user.is_premium){bc='premium';bt='PREMIUM';}
+  }
   if(S.user){
     u.classList.add('show');$('uAv').textContent=(S.user.email||'U')[0].toUpperCase();$('uNm').textContent=S.user.email;$('uPl').textContent=bt.charAt(0)+bt.slice(1).toLowerCase()+' Plan';
     sl.innerHTML='<i class="fa-solid fa-right-from-bracket"></i> Log Out';sl.href='#';sl.style.cursor='pointer';
@@ -3852,15 +3875,18 @@ function updateModelUI(){
   if(icon){icon.className='m-icon '+m.c;icon.textContent=m.t;} if(name)name.textContent=m.n;
   document.querySelectorAll('.model-item').forEach(function(i){i.classList.toggle('active',i.getAttribute('data-model')===S.model);});
 }
-function selectModel(m){S.model=m;try{localStorage.setItem('helox-model',m);}catch(e){}updateModelUI();toggleMD(false);toast('Switched to '+(m==='helox'?'HeloXAi':m),'ok');}
+function selectModel(m){S.model=m;try{localStorage.setItem('helox-model',m)}catch(e){}updateModelUI();toggleMD(false);toast('Switched to '+(m==='helox'?'HeloXAi':m),'ok');}
 function toggleMD(open){S.mdOpen=typeof open==='boolean'?open:!S.mdOpen;$('modelSel').classList.toggle('open',S.mdOpen);$('modelDd').classList.toggle('on',S.mdOpen);}
-function initModel(){var s='helox';try{s=localStorage.getItem('helox-model')||'helox';}catch(e){}S.model=s;updateModelUI();}
+function initModel(){var s='helox';try{s=localStorage.getItem('helox-model')||'helox'}catch(e){}S.model=s;updateModelUI();}
 
 /* ========== VIEW / GALLERY ========== */
 function switchView(v){S.view=v;$('chatView').style.display=v==='chat'?'block':'none';$('galleryView').style.display=v==='gallery'?'block':'none';$('cbContainer').style.display=v==='chat'?'block':'none';$('chatTab').classList.toggle('active',v==='chat');$('galleryTab').classList.toggle('active',v==='gallery');if(v==='gallery')renderGallery();}
-function extractMedia(c){var found=[],m,r=/!\[([^\]]*)\]\(([^)]+)\)/g;while((m=r.exec(c))!==null)found.push({type:/\.(mp4|webm|mov)/i.test(m[2])?'video':'image',url:m[2],prompt:m[1]||'',id:uid()});return found;}
-function addGal(c){extractMedia(c).forEach(function(i){if(!S.gallery.some(function(g){return g.url===i.url;}))S.gallery.unshift(i);});}
-
+function extractMedia(c){ var found=[],m,r=/!\[([^\]]*)\]\(([^)]+)\)/g;while((m=r.exec(c))!==null)found.push({type:/\.(mp4|webm|mov)/i.test(m[2])?'video':'image',url:m[2],prompt:m[1]||'',id:uid()});return found; }
+function addGal(c){
+  extractMedia(c).forEach(function(i){ if(!S.gallery.some(function(g){return g.url===i.url}))S.gallery.unshift(i); });
+  if(c.indexOf('![') > -1 || c.indexOf('data:image') > -1) incrementUsage('images');
+  if(c.indexOf('video') > -1 || c.indexOf('.mp4') > -1) incrementUsage('videos');
+}
 function renderGallery(){
   var grid=$('galGrid'),empty=$('galEmpty'),count=$('galCount');if(!grid)return;
   count.textContent=S.gallery.length+' item'+(S.gallery.length!==1?'s':'');
@@ -3872,285 +3898,959 @@ function renderGallery(){
   });
   grid.innerHTML=html;
 }
-
 function openLB(src,isV){S.lbUrl=src;S.lbType=isV?'video':'image';$('lbContent').innerHTML=isV?'<video src="'+src+'" controls autoplay style="max-width:90vw;max-height:85vh;border-radius:18px">':'<img src="'+src+'" style="max-width:90vw;max-height:85vh;border-radius:18px">';$('lightbox').classList.add('on');}
 function closeLB(){$('lightbox').classList.remove('on');$('lbContent').innerHTML='';S.lbUrl='';}
 
-async function downloadResource(url){
-  if(!url) return; toast('Downloading...','inf');
-  try{
-    var response=await fetch(url); if(!response.ok) throw new Error("Network error");
-    var blob=await response.blob(); var blobUrl=window.URL.createObjectURL(blob);
-    var link=document.createElement('a'); link.href=blobUrl;
-    var ext='bin',type=blob.type||'';
-    if(type.includes('jpeg')||type.includes('jpg'))ext='jpg';else if(type.includes('png'))ext='png';else if(type.includes('gif'))ext='gif';else if(type.includes('webp'))ext='webp';else if(type.includes('mp4'))ext='mp4';else if(type.includes('webm'))ext='webm';
-    link.download='heloxai-'+Date.now()+'.'+ext;
-    document.body.appendChild(link); link.click(); document.body.removeChild(link); window.URL.revokeObjectURL(blobUrl);
-  }catch(error){console.error('Download failed:',error);toast('Download failed','err');window.open(url,'_blank');}
+async function downloadResource(url) {
+  if(!url) return;
+  toast('Downloading...', 'inf');
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Network response was not ok");
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    let ext = 'bin';
+    const type = blob.type || '';
+    if (type.includes('jpeg') || type.includes('jpg')) ext = 'jpg';
+    else if (type.includes('png')) ext = 'png';
+    else if (type.includes('gif')) ext = 'gif';
+    else if (type.includes('webp')) ext = 'webp';
+    else if (type.includes('mp4')) ext = 'mp4';
+    else if (type.includes('webm')) ext = 'webm';
+    else if (type.includes('quicktime')) ext = 'mov';
+    link.download = 'heloxai-' + Date.now() + '.' + ext;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(blobUrl);
+  } catch (error) {
+    console.error('Download failed:', error);
+    toast('Download failed', 'err');
+    window.open(url, '_blank');
+  }
 }
 
-/* =========================================
-   CHAT LIST RENDERING
-   ========================================= */
+/* ========== RENDER MESSAGES ========== */
 function showWelcome(){$('welcomeEl').style.display='flex';$('msgsEl').style.display='none';}
 function showMsgs(){$('welcomeEl').style.display='none';$('msgsEl').style.display='block';}
 function renderChatList(){
-  var el=$('chatListItems'); if(!el) return;
+  var el=$('chatListItems');if(!el)return;
   if(!S.chatListData.length){el.innerHTML='<span style="color:var(--text-muted);font-size:12px;padding:6px 12px;display:block">No conversations yet</span>';return;}
   var html='';
   S.chatListData.forEach(function(c){html+='<button class="cl-item'+(c.id===S.chatId?' active':'')+'" data-cid="'+c.id+'"><i class="fa-regular fa-message"></i><span class="cl-title">'+esc(c.title)+'</span><span class="cl-time">'+ago(c.updated_at)+'</span><button type="button" class="cl-del" data-del-cid="'+c.id+'" aria-label="Delete"><i class="fa-solid fa-trash"></i></button></button>';});
   el.innerHTML=html;
 }
-
-/* =========================================
-   TYPING INDICATOR CSS (inject if missing)
-   ========================================= */
-(function(){
-  var s=document.createElement('style');
-  s.textContent='.typing-indicator{display:flex;gap:5px;padding:8px 0;}.typing-indicator span{width:8px;height:8px;border-radius:50%;background:var(--text-muted);animation:typingBounce .6s ease-in-out infinite;}.typing-indicator span:nth-child(2){animation-delay:.15s;}.typing-indicator span:nth-child(3){animation-delay:.3s;}@keyframes typingBounce{0%,100%{transform:translateY(0);opacity:.4;}50%{transform:translateY(-6px);opacity:1;}}';
-  document.head.appendChild(s);
-})();
-
-/* =========================================
-   EVENT LISTENERS & INITIALIZATION
-   ========================================= */
-function initEventListeners(){
-  /* Send button */
-  var sendBtn=$('sendBtn');
-  if(sendBtn){
-    sendBtn.addEventListener('click',function(){
-      var act=this.getAttribute('data-act');
-      if(act==='stop') stopGen();
-      else sendMsg();
-    });
-  }
-
-  /* Text input */
-  var input=$('cbInput');
-  if(input){
-    input.addEventListener('keydown',function(e){
-      if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();if(S.streaming) stopGen(); else sendMsg();}
-    });
-    input.addEventListener('input',updateCB);
-  }
-
-  /* File input */
-  var fileInput=$('fileInput');
-  if(fileInput){
-    fileInput.addEventListener('change',function(){
-      if(this.files&&this.files.length) handleFileSelect(this.files);
-      this.value='';
-    });
-  }
-
-  /* File attach button */
-  var attachBtn=$('fileAttachBtn');
-  if(attachBtn){
-    attachBtn.addEventListener('click',function(e){
-      e.preventDefault(); e.stopPropagation();
-      if(fileInput) fileInput.click();
-    });
-  }
-
-  /* Remove pending file (event delegation on preview strip) */
-  var strip=$('imgPreviewStrip');
-  if(strip){
-    strip.addEventListener('click',function(e){
-      var btn=e.target.closest('[data-rm-idx]');
-      if(btn){e.stopPropagation();rmPendingFile(parseInt(btn.getAttribute('data-rm-idx')));}
-    });
-  }
-
-  /* Chat list clicks (event delegation) */
-  var chatListEl=$('chatListItems');
-  if(chatListEl){
-    chatListEl.addEventListener('click',function(e){
-      var delBtn=e.target.closest('[data-del-cid]');
-      if(delBtn){e.stopPropagation();delConv(delBtn.getAttribute('data-del-cid'));return;}
-      var item=e.target.closest('[data-cid]');
-      if(item){loadConv(item.getAttribute('data-cid'));if(S.sbOpen)toggleSB(false);}
-    });
-  }
-
-  /* New chat button */
-  var ncBtn=$('newChatBtn');
-  if(ncBtn) ncBtn.addEventListener('click',function(){startNewChat();});
-
-  /* Sidebar toggle */
-  var sbBtn=$('sbToggle');
-  if(sbBtn) sbBtn.addEventListener('click',function(){toggleSB();});
-  var sbOv=$('sbOv');
-  if(sbOv) sbOv.addEventListener('click',function(){toggleSB(false);});
-
-  /* Sign in/out */
-  var signInLink=$('signInLink');
-  if(signInLink){
-    signInLink.addEventListener('click',function(e){
-      if(S.user){e.preventDefault();signOut();}
-    });
-  }
-
-  /* Theme buttons */
-  document.querySelectorAll('.t-btn').forEach(function(btn){
-    btn.addEventListener('click',function(){setTheme(this.getAttribute('data-t'));});
+function buildImgHtml(imgs){
+  if(!imgs||!imgs.length)return '';
+  var cls=imgs.length===1?'single':'multi';
+  var html='<div class="msg-imgs">';
+  imgs.forEach(function(img){
+      var src = img.dataUrl || img.url;
+      var isVideo = (img.type === 'video' || (img.url && (img.url.includes('.mp4') || img.url.includes('.webm'))));
+      if(isVideo) { html+='<div class="msg-img-item '+cls+'"><video src="'+src+'" controls autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover"></video></div>'; }
+      else { html+='<div class="msg-img-item '+cls+'" data-msg-img="'+esc(src)+'"><img src="'+src+'" alt="'+esc(img.name||'Image')+'" loading="lazy"></div>'; }
   });
+  return html+'</div>';
+}
 
-  /* Model selector */
-  var modelSel=$('modelSel');
-  if(modelSel) modelSel.addEventListener('click',function(e){if(!e.target.closest('.model-item'))toggleMD();});
-  document.querySelectorAll('.model-item').forEach(function(item){
-    item.addEventListener('click',function(){selectModel(this.getAttribute('data-model'));});
-  });
+function buildMessageHtml(m, i) {
+  var isAi = m.role === 'assistant';
+  var roleClass = isAi ? 'ai-msg' : 'user-msg';
+  var name = isAi ? 'AI' : 'You';
+  var html = '';
+  if (isAi) {
+      html += '<div class="msg ' + roleClass + '">';
+      html += '  <div class="msg-inner">';
+      html += '    <div class="msg-label"><span class="ai-dot"></span> AI <span id="ai-status-' + i + '" class="ai-status"></span></div>';
+      html += '    <div id="mc-' + i + '" class="msg-ct"></div>';
+      html += '    <div id="mi-' + i + '" class="msg-imgs"></div>';
+      html += '    <div class="msg-acts">';
+      html += '      <button class="ma" data-act="copy" data-i="' + i + '"><i class="fa-regular fa-copy"></i></button>';
+      html += '      <button class="ma' + (m.liked?' liked':'') + '" data-act="like" data-i="' + i + '"><i class="fa-regular fa-thumbs-up"></i></button>';
+      html += '      <button class="ma' + (m.disliked?' disliked':'') + '" data-act="dislike" data-i="' + i + '"><i class="fa-regular fa-thumbs-down"></i></button>';
+      html += '      <button class="ma' + (isAuthed()?'':' locked') + '" data-act="voice" data-i="' + i + '" data-tip="Read Aloud"><i class="fa-solid fa-volume-high"></i></button>';
+      html += '      <button class="ma" data-act="regen" data-i="' + i + '"><i class="fa-solid fa-rotate-right"></i></button>';
+      html += '    </div>';
+      html += '    <div class="msg-time">' + m.time + '</div>';
+      html += '  </div>';
+      html += '</div>';
+  } else {
+      html += '<div class="msg ' + roleClass + '">';
+      html += '  <div class="msg-inner">';
+      html += '    <div class="msg-label">' + name + '</div>';
+      html += '    <div class="msg-bubble">';
+      html += '      <div class="msg-text-wrapper" id="mtw-' + m.id + '">' + esc(m.content) + '</div>';
+      html += '      <button class="msg-toggle-btn" id="mtb-' + m.id + '">Show more</button>';
+      if (m.images && m.images.length) html += buildImgHtml(m.images);
+      html += '    </div>';
+      html += '    <div class="msg-acts">';
+      html += '      <button class="ma" data-act="copy" data-i="' + i + '"><i class="fa-regular fa-copy"></i></button>';
+      html += '      <button class="ma" data-act="edit" data-i="' + i + '"><i class="fa-solid fa-pen"></i></button>';
+      html += '    </div>';
+      html += '    <div class="msg-time">' + m.time + '</div>';
+      html += '  </div>';
+      html += '</div>';
+  }
+  return html;
+}
 
-  /* Mode buttons */
-  document.querySelectorAll('.mode-btn').forEach(function(btn){
-    btn.addEventListener('click',function(){selectMode(this.getAttribute('data-mode'));});
-  });
-
-  /* View tabs */
-  var chatTab=$('chatTab'), galTab=$('galleryTab');
-  if(chatTab) chatTab.addEventListener('click',function(){switchView('chat');});
-  if(galTab) galTab.addEventListener('click',function(){switchView('gallery');});
-
-  /* Lightbox close */
-  var lightbox=$('lightbox');
-  if(lightbox) lightbox.addEventListener('click',function(e){if(e.target===lightbox)closeLB();});
-
-  /* Link modal close */
-  var lmClose=$('lmClose');
-  if(lmClose) lmClose.addEventListener('click',closeLinkModal);
-  var lmOv=$('lmOv');
-  if(lmOv) lmOv.addEventListener('click',closeLinkModal);
-
-  /* HTML preview modal close */
-  var hpClose=$('htmlPreviewClose');
-  if(hpClose) hpClose.addEventListener('click',function(){$('htmlPreviewModal').classList.remove('on');});
-
-  /* Edit modal */
-  var emSave=$('emSave');
-  if(emSave) emSave.addEventListener('click',saveEdit);
-  var emCancel=$('emCancel');
-  if(emCancel) emCancel.addEventListener('click',closeEdit);
-  var emOv=$('emOverlay');
-  if(emOv) emOv.addEventListener('click',closeEdit);
-
-  /* Action sheet */
-  var asOv=$('asOv');
-  if(asOv) asOv.addEventListener('click',function(){toggleAS(false);});
-
-  /* Voice dropdown */
-  document.querySelectorAll('[data-voice]').forEach(function(btn){
-    btn.addEventListener('click',function(){S.selectedVoice=this.getAttribute('data-voice');toggleVD(false);toast('Voice: '+this.textContent.trim(),'ok');});
-  });
-
-  /* Welcome cards */
-  document.querySelectorAll('.w-card').forEach(function(card){
-    card.addEventListener('click',function(){
-      if(this.classList.contains('locked')){toast('Sign in to use this feature','wrn');return;}
-      var text=this.getAttribute('data-prompt')||this.querySelector('.w-text')?.textContent||'';
-      if(text){$('cbInput').value=text;sendMsg();}
-    });
-  });
-
-  /* Escape key handlers */
-  document.addEventListener('keydown',function(e){
-    if(e.key==='Escape'){
-      if(S.lbUrl) closeLB();
-      else if($('linkModal')?.classList.contains('on')) closeLinkModal();
-      else if($('htmlPreviewModal')?.classList.contains('on')) $('htmlPreviewModal').classList.remove('on');
-      else if(S.mdOpen) toggleMD(false);
-      else if(S.vdOpen) toggleVD(false);
-      else if(S.asOpen) toggleAS(false);
-      else if(S.sbOpen) toggleSB(false);
+function renderAll(){
+    if (!S.msgs.length) { showWelcome(); return; }
+    showMsgs();
+    var msgsEl = $('msgsEl');
+    var html = '';
+    for (var i = 0; i < S.msgs.length; i++) {
+        html += buildMessageHtml(S.msgs[i], i);
     }
-  });
+    msgsEl.innerHTML = html;
 
-  /* ===== DRAG & DROP ===== */
-  var dropTarget=$('msgsWrap')||document.body;
-  var dragCounter=0;
-
-  dropTarget.addEventListener('dragenter',function(e){
-    e.preventDefault(); dragCounter++;
-    dropTarget.style.outline='2px dashed var(--accent)';
-    dropTarget.style.outlineOffset='-8px';
-  },{passive:false});
-
-  dropTarget.addEventListener('dragleave',function(e){
-    e.preventDefault(); dragCounter--;
-    if(dragCounter<=0){dragCounter=0;dropTarget.style.outline='none';}
-  },{passive:false});
-
-  dropTarget.addEventListener('dragover',function(e){e.preventDefault();},{passive:false});
-
-  dropTarget.addEventListener('drop',function(e){
-    e.preventDefault(); dragCounter=0;
-    dropTarget.style.outline='none';
-    if(e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files.length){
-      handleFileSelect(e.dataTransfer.files);
-      var inp=$('cbInput'); if(inp) inp.focus();
-    }
-  },{passive:false});
-
-  /* ===== PASTE IMAGES ===== */
-  var cbInput=$('cbInput');
-  if(cbInput){
-    cbInput.addEventListener('paste',function(e){
-      var items=e.clipboardData&&e.clipboardData.items;
-      if(!items) return;
-      for(var i=0;i<items.length;i++){
-        if(items[i].type.indexOf('image/')===0){
-          e.preventDefault();
-          var file=items[i].getAsFile();
-          if(file&&file.size<=MAX_UPLOAD_SIZE){
-            handleFileSelect([file]);
-          } else if(file){toast('Pasted image too large (max 20MB)','err');}
-          break;
+    var mermaidQueue = [];
+    S.msgs.forEach(function(m, i){
+        if(m.role==='assistant'){
+            var el=$('mc-'+i); 
+            var miEl=$('mi-'+i); 
+            if(el) { 
+                el.innerHTML = md(m.content); 
+                // Math first (fast, inline)
+                applyMath(el);
+                // Queue mermaid for sequential processing
+                if (el.querySelectorAll('code.language-mermaid').length) {
+                    mermaidQueue.push(el);
+                }
+            }
+            if(miEl && m.images && m.images.length) {
+                miEl.innerHTML = buildImgHtml(m.images).replace('<div class="msg-imgs">','').replace('</div>','');
+            }
+        } else {
+            var wrapper = $('mtw-'+m.id);
+            var btn = $('mtb-'+m.id);
+            if(wrapper && btn) {
+                // Use requestAnimationFrame so scrollHeight is accurate
+                requestAnimationFrame(function() {
+                    if (wrapper.scrollHeight > 180) {
+                        wrapper.classList.add('collapsed');
+                        btn.style.display = 'block';
+                        btn.textContent = 'Show more';
+                    } else {
+                        wrapper.classList.remove('collapsed');
+                        btn.style.display = 'none';
+                    }
+                });
+            }
         }
+    });
+
+   /**
+ * ChatGPT-style image streaming blur reveal
+ * Progressive blur reduction: streaming → stream-mid → stream-near → stream-done
+ */
+function streamRevealImage(container, imgUrl, options = {}) {
+  const {
+    stages = [1800, 2800, 1200],  // ms per stage: mid, near, done
+    onError = null
+  } = options;
+
+  // Ensure streaming class is on
+  container.classList.add('streaming');
+  container.classList.remove('stream-mid', 'stream-near', 'stream-done', 'loading');
+
+  // Create or get the image element
+  let img = container.tagName === 'IMG' ? container : container.querySelector('img');
+  const isSelf = container.tagName === 'IMG';
+
+  if (!img) {
+    img = document.createElement('img');
+    img.alt = options.alt || 'Generated image';
+    if (!isSelf) {
+      // Insert img as first child (before ::before/::after pseudo-elements)
+      const firstChild = container.firstChild;
+      if (firstChild) {
+        container.insertBefore(img, firstChild);
+      } else {
+        container.appendChild(img);
+      }
+    }
+  }
+
+  img.style.position = 'relative';
+  img.style.zIndex = '2';
+
+  // Start loading the real image
+  const tempImg = new Image();
+  tempImg.crossOrigin = 'anonymous';
+
+  tempImg.onload = () => {
+    img.src = imgUrl;
+
+    // Small delay so the browser paints the blurred version first
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        // Stage 1: mid-blur
+        setTimeout(() => {
+          container.classList.remove('streaming');
+          container.classList.add('stream-mid');
+        }, stages[0]);
+
+        // Stage 2: near-clear
+        setTimeout(() => {
+          container.classList.remove('stream-mid');
+          container.classList.add('stream-near');
+        }, stages[0] + stages[1]);
+
+        // Stage 3: fully revealed
+        setTimeout(() => {
+          container.classList.remove('stream-near');
+          container.classList.add('stream-done');
+          // Clean up inline styles after transition
+          setTimeout(() => {
+            img.style.position = '';
+            img.style.zIndex = '';
+          }, 1000);
+        }, stages[0] + stages[1] + stages[2]);
+      });
+    });
+  };
+
+  tempImg.onerror = () => {
+    container.classList.remove('streaming', 'stream-mid', 'stream-near');
+    container.classList.add('stream-done');
+    if (onError) onError();
+  };
+
+  // For streaming: set a tiny colorful placeholder or start loading immediately
+  tempImg.src = imgUrl;
+
+  return img;
+}
+
+/**
+ * Simulate streaming for an image that's already in the DOM
+ * (e.g., after receiving a message with images from API)
+ */
+function animateExistingImages(container) {
+  const wrappers = container.querySelectorAll('.img-wrap, .msg-img-item, .gen-img-card');
+  wrappers.forEach(wrap => {
+    const img = wrap.querySelector('img');
+    if (!img || !img.src || img.complete === false) return;
+    if (wrap.classList.contains('stream-done')) return;
+
+    // Add streaming class, then progressively reveal
+    wrap.classList.add('streaming');
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          wrap.classList.remove('streaming');
+          wrap.classList.add('stream-mid');
+        }, 800);
+
+        setTimeout(() => {
+          wrap.classList.remove('stream-mid');
+          wrap.classList.add('stream-near');
+        }, 2200);
+
+        setTimeout(() => {
+          wrap.classList.remove('stream-near');
+          wrap.classList.add('stream-done');
+        }, 3200);
+      });
+    });
+  });
+}
+
+/**
+ * Show a colorful blur loading placeholder before the real image arrives
+ */
+function showStreamPlaceholder(container, type = 'single') {
+  container.classList.remove('stream-done', 'stream-mid', 'stream-near', 'streaming');
+  container.classList.add('loading');
+
+  // For gen-img-card, ensure min-height
+  if (type === 'gen') {
+    container.style.minHeight = '280px';
+  }
+}
+
+/**
+ * Replace placeholder with streaming reveal
+ */
+function revealStreamImage(container, imgUrl, type = 'single') {
+  container.classList.remove('loading');
+  if (type === 'gen') {
+    container.style.minHeight = '';
+  }
+  return streamRevealImage(container, imgUrl, {
+    stages: type === 'gen' ? [2200, 3200, 1400] : [1800, 2800, 1200]
+  });
+}
+
+// --- Intersection Observer: animate images when they scroll into view ---
+const streamObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const el = entry.target;
+      if (!el.classList.contains('stream-done') && !el.classList.contains('streaming') && !el.classList.contains('loading')) {
+        const img = el.querySelector('img');
+        if (img && img.complete && img.naturalWidth > 0) {
+          animateExistingImages(el);
+        }
+      }
+      streamObserver.unobserve(el);
+    }
+  });
+}, { threshold: 0.2 });
+
+// Auto-observe all image containers added to the DOM
+const streamMutationObs = new MutationObserver((mutations) => {
+  mutations.forEach(m => {
+    m.addedNodes.forEach(node => {
+      if (node.nodeType !== 1) return;
+      // Direct match
+      if (node.matches && node.matches('.img-wrap, .msg-img-item, .gen-img-card')) {
+        streamObserver.observe(node);
+      }
+      // Children match
+      const children = node.querySelectorAll ? node.querySelectorAll('.img-wrap, .msg-img-item, .gen-img-card') : [];
+      children.forEach(c => streamObserver.observe(c));
+    });
+  });
+});
+streamMutationObs.observe(document.body, { childList: true, subtree: true });
+
+    // Process mermaid diagrams sequentially after all HTML is in DOM
+    function processNextMermaid() {
+        if (!mermaidQueue.length) return;
+        var el = mermaidQueue.shift();
+        processMermaid(el);
+        // Small delay between diagrams to avoid stack overflow
+        setTimeout(processNextMermaid, 50);
+    }
+    if (mermaidQueue.length) setTimeout(processNextMermaid, 100);
+
+    if (S.isAutoScrolling) scrollBot(true);
+}
+
+var _lastMathTime = 0;
+function updateLastAI(content){
+  var i=S.msgs.length-1;if(i<0||S.msgs[i].role!=='assistant')return;
+  S.msgs[i].content=content;var el=$('mc-'+i);
+  if(el){
+      el.innerHTML = md(content); 
+      // Throttle math during streaming — only re-render every 300ms
+      var now = Date.now();
+      if (now - _lastMathTime > 300) {
+          _lastMathTime = now;
+          applyMath(el);
+      }
+  }
+  var w=$('msgsWrap');
+  if(w){
+    var dist = w.scrollHeight - w.scrollTop - w.clientHeight;
+    if(S.isAutoScrolling || dist < S.scrollThreshold){ scrollBot(true); } else { checkScrollBtn(); }
+  }
+}
+
+function addTyping(){
+  var d=document.createElement('div');d.className='msg ai-msg';d.id='typMsg';
+  d.innerHTML='<div class="msg-inner"><div class="msg-label"><span class="ai-dot"></span> AI <span id="ai-status-typing" class="ai-status">Thinking...</span></div><div class="typing-wrap"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>';
+  $('msgsEl').appendChild(d);if(S.isAutoScrolling)scrollBot(true);
+}
+function rmTyping(){var e=$('typMsg');if(e)e.remove();}
+
+function checkScrollBtn(){
+  var w=$('msgsWrap');
+  if(!w)return;
+  var dist = w.scrollHeight - w.scrollTop - w.clientHeight;
+  if(dist < S.scrollThreshold){
+    S.isAutoScrolling = true;
+    $('scrollBot').classList.remove('vis');
+  } else {
+    S.isAutoScrolling = false;
+    $('scrollBot').classList.add('vis');
+  }
+}
+
+function scrollBot(force){
+  if(force||S.isAutoScrolling){
+    requestAnimationFrame(function(){
+      var w=$('msgsWrap');if(w){
+        w.scrollTop=w.scrollHeight;
+        S.isAutoScrolling=true;
+        $('scrollBot').classList.remove('vis');
       }
     });
   }
 }
 
-/* =========================================
-   BOOT
-   ========================================= */
-async function boot(){
-  initTheme();
-  initMarked();
-  initModel();
-  initScrollDetection();
-  initEventListeners();
-
-  /* Load mode */
-  try{var sm=localStorage.getItem('helox-mode');if(sm)selectMode(sm);}catch(e){}
-
-  /* Load last chat */
-  var lastId=getActiveChat();
-  if(lastId){
-    var chats=loadLocalChats();
-    S.chatListData=chats;
-    var found=chats.find(function(c){return c.id===lastId;});
-    if(found){await loadConv(lastId);}
-    else{renderChatList();showWelcome();}
-  } else {
-    renderChatList(); showWelcome();
+/* ========== MIC / STT ========== */
+function toggleMic(){
+  if(!S.user){toast('Sign in to use voice input','wrn');return;}
+  if(S.recording){
+    if(S.recorder)S.recorder.stop();
+    S.recording=false;$('micBtn').classList.remove('mic-on');
+    updateCB();
+    return;
   }
-
-  /* Auth */
-  await setupAuth();
-
-  /* Render final state */
-  renderChatList();
-  renderAll();
-  refreshUI();
-  updateSendBtn();
-
-  console.log('[HeloXAi] Ready. Model:', S.model, '| Theme:', S.theme);
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      toast('Microphone not supported in this browser', 'err');
+      return;
+  }
+  navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+    S.chunks=[];S.recorder=new MediaRecorder(stream);
+    S.recorder.ondataavailable=function(e){if(e.data.size>0)S.chunks.push(e.data);};
+    S.recorder.onstop=function(){stream.getTracks().forEach(function(t){t.stop();});doSTT(new Blob(S.chunks,{type:'audio/webm'}));};
+    S.recorder.start();
+    S.recording=true;$('micBtn').classList.add('mic-on');
+    toast('Listening...','inf');
+  }).catch(function(e){
+      if(e.name === 'NotAllowedError') toast('Microphone permission denied', 'wrn');
+      else if(e.name === 'NotSupportedError') toast('Microphone hardware not found', 'err');
+      else toast('Microphone error: ' + e.message, 'err');
+  });
 }
 
-/* Start */
-if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',boot);}
-else{boot();}
+function doSTT(blob){
+  toast('Processing voice...','inf');
+  var fd=new FormData();fd.append('file',blob,'recording.webm');
+  var h={};if(S.user&&S.user.token)h['Authorization']='Bearer '+S.user.token;
+  fetch(apiUrl()+'/stt',{method:'POST',headers:h,credentials:'include',body:fd})
+    .then(function(r){ if(!r.ok) throw new Error('STT failed'); return r.json(); })
+    .then(function(d){
+      if(d.text){
+        $('cbInput').value=d.text;autoH($('cbInput'));updateCB();toast('Recognized','ok');setTimeout(function(){sendMsg();},600);
+      } else { toast('No speech detected','err'); }
+    })
+    .catch(function(e){ handleError(e, 'Voice Recognition'); });
+}
+
+/* ========== STREAMING ========== */
+function streamRes(res, onChunk, onDone, onMedia, onStatus) {
+    if (!res.body || typeof res.body.getReader !== 'function') {
+        return res.text().then(function (t) { onChunk(t); onDone(); });
+    }
+    var reader = res.body.getReader();
+    var decoder = new TextDecoder('utf-8');
+    var buffer = '';
+    var finished = false;
+
+    function processChunk(line) {
+        line = line.trim();
+        if (!line) return;
+        if (line.startsWith('data:')) { line = line.slice(5).trim(); }
+        if (line === '[DONE]') { onDone(); finished = true; return; }
+        try {
+            var json = JSON.parse(line);
+            if (json.type === 'media' && typeof onMedia === 'function') { onMedia(json); return; }
+            if (json.type === 'status' && typeof onStatus === 'function') { onStatus(json.message); return; }
+            var text = json.token || json.text || json.content || (json.delta && json.delta.content) || '';
+            if (text) { onChunk(text); }
+        } catch (e) {}
+    }
+
+    function pump() {
+        return reader.read().then(function (result) {
+            if (result.done) {
+                if (buffer.trim() && !finished) { processChunk(buffer); }
+                if (!finished) onDone();
+                return;
+            }
+            buffer += decoder.decode(result.value, { stream: true });
+            var parts = buffer.split('\n\n');
+            buffer = parts.pop();
+            parts.forEach(processChunk);
+            return pump();
+        }).catch(function (err) {
+            console.error('Stream read error:', err);
+            if (!finished) onDone();
+        });
+    }
+    return pump();
+}
+
+/* ========== SEND MESSAGES ========== */
+async function sendMsg(text){
+  var t=text||$('cbInput').value.trim();
+  if((!t&&!S.pendingFiles.length)||S.streaming)return;  
+  var limitCheck = checkLimits(t);
+  if(!limitCheck.allowed) {
+      toast(limitCheck.msg, 'wrn');
+      return;
+  }
+  if(!S.chatId) await startNewChat();
+  var imgs=S.pendingFiles.filter(function(f){return f.type==='image';}).map(function(f){return{dataUrl:f.dataUrl,name:f.name};});
+  var files=S.pendingFiles.filter(function(f){return f.type!=='image';});
+  var msg={id:uid(),role:'user',content:t,images:imgs,time:now()};
+  S.msgs.push(msg);
+  saveChatHistory(S.chatId, S.msgs);
+  if(S.msgs.length === 1) {
+     var newTitle = (t || 'Image/File Chat').substring(0, 30) + (t && t.length>30 ? '...' : '');
+     var c = S.chatListData.find(x => x.id === S.chatId);
+     if(c) {
+         c.title = newTitle; c.updated_at = new Date().toISOString(); saveLocalChats(); renderChatList(); $('hdrTitle').textContent = newTitle;
+     }
+  }
+  if(S.user && S.chatId){ saveMsg({role:'user',content:t||'[Image/File attached]',metadata:{has_images:imgs.length>0}}); }
+  clearPending();$('cbInput').value='';autoH($('cbInput'));updateCB();
+  S.isAutoScrolling = true; scrollBot(true); renderAll();
+  
+  if(imgs.length||files.length){
+    sendWithFiles(t,imgs.map(function(img){var f=dataUrlToFile(img.dataUrl,img.name);return f?{type:'image',dataUrl:img.dataUrl,name:img.name,file:f}:null;}).filter(Boolean),files);
+  }else{
+    sendToAI(t);
+  }
+}
+
+function sendWithFiles(text,imgs,files){
+  S.streaming=true;S.abort=new AbortController();addTyping();updateCB();
+  var fd=new FormData();fd.append('prompt',text||'What is in this image?');
+  var pf=null,pn='file.bin';
+  if(imgs.length>0){pf=imgs[0].file;pn=imgs[0].name;}else if(files.length>0){pf=files[0].file;pn=files[0].name;}
+  if(pf)fd.append('file',pf,pn);
+  var h={};if(S.user&&S.user.token)h['Authorization']='Bearer '+S.user.token;
+  var full='';
+  var onMedia = function(data){ 
+      var idx = S.msgs.length-1; 
+      if(data.type==='image'){
+          if(!S.msgs[idx].images) S.msgs[idx].images = [];
+          data.data.forEach(function(img){ S.msgs[idx].images.push(img); });
+          renderAll();
+      }
+  };
+  fetch(apiUrl()+'/analysis',{method:'POST',headers:h,credentials:'include',signal:S.abort.signal,body:fd}).then(function(res){
+    if(!res.ok)throw new Error('HTTP '+res.status);rmTyping();
+    var ct=(res.headers.get('content-type')||'').toLowerCase();
+    if(ct.indexOf('application/json')!==-1){
+      return res.json().then(function(d){var c=d.response||d.reply ||d.content||d.result||d.message||JSON.stringify(d);var ai={id:uid(),role:'assistant',content:c,liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();addGal(c);saveChatHistory(S.chatId, S.msgs);if(S.chatId)updateTs(S.chatId);});
+    }
+    var ai={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();
+    return streamRes(res,function(chunk){full+=chunk;requestAnimationFrame(function(){updateLastAI(full);});},function(){S.msgs[S.msgs.length-1].content=full;addGal(full);saveChatHistory(S.chatId, S.msgs);if(S.chatId)updateTs(S.chatId);}, onMedia);
+  }).catch(function(e){
+    rmTyping();
+    if(e.name==='AbortError'){
+        var lastIdx = S.msgs.length-1;
+        if(full && full.trim().length > 0){
+            S.msgs[lastIdx].content = full;
+            saveChatHistory(S.chatId, S.msgs).catch(function(){});
+            updateLastAI(full);
+        } else {
+            S.msgs[lastIdx].content = "_Generation stopped by user._";
+        }
+        renderAll();
+        toast('Stopped','inf');
+    }
+    else{S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});renderAll();toast('Request failed','err');}
+  }).finally(function(){S.streaming=false;S.abort=null;updateCB();});
+}
+
+function sendToAI(text){
+  if(!text)return;S.streaming=true;S.abort=new AbortController();addTyping();updateCB();var full='';
+  var url = apiUrl(); 
+
+  if(!url) {
+      toast('Backend API URL not found. Cannot send message.', 'err');
+      S.streaming=false; 
+      rmTyping();
+      updateCB();
+      return;
+  }
+
+  var onMedia = function(data){
+      var idx = S.msgs.length - 1;
+      if(!S.msgs[idx]) return;
+      if(!S.msgs[idx].images) S.msgs[idx].images = [];
+      var mediaType = 'image'; 
+      if (data.media_type === 'video' || (data.url && (data.url.includes('.mp4') || data.url.includes('.webm')))) mediaType = 'video';
+      if(data.type === 'image'){
+          data.data.forEach(function(img){
+              var url = img.url || img;
+              S.msgs[idx].images.push({url: url, name: 'Generated', type: mediaType});
+              if(!S.gallery.some(function(g){return g.url===url})) S.gallery.unshift({type:mediaType,url:url,prompt:'Generated',id:uid()});
+              incrementUsage('images');
+              var el=$('mi-'+idx);
+              if(el) { el.insertAdjacentHTML('beforeend', '<div class="msg-img-item single"><img src="'+url+'" loading="lazy"></div>'); }
+          });
+      } else if (data.type === 'video') {
+          var vidObj = {type:mediaType, url:data.url};
+          S.msgs[idx].images.push(vidObj);
+          if(!S.gallery.some(function(g){return g.url===data.url})) S.gallery.unshift({type:mediaType,url:data.url,prompt:'Generated',id:uid()});
+          incrementUsage('videos');
+          var el=$('mi-'+idx);
+          if(el) el.insertAdjacentHTML('beforeend', '<div class="msg-img-item single"><video src="'+data.url+'" controls autoplay loop muted playsinline></video></div>');
+      }
+      renderAll(); scrollBot(true);
+  };
+  var onStatus = function(msg){
+      var typing = document.getElementById('ai-status-typing');
+      if(typing) typing.textContent = msg;
+      var realIdx = S.msgs.length - 1;
+      var el=$('ai-status-'+realIdx);
+      if(el) { el.textContent = msg; el.style.display = 'inline-block'; }
+  };
+
+  fetch(url+'/ask/universal',{
+      method:'POST', headers:authH(), credentials:'include', signal:S.abort.signal,
+      body:JSON.stringify({ prompt:text, conversation_id:S.chatId, mode: S.mode, model: S.model })
+  }).then(function(res){
+    if(!res.ok)throw new Error('HTTP '+res.status);rmTyping();
+    var ct=(res.headers.get('content-type')||'').toLowerCase();
+    if(ct.indexOf('application/json')!==-1){
+      return res.json().then(function(d){var c=d.response||d.content||d.result||d.message||JSON.stringify(d);var ai={id:uid(),role:'assistant',content:c,liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();addGal(c);saveChatHistory(S.chatId, S.msgs);if(S.chatId)updateTs(S.chatId);});
+    }
+    var ai={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();
+    return streamRes(res,function(chunk){full+=chunk;updateLastAI(full);},function(){
+        S.msgs[S.msgs.length-1].content=full;
+        saveChatHistory(S.chatId, S.msgs);if(S.chatId)updateTs(S.chatId);
+        // Trigger Mermaid rendering after streaming is complete for this message
+        var i=S.msgs.length-1; var el=$('mc-'+i); if(el) processMermaid(el);
+    }, onMedia, onStatus);
+  }).catch(function(e){
+    rmTyping();
+    if(e.name==='AbortError'){
+        var lastIdx = S.msgs.length-1;
+        if(full && full.trim().length > 0){
+            S.msgs[lastIdx].content = full;
+            saveChatHistory(S.chatId, S.msgs).catch(function(){});
+            updateLastAI(full);
+        } else {
+            S.msgs[lastIdx].content = "_Generation stopped by user._";
+        }
+        renderAll();
+        toast('Stopped','inf');
+    } else {
+        S.msgs.push({id:uid(),role:'assistant',content:'**Error:** '+e.message,liked:false,disliked:false,time:now()});
+        renderAll();
+        handleError(e, 'AI Generation');
+    }
+  }).finally(function(){S.streaming=false;S.abort=null;updateCB();});
+}
+
+function regenAI(){
+  var lastIdx = S.msgs.length-1;
+  if(lastIdx>=0 && S.msgs[lastIdx].role === 'assistant'){
+      S.msgs.pop();
+      renderAll();
+  }
+  var lastUser = '';
+  for(var i=S.msgs.length-1;i>=0;i--){
+      if(S.msgs[i].role==='user'){ lastUser=S.msgs[i].content; break; }
+  }
+  if(lastUser) sendToAI(lastUser);
+}
+
+function stopGen(){
+    if(S.abort) S.abort.abort(); 
+    if(S.currentAudio) {
+        try { S.currentAudio.pause(); S.currentAudio.currentTime = 0; } catch(e) {}
+        S.currentAudio = null;
+    }
+}
+
+/* ========== CHATBAR STATE ========== */
+function autoH(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,200)+'px';}
+function updateCB(){
+  var hasText=$('cbInput').value.trim().length>0,hasFiles=S.pendingFiles.length>0;
+  var mic=$('micBtn'),voice=$('voiceBtn'),ss=$('sendStopBtn');
+  if(S.streaming){
+    mic.classList.add('hide'); voice.classList.add('hide'); ss.classList.remove('hide','send'); ss.classList.add('stop'); ss.innerHTML='<i class="fa-solid fa-stop"></i>'; ss.setAttribute('aria-label','Stop generating');
+  }else if(hasText||hasFiles){
+    if(!S.recording){ mic.classList.add('hide'); voice.classList.add('hide'); }
+    ss.classList.remove('hide','stop'); ss.classList.add('send'); ss.innerHTML='<i class="fa-solid fa-arrow-up"></i>'; ss.setAttribute('aria-label','Send message');
+  }else{
+    if(!S.recording){ mic.classList.remove('hide'); voice.classList.remove('hide'); }
+    ss.classList.add('hide'); ss.classList.remove('send','stop');
+  }
+}
+
+function finalizeLastMessage() {
+    var i = S.msgs.length - 1;
+    if (i < 0 || S.msgs[i].role !== 'assistant') return;
+    var el = $('mc-' + i);
+    if (!el || !el.isConnected) return;
+    // Final full math render (no throttle)
+    applyMath(el);
+    // Final mermaid render
+    processMermaid(el);
+    // Invalidate cache for this content so next render is fresh
+    mdCache.delete(S.msgs[i].content);
+}
+
+async function loadVoices() {
+    var list=$('voiceList');
+    if(!list) return;
+    list.innerHTML = '<div style="padding:10px;color:var(--text-muted);font-size:12px;">Loading voices...</div>';
+    try {
+        if(!apiUrl()) throw new Error("API not configured");
+        var r=await fetch(apiUrl()+'/tts/voices');
+        if(r.ok){
+            var d=await r.json();
+            list.innerHTML = '';
+            if(d.voices && d.voices.length > 0) {
+                d.voices.forEach(function(v){
+                    var el=document.createElement('div');
+                    el.className='v-item'+(v.id===S.selectedVoice?' active':'');
+                    el.textContent=v.name;
+                    el.dataset.v=v.id;
+                    el.addEventListener('click',function(){
+                        S.selectedVoice=v.id;
+                        document.querySelectorAll('.v-item').forEach(function(i){i.classList.remove('active')});
+                        el.classList.add('active');
+                        toggleVD(false);
+                        toast('Voice: ' + v.name, 'ok');
+                    });
+                    list.appendChild(el);
+                });
+            } else {
+                list.innerHTML = '<div style="padding:10px;color:var(--text-muted);font-size:12px;">No voices found</div>';
+            }
+        } else {
+            throw new Error(`HTTP ${r.status}`);
+        }
+    } catch(e) { 
+        console.error(e);
+        list.innerHTML = '<div style="padding:10px;color:var(--danger);font-size:12px;">Failed to load voices</div>';
+    }
+}
+
+/* ========== EVENT LISTENERS ========== */
+function initEvents(){
+  /* Sidebar */
+  $('menuBtn').addEventListener('click',function(){toggleSB();});
+  $('sbClose').addEventListener('click',function(e){e.stopPropagation();toggleSB(false);});
+  $('sbOv').addEventListener('click',function(){toggleSB(false);});
+  $('newChatBtn').addEventListener('click',function(e){e.stopPropagation();startNewChat();});
+  $('signInLink').addEventListener('click',function(e){if(S.user){e.preventDefault();signOut();}});
+  $('contactLink').addEventListener('click',function(e){e.stopPropagation();toggleSB(false);$('contactModal').classList.add('on');});
+  $('sbSearch').addEventListener('input',function(){var q=this.value.toLowerCase();document.querySelectorAll('#chatListItems .cl-item').forEach(function(el){var t=el.querySelector('.cl-title');if(t)t=t.textContent.toLowerCase();el.style.display=(!q||t.indexOf(q)!==-1)?'flex':'none';});});
+  /* Theme */
+  $('themeGrid').addEventListener('click',function(e){var b=e.target.closest('.t-btn');if(b){e.stopPropagation();setTheme(b.getAttribute('data-t'));}});
+  /* Model selector */
+  $('modelSel').addEventListener('click',function(e){e.stopPropagation();toggleMD();});
+  $('modelDd').addEventListener('click',function(e){e.stopPropagation();var item=e.target.closest('.model-item');if(item)selectModel(item.getAttribute('data-model'));});
+  /* Modes */
+  $('modesContainer').addEventListener('click',function(e){ var btn = e.target.closest('.mode-btn'); if(btn) selectMode(btn.getAttribute('data-mode')); });
+  /* Header tabs */
+  $('chatTab').addEventListener('click',function(){switchView('chat');});
+  $('galleryTab').addEventListener('click',function(){switchView('gallery');});
+  /* Action sheet */
+  $('asBtn').addEventListener('click',function(e){e.stopPropagation();toggleAS();});
+  $('asClose').addEventListener('click',function(e){e.stopPropagation();toggleAS(false);});
+  $('asOv').addEventListener('click',function(){toggleAS(false);});
+  $('asSheet').addEventListener('click',function(e){
+    var o=e.target.closest('.as-opt');
+    if(!o)return;
+    if(o.classList.contains('locked')){toast('Sign in required', 'wrn');return;}
+    e.stopPropagation();
+    var rawPrompt = o.getAttribute('data-prompt');
+    var cleanPrompt = rawPrompt.replace(/\\n\\n/g, '').replace(/\n\n/g, ''); 
+    $('cbInput').value=cleanPrompt;
+    $('cbInput').focus();autoH($('cbInput'));updateCB();toggleAS(false);
+  });
+  /* Voice dropdown */
+  $('voiceBtn').addEventListener('click',function(e){
+    e.stopPropagation(); 
+    if(!S.user){toast('Sign in to use voice','wrn');return;}
+    toggleVD();
+    if(S.vdOpen && $('voiceList').children.length === 0) loadVoices();
+  });
+  /* File Upload - FIXED LIMIT 2 */
+  $('fileBtn').addEventListener('click',function(e){e.stopPropagation();$('fileInput').click();});
+  $('fileInput').addEventListener('change',function(){
+    var files=this.files;if(!files||!files.length)return;
+    if(files.length > 2) {
+        toast('Only 2 files allowed at a time', 'wrn');
+        files = Array.from(files).slice(0, 2); 
+    }
+    var promises=[];
+    for(var i=0;i<files.length;i++){(function(file){
+      if(isImgFile(file)){promises.push(readAsDataUrl(file).then(function(url){S.pendingFiles.push({type:'image',dataUrl:url,name:file.name,size:file.size,file:file});}));}
+      else if(isVidFile(file)){promises.push(readAsDataUrl(file).then(function(url){S.pendingFiles.push({type:'video',dataUrl:url,name:file.name,size:file.size,file:file});}));}
+      else{S.pendingFiles.push({type:'file',name:file.name,size:file.size,file:file});}
+    })(files[i]);}
+    Promise.all(promises).then(function(){renderImgPreview();updateCB();});
+    this.value='';
+  });
+  /* Delegated Clicks */
+  document.addEventListener('click',function(e){
+    var linkEl = e.target.closest('.msg-ct a');
+    if(linkEl){
+        e.preventDefault();
+        var url = linkEl.getAttribute('href');
+        if(url && (url.startsWith('http') || url.startsWith('/'))) { openLinkModal(url); }
+        return;
+    }
+    var tgBtn = e.target.closest('.msg-toggle-btn');
+    if(tgBtn){
+        e.stopPropagation();
+        var btnId = tgBtn.id.replace('mtb-', '');
+        var wrapper = $('mtw-'+btnId);
+        if(wrapper) {
+            wrapper.classList.toggle('collapsed');
+            tgBtn.textContent = wrapper.classList.contains('collapsed') ? 'Show more' : 'Show less';
+        }
+        return;
+    }
+    if(e.target.closest('#lbDl')){ e.preventDefault(); e.stopPropagation(); downloadResource(S.lbUrl); return; }
+    var cpBtn=e.target.closest('[data-action="copy-code"]');
+    if(cpBtn){
+      e.stopPropagation();
+      var blk=cpBtn.closest('.code-blk');
+      var codeEl=blk?blk.querySelector('code'):null;
+      if(codeEl){
+        navigator.clipboard.writeText(codeEl.textContent).then(function(){
+          var orig = cpBtn.innerHTML;
+          cpBtn.innerHTML='<i class="fa-solid fa-check"></i> Copied';
+          cpBtn.classList.add('copied');
+          setTimeout(function(){cpBtn.innerHTML=orig;cpBtn.classList.remove('copied');},2000);
+        }).catch(function(){toast('Copy failed','err');});
+      }
+      return;
+    }
+    var runBtn = e.target.closest('[data-action="run-html"]');
+    if(runBtn){
+      e.stopPropagation();
+      var blk = runBtn.closest('.code-blk');
+      var codeEl = blk ? blk.querySelector('code') : null;
+      if(codeEl){ openHtmlPreview(codeEl.textContent); }
+      return;
+    }
+    var rmBtn=e.target.closest('[data-rm-idx]');
+    if(rmBtn){ var idx=parseInt(rmBtn.getAttribute('data-rm-idx'),10); rmPendingFile(idx);return; return; }
+    var msgImg=e.target.closest('[data-msg-img]');
+    if(msgImg){openLB(msgImg.getAttribute('data-msg-img'),false);return;}
+    var ab=e.target.closest('.ma');
+    if(ab){
+      if(ab.classList.contains('locked'))return;
+      var act=ab.getAttribute('data-act');
+      var idx=parseInt(ab.getAttribute('data-i'),10);
+      if(isNaN(idx)||idx<0||idx>=S.msgs.length)return;
+      if(act==='copy') actCopy(idx);
+      else if(act==='like') actLike(idx,'like');
+      else if(act==='dislike') actLike(idx,'dislike');
+      else if(act==='edit') openEdit(idx); 
+      else if(act==='regen') actRegen(idx);
+      else if(act==='voice') actVoice(idx);
+      return;
+    }
+    var wCard=e.target.closest('.w-card');
+    if(wCard){
+      if(wCard.classList.contains('locked')){toast('Sign in to use this feature', 'wrn');return;}
+      sendMsg(wCard.getAttribute('data-prompt'));return;
+    }
+    var galItem=e.target.closest('.gal-item');
+    if(galItem){
+      var gid=galItem.getAttribute('data-gid');
+      var g=S.gallery.find(function(x){return x.id===gid;});
+      if(g)openLB(g.url,g.type==='video');return;
+    }
+  });
+
+  var inp=$('cbInput');
+  inp.addEventListener('input',function(){autoH(inp);updateCB();});
+  inp.addEventListener('keydown',function(e){
+    if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}
+  });
+
+  $('micBtn').addEventListener('click',function(e){
+    e.stopPropagation();
+    if(!this.classList.contains('locked')) toggleMic();
+  });
+
+  $('sendStopBtn').addEventListener('click',function(e){
+    e.stopPropagation();
+    if(S.streaming) stopGen();
+    else sendMsg();
+  });
+
+  $('msgsWrap').addEventListener('scroll',checkScrollBtn);
+  $('scrollBot').addEventListener('click',function(e){e.stopPropagation();scrollBot(true);});
+
+  $('lbClose').addEventListener('click',function(e){e.stopPropagation();closeLB();});
+  $('lightbox').addEventListener('click',function(e){if(e.target===$('lightbox'))closeLB();});
+
+  $('lmFollowUp').addEventListener('click',function(e){e.stopPropagation();if(S.activeLinkUrl){sendMsg('Tell me more about this link: '+S.activeLinkUrl);closeLinkModal();}});
+
+  $('emClose').addEventListener('click',closeEdit);
+  $('emCancel').addEventListener('click',closeEdit);
+  $('emOverlay').addEventListener('click',closeEdit);
+  $('emSave').addEventListener('click',saveEdit);
+
+  $('closeHtmlPrev').addEventListener('click',function(){$('htmlPreviewModal').classList.remove('on');});
+  $('htmlPreviewModal').addEventListener('click',function(e){if(e.target===$('htmlPreviewModal')){$('htmlPreviewModal').classList.remove('on');}});
+
+  $('chatList').addEventListener('click',function(e){
+    var delBtn=e.target.closest('[data-del-cid]');
+    if(delBtn){
+      e.stopPropagation();
+      var cid=delBtn.getAttribute('data-del-cid');
+      delConv(cid);
+      return;
+    }
+    var item=e.target.closest('.cl-item');
+    if(item){
+      var cid=item.getAttribute('data-cid');
+      loadConv(cid);
+      renderChatList();
+      toggleSB(false);
+    }
+  });
+
+  document.addEventListener('click',function(e){
+    var cb=e.target.closest('[data-close]');
+    if(cb){e.stopPropagation();var target=$(cb.getAttribute('data-close'));if(target)target.classList.remove('on');return;}
+    var ov=e.target.closest('.modal-ov');
+    if(ov&&e.target===ov){ov.classList.remove('on');return;}
+    if(S.vdOpen&&!e.target.closest('#voiceDd')&&!e.target.closest('#voiceBtn'))toggleVD(false);
+    if(S.mdOpen&&!e.target.closest('#modelSel')&&!e.target.closest('#modelDd'))toggleMD(false);
+  });
+
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Escape')return;
+    if($('lightbox').classList.contains('on')){closeLB();return;}
+    if($('htmlPreviewModal').classList.contains('on')){$('htmlPreviewModal').classList.remove('on');return;}
+    if(S.asOpen){toggleAS(false);return;}
+    if(S.vdOpen){toggleVD(false);return;}
+    if(S.sbOpen){toggleSB(false);return;}
+    if(S.mdOpen){toggleMD(false);return;}
+    if($('emModal').classList.contains('on')){closeEdit();return;}
+    document.querySelectorAll('.modal-ov.on').forEach(function(m){m.classList.remove('on');});
+  });
+
+  document.addEventListener('paste',function(e){
+    if(S.streaming)return;
+    var items=e.clipboardData&&e.clipboardData.items;if(!items)return;
+    for(var i=0;i<items.length;i++){
+      if(items[i].type.indexOf('image/')===0){
+        e.preventDefault();
+        var file=items[i].getAsFile();if(!file)continue;
+        var name='pasted-'+Date.now()+'.'+(file.type.split('/')[1]||'png');
+        (function(f,n){
+          readAsDataUrl(f).then(function(url){
+            S.pendingFiles.push({type:'image',dataUrl:url,name:n,size:f.size,file:new File([f],n,{type:f.type})});
+            renderImgPreview();updateCB();
+          });
+        })(file,name);
+        break;
+      }
+    }
+  });
+}
+
+/* ========== INIT ========== */
+async function init(){
+  initTheme();initMarked();initModel();initEvents();
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) { $('micBtn').classList.add('locked'); }
+  setupAuth();renderAll();updateCB();
+  await loadChatList();
+  var lastActiveId = getActiveChat();
+  if(lastActiveId && S.chatListData.find(function(c){ return c.id === lastActiveId; })) {
+      await loadConv(lastActiveId);
+  } else {
+      showWelcome();
+  }
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 
 })();
 </script>
