@@ -4491,7 +4491,7 @@ function sendToAI(text){
 
   fetch(url+'/ask/universal',{
       method:'POST', headers:authH(), credentials:'include', signal:S.abort.signal,
-      body:JSON.stringify({ prompt:text, conversation_id:S.chatId, mode: S.mode, model: S.model })
+      body:JSON.stringify({ prompt:text, conversation_id:S.chatId, model: S.model })
   }).then(function(res){
     if(!res.ok)throw new Error('HTTP '+res.status);rmTyping();
     var ct=(res.headers.get('content-type')||'').toLowerCase();
