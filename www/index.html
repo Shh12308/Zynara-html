@@ -1029,6 +1029,25 @@ pre:hover .code-copy-btn{opacity:1}
 }
 
 /* =========================================
+   GENERATED IMAGE CARDS
+   ========================================= */
+.gen-img-card{margin:16px 0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--bg-secondary);transition:border-color .2s}
+.gen-img-card:hover{border-color:var(--border-active)}
+.gen-img-card img{width:100%;display:block;cursor:pointer;transition:transform .4s var(--ease);border-radius:0}
+.gen-img-card:hover img{transform:scale(1.01)}
+.gen-img-meta{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.gen-img-prompt{font-size:12px;color:var(--text-muted);line-height:1.5;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gen-img-prompt strong{color:var(--text-secondary);font-weight:600}
+.gen-img-actions{display:flex;gap:6px;flex-shrink:0}
+.gen-img-btn{width:32px;height:32px;border-radius:8px;background:var(--bg-tertiary);border:1px solid var(--border);color:var(--text-secondary);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.gen-img-btn:hover{background:var(--bg-hover);color:var(--text-primary);border-color:var(--border-active)}
+
+/* Image generation loading skeleton */
+.gen-img-skeleton{margin:16px 0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:linear-gradient(110deg,var(--bg-tertiary) 8%,var(--bg-quaternary) 18%,var(--bg-tertiary) 33%);background-size:200% 100%;animation:imgShimmer 1.5s linear infinite;min-height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text-muted);font-size:13px}
+.gen-img-skeleton i{font-size:28px;opacity:.3}
+.gen-img-skeleton span{opacity:.5;font-size:12px}
+
+/* =========================================
    IMAGES & GALLERY (ChatGPT Image Style)
    ========================================= */
 
@@ -2949,6 +2968,7 @@ function appendUserMessage(text){
   return div;
 }
 
+/* ── Replace createAIMessageElement ── */
 function createAIMessageElement(){
   hideWelcome();
   const inner = dom().msgsInner;
@@ -2963,6 +2983,7 @@ function createAIMessageElement(){
         <span class="ai-status" style="display:none"></span>
       </div>
       <div class="msg-text-wrapper">
+        <div class="msg-images"></div>
         <div class="msg-ct">
           <div class="thinking-dots"><span></span><span></span><span></span></div>
         </div>
@@ -2974,47 +2995,70 @@ function createAIMessageElement(){
   return div;
 }
 
-function appendAIMessageFull(content){
-  // Non-streaming: render a complete AI message (e.g. loading history)
-  hideWelcome();
-  const inner = dom().msgsInner;
-  if(!inner) return null;
-  const div = document.createElement('div');
-  div.className = 'msg ai-msg';
-  div.innerHTML = `
-    <div class="msg-inner">
-      <div class="msg-label"><span class="ai-dot"></span> HeloxAi</div>
-      <div class="msg-text-wrapper"><div class="msg-ct"></div></div>
-      <div class="msg-acts"></div>
+/* ── Replace handleImageEvent ── */
+function handleImageEvent(aiEl, ev){
+  const b64 = ev.data || ev.b64_json || ev.image_data;
+  if(!b64) return;
+  const mime = ev.mime_type || ev.mime || 'image/png';
+  const promptText = ev.prompt || '';
+
+  // Remove skeleton if present
+  const skeleton = aiEl.querySelector('.gen-img-skeleton');
+  if(skeleton) skeleton.remove();
+
+  // Append to .msg-images — NEVER to .msg-ct
+  const imgContainer = aiEl.querySelector('.msg-images');
+  if(!imgContainer) return;
+
+  const card = document.createElement('div');
+  card.className = 'gen-img-card';
+  card.innerHTML = `
+    <img src="data:${mime};base64,${b64}" alt="${escHtml(promptText)}" loading="lazy" onclick="window.open(this.src,'_blank')">
+    <div class="gen-img-meta">
+      <div class="gen-img-prompt"><strong>Prompt:</strong> ${escHtml(promptText)}</div>
+      <div class="gen-img-actions">
+        <button class="gen-img-btn" title="Download" onclick="downloadBase64Image('data:${mime};base64,${b64}','helox-image.png')"><i class="fa-solid fa-download"></i></button>
+        <button class="gen-img-btn" title="Open full size" onclick="window.open(this.closest('.gen-img-card').querySelector('img').src,'_blank')"><i class="fa-solid fa-up-right-from-square"></i></button>
+      </div>
     </div>`;
-  inner.appendChild(div);
-  const ct = div.querySelector('.msg-ct');
-  ct.innerHTML = DOMPurify.sanitize(renderMD(content, false), SANITIZE_OPTS);
-  postProcess(ct);
-  checkCollapse(div);
-  return div;
+  imgContainer.appendChild(card);
+  scrollToBottom();
 }
 
-function checkCollapse(msgEl){
-  const wrapper = msgEl.querySelector('.msg-text-wrapper');
-  const ct = msgEl.querySelector('.msg-ct');
-  if(!wrapper || !ct) return;
-  if(ct.scrollHeight > 220){
-    wrapper.classList.add('collapsed');
-    let btn = msgEl.querySelector('.msg-toggle-btn');
-    if(!btn){
-      btn = document.createElement('button');
-      btn.className='msg-toggle-btn';
-      btn.textContent='Show more';
-      btn.onclick=()=>{
-        const collapsed = wrapper.classList.toggle('collapsed');
-        btn.textContent = collapsed ? 'Show more' : 'Show less';
-      };
-      wrapper.parentNode.insertBefore(btn, wrapper.nextSibling);
-    }
-  }
+/* ── New: image_generating skeleton handler ── */
+function showImageSkeleton(aiEl, prompt){
+  const imgContainer = aiEl.querySelector('.msg-images');
+  if(!imgContainer) return;
+  // Don't add duplicate skeletons
+  if(imgContainer.querySelector('.gen-img-skeleton')) return;
+  const skel = document.createElement('div');
+  skel.className = 'gen-img-skeleton';
+  skel.innerHTML = '<i class="fa-solid fa-image"></i><span>Generating image...</span>';
+  imgContainer.appendChild(skel);
+  scrollToBottom();
 }
 
+/* ── Replace scheduleRender — targets ONLY .msg-ct ── */
+function scheduleRender(contentEl, rawText, searchHtml){
+  if(_renderTimer) return;
+  _renderTimer = setTimeout(()=>{
+    _renderTimer = null;
+    let html = renderMD(rawText, true);
+    if(searchHtml) html = searchHtml + html;
+    contentEl.innerHTML = DOMPurify.sanitize(html, SANITIZE_OPTS);
+    postProcess(contentEl);
+    autoScroll();
+  }, RENDER_DELAY);
+}
+
+/* ── Replace finalRender — targets ONLY .msg-ct ── */
+function finalRender(contentEl, rawText, searchHtml){
+  cancelRender();
+  let html = renderMD(rawText, false);
+  if(searchHtml) html = searchHtml + html;
+  contentEl.innerHTML = DOMPurify.sanitize(html, SANITIZE_OPTS);
+  postProcess(contentEl);
+}   
 /* ═══════════════════════════════════════════════════════════
    §8  STOP BUTTON
    ═══════════════════════════════════════════════════════════ */
@@ -3081,6 +3125,7 @@ async function sendMessage(prompt){
     status.style.display='inline-flex';
     status.textContent='responding...';
 
+    /* ── Replace the entire for-await switch inside sendMessage ── */
     for await(const ev of parseSSE(res)){
       if(S.abort.signal.aborted) break;
 
@@ -3105,18 +3150,30 @@ async function sendMessage(prompt){
           searchHtml = ev.html || '';
           break;
 
+        case 'image_generating':
+          status.textContent='generating image...';
+          showImageSkeleton(aiEl, ev.prompt || prompt);
+          break;
+
         case 'image':
-          handleImageEvent(ct, ev);
+          status.textContent='responding...';
+          handleImageEvent(aiEl, ev);
           break;
 
         case 'done':
           cancelRender();
           finalRender(ct, raw, searchHtml);
+          // Remove any leftover skeleton
+          const skel = aiEl.querySelector('.gen-img-skeleton');
+          if(skel) skel.remove();
           aiEl.classList.remove('streaming-cursor');
           status.textContent='';
           break;
 
         case 'error':
+          // Remove skeleton on error too
+          const skelErr = aiEl.querySelector('.gen-img-skeleton');
+          if(skelErr) skelErr.remove();
           throw new Error(ev.message || 'Stream error from server');
       }
     }
