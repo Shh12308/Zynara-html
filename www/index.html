@@ -250,6 +250,27 @@ main{ flex:1; display:flex;flex-direction:column; width:100%; position:relative;
   word-break: break-word;
 }
 
+   
+/* ═══ STREAMING UI ═══ */
+.streaming-cursor .msg-ct::after{content:'▍';color:var(--accent);animation:cursorBlink .8s step-end infinite;font-weight:400;margin-left:1px;font-size:.95em}
+@keyframes cursorBlink{0%,100%{opacity:1}50%{opacity:0}}
+.thinking-dots{display:inline-flex;gap:5px;align-items:center;padding:6px 0}
+.thinking-dots span{width:7px;height:7px;border-radius:50%;background:var(--accent);opacity:.25;animation:dotPulse 1.4s ease-in-out infinite}
+.thinking-dots span:nth-child(2){animation-delay:.2s}
+.thinking-dots span:nth-child(3){animation-delay:.4s}
+@keyframes dotPulse{0%,80%,100%{opacity:.25;transform:scale(.8)}40%{opacity:1;transform:scale(1.15)}}
+.stop-stream-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 18px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:22px;color:var(--text-secondary);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;font-family:var(--font-body);margin:6px auto 0;animation:slideUpFade .25s var(--ease-out) both}
+.stop-stream-btn:hover{background:var(--bg-hover);border-color:var(--danger);color:var(--danger)}
+.stop-stream-btn i{font-size:10px}
+.msg-streaming .ai-status{display:inline-flex!important;align-items:center;gap:6px}
+.msg-streaming .ai-status::after{content:'';width:5px;height:5px;border-radius:50%;background:var(--accent);animation:dotPulse 1.4s ease-in-out infinite;flex-shrink:0}
+.code-copy-btn{position:absolute;top:8px;right:8px;background:var(--bg-tertiary);border:1px solid var(--border);color:var(--text-muted);padding:5px 8px;border-radius:6px;font-size:12px;cursor:pointer;transition:all .15s;opacity:0;z-index:2}
+pre:hover .code-copy-btn{opacity:1}
+.code-copy-btn:hover{background:var(--bg-hover);color:var(--text-primary);border-color:var(--border-active)}
+.code-copy-btn.copied{color:var(--accent);border-color:var(--accent)}
+.input-disabled{opacity:.5;pointer-events:none}
+
+
 /* --- Headings --- */
 .msg-ct h1, .msg-ct h2, .msg-ct h3, .msg-ct h4, .msg-ct h5, .msg-ct h6 {
   font-family: var(--font-display);
@@ -2696,89 +2717,1330 @@ svg .katex, svg .katex-html,
    <script src="./clock.js"></script>
 <!-- KaTeX Safe Renderer — MUST load before app.js -->
 <script>
-(function() {
-  'use strict';
+(function(){
+'use strict';
 
-  // Override renderMathInElement globally with a safe version
-  window.safeRenderMath = function(container) {
-    if (!container || !container.isConnected) return;
-    if (typeof renderMathInElement !== 'function') return;
+/* ═══════════════════════════════════════════════════════════
+   §1  CONFIGURATION & STATE
+   ═══════════════════════════════════════════════════════════ */
+const API = window.location.origin;
+const RENDER_DELAY   = 45;          // ms between streamed markdown renders
+const SCROLL_THRESHOLD = 180;       // px from bottom to auto-scroll
+const SANITIZE_OPTS = {
+  ADD_TAGS: ['details','summary','iframe'],
+  ADD_ATTR: ['target','rel','allowfullscreen','frameborder','scrolling','loading','controls','autoplay','loop','muted','poster','playinline'],
+  FORBID_TAGS: ['style','form','input','textarea','select','button'],
+  FORBID_ATTR: ['onerror','onload','onclick','onmouseover']
+};
+const KATEX_OPTS = {
+  delimiters:[
+    {left:'$$',right:'$$',display:true},
+    {left:'$',right:'$',display:false},
+    {left:'\\(',right:'\\)',display:false},
+    {left:'\\[',right:'\\]',display:true}
+  ],
+  throwOnError:false
+};
 
-    // Don't render inside these containers
-    var blockedParents = ['.code-blk', '.mermaid', '.map-preview', '.map-embed', '.embed-youtube', 'svg', '.sb-overlay', '.sidebar', '.modal-ov', '.cookie-banner'];
-    for (var i = 0; i < blockedParents.length; i++) {
-      if (container.closest && container.closest(blockedParents[i])) return;
-    }
+const S = {
+  convId: null,
+  convs: [],
+  user: null,
+  streaming: false,
+  model: localStorage.getItem('helox-model') || 'helox',
+  mode: localStorage.getItem('helox-mode') || 'general',
+  theme: localStorage.getItem('helox-theme') || 'dark',
+  sidebarOpen: false,
+  abort: null,
+  plan: 'free',
+  isPremium: false,
+};
 
-    try {
-      renderMathInElement(container, {
-        delimiters: [
-          { left: "$$", right: "$$", display: true },
-          { left: "\\[", right: "\\]", display: true },
-          { left: "$", right: "$", display: false },
-          { left: "\\(", right: "\\)", display: false }
-        ],
-        throwOnError: false,
-        ignoredTags: [
-          "script", "noscript", "style", "textarea", "pre", "code",
-          "option", "svg", "math", "iframe", "object", "embed",
-          "template", "slot", "select", "button", "input", "label"
-        ],
-        ignoredClasses: [
-          "hljs", "katex", "no-katex", "code-hd", "cp-btn",
-          "code-lang-badge", "line-numbers-rows", "mermaid",
-          "map-preview", "map-pin", "map-overlay-btn",
-          "search-thumb", "source-chip-img", "img-wrap",
-          "msg-img-item", "gen-img-card", "embed-tweet",
-          "w-card", "cl-item", "sb-logo", "hdr-title"
-        ],
-        strict: false,
-        trust: false
-      });
-    } catch (e) {
-      // Silently swallow NotSupportedError — this is the fix for code 9
-      if (e.name !== 'NotSupportedError' && e.code !== 9) {
-        console.warn('KaTeX:', e.message);
-      }
-    }
+/* ═══════════════════════════════════════════════════════════
+   §2  DOM REFERENCES (lazy-init to survive partial HTML)
+   ═══════════════════════════════════════════════════════════ */
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+function dom(){
+  return {
+    msgsWrap:   $('#msgs-wrap'),
+    msgsInner:  $('#msgs-inner'),
+    welcome:    $('.welcome'),
+    input:      $('.chat-input'),
+    sendBtn:    $('.send-btn'),
+    fileBtn:    $('.file-btn'),
+    voiceBtn:   $('.voice-btn'),
+    fileInput:  $('#file-input'),
+    sidebar:    $('.sidebar'),
+    sbOverlay:  $('.sb-overlay'),
+    sbList:     $('.cl'),
+    newChatBtn: $('.nc-btn'),
+    hdrTitle:   $('.hdr-title'),
+    modelSel:   $('.model-sel'),
+    modelDd:    $('.model-dd'),
+    stopBtn:    null,  // created dynamically
   };
+}
 
-  // Batch render all message containers
-  window.renderAllMath = function() {
-    var els = document.querySelectorAll('.msg-ct');
-    for (var i = 0; i < els.length; i++) {
-      if (els[i].isConnected) {
-        window.safeRenderMath(els[i]);
-      }
-    }
-  };
+/* ═══════════════════════════════════════════════════════════
+   §3  MARKED CONFIGURATION
+   ═══════════════════════════════════════════════════════════ */
+if(typeof marked !== 'undefined'){
+  marked.setOptions({ gfm:true, breaks:true });
+}
 
-  // Monkey-patch: if anything calls renderMathInElement directly,
-  // intercept it to prevent the crash
-  var _originalRenderMath = window.renderMathInElement;
-  if (_originalRenderMath) {
-    window.renderMathInElement = function(elem, opts) {
-      if (!elem || !elem.isConnected) return;
-      // Block rendering on non-HTML elements
-      if (elem.nodeType !== 1) return;
-      var tag = (elem.tagName || '').toLowerCase();
-      if (tag === 'svg' || tag === 'math' || tag === 'script' || tag === 'style') return;
-      // Block if inside a code block or mermaid
-      if (elem.closest && (elem.closest('.code-blk') || elem.closest('.mermaid') || elem.closest('pre') || elem.closest('svg'))) return;
-      try {
-        return _originalRenderMath.call(this, elem, opts || {
-          throwOnError: false,
-          ignoredTags: ["script","noscript","style","textarea","pre","code","option","svg","math","iframe","object","embed","template","slot","select","button","input"],
-          ignoredClasses: ["hljs","katex","no-katex","code-hd","cp-btn","code-lang-badge","line-numbers-rows","mermaid","map-preview","search-thumb","img-wrap","msg-img-item"],
-          strict: false
-        });
-      } catch (e) {
-        if (e.name !== 'NotSupportedError' && e.code !== 9) {
-          console.warn('KaTeX intercepted:', e.message);
+/* ═══════════════════════════════════════════════════════════
+   §4  SSE STREAM PARSER
+   ═══════════════════════════════════════════════════════════ */
+async function* parseSSE(response){
+  const reader = response.body.getReader();
+  const dec = new TextDecoder();
+  let buf = '';
+  try{
+    while(true){
+      const {done,value} = await reader.read();
+      if(done) break;
+      buf += dec.decode(value,{stream:true});
+      const lines = buf.split('\n');
+      buf = lines.pop() || '';
+      for(const line of lines){
+        const t = line.trim();
+        if(!t) continue;
+        if(t === 'data: [DONE]'){ yield {type:'done'}; return; }
+        if(t.startsWith('data: ')){
+          try{ yield JSON.parse(t.slice(6)); }
+          catch(e){/* skip */}
         }
       }
-    };
+    }
+    // flush remainder
+    if(buf.trim().startsWith('data: ')){
+      try{ yield JSON.parse(buf.trim().slice(6)); }catch(e){}
+    }
+  }finally{
+    reader.releaseLock();
   }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   §5  MARKDOWN RENDERING PIPELINE
+   ═══════════════════════════════════════════════════════════ */
+let _renderTimer = null;
+
+function patchCodeBlocks(text){
+  // If odd number of ``` markers, temp-close the last one
+  const m = text.match(/```/g);
+  if(m && m.length % 2 !== 0) return text + '\n```';
+  return text;
+}
+
+function renderMD(raw, streaming){
+  let t = raw;
+  if(streaming) t = patchCodeBlocks(t);
+  return marked.parse(t);
+}
+
+function postProcess(el){
+  // Syntax highlight — only new blocks
+  el.querySelectorAll('pre code:not(.hljs)').forEach(b => {
+    hljs.highlightElement(b);
+  });
+  // KaTeX
+  if(window.renderMathInElement){
+    try{ renderMathInElement(el, KATEX_OPTS); }catch(e){}
+  }
+  // Links → new tab
+  el.querySelectorAll('a:not([target])').forEach(a=>{
+    a.target='_blank'; a.rel='noopener noreferrer';
+  });
+  // Copy buttons on code blocks
+  el.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.code-copy-btn')) return;
+    pre.style.position='relative';
+    const btn = document.createElement('button');
+    btn.className='code-copy-btn';
+    btn.innerHTML='<i class="fa-regular fa-copy"></i>';
+    btn.title='Copy code';
+    btn.onclick=()=>copyCode(pre,btn);
+    pre.appendChild(btn);
+  });
+  // Admonition transform: > [!NOTE] text → .admonition
+  el.querySelectorAll('blockquote').forEach(bq=>{
+    const first = bq.querySelector('p');
+    if(!first) return;
+    const m = first.textContent.match(/^\[!(NOTE|TIP|WARNING|WARN|ERROR|ERR|IMPORTANT|INFO|CAUTION)\]\s*/i);
+    if(!m) return;
+    const type = m[1].toUpperCase();
+    const typeMap = {NOTE:'note',TIP:'tip',WARNING:'warn',WARN:'warn',ERROR:'err',ERR:'err',IMPORTANT:'note',INFO:'note',CAUTION:'warn'};
+    const cls = typeMap[type] || 'note';
+    const iconMap = {note:'fa-circle-info',tip:'fa-lightbulb',warn:'fa-triangle-exclamation',err:'fa-circle-xmark'};
+    const titleMap = {note:'Note',tip:'Tip',warn:'Warning',err:'Error'};
+    first.textContent = first.textContent.slice(m[0].length);
+    bq.outerHTML = `<div class="admonition adm-${cls}"><div class="admonition-icon"><i class="fa-solid ${iconMap[cls]||iconMap.note}"></i></div><div><span class="adm-title">${titleMap[cls]||type}</span>${bq.innerHTML}</div></div>`;
+  });
+}
+
+function scheduleRender(contentEl, rawText, searchHtml){
+  if(_renderTimer) return;
+  _renderTimer = setTimeout(()=>{
+    _renderTimer = null;
+    let html = renderMD(rawText, true);
+    if(searchHtml) html = searchHtml + html;
+    contentEl.innerHTML = DOMPurify.sanitize(html, SANITIZE_OPTS);
+    postProcess(contentEl);
+    autoScroll();
+  }, RENDER_DELAY);
+}
+
+function cancelRender(){
+  if(_renderTimer){ clearTimeout(_renderTimer); _renderTimer=null; }
+}
+
+function finalRender(contentEl, rawText, searchHtml){
+  cancelRender();
+  let html = renderMD(rawText, false);
+  if(searchHtml) html = searchHtml + html;
+  contentEl.innerHTML = DOMPurify.sanitize(html, SANITIZE_OPTS);
+  postProcess(contentEl);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   §6  SCROLLING
+   ═══════════════════════════════════════════════════════════ */
+function autoScroll(){
+  const w = dom().msgsWrap;
+  if(!w) return;
+  const atBottom = w.scrollHeight - w.scrollTop - w.clientHeight < SCROLL_THRESHOLD;
+  if(atBottom) w.scrollTop = w.scrollHeight;
+}
+function scrollToBottom(){
+  const w = dom().msgsWrap;
+  if(w) w.scrollTop = w.scrollHeight;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   §7  MESSAGE DOM CREATION
+   ═══════════════════════════════════════════════════════════ */
+function hideWelcome(){
+  const w = dom().welcome;
+  if(w) w.style.display='none';
+}
+function showWelcome(){
+  const w = dom().welcome;
+  if(w) w.style.display='';
+}
+
+function appendUserMessage(text){
+  hideWelcome();
+  const inner = dom().msgsInner;
+  if(!inner) return;
+  const div = document.createElement('div');
+  div.className = 'msg user-msg';
+  div.innerHTML = `
+    <div class="msg-inner">
+      <div class="msg-label">You</div>
+      <div class="msg-bubble">
+        <div class="msg-text-wrapper"><div class="msg-ct">${escHtml(text)}</div></div>
+      </div>
+    </div>`;
+  inner.appendChild(div);
+  scrollToBottom();
+  return div;
+}
+
+function createAIMessageElement(){
+  hideWelcome();
+  const inner = dom().msgsInner;
+  if(!inner) return null;
+  const div = document.createElement('div');
+  div.className = 'msg ai-msg msg-streaming streaming-cursor';
+  div.innerHTML = `
+    <div class="msg-inner">
+      <div class="msg-label">
+        <span class="ai-dot"></span>
+        HeloxAi
+        <span class="ai-status" style="display:none"></span>
+      </div>
+      <div class="msg-text-wrapper">
+        <div class="msg-ct">
+          <div class="thinking-dots"><span></span><span></span><span></span></div>
+        </div>
+      </div>
+      <div class="msg-acts"></div>
+    </div>`;
+  inner.appendChild(div);
+  scrollToBottom();
+  return div;
+}
+
+function appendAIMessageFull(content){
+  // Non-streaming: render a complete AI message (e.g. loading history)
+  hideWelcome();
+  const inner = dom().msgsInner;
+  if(!inner) return null;
+  const div = document.createElement('div');
+  div.className = 'msg ai-msg';
+  div.innerHTML = `
+    <div class="msg-inner">
+      <div class="msg-label"><span class="ai-dot"></span> HeloxAi</div>
+      <div class="msg-text-wrapper"><div class="msg-ct"></div></div>
+      <div class="msg-acts"></div>
+    </div>`;
+  inner.appendChild(div);
+  const ct = div.querySelector('.msg-ct');
+  ct.innerHTML = DOMPurify.sanitize(renderMD(content, false), SANITIZE_OPTS);
+  postProcess(ct);
+  checkCollapse(div);
+  return div;
+}
+
+function checkCollapse(msgEl){
+  const wrapper = msgEl.querySelector('.msg-text-wrapper');
+  const ct = msgEl.querySelector('.msg-ct');
+  if(!wrapper || !ct) return;
+  if(ct.scrollHeight > 220){
+    wrapper.classList.add('collapsed');
+    let btn = msgEl.querySelector('.msg-toggle-btn');
+    if(!btn){
+      btn = document.createElement('button');
+      btn.className='msg-toggle-btn';
+      btn.textContent='Show more';
+      btn.onclick=()=>{
+        const collapsed = wrapper.classList.toggle('collapsed');
+        btn.textContent = collapsed ? 'Show more' : 'Show less';
+      };
+      wrapper.parentNode.insertBefore(btn, wrapper.nextSibling);
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   §8  STOP BUTTON
+   ═══════════════════════════════════════════════════════════ */
+function showStopButton(){
+  hideStopButton();
+  const inner = dom().msgsInner;
+  if(!inner) return;
+  const btn = document.createElement('button');
+  btn.className='stop-stream-btn';
+  btn.id='stop-btn';
+  btn.innerHTML='<i class="fa-solid fa-stop"></i> Stop generating';
+  btn.onclick = stopStreaming;
+  inner.appendChild(btn);
+  scrollToBottom();
+}
+function hideStopButton(){
+  const b = $('#stop-btn');
+  if(b) b.remove();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   §9  CORE STREAMING SEND
+   ═══════════════════════════════════════════════════════════ */
+async function sendMessage(prompt){
+  if(S.streaming) return;
+  prompt = (prompt||'').trim();
+  if(!prompt) return;
+
+  appendUserMessage(prompt);
+  const aiEl = createAIMessageElement();
+  if(!aiEl) return;
+  const ct = aiEl.querySelector('.msg-ct');
+  const status = aiEl.querySelector('.ai-status');
+
+  S.streaming = true;
+  S.abort = new AbortController();
+  setInputEnabled(false);
+  showStopButton();
+
+  let raw = '';
+  let searchHtml = '';
+  let convId = S.convId;
+
+  try{
+    const res = await fetch(`${API}/ask/universal`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        prompt,
+        conversation_id: convId,
+        stream: true,
+        model: S.model,
+        mode: S.mode,
+      }),
+      signal: S.abort.signal,
+      credentials:'include',
+    });
+
+    if(!res.ok){
+      const errBody = await res.text().catch(()=>'');
+      throw new Error(`HTTP ${res.status}: ${errBody.slice(0,200) || res.statusText}`);
+    }
+
+    status.style.display='inline-flex';
+    status.textContent='responding...';
+
+    for await(const ev of parseSSE(res)){
+      if(S.abort.signal.aborted) break;
+
+      switch(ev.type){
+
+        case 'conversation_id':
+          convId = ev.conversation_id;
+          if(!S.convId){
+            S.convId = convId;
+            addConvToSidebar(convId, prompt.slice(0,50));
+            setHdrTitle(prompt.slice(0,60));
+          }
+          break;
+
+        case 'token':
+          raw += (ev.text||'');
+          status.textContent='responding...';
+          scheduleRender(ct, raw, searchHtml);
+          break;
+
+        case 'search_html':
+          searchHtml = ev.html || '';
+          break;
+
+        case 'image':
+          handleImageEvent(ct, ev);
+          break;
+
+        case 'done':
+          cancelRender();
+          finalRender(ct, raw, searchHtml);
+          aiEl.classList.remove('streaming-cursor');
+          status.textContent='';
+          break;
+
+        case 'error':
+          throw new Error(ev.message || 'Stream error from server');
+      }
+    }
+
+    // If loop ended without 'done' (aborted or connection closed)
+    if(!aiEl.classList.contains('streaming-cursor') === false && raw){
+      // already finalized
+    } else if(S.abort.signal.aborted && raw){
+      cancelRender();
+      finalRender(ct, raw, searchHtml);
+      aiEl.classList.remove('streaming-cursor');
+      status.textContent='stopped';
+    }
+
+    if(convId && !S.convId) S.convId = convId;
+
+  }catch(err){
+    cancelRender();
+    if(err.name === 'AbortError'){
+      if(raw){
+        finalRender(ct, raw, searchHtml);
+        aiEl.classList.remove('streaming-cursor');
+      } else {
+        ct.innerHTML='<em style="color:var(--text-muted)">Generation stopped.</em>';
+      }
+      status.textContent='stopped';
+    } else {
+      ct.innerHTML=`<div style="color:var(--danger);padding:8px 0"><i class="fa-solid fa-circle-exclamation"></i> ${escHtml(err.message)}</div>`;
+      status.textContent='error';
+      console.error('Stream error:', err);
+    }
+  }finally{
+    S.streaming = false;
+    S.abort = null;
+    aiEl.classList.remove('msg-streaming','streaming-cursor');
+    hideStopButton();
+    setInputEnabled(true);
+    checkCollapse(aiEl);
+    focusInput();
+    scrollToBottom();
+  }
+}
+
+function stopStreaming(){
+  if(S.abort){
+    S.abort.abort();
+    S.abort = null;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   §10  IMAGE EVENT HANDLER
+   ═══════════════════════════════════════════════════════════ */
+function handleImageEvent(ct, ev){
+  const b64 = ev.data || ev.b64_json || ev.image_data;
+  if(!b64) return;
+  const mime = ev.mime_type || ev.mime || 'image/png';
+  const promptText = ev.prompt || '';
+  const card = document.createElement('div');
+  card.className='gen-img-card';
+  card.innerHTML=`
+    <img src="data:${mime};base64,${b64}" alt="${escHtml(promptText)}" loading="lazy" onclick="window.open(this.src,'_blank')">
+    <div class="gen-img-meta">
+      <div class="gen-img-prompt"><strong>Prompt:</strong> ${escHtml(promptText)}</div>
+      <div class="gen-img-actions">
+        <button class="gen-img-btn" title="Download" onclick="downloadBase64Image('data:${mime};base64,${b64}','helox-image.png')"><i class="fa-solid fa-download"></i></button>
+        <button class="gen-img-btn" title="Open" onclick="window.open(this.closest('.gen-img-card').querySelector('img').src,'_blank')"><i class="fa-solid fa-up-right-from-square"></i></button>
+      </div>
+    </div>`;
+  ct.appendChild(card);
+}
+
+// Global for inline onclick
+window.downloadBase64Image = function(dataUrl, filename){
+  const a = document.createElement('a');
+  a.href = dataUrl; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+};
+
+/* ═══════════════════════════════════════════════════════════
+   §11  STREAMING FILE ANALYSIS
+   ═══════════════════════════════════════════════════════════ */
+async function sendAnalysis(formData, displayLabel){
+  if(S.streaming) return;
+
+  hideWelcome();
+  const aiEl = createAIMessageElement();
+  if(!aiEl) return;
+  const ct = aiEl.querySelector('.msg-ct');
+  const status = aiEl.querySelector('.ai-status');
+
+  S.streaming = true;
+  S.abort = new AbortController();
+  setInputEnabled(false);
+  showStopButton();
+
+  let raw = '';
+  let convId = S.convId;
+
+  try{
+    const res = await fetch(`${API}/analysis`,{
+      method:'POST',
+      body: formData,
+      signal: S.abort.signal,
+      credentials:'include',
+    });
+
+    if(!res.ok){
+      const t = await res.text().catch(()=>'');
+      throw new Error(`HTTP ${res.status}: ${t.slice(0,200)}`);
+    }
+
+    status.style.display='inline-flex';
+    status.textContent='analyzing...';
+
+    for await(const ev of parseSSE(res)){
+      if(S.abort.signal.aborted) break;
+      switch(ev.type){
+        case 'conversation_id':
+          convId = ev.conversation_id;
+          if(!S.convId){
+            S.convId = convId;
+            addConvToSidebar(convId, displayLabel.slice(0,50));
+            setHdrTitle(displayLabel.slice(0,60));
+          }
+          break;
+        case 'token':
+          raw += (ev.text||'');
+          status.textContent='analyzing...';
+          scheduleRender(ct, raw, '');
+          break;
+        case 'done':
+          cancelRender();
+          finalRender(ct, raw, '');
+          aiEl.classList.remove('streaming-cursor');
+          status.textContent='';
+          break;
+        case 'error':
+          throw new Error(ev.message || 'Analysis error');
+      }
+    }
+
+    if(convId && !S.convId) S.convId = convId;
+
+  }catch(err){
+    cancelRender();
+    if(err.name==='AbortError'){
+      if(raw){
+        finalRender(ct, raw, '');
+        aiEl.classList.remove('streaming-cursor');
+      } else {
+        ct.innerHTML='<em style="color:var(--text-muted)">Analysis stopped.</em>';
+      }
+      status.textContent='stopped';
+    } else {
+      ct.innerHTML=`<div style="color:var(--danger);padding:8px 0"><i class="fa-solid fa-circle-exclamation"></i> ${escHtml(err.message)}</div>`;
+      status.textContent='error';
+    }
+  }finally{
+    S.streaming=false; S.abort=null;
+    aiEl.classList.remove('msg-streaming','streaming-cursor');
+    hideStopButton(); setInputEnabled(true);
+    checkCollapse(aiEl); focusInput(); scrollToBottom();
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   §12  INPUT MANAGEMENT
+   ═══════════════════════════════════════════════════════════ */
+function setInputEnabled(on){
+  const inp = dom().input;
+  const btn = dom().sendBtn;
+  if(inp) inp.classList.toggle('input-disabled', !on);
+  if(btn) btn.classList.toggle('input-disabled', !on);
+}
+function focusInput(){
+  setTimeout(()=>{ const i=dom().input; if(i) i.focus(); },50);
+}
+function getInputText(){
+  const i=dom().input; return i ? i.value.trim() : '';
+}
+function clearInput(){
+  const i=dom().input; if(i){ i.value=''; autoResize(i); }
+}
+function autoResize(el){
+  if(!el) return;
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight, 200)+'px';
+}
+
+function handleSend(){
+  if(S.streaming) return;
+  const text = getInputText();
+  if(!text) return;
+  clearInput();
+  sendMessage(text);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   §13  FILE UPLOAD
+   ═══════════════════════════════════════════════════════════ */
+function triggerFileInput(){
+  const fi = dom().fileInput;
+  if(fi) fi.click();
+}
+
+async function handleFileSelect(files){
+  if(!files || !files.length) return;
+  const file = files[0];
+  if(file.size > 20*1024*1024){
+    alert('File too large. Maximum 20MB.');
+    return;
+  }
+
+  const fd = new FormData();
+  const prompt = getInputText();
+  if(prompt) fd.append('prompt', prompt);
+  if(S.convId) fd.append('conversation_id', S.convId);
+  fd.append('stream', 'true');
+  fd.append('file', file);
+
+  clearInput();
+  appendUserMessage(`[File: ${file.name}]` + (prompt ? `\n${prompt}` : ''));
+  await sendAnalysis(fd, file.name);
+}
+
+async function handlePasteImage(e){
+  const items = e.clipboardData?.items;
+  if(!items) return;
+  for(const item of items){
+    if(item.type.startsWith('image/')){
+      e.preventDefault();
+      const file = item.getAsFile();
+      if(!file) continue;
+      const b64 = await fileToBase64(file);
+      const fd = new FormData();
+      const prompt = getInputText();
+      if(prompt) fd.append('prompt', prompt);
+      if(S.convId) fd.append('conversation_id', S.convId);
+      fd.append('stream', 'true');
+      fd.append('image_base64', b64);
+      fd.append('image_mime', file.type);
+
+      clearInput();
+      appendUserMessage(`[Image pasted]` + (prompt ? `\n${prompt}` : ''));
+      await sendAnalysis(fd, 'Pasted image');
+      return;
+    }
+  }
+}
+
+function fileToBase64(file){
+  return new Promise((resolve,reject)=>{
+    const r = new FileReader();
+    r.onload = ()=> resolve(r.result);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   §14  CONVERSATION MANAGEMENT
+   ═══════════════════════════════════════════════════════════ */
+async function loadConversations(){
+  try{
+    const res = await fetch(`${API}/chats`,{credentials:'include'});
+    if(!res.ok) return;
+    const data = await res.json();
+    S.convs = Array.isArray(data) ? data : (data.conversations || data.data || []);
+    renderSidebar();
+  }catch(e){
+    console.warn('Failed to load conversations:', e);
+  }
+}
+
+function renderSidebar(){
+  const list = dom().sbList;
+  if(!list) return;
+  // Keep the label
+  const label = list.querySelector('.cl-label');
+  list.innerHTML = '';
+  if(label) list.appendChild(label);
+
+  const today = [], week = [], older = [];
+  const now = Date.now();
+  const DAY = 86400000;
+
+  for(const c of S.convs){
+    const t = new Date(c.updated_at || c.created_at).getTime();
+    const item = {id:c.id, title:c.title||'New chat', time:c.updated_at||c.created_at};
+    if(now - t < DAY) today.push(item);
+    else if(now - t < 7*DAY) week.push(item);
+    else older.push(item);
+  }
+
+  const groups = [
+    {label:'Today', items:today},
+    {label:'Previous 7 days', items:week},
+    {label:'Older', items:older},
+  ];
+
+  for(const g of groups){
+    if(!g.items.length) continue;
+    const lbl = document.createElement('div');
+    lbl.className='cl-label';
+    lbl.textContent=g.label;
+    list.appendChild(lbl);
+    for(const item of g.items){
+      list.appendChild(createConvItem(item));
+    }
+  }
+}
+
+function createConvItem(c){
+  const btn = document.createElement('button');
+  btn.className='cl-item' + (c.id===S.convId?' active':'');
+  btn.dataset.id = c.id;
+  const timeStr = formatTime(c.time);
+  btn.innerHTML=`
+    <i class="fa-regular fa-message"></i>
+    <span class="cl-title">${escHtml(c.title)}</span>
+    <span class="cl-time">${timeStr}</span>
+    <button class="cl-del" title="Delete" data-del="${c.id}"><i class="fa-solid fa-xmark"></i></button>`;
+  btn.addEventListener('click', (e)=>{
+    if(e.target.closest('.cl-del')) return;
+    switchConversation(c.id);
+  });
+  btn.querySelector('.cl-del').addEventListener('click',(e)=>{
+    e.stopPropagation();
+    deleteConversation(c.id);
+  });
+  return btn;
+}
+
+function addConvToSidebar(id, title){
+  // Remove from list if exists, add to top
+  S.convs = S.convs.filter(c=>c.id!==id);
+  S.convs.unshift({id, title, updated_at: new Date().toISOString(), created_at: new Date().toISOString()});
+  renderSidebar();
+}
+
+function updateConvTitle(id, title){
+  const c = S.convs.find(x=>x.id===id);
+  if(c) c.title = title;
+  const el = $(`.cl-item[data-id="${id}"] .cl-title`);
+  if(el) el.textContent = title;
+}
+
+function setHdrTitle(t){
+  const h = dom().hdrTitle;
+  if(h) h.textContent = t || 'HeloxAi';
+}
+
+async function switchConversation(id){
+  if(S.streaming) stopStreaming();
+  S.convId = id;
+  const c = S.convs.find(x=>x.id===id);
+  setHdrTitle(c ? c.title : 'HeloxAi');
+  renderSidebar();
+  closeSidebar();
+
+  // Load messages
+  const inner = dom().msgsInner;
+  if(inner) inner.innerHTML = '';
+  hideWelcome();
+
+  try{
+    const res = await fetch(`${API}/chat/${id}/messages`,{credentials:'include'});
+    if(!res.ok) throw new Error('Failed to load');
+    const msgs = await res.json();
+    const arr = Array.isArray(msgs) ? msgs : (msgs.messages || msgs.data || []);
+    for(const m of arr){
+      if(m.role==='user') appendUserMessage(m.content);
+      else if(m.role==='assistant') appendAIMessageFull(m.content);
+    }
+    scrollToBottom();
+  }catch(e){
+    console.warn('Load messages error:', e);
+    showWelcome();
+  }
+}
+
+async function deleteConversation(id){
+  try{
+    await fetch(`${API}/chats/${id}`,{method:'DELETE',credentials:'include'});
+  }catch(e){}
+  S.convs = S.convs.filter(c=>c.id!==id);
+  if(S.convId===id){
+    S.convId = null;
+    const inner = dom().msgsInner;
+    if(inner) inner.innerHTML='';
+    setHdrTitle('HeloxAi');
+    showWelcome();
+  }
+  renderSidebar();
+}
+
+function newChat(){
+  if(S.streaming) stopStreaming();
+  S.convId = null;
+  const inner = dom().msgsInner;
+  if(inner) inner.innerHTML='';
+  setHdrTitle('HeloxAi');
+  showWelcome();
+  renderSidebar();
+  closeSidebar();
+  focusInput();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   §15  SIDEBAR
+   ═══════════════════════════════════════════════════════════ */
+function openSidebar(){
+  S.sidebarOpen=true;
+  const sb=dom().sidebar, ov=dom().sbOverlay;
+  if(sb) sb.style.transform='translateX(0)';
+  if(ov) ov.classList.add('on');
+}
+function closeSidebar(){
+  S.sidebarOpen=false;
+  const sb=dom().sidebar, ov=dom().sbOverlay;
+  if(sb) sb.style.transform='';
+  if(ov) ov.classList.remove('on');
+}
+function toggleSidebar(){
+  S.sidebarOpen ? closeSidebar() : openSidebar();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   §16  MODEL SELECTOR
+   ═══════════════════════════════════════════════════════════ */
+const MODELS = [
+  {id:'helox', name:'HeloxAi', desc:'Llama 3.3 70B', icon:'H', iconCls:'gpt-icon'},
+  {id:'chatgpt', name:'ChatGPT', desc:'GPT-4o Mini', icon:'G', iconCls:'gpt-icon'},
+  {id:'chatz', name:'ChatZ', desc:'Llama 3.3 70B + Vision', icon:'Z', iconCls:'z-icon'},
+];
+
+function initModelSelector(){
+  const sel = dom().modelSel;
+  const dd = dom().modelDd;
+  if(!sel || !dd) return;
+
+  dd.innerHTML = '';
+  const cat = document.createElement('div');
+  cat.className='model-cat';
+  cat.textContent='Available Models';
+  dd.appendChild(cat);
+
+  for(const m of MODELS){
+    const item = document.createElement('div');
+    item.className='model-item'+(m.id===S.model?' active':'');
+    item.dataset.model=m.id;
+    item.innerHTML=`
+      <div class="mi-icon ${m.iconCls}">${m.icon}</div>
+      <div class="mi-info">
+        <div class="mi-name">${m.name}</div>
+        <div class="mi-desc">${m.desc}</div>
+      </div>
+      <i class="fa-solid fa-check mi-check"></i>`;
+    item.onclick=()=> selectModel(m);
+    dd.appendChild(item);
+  }
+
+  sel.onclick=(e)=>{
+    e.stopPropagation();
+    dd.classList.toggle('on');
+    sel.classList.toggle('open');
+  };
+
+  updateModelDisplay();
+}
+
+function selectModel(m){
+  S.model = m.id;
+  localStorage.setItem('helox-model', m.id);
+  dom().modelDd?.classList.remove('on');
+  dom().modelSel?.classList.remove('open');
+  updateModelDisplay();
+  $$('.model-item').forEach(el=> el.classList.toggle('active', el.dataset.model===m.id));
+}
+
+function updateModelDisplay(){
+  const sel = dom().modelSel;
+  if(!sel) return;
+  const m = MODELS.find(x=>x.id===S.model) || MODELS[0];
+  sel.querySelector('.m-icon').className = 'm-icon '+m.iconCls;
+  sel.querySelector('.m-icon').textContent = m.icon;
+  sel.querySelector('.m-name').textContent = m.name;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   §17  MODE BUTTONS
+   ═══════════════════════════════════════════════════════════ */
+function initModeButtons(){
+  $$('.mode-btn').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.mode===S.mode);
+    btn.onclick=()=>{
+      S.mode = btn.dataset.mode || 'general';
+      localStorage.setItem('helox-mode', S.mode);
+      $$('.mode-btn').forEach(b=> b.classList.toggle('active', b.dataset.mode===S.mode));
+    };
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   §18  THEME
+   ═══════════════════════════════════════════════════════════ */
+const THEMES = ['dark','light','gold','cyber'];
+
+function setTheme(t){
+  if(!THEMES.includes(t)) t='dark';
+  S.theme = t;
+  document.documentElement.dataset.theme = t;
+  localStorage.setItem('helox-theme', t);
+  $$('.t-btn').forEach(b=> b.classList.toggle('active', b.dataset.theme===t));
+  // Update meta theme-color
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if(meta){
+    const colors = {dark:'#08080c',light:'#fafafa',gold:'#1c1c14',cyber:'#000000'};
+    meta.content = colors[t]||'#08080c';
+  }
+}
+
+function initTheme(){
+  setTheme(S.theme);
+  $$('.t-btn').forEach(b=>{
+    b.onclick=()=> setTheme(b.dataset.theme);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   §19  TTS / STT
+   ═══════════════════════════════════════════════════════════ */
+let _ttsAudio = null;
+let _sttMediaRec = null;
+let _sttStream = null;
+
+function stopTTS(){
+  if(_ttsAudio){ _ttsAudio.pause(); _ttsAudio=null; }
+}
+
+async function speakText(text){
+  stopTTS();
+  try{
+    const res = await fetch(`${API}/tts`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({text: text.slice(0,4000)}),
+      credentials:'include',
+    });
+    if(!res.ok) throw new Error('TTS failed');
+    const blob = await res.blob();
+    _ttsAudio = new Audio(URL.createObjectURL(blob));
+    _ttsAudio.play();
+  }catch(e){
+    console.warn('TTS error:', e);
+    // Fallback to browser TTS
+    if('speechSynthesis' in window){
+      const u = new SpeechSynthesisUtterance(text.slice(0,4000));
+      speechSynthesis.speak(u);
+    }
+  }
+}
+
+async function startSTT(){
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert('Voice input not supported in this browser.');
+    return;
+  }
+  try{
+    _sttStream = await navigator.mediaDevices.getUserMedia({audio:true});
+    const vb = dom().voiceBtn;
+    if(vb){
+      vb.classList.add('recording');
+      vb.innerHTML='<i class="fa-solid fa-stop"></i>';
+    }
+
+    // Collect audio chunks
+    const chunks = [];
+    const rec = new MediaRecorder(_sttStream, {mimeType:'audio/webm'});
+    rec.ondataavailable = e=>{ if(e.data.size>0) chunks.push(e.data); };
+    rec.onstop = async()=>{
+      const blob = new Blob(chunks, {type:'audio/webm'});
+      try{
+        const fd = new FormData();
+        fd.append('audio', blob, 'recording.webm');
+        const res = await fetch(`${API}/stt`,{
+          method:'POST', body:fd, credentials:'include'
+        });
+        if(res.ok){
+          const data = await res.json();
+          if(data.text){
+            const inp = dom().input;
+            if(inp){ inp.value += data.text; autoResize(inp); focusInput(); }
+          }
+        }
+      }catch(e){
+        console.warn('STT error:', e);
+      }
+      cleanupSTT();
+    };
+    _sttMediaRec = rec;
+    rec.start();
+  }catch(e){
+    console.warn('Mic error:', e);
+    cleanupSTT();
+  }
+}
+
+function stopSTT(){
+  if(_sttMediaRec && _sttMediaRec.state!=='inactive'){
+    _sttMediaRec.stop();
+  }
+  cleanupSTT();
+}
+
+function cleanupSTT(){
+  if(_sttStream){
+    _sttStream.getTracks().forEach(t=>t.stop());
+    _sttStream=null;
+  }
+  _sttMediaRec=null;
+  const vb = dom().voiceBtn;
+  if(vb){
+    vb.classList.remove('recording');
+    vb.innerHTML='<i class="fa-solid fa-microphone"></i>';
+  }
+}
+
+function toggleSTT(){
+  if(_sttMediaRec && _sttMediaRec.state==='recording') stopSTT();
+  else startSTT();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   §20  USER PLAN
+   ═══════════════════════════════════════════════════════════ */
+async function fetchPlan(){
+  try{
+    // Try to get plan from backend fallback endpoint
+    // We need a token — try reading from supabase session
+    if(window.supabase){
+      const {data:{session}} = await supabase.auth.getSession();
+      if(session){
+        const res = await fetch(`${API}/user/plan`,{
+          headers:{'Authorization':`Bearer ${session.access_token}`},
+        });
+        if(res.ok){
+          const d = await res.json();
+          S.plan = d.plan || 'free';
+          S.isPremium = d.is_premium || d.is_lifetime || false;
+          updatePlanUI();
+          return;
+        }
+      }
+    }
+  }catch(e){}
+  updatePlanUI();
+}
+
+function updatePlanUI(){
+  const el = $('.hdr-plan');
+  if(!el) return;
+  const planLabels = {
+    free:{text:'FREE',bg:'var(--bg-tertiary)',color:'var(--text-muted)'},
+    pro_monthly:{text:'PRO',bg:'rgba(16,185,129,.15)',color:'var(--accent)'},
+    ultimate_monthly:{text:'ULTIMATE',bg:'rgba(168,85,247,.15)',color:'#a855f7'},
+    lifetime:{text:'LIFETIME',bg:'rgba(245,158,11,.15)',color:'var(--warning)'},
+  };
+  const p = planLabels[S.plan] || planLabels.free;
+  el.textContent = p.text;
+  el.style.background = p.bg;
+  el.style.color = p.color;
+
+  // Lock premium-only buttons
+  $$('.nc-btn.locked, .w-card.locked').forEach(el=>{
+    if(S.isPremium) el.classList.remove('locked');
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   §21  UTILITY
+   ═══════════════════════════════════════════════════════════ */
+function escHtml(s){
+  const d=document.createElement('div');
+  d.textContent=s;
+  return d.innerHTML;
+}
+
+function formatTime(iso){
+  if(!iso) return '';
+  const d = new Date(iso);
+  const now = new Date();
+  const diffMs = now - d;
+  const diffMin = Math.floor(diffMs/60000);
+  if(diffMin < 1) return 'Just now';
+  if(diffMin < 60) return diffMin+'m ago';
+  const diffHr = Math.floor(diffMin/60);
+  if(diffHr < 24) return diffHr+'h ago';
+  const diffDay = Math.floor(diffHr/24);
+  if(diffDay < 7) return diffDay+'d ago';
+  return d.toLocaleDateString(undefined,{month:'short',day:'numeric'});
+}
+
+function copyCode(pre, btn){
+  const code = pre.querySelector('code');
+  if(!code) return;
+  navigator.clipboard.writeText(code.textContent).then(()=>{
+    btn.innerHTML='<i class="fa-solid fa-check"></i>';
+    btn.classList.add('copied');
+    setTimeout(()=>{
+      btn.innerHTML='<i class="fa-regular fa-copy"></i>';
+      btn.classList.remove('copied');
+    },2000);
+  }).catch(()=>{
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = code.textContent;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+    btn.innerHTML='<i class="fa-solid fa-check"></i>';
+    btn.classList.add('copied');
+    setTimeout(()=>{
+      btn.innerHTML='<i class="fa-regular fa-copy"></i>';
+      btn.classList.remove('copied');
+    },2000);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   §22  WELCOME CARD HANDLERS
+   ═══════════════════════════════════════════════════════════ */
+function initWelcomeCards(){
+  $$('.w-card:not(.locked)').forEach(card=>{
+    card.onclick=()=>{
+      const text = card.querySelector('.w-text')?.textContent;
+      if(text) sendMessage(text);
+    };
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   §23  DRAG & DROP
+   ═══════════════════════════════════════════════════════════ */
+function initDragDrop(){
+  const main = $('main');
+  if(!main) return;
+  let dragCount = 0;
+  main.addEventListener('dragenter',(e)=>{
+    e.preventDefault();
+    dragCount++;
+    main.classList.add('drag-over');
+  });
+  main.addEventListener('dragleave',(e)=>{
+    e.preventDefault();
+    dragCount--;
+    if(dragCount<=0){ dragCount=0; main.classList.remove('drag-over'); }
+  });
+  main.addEventListener('dragover',(e)=> e.preventDefault());
+  main.addEventListener('drop',(e)=>{
+    e.preventDefault();
+    dragCount=0;
+    main.classList.remove('drag-over');
+    if(e.dataTransfer.files.length) handleFileSelect(e.dataTransfer.files);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   §24  SEARCH QA TOGGLES
+   ═══════════════════════════════════════════════════════════ */
+function initSearchToggles(){
+  document.addEventListener('click',(e)=>{
+    const qa = e.target.closest('.search-qa-item');
+    if(qa) qa.classList.toggle('open');
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   §25  MESSAGE ACTION BUTTONS (Copy, TTS, etc.)
+   ═══════════════════════════════════════════════════════════ */
+function addMsgActions(aiEl, rawText){
+  const acts = aiEl.querySelector('.msg-acts');
+  if(!acts || acts.children.length) return;
+  acts.style.cssText='display:flex;gap:4px;margin-top:8px;justify-content:flex-start;';
+  acts.innerHTML=`
+    <button class="ib" title="Copy" data-act="copy"><i class="fa-regular fa-copy"></i></button>
+    <button class="ib" title="Speak" data-act="tts"><i class="fa-solid fa-volume-high"></i></button>
+    <button class="ib" title="Regenerate" data-act="regen"><i class="fa-solid fa-rotate"></i></button>`;
+
+  acts.querySelector('[data-act="copy"]').onclick=()=>{
+    navigator.clipboard.writeText(rawText).catch(()=>{});
+    const icon = acts.querySelector('[data-act="copy"] i');
+    icon.className='fa-solid fa-check';
+    setTimeout(()=>{ icon.className='fa-regular fa-copy'; },1500);
+  };
+  acts.querySelector('[data-act="tts"]').onclick=()=> speakText(rawText);
+  acts.querySelector('[data-act="regen"]').onclick=()=>{
+    // Find the last user message and re-send
+    const msgs = $$('.msg.user-msg');
+    if(msgs.length){
+      const lastUserText = msgs[msgs.length-1].querySelector('.msg-ct')?.textContent;
+      if(lastUserText){
+        // Remove last AI message
+        aiEl.remove();
+        hideStopButton();
+        sendMessage(lastUserText);
+      }
+    }
+  };
+}
+
+/* ═══════════════════════════════════════════════════════════
+   §26  PATCHED STREAMING SEND WITH ACTION BUTTONS
+   ═══════════════════════════════════════════════════════════
+// We override sendMessage to also attach action buttons after done.
+// (The version in §9 is the core; we wrap it here for actions.)
+const _origSendMessage = sendMessage;
+sendMessage = async function(prompt){
+  await _origSendMessage(prompt);
+  // After streaming completes, add action buttons to the last AI message
+  const lastAI = $$('.msg.ai-msg');
+  if(lastAI.length){
+    const el = lastAI[lastAI.length - 1];
+    const text = el.querySelector('.msg-ct')?.innerText || '';
+    if(text && !el.querySelector('.msg-acts')?.children?.length){
+      addMsgActions(el, text);
+    }
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════
+   §27  INITIALIZATION
+   ═══════════════════════════════════════════════════════════ */
+function init(){
+  initTheme();
+  initModelSelector();
+  initModeButtons();
+  initWelcomeCards();
+  initDragDrop();
+  initSearchToggles();
+
+  // Input events
+  const inp = dom().input;
+  if(inp){
+    inp.addEventListener('input',()=> autoResize(inp));
+    inp.addEventListener('keydown',(e)=>{
+      if(e.key==='Enter' && !e.shiftKey){
+        e.preventDefault();
+        handleSend();
+      }
+    });
+    inp.addEventListener('paste', handlePasteImage);
+  }
+
+  // Send button
+  const sendBtn = dom().sendBtn;
+  if(sendBtn) sendBtn.addEventListener('click', handleSend);
+
+  // File button
+  const fileBtn = dom().fileBtn;
+  if(fileBtn) fileBtn.addEventListener('click', triggerFileInput);
+
+  // File input change
+  const fileInput = dom().fileInput;
+  if(fileInput) fileInput.addEventListener('change',(e)=>{
+    if(e.target.files.length) handleFileSelect(e.target.files);
+    e.target.value=''; // reset so same file can be re-selected
+  });
+
+  // Voice button
+  const voiceBtn = dom().voiceBtn;
+  if(voiceBtn) voiceBtn.addEventListener('click', toggleSTT);
+
+  // Sidebar
+  const sbToggle = $('.sb-toggle');
+  if(sbToggle) sbToggle.addEventListener('click', toggleSidebar);
+  const ov = dom().sbOverlay;
+  if(ov) ov.addEventListener('click', closeSidebar);
+
+  // New chat
+  const ncBtn = dom().newChatBtn;
+  if(ncBtn) ncBtn.addEventListener('click', newChat);
+
+  // Close dropdowns on outside click
+  document.addEventListener('click',(e)=>{
+    if(!e.target.closest('.model-sel')){
+      dom().modelDd?.classList.remove('on');
+      dom().modelSel?.classList.remove('open');
+    }
+  });
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown',(e)=>{
+    // Ctrl/Cmd + K = new chat
+    if((e.ctrlKey||e.metaKey) && e.key==='k'){
+      e.preventDefault();
+      newChat();
+    }
+    // Escape = close sidebar / stop streaming
+    if(e.key==='Escape'){
+      if(S.streaming) stopStreaming();
+      else if(S.sidebarOpen) closeSidebar();
+      dom().modelDd?.classList.remove('on');
+      dom().modelSel?.classList.remove('open');
+    }
+  });
+
+  // Load data
+  loadConversations();
+  fetchPlan();
+  focusInput();
+
+  console.log('%c HeloxAi v4 — Streaming Enabled ','background:#10b981;color:#fff;font-weight:bold;padding:4px 8px;border-radius:4px;');
+}
+
+// Boot
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+
 })();
 </script>
 <script>
