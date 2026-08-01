@@ -906,6 +906,11 @@ pre:hover .code-copy-btn{opacity:1}
 }
 .map-pin svg { width: 36px; height: 46px; }
 /* Map zoom/open button overlay */
+
+/* Image fullscreen modal */
+#img-modal{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:24px;cursor:zoom-out}
+#img-modal img{max-width:95vw;max-height:92vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5);object-fit:contain;transition:transform .3s var(--ease)}
+#img-modal img:hover{transform:scale(1.01)}
 .map-overlay-btn {
   position: absolute;
   bottom: 10px;
@@ -1076,23 +1081,47 @@ pre:hover .code-copy-btn{opacity:1}
 /* =========================================
    GENERATED IMAGE CARDS
    ========================================= */
-.gen-img-card{margin:16px 0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--bg-secondary);transition:border-color .2s}
-.gen-img-card:hover{border-color:var(--border-active)}
-.gen-img-card img{width:100%;display:block;cursor:pointer;transition:transform .4s var(--ease);border-radius:0}
-.gen-img-card:hover img{transform:scale(1.01)}
-.gen-img-meta{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.gen-img-prompt{font-size:12px;color:var(--text-muted);line-height:1.5;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.gen-img-prompt strong{color:var(--text-secondary);font-weight:600}
-.gen-img-actions{display:flex;gap:6px;flex-shrink:0}
-.gen-img-btn{width:32px;height:32px;border-radius:8px;background:var(--bg-tertiary);border:1px solid var(--border);color:var(--text-secondary);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
-.gen-img-btn:hover{background:var(--bg-hover);color:var(--text-primary);border-color:var(--border-active)}
-
 /* Image generation loading skeleton */
-.gen-img-skeleton{margin:16px 0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:linear-gradient(110deg,var(--bg-tertiary) 8%,var(--bg-quaternary) 18%,var(--bg-tertiary) 33%);background-size:200% 100%;animation:imgShimmer 1.5s linear infinite;min-height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text-muted);font-size:13px}
-.gen-img-skeleton i{font-size:28px;opacity:.3}
-.gen-img-skeleton span{opacity:.5;font-size:12px}
+@keyframes imgShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.gen-img-skeleton{margin:16px 0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:linear-gradient(110deg,var(--bg-tertiary) 8%,var(--bg-quaternary) 18%,var(--bg-tertiary) 33%);background-size:200% 100%;animation:imgShimmer 1.5s ease-in-out infinite;aspect-ratio:1/1;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
 
-/* =========================================
+/* ChatGPT-style image generation loader */
+.img-gen-loader{margin:16px 0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:var(--bg-secondary);position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;aspect-ratio:1/1}
+.img-gen-loader-bg{position:absolute;inset:0;background:linear-gradient(110deg,var(--bg-tertiary) 8%,var(--bg-quaternary) 18%,var(--bg-tertiary) 33%);background-size:200% 100%;animation:imgShimmer 1.8s ease-in-out infinite;opacity:.6}
+.img-gen-loader-content{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:32px}
+.img-gen-loader-icon{width:64px;height:64px;border-radius:16px;background:var(--accent-dim);border:1px solid var(--border-active);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--accent);position:relative}
+.img-gen-loader-icon::after{content:'';position:absolute;inset:-4px;border-radius:20px;border:2px solid var(--accent);opacity:0;animation:imgLoaderPulse 2s ease-in-out infinite}
+@keyframes imgLoaderPulse{0%,100%{opacity:0;transform:scale(.95)}50%{opacity:.4;transform:scale(1.08)}}
+.img-gen-loader-icon i{animation:imgIconSpin 3s linear infinite}
+@keyframes imgIconSpin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+.img-gen-loader-text{font-size:14px;font-weight:600;color:var(--text-secondary);text-align:center}
+.img-gen-loader-sub{font-size:12px;color:var(--text-muted);text-align:center;margin-top:-8px}
+.img-gen-loader-dots{display:inline-flex;gap:4px;margin-left:4px}
+.img-gen-loader-dots span{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:dotPulse 1.4s ease-in-out infinite}
+.img-gen-loader-dots span:nth-child(2){animation-delay:.2s}
+.img-gen-loader-dots span:nth-child(3){animation-delay:.4s}
+
+/* Progress bar at bottom of loader */
+.img-gen-loader-progress{position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--bg-tertiary);overflow:hidden}
+.img-gen-loader-progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-hover));border-radius:3px;width:0%;transition:width .4s var(--ease);animation:imgProgressIndeterminate 2s ease-in-out infinite}
+@keyframes imgProgressIndeterminate{0%{width:0%;margin-left:0%}50%{width:40%;margin-left:30%}100%{width:0%;margin-left:100%}}
+
+/* Smooth image reveal animation */
+.gen-img-card.revealing{animation:imgReveal .6s var(--ease-out) both}
+@keyframes imgReveal{0%{opacity:0;transform:scale(.97);filter:blur(8px)}100%{opacity:1;transform:scale(1);filter:blur(0)}}
+
+/* Image card with aspect ratio support for non-square */
+.gen-img-card img{width:100%;display:block;cursor:pointer;transition:transform .4s var(--ease);border-radius:0;object-fit:cover}
+.gen-img-card.landscape img{aspect-ratio:3/2}
+.gen-img-card.portrait img{aspect-ratio:2/3}
+.gen-img-card.square img{aspect-ratio:1/1}
+
+/* Loader aspect ratio variants */
+.img-gen-loader.landscape{aspect-ratio:3/2}
+.img-gen-loader.portrait{aspect-ratio:2/3}
+.img-gen-loader.square{aspect-ratio:1/1}
+.gen-img-skeleton.landscape{aspect-ratio:3/2}
+.gen-img-skeleton.portrait{aspect-ratio:2/3}=========================================
    IMAGES & GALLERY (ChatGPT Image Style)
    ========================================= */
 
@@ -2909,6 +2938,24 @@ async function sendMessage(prompt){
       if(S.abort.signal.aborted)return 'break';
       switch(ev.type){
         case 'conversation_id':convId=ev.conversation_id;if(!S.convId){S.convId=convId;addConvToSidebar(convId,prompt.slice(0,50));setHdrTitle(prompt.slice(0,60));}break;
+
+// ── IMAGE GENERATION STREAMING HANDLERS ──
+
+case "image_generating":
+  // Show ChatGPT-style loader in the AI message
+  handleImageGenerating(event);
+  break;
+
+case "image_generated":
+  // Replace loader with the actual image, smooth reveal
+  handleImageGenerated(event);
+  break;
+
+case "image_progress":
+  // Optional: update progress text
+  handleImageProgress(event);
+  break;
+
         case 'status':status.textContent=ev.message||'';status.style.display='inline-flex';if(/generat.*image/i.test(ev.message||''))showImageSkeleton(aiEl);break;
         case 'token':raw+=(ev.text||'');status.textContent='responding...';scheduleRender(ct,raw,searchHtml);break;
         case 'search_results':searchHtml=ev.html||'';break;
@@ -4464,6 +4511,207 @@ function animateExistingImages(container) {
 /**
  * Show a colorful blur loading placeholder before the real image arrives
  */
+
+// ══════════════════════════════════════════════
+// IMAGE GENERATION STREAMING UI
+// ══════════════════════════════════════════════
+
+/**
+ * Called when backend emits { type: "image_generating", size: "1024x1024" }
+ * Inserts a ChatGPT-style animated loader into the current AI message.
+ */
+function handleImageGenerating(event) {
+  const msgEl = document.querySelector('.msg.ai-msg:last-of-type');
+  if (!msgEl) return;
+
+  const ct = msgEl.querySelector('.msg-ct');
+  if (!ct) return;
+
+  // Remove any previous loader/skeleton
+  const oldLoader = ct.querySelector('.img-gen-loader, .gen-img-skeleton');
+  if (oldLoader) oldLoader.remove();
+
+  // Determine aspect ratio class from size
+  let ratioClass = 'square';
+  const size = event.size || '1024x1024';
+  if (size === '1536x1024') ratioClass = 'landscape';
+  else if (size === '1024x1536') ratioClass = 'portrait';
+
+  const loaderHTML = `
+    <div class="img-gen-loader ${ratioClass}" data-role="img-loader">
+      <div class="img-gen-loader-bg"></div>
+      <div class="img-gen-loader-content">
+        <div class="img-gen-loader-icon">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </div>
+        <div class="img-gen-loader-text">
+          Generating image
+          <span class="img-gen-loader-dots">
+            <span></span><span></span><span></span>
+          </span>
+        </div>
+        <div class="img-gen-loader-sub">This may take a few seconds</div>
+      </div>
+      <div class="img-gen-loader-progress">
+        <div class="img-gen-loader-progress-bar"></div>
+      </div>
+    </div>
+  `;
+
+  ct.insertAdjacentHTML('beforeend', loaderHTML);
+
+  // Scroll to show the loader
+  scrollToBottom();
+}
+
+
+/**
+ * Called when backend emits { type: "image_generated", data: "base64...", prompt: "...", size: "..." }
+ * Replaces the loader with the actual image card and smooth-reveals it.
+ */
+function handleImageGenerated(event) {
+  const msgEl = document.querySelector('.msg.ai-msg:last-of-type');
+  if (!msgEl) return;
+
+  const ct = msgEl.querySelector('.msg-ct');
+  if (!ct) return;
+
+  // Remove loader
+  const loader = ct.querySelector('[data-role="img-loader"]');
+  if (loader) loader.remove();
+
+  // Also remove any skeleton fallback
+  const skeleton = ct.querySelector('.gen-img-skeleton');
+  if (skeleton) skeleton.remove();
+
+  const base64Data = event.data;
+  if (!base64Data) return;
+
+  const prompt = event.prompt || '';
+  const size = event.size || '1024x1024';
+
+  // Determine ratio class
+  let ratioClass = 'square';
+  if (size === '1536x1024') ratioClass = 'landscape';
+  else if (size === '1024x1536') ratioClass = 'portrait';
+
+  // Build the image card (matches your existing .gen-img-card markup)
+  const cardId = 'img-' + Date.now();
+  const cardHTML = `
+    <div class="gen-img-card revealing ${ratioClass}" id="${cardId}">
+      <img
+        src="data:image/png;base64,${base64Data}"
+        alt="${escapeHTML(prompt)}"
+        loading="eager"
+        onclick="openImageModal(this.src)"
+      />
+      <div class="gen-img-meta">
+        <div class="gen-img-prompt"><strong>Prompt:</strong> ${escapeHTML(prompt)}</div>
+        <div class="gen-img-actions">
+          <button class="gen-img-btn" onclick="downloadGeneratedImage('${cardId}', '${escapeHTML(prompt)}')" title="Download">
+            <i class="fa-solid fa-download"></i>
+          </button>
+          <button class="gen-img-btn" onclick="openImageModal(document.querySelector('#${cardId} img').src)" title="Full view">
+            <i class="fa-solid fa-expand"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  ct.insertAdjacentHTML('beforeend', cardHTML);
+
+  // Smooth image load-in (fade out blur)
+  const img = document.querySelector(`#${cardId} img`);
+  if (img) {
+    img.style.opacity = '0';
+    img.style.transition = 'opacity 0.5s ease, transform 0.5s cubic-bezier(0,0,0.2,1)';
+    img.style.transform = 'scale(1.02)';
+    if (img.complete) {
+      // Already loaded (base64 is instant, but be safe)
+      requestAnimationFrame(() => {
+        img.style.opacity = '1';
+        img.style.transform = 'scale(1)';
+      });
+    } else {
+      img.addEventListener('load', () => {
+        requestAnimationFrame(() => {
+          img.style.opacity = '1';
+          img.style.transform = 'scale(1)';
+        });
+      }, { once: true });
+    }
+  }
+
+  scrollToBottom();
+}
+
+
+/**
+ * Optional: update the loader status text during generation
+ */
+function handleImageProgress(event) {
+  const loader = document.querySelector('[data-role="img-loader"]');
+  if (!loader) return;
+
+  const textEl = loader.querySelector('.img-gen-loader-text');
+  const subEl = loader.querySelector('.img-gen-loader-sub');
+  if (event.message && textEl) {
+    textEl.innerHTML = event.message + '<span class="img-gen-loader-dots"><span></span><span></span><span></span></span>';
+  }
+  if (event.sub && subEl) {
+    subEl.textContent = event.sub;
+  }
+}
+
+
+/**
+ * Helper: download a generated image
+ */
+function downloadGeneratedImage(cardId, prompt) {
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  const img = card.querySelector('img');
+  if (!img) return;
+
+  const link = document.createElement('a');
+  link.download = `heloxai-${prompt.slice(0, 40).replace(/[^a-z0-9]/gi, '-').toLowerCase()}.png`;
+  link.href = img.src;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+
+/**
+ * Helper: open image in a fullscreen modal
+ */
+function openImageModal(src) {
+  // Remove existing modal if any
+  const existing = document.getElementById('img-modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'img-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:24px;cursor:zoom-out;animation:slideUpFade .25s ease both';
+  modal.innerHTML = `<img src="${src}" style="max-width:95vw;max-height:92vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5);object-fit:contain" />`;
+  modal.onclick = () => modal.remove();
+  document.body.appendChild(modal);
+
+  // Close on Escape
+  const escHandler = (e) => {
+    if (e.key === 'Escape') { modal.remove(); document.removeEventListener('keydown', escHandler); }
+  };
+  document.addEventListener('keydown', escHandler);
+}
+
+function escapeHTML(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
 function showStreamPlaceholder(container, type = 'single') {
   container.classList.remove('stream-done', 'stream-mid', 'stream-near', 'streaming');
   container.classList.add('loading');
