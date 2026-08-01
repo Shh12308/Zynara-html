@@ -668,6 +668,51 @@ pre:hover .code-copy-btn{opacity:1}
   z-index: 1;
 }
 
+/* Search image loading states */
+.search-thumb {
+  background: var(--bg-quaternary);
+  object-fit: cover;
+  color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.search-thumb[src=""],
+.search-thumb:not([src]) {
+  display: none;
+}
+.source-chip-img,
+.search-link-favicon {
+  background: var(--bg-quaternary);
+  border-radius: 3px;
+  color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.source-chip-img[src=""],
+.search-link-favicon[src=""] {
+  display: none;
+}
+/* Search card image aspect ratio fix */
+.search-card .search-thumb {
+  aspect-ratio: 1 / 1;
+  width: 88px;
+  height: 88px;
+  flex-shrink: 0;
+}
+/* Smooth image load-in */
+.search-card .search-thumb,
+.gen-img-card img {
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.4s var(--ease);
+}
+.search-card .search-thumb.loaded,
+.gen-img-card img.loaded {
+  opacity: 1;
+}
+.search-card:hover .search-thumb.loaded {
+  transform: scale(1.03);
+}
+
 /* Search card info */
 .search-info {
   flex: 1;
@@ -2745,7 +2790,7 @@ var SANITIZE_OPTS = {
   ADD_TAGS:['details','summary','iframe'],
   ADD_ATTR:['target','rel','allowfullscreen','frameborder','scrolling','loading','controls','autoplay','loop','muted','poster','playinline'],
   FORBID_TAGS:['style','form','input','textarea','select','button'],
-  FORBID_ATTR:['onerror','onload','onclick','onmouseover']
+    FORBID_ATTR:['onload','onclick','onmouseover']
 };
 var KATEX_OPTS = {
   delimiters:[
@@ -5713,6 +5758,13 @@ function initEvents(){
 
 /* ========== INIT ========== */
 async function init(){
+
+  // Lazy-load image fade-in
+  document.addEventListener('load', function(e){
+    if(e.target.tagName==='IMG' && (e.target.classList.contains('search-thumb') || e.target.closest('.gen-img-card'))){
+      e.target.classList.add('loaded');
+    }
+  }, true);
   initTheme();initMarked();initModel();initEvents();
   if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) { $('micBtn').classList.add('locked'); }
   setupAuth();renderAll();updateCB();
