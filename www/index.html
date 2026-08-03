@@ -1100,7 +1100,15 @@ pre:hover .code-copy-btn{opacity:1}
 .img-gen-loader-dots span{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:dotPulse 1.4s ease-in-out infinite}
 .img-gen-loader-dots span:nth-child(2){animation-delay:.2s}
 .img-gen-loader-dots span:nth-child(3){animation-delay:.4s}
-
+/* ── Complete image generation CSS (replaces truncated section) ── */
+.img-gen-loader-bg{position:absolute;inset:0;background:linear-gradient(110deg,var(--bg-tertiary) 8%,var(--bg-quaternary) 18%,var(--bg-tertiary) 33%);background-size:200% 100%;animation:imgShimmer 1.5s ease-in-out infinite;pointer-events:none}
+.gen-img-card{margin:16px 0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:var(--bg-secondary);position:relative}
+.gen-img-card img{width:100%;display:block;border-radius:var(--radius);cursor:zoom-in}
+.gen-img-card img.loaded{opacity:1!important}
+.gen-img-overlay{position:absolute;bottom:10px;right:10px;display:flex;gap:6px;z-index:3}
+.gen-img-btn{width:36px;height:36px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.6);backdrop-filter:blur(8px);color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;-webkit-appearance:none;appearance:none}
+.gen-img-btn:hover{background:rgba(0,0,0,.85);transform:scale(1.05)}
+   
 /* Progress bar at bottom of loader */
 .img-gen-loader-progress{position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--bg-tertiary);overflow:hidden}
 .img-gen-loader-progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-hover));border-radius:3px;width:0%;transition:width .4s var(--ease);animation:imgProgressIndeterminate 2s ease-in-out infinite}
