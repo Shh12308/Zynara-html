@@ -4993,432 +4993,706 @@ function sendWithFiles(text,imgs,files){
   }).finally(function(){S.streaming=false;S.abort=null;updateCB();});
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   IMAGE STREAMING HANDLER — matched to backend SSE format
-   Backend sends:
-     {"type":"status","message":"Generating image..."}
-     {"type":"image","data":"<base64_string>"}
-     {"type":"error","message":"..."}
-   ═══════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════
+   FIX 1: DOMPurify MUST allow data: URIs — add this RIGHT AFTER
+   the DOMPurify script loads, BEFORE any other code uses it.
+   Without this, every data:image src gets silently deleted,
+   leaving null elements that crash on .value / .src access.
+   ═══════════════════════════════════════════════════════════════════ */
+if (typeof DOMPurify !== 'undefined') {
+  DOMPurify.addHook('uponSanitizeAttribute', function(node, data) {
+    // Allow data:image URIs in src attributes
+    if (data.attrName === 'src' && data.attrValue && data.attrValue.startsWith('data:image/')) {
+      node.setAttribute('data-preserve-src', data.attrValue);
+    }
+  });
+  DOMPurify.addHook('afterSanitizeAttributes', function(node) {
+    const preserved = node.getAttribute('data-preserve-src');
+    if (preserved) {
+      node.setAttribute('src', preserved);
+      node.removeAttribute('data-preserve-src');
+    }
+  });
+}
 
+/* ═══════════════════════════════════════════════════════════════════
+   FIX 2: Complete Image Stream Handler — every DOM call guarded
+   ═══════════════════════════════════════════════════════════════════ */
 const ImageStreamHandler = (() => {
+  const _streams = new Map();
 
-  // ── State tracking per active image generation ──
-  const _activeImageStreams = new Map(); // convId → { loaderEl, prompt, rawB64 }
+  function _safeAppend(parent, child) {
+    if (!parent || !child) return false;
+    try { parent.appendChild(child); return true; } catch(e) { console.warn('[ImgStream] append failed:', e); return false; }
+  }
 
-  /* ── Create the shimmer loading skeleton ── */
+  function _safeRemove(el) {
+    if (!el || !el.parentNode) return;
+    try { el.parentNode.removeChild(el); } catch(e) {}
+  }
+
+  function _safeReplace(oldEl, newEl) {
+    if (!oldEl || !oldEl.parentNode || !newEl) return false;
+    try { oldEl.parentNode.replaceChild(newEl, oldEl); return true; } catch(e) {
+      console.warn('[ImgStream] replace failed:', e);
+      _safeRemove(oldEl);
+      return false;
+    }
+  }
+
   function createLoader() {
     const el = document.createElement('div');
     el.className = 'img-gen-loader';
+    el.setAttribute('role', 'status');
     el.setAttribute('aria-label', 'Generating image');
-    el.innerHTML = `
-      <div class="img-gen-loader-bg"></div>
-      <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:14px;pointer-events:none">
-        <i class="fa-solid fa-wand-magic-sparkles" style="font-size:36px;color:var(--accent);opacity:.6;animation:spin 3s linear infinite"></i>
-        <span style="font-size:13px;color:var(--text-muted);font-weight:500;letter-spacing:.3px">Generating image...</span>
-        <span style="font-size:11px;color:var(--text-muted);opacity:.5">This may take 10–30 seconds</span>
-      </div>
-    `;
+    el.innerHTML =
+      '<div class="img-gen-loader-bg"></div>' +
+      '<div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:14px;pointer-events:none">' +
+        '<i class="fa-solid fa-wand-magic-sparkles" style="font-size:36px;color:var(--accent);opacity:.6;animation:spin 3s linear infinite"></i>' +
+        '<span style="font-size:13px;color:var(--text-muted);font-weight:500">Generating image...</span>' +
+        '<span style="font-size:11px;color:var(--text-muted);opacity:.5">This may take 10-30 seconds</span>' +
+      '</div>';
     return el;
   }
 
-  /* ── Create the final displayed image card ── */
   function createImageCard(b64Data, promptText) {
+    if (!b64Data) return null;
+
     const wrapper = document.createElement('div');
     wrapper.className = 'gen-img-card';
-    wrapper.style.cssText = 'margin:16px 0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:var(--bg-secondary);position:relative;';
+    wrapper.style.cssText =
+      'margin:16px 0;border-radius:var(--radius);overflow:hidden;' +
+      'border:1px solid var(--border);background:var(--bg-secondary);position:relative;';
 
-    const uid = 'genimg-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+    const uid = 'gi-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
     const safeAlt = (promptText || 'Generated image').replace(/[<>&"']/g, '').slice(0, 200);
-    const dataUrl = `data:image/png;base64,${b64Data}`;
 
-    wrapper.innerHTML = `
-      <img id="${uid}"
-           src="${dataUrl}"
-           alt="${safeAlt}"
-           style="width:100%;display:block;border-radius:var(--radius);cursor:zoom-in;opacity:0;transition:opacity .5s ease,transform .4s var(--ease);"
-           loading="eager" />
-      <div style="position:absolute;bottom:10px;right:10px;display:flex;gap:6px;z-index:3">
-        <button onclick="ImageStreamHandler.downloadById('${uid}')"
-                style="width:36px;height:36px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.6);backdrop-filter:blur(8px);color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s"
-                onmouseover="this.style.background='rgba(0,0,0,.8)'"
-                onmouseout="this.style.background='rgba(0,0,0,.6)'"
-                title="Download image"
-                aria-label="Download image">
-          <i class="fa-solid fa-download"></i>
-        </button>
-        <button onclick="ImageStreamHandler.fullscreenById('${uid}')"
-                style="width:36px;height:36px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.6);backdrop-filter:blur(8px);color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s"
-                onmouseover="this.style.background='rgba(0,0,0,.8)'"
-                onmouseout="this.style.background='rgba(0,0,0,.6)'"
-                title="View fullscreen"
-                aria-label="View fullscreen">
-          <i class="fa-solid fa-expand"></i>
-        </button>
-      </div>
-    `;
+    // Use DOM API — NOT innerHTML — to avoid DOMPurify/marked interference
+    const img = document.createElement('img');
+    img.id = uid;
+    img.alt = safeAlt;
+    img.style.cssText =
+      'width:100%;display:block;border-radius:var(--radius);cursor:zoom-in;' +
+      'opacity:0;transition:opacity .5s ease,transform .4s cubic-bezier(.4,0,.2,1);';
+    // Set src AFTER element is in DOM to avoid some browser quirks with huge data URIs
+    img._pendingSrc = 'data:image/png;base64,' + b64Data;
+    img.addEventListener('click', function() { ImageStreamHandler.fullscreenById(uid); });
 
-    // Trigger fade-in after paint
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        const img = wrapper.querySelector('img');
-        if (img) {
+    // Action buttons container
+    const btns = document.createElement('div');
+    btns.style.cssText =
+      'position:absolute;bottom:10px;right:10px;display:flex;gap:6px;z-index:3';
+
+    const dlBtn = document.createElement('button');
+    dlBtn.title = 'Download image';
+    dlBtn.setAttribute('aria-label', 'Download image');
+    dlBtn.style.cssText =
+      'width:36px;height:36px;border-radius:10px;border:1px solid rgba(255,255,255,.15);' +
+      'background:rgba(0,0,0,.6);backdrop-filter:blur(8px);color:#fff;font-size:13px;' +
+      'cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s';
+    dlBtn.innerHTML = '<i class="fa-solid fa-download"></i>';
+    dlBtn.addEventListener('click', function(e) { e.stopPropagation(); ImageStreamHandler.downloadById(uid); });
+    dlBtn.addEventListener('mouseover', function() { this.style.background = 'rgba(0,0,0,.8)'; });
+    dlBtn.addEventListener('mouseout', function() { this.style.background = 'rgba(0,0,0,.6)'; });
+
+    const fsBtn = document.createElement('button');
+    fsBtn.title = 'View fullscreen';
+    fsBtn.setAttribute('aria-label', 'View fullscreen');
+    fsBtn.style.cssText = dlBtn.style.cssText;
+    fsBtn.innerHTML = '<i class="fa-solid fa-expand"></i>';
+    fsBtn.addEventListener('click', function(e) { e.stopPropagation(); ImageStreamHandler.fullscreenById(uid); });
+    fsBtn.addEventListener('mouseover', function() { this.style.background = 'rgba(0,0,0,.8)'; });
+    fsBtn.addEventListener('mouseout', function() { this.style.background = 'rgba(0,0,0,.6)'; });
+
+    btns.appendChild(dlBtn);
+    btns.appendChild(fsBtn);
+    wrapper.appendChild(img);
+    wrapper.appendChild(btns);
+
+    // After appending to DOM, set the src and trigger fade-in
+    wrapper._initImg = function() {
+      if (img._pendingSrc && !img.src) {
+        img.src = img._pendingSrc;
+        delete img._pendingSrc;
+      }
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
           img.style.opacity = '1';
           img.classList.add('loaded');
-        }
+        });
       });
-    });
-
-    // Click image itself → fullscreen
-    const imgEl = wrapper.querySelector('img');
-    if (imgEl) {
-      imgEl.addEventListener('click', () => {
-        ImageStreamHandler.fullscreenById(uid);
-      });
-    }
+    };
 
     return wrapper;
   }
 
-  /* ── Create an inline error display for failed generation ── */
   function createErrorBubble(message) {
     const el = document.createElement('div');
-    el.style.cssText = 'margin:12px 0;padding:14px 18px;background:var(--adm-err-bg);border:1px solid var(--adm-err-border);border-radius:var(--radius-sm);color:var(--adm-err-text);font-size:13px;display:flex;align-items:center;gap:10px;';
-    el.innerHTML = `<i class="fa-solid fa-circle-exclamation" style="flex-shrink:0"></i><span>${(message || 'Image generation failed').replace(/[<>&"']/g, '')}</span>`;
+    el.style.cssText =
+      'margin:12px 0;padding:14px 18px;background:var(--adm-err-bg);' +
+      'border:1px solid var(--adm-err-border);border-radius:var(--radius-sm);' +
+      'color:var(--adm-err-text);font-size:13px;display:flex;align-items:center;gap:10px;';
+    const icon = document.createElement('i');
+    icon.className = 'fa-solid fa-circle-exclamation';
+    icon.style.flexShrink = '0';
+    const span = document.createElement('span');
+    span.textContent = (message || 'Image generation failed').replace(/[<>&"']/g, '');
+    el.appendChild(icon);
+    el.appendChild(span);
     return el;
   }
 
-  /* ── Main entry point: process one SSE event ──
-     Called from inside your fetch/EventSource onmessage loop.
-     Parameters:
-       parsed   — the JSON-parsed SSE data object
-       msgCt    — the .msg-ct DOM element where content renders
-       msgEl    — the .msg parent element (for class toggles)
-       convId   — conversation ID for state tracking
-       prompt   — original user prompt (for alt text / download filename)
-  */
+  /**
+   * Main event handler — call from your SSE loop.
+   * Returns true if the event was an image event (handled).
+   * Returns false if not an image event (let text handler process it).
+   */
   function handleEvent(parsed, msgCt, msgEl, convId, prompt) {
-    if (!parsed || !parsed.type) return false; // not an image event
-    if (!['status', 'image', 'image_result', 'error'].includes(parsed.type)) return false;
+    if (!parsed || typeof parsed !== 'object' || !parsed.type) return false;
+    var t = parsed.type;
 
-    const t = parsed.type;
+    // Only intercept these specific types
+    if (t !== 'status' && t !== 'image' && t !== 'image_result' && t !== 'error') return false;
 
-    // ── STATUS: show loader ──
+    // Status events — only intercept image-related ones
     if (t === 'status') {
-      const msg = (parsed.message || '').toLowerCase();
-      if (msg.includes('image') || msg.includes('generat')) {
-        // Remove streaming text cursor — this is an image, not text
+      var msg = (parsed.message || '').toLowerCase();
+      if (!msg.includes('image') && !msg.includes('generat') && !msg.includes('drawing')) return false;
+
+      // Null guard: if msgCt doesn't exist, we can't show anything — skip silently
+      if (!msgCt) {
+        console.warn('[ImgStream] status event but msgCt is null');
+        return true;
+      }
+
+      // Remove cursor — this is image, not text
+      if (msgEl) {
         msgEl.classList.remove('streaming-cursor');
-
-        // Remove any previous loader for this conversation
-        const existing = _activeImageStreams.get(convId);
-        if (existing && existing.loaderEl && existing.loaderEl.parentNode) {
-          existing.loaderEl.remove();
-        }
-
-        const loader = createLoader();
-        msgCt.appendChild(loader);
-
-        _activeImageStreams.set(convId, {
-          loaderEl: loader,
-          prompt: prompt || '',
-          rawB64: null
-        });
-
-        return true; // handled
       }
-      return false;
+
+      // Remove any previous loader for this conv
+      var existing = _streams.get(convId);
+      if (existing && existing.loaderEl) {
+        _safeRemove(existing.loaderEl);
+      }
+
+      var loader = createLoader();
+      _safeAppend(msgCt, loader);
+      _streams.set(convId, { loaderEl: loader, prompt: prompt || '', rawB64: null });
+      return true;
     }
 
-    // ── IMAGE RESULT: replace loader with actual image ──
+    // Image result
     if (t === 'image' || t === 'image_result') {
-      const b64 = parsed.data || parsed.image || null;
-      if (!b64) return true; // handled but no data — silently ignore
+      var b64 = parsed.data || parsed.image || parsed.base64 || null;
+      if (!b64) return true; // handled but no data
 
-      const state = _activeImageStreams.get(convId);
-      const card = createImageCard(b64, prompt || (state && state.prompt) || '');
-
-      if (state && state.loaderEl && state.loaderEl.parentNode) {
-        state.loaderEl.replaceWith(card);
-      } else {
-        msgCt.appendChild(card);
+      if (!msgCt) {
+        console.warn('[ImgStream] image event but msgCt is null');
+        _streams.set(convId, { loaderEl: null, prompt: prompt || '', rawB64: b64 });
+        return true;
       }
 
-      // Update state
-      if (state) {
-        state.loaderEl = null;
-        state.rawB64 = b64;
-      } else {
-        _activeImageStreams.set(convId, { loaderEl: null, prompt: prompt || '', rawB64: b64 });
+      var card = createImageCard(b64, prompt || '');
+      if (!card) return true;
+
+      var state = _streams.get(convId);
+      var replaced = false;
+      if (state && state.loaderEl) {
+        replaced = _safeReplace(state.loaderEl, card);
+      }
+      if (!replaced) {
+        _safeAppend(msgCt, card);
       }
 
-      // Remove streaming cursor & status
-      msgEl.classList.remove('streaming-cursor', 'msg-streaming');
-      const statusEl = msgEl.querySelector('.ai-status');
-      if (statusEl) statusEl.style.display = 'none';
+      // Initialize the image src AFTER it's in the DOM tree
+      if (card._initImg) card._initImg();
 
-      return true; // handled
+      _streams.set(convId, { loaderEl: null, prompt: prompt || '', rawB64: b64 });
+
+      if (msgEl) {
+        msgEl.classList.remove('streaming-cursor', 'msg-streaming');
+        var statusEl = msgEl.querySelector('.ai-status');
+        if (statusEl) statusEl.style.display = 'none';
+      }
+      return true;
     }
 
-    // ── ERROR: replace loader with error message ──
+    // Error
     if (t === 'error') {
-      const state = _activeImageStreams.get(convId);
-      if (state && state.loaderEl && state.loaderEl.parentNode) {
-        state.loaderEl.replaceWith(createErrorBubble(parsed.message));
-        state.loaderEl = null;
-      } else {
-        msgCt.appendChild(createErrorBubble(parsed.message));
+      if (!msgCt) return true;
+
+      var errState = _streams.get(convId);
+      var errReplaced = false;
+      if (errState && errState.loaderEl) {
+        errReplaced = _safeReplace(errState.loaderEl, createErrorBubble(parsed.message));
+      }
+      if (!errReplaced) {
+        _safeAppend(msgCt, createErrorBubble(parsed.message));
       }
 
-      msgEl.classList.remove('streaming-cursor', 'msg-streaming');
-      _activeImageStreams.delete(convId);
-      return true; // handled
+      if (msgEl) {
+        msgEl.classList.remove('streaming-cursor', 'msg-streaming');
+      }
+      _streams.delete(convId);
+      return true;
     }
 
     return false;
   }
 
-  /* ── Cleanup when stream ends ── */
   function cleanup(convId) {
-    const state = _activeImageStreams.get(convId);
-    if (state && state.loaderEl && state.loaderEl.parentNode) {
-      // Stream ended while loader still showing — generation likely failed silently
-      state.loaderEl.replaceWith(createErrorBubble('Image generation timed out or failed unexpectedly.'));
+    var state = _streams.get(convId);
+    if (state && state.loaderEl) {
+      var parent = state.loaderEl.parentNode;
+      if (parent) {
+        _safeReplace(state.loaderEl, createErrorBubble('Image generation timed out or failed.'));
+      } else {
+        _safeRemove(state.loaderEl);
+      }
     }
-    _activeImageStreams.delete(convId);
+    _streams.delete(convId);
   }
 
-  /* ── Get accumulated base64 for saving to DB ── */
   function getBase64(convId) {
-    const state = _activeImageStreams.get(convId);
-    return state ? state.rawB64 : null;
+    var s = _streams.get(convId);
+    return s ? s.rawB64 : null;
   }
 
-  /* ── Download helper ── */
   function downloadById(imgId) {
-    const img = document.getElementById(imgId);
-    if (!img || !img.src) return;
-    const a = document.createElement('a');
-    a.href = img.src;
-    a.download = 'heloxai-image-' + Date.now() + '.png';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    try {
+      var img = document.getElementById(imgId);
+      if (!img || !img.src || img.src === location.href) return;
+      var a = document.createElement('a');
+      a.href = img.src;
+      a.download = 'heloxai-image-' + Date.now() + '.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch(e) { console.warn('[ImgStream] download failed:', e); }
   }
 
-  /* ── Fullscreen helper ── */
   function fullscreenById(imgId) {
-    const img = document.getElementById(imgId);
-    if (!img || !img.src) return;
+    try {
+      var img = document.getElementById(imgId);
+      if (!img || !img.src || img.src === location.href) return;
 
-    let modal = document.getElementById('img-modal');
-    if (!modal) {
-      modal = document.createElement('div');
-      modal.id = 'img-modal';
-      modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.88);backdrop-filter:blur(14px);display:none;align-items:center;justify-content:center;padding:24px;cursor:zoom-out;opacity:0;transition:opacity .25s ease;';
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeFullscreen();
-      });
-      document.body.appendChild(modal);
-    }
+      var modal = document.getElementById('img-modal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'img-modal';
+        modal.style.cssText =
+          'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.88);' +
+          'backdrop-filter:blur(14px);display:none;align-items:center;' +
+          'justify-content:center;padding:24px;cursor:zoom-out;opacity:0;transition:opacity .25s ease;';
+        modal.addEventListener('click', function(e) {
+          if (e.target === modal) ImageStreamHandler.closeFullscreen();
+        });
+        document.body.appendChild(modal);
+      }
 
-    modal.innerHTML = `<img src="${img.src}" alt="" style="max-width:95vw;max-height:92vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5);object-fit:contain;transition:transform .3s var(--ease);" />`;
-    modal.style.display = 'flex';
-    requestAnimationFrame(() => { modal.style.opacity = '1'; });
+      // Clear previous content
+      modal.innerHTML = '';
 
-    // ESC to close
-    const escHandler = (e) => {
-      if (e.key === 'Escape') { closeFullscreen(); document.removeEventListener('keydown', escHandler); }
-    };
-    document.addEventListener('keydown', escHandler);
+      var mImg = document.createElement('img');
+      mImg.src = img.src;
+      mImg.alt = '';
+      mImg.style.cssText =
+        'max-width:95vw;max-height:92vh;border-radius:12px;' +
+        'box-shadow:0 20px 60px rgba(0,0,0,.5);object-fit:contain;' +
+        'transition:transform .3s cubic-bezier(.4,0,.2,1);';
+      modal.appendChild(mImg);
+      modal.style.display = 'flex';
+      requestAnimationFrame(function() { modal.style.opacity = '1'; });
+
+      var escHandler = function(e) {
+        if (e.key === 'Escape') {
+          ImageStreamHandler.closeFullscreen();
+          document.removeEventListener('keydown', escHandler);
+        }
+      };
+      document.addEventListener('keydown', escHandler);
+    } catch(e) { console.warn('[ImgStream] fullscreen failed:', e); }
   }
 
   function closeFullscreen() {
-    const modal = document.getElementById('img-modal');
+    var modal = document.getElementById('img-modal');
     if (modal) {
       modal.style.opacity = '0';
-      setTimeout(() => { modal.style.display = 'none'; }, 250);
+      setTimeout(function() { modal.style.display = 'none'; }, 250);
     }
   }
 
-  /* ── Build the HTML string to persist in conversation history ── */
   function buildHistoryHTML(b64, prompt) {
     if (!b64) return '';
-    const safeAlt = (prompt || 'Generated image').replace(/[<>&"']/g, '').slice(0, 200);
-    const uid = 'histimg-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
-    return `<div class="gen-img-card" style="margin:16px 0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:var(--bg-secondary);position:relative">
-      <img id="${uid}" src="data:image/png;base64,${b64}" alt="${safeAlt}" style="width:100%;display:block;border-radius:var(--radius);cursor:zoom-in" onclick="ImageStreamHandler.fullscreenById('${uid}')" />
-      <div style="position:absolute;bottom:10px;right:10px;display:flex;gap:6px;z-index:3">
-        <button onclick="ImageStreamHandler.downloadById('${uid}')" style="width:36px;height:36px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.6);backdrop-filter:blur(8px);color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Download"><i class="fa-solid fa-download"></i></button>
-        <button onclick="ImageStreamHandler.fullscreenById('${uid}')" style="width:36px;height:36px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.6);backdrop-filter:blur(8px);color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Fullscreen"><i class="fa-solid fa-expand"></i></button>
-      </div>
-    </div>`;
+    var uid = 'hi-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+    var safeAlt = (prompt || 'Generated image').replace(/[<>&"']/g, '').slice(0, 200);
+    // When loading from history, the img is already inline so no need for deferred src
+    return '<div class="gen-img-card" style="margin:16px 0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:var(--bg-secondary);position:relative">' +
+      '<img id="' + uid + '" src="data:image/png;base64,' + b64 + '" alt="' + safeAlt + '" style="width:100%;display:block;border-radius:var(--radius);cursor:zoom-in;opacity:1" onclick="ImageStreamHandler.fullscreenById(\'' + uid + '\')" />' +
+      '<div style="position:absolute;bottom:10px;right:10px;display:flex;gap:6px;z-index:3">' +
+        '<button onclick="event.stopPropagation();ImageStreamHandler.downloadById(\'' + uid + '\')" style="width:36px;height:36px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.6);backdrop-filter:blur(8px);color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Download"><i class="fa-solid fa-download"></i></button>' +
+        '<button onclick="event.stopPropagation();ImageStreamHandler.fullscreenById(\'' + uid + '\')" style="width:36px;height:36px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.6);backdrop-filter:blur(8px);color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Fullscreen"><i class="fa-solid fa-expand"></i></button>' +
+      '</div>' +
+    '</div>';
   }
 
-  // Public API
   return {
-    handleEvent,
-    cleanup,
-    getBase64,
-    downloadById,
-    fullscreenById,
-    closeFullscreen,
-    buildHistoryHTML,
-    createLoader,
-    createImageCard
+    handleEvent: handleEvent,
+    cleanup: cleanup,
+    getBase64: getBase64,
+    downloadById: downloadById,
+    fullscreenById: fullscreenById,
+    closeFullscreen: closeFullscreen,
+    buildHistoryHTML: buildHistoryHTML,
+    createLoader: createLoader
   };
-
 })();
 
 
-/* ═══════════════════════════════════════════════════════════════
-   INTEGRATION: Where to hook into your existing streaming loop
-   ═══════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════════
+   FIX 3: Safe message element creation — NEVER returns null
+   Call this BEFORE starting the fetch, so msgCt/msgEl always exist.
+   ═══════════════════════════════════════════════════════════════════ */
+function createAIMessageSafe() {
+  var inner = document.querySelector('.msgs-inner');
+  if (!inner) {
+    console.error('[createAIMessage] .msgs-inner not found in DOM');
+    inner = document.querySelector('.msgs-wrap');
+  }
 
-   Inside your existing fetch → ReadableStream loop (the one that reads
-   the SSE response from POST /ask/universal), find the section where
-   you parse each SSE line and handle different event types.
+  var msg = document.createElement('div');
+  msg.className = 'msg ai-msg msg-streaming';
 
-   BEFORE (broken pattern — probably something like):
-   ─────────────────────────────────────────────
-   if (data.type === 'content') {
-     // append text delta
-   }
+  var msgInner = document.createElement('div');
+  msgInner.className = 'msg-inner';
 
-   REPLACE WITH:
-   ─────────────────────────────────────────────
-*/
+  var label = document.createElement('div');
+  label.className = 'msg-label';
+  label.innerHTML =
+    '<span class="ai-dot"></span>' +
+    '<span>HeloxAi</span>' +
+    '<span class="ai-status">thinking...</span>';
 
-/*
-   Example of the corrected streaming loop structure:
+  var ct = document.createElement('div');
+  ct.className = 'msg-ct';
 
-   async function sendMessage(prompt, convId) {
-     const msgEl = createAIMessageElement();   // your existing function
-     const msgCt = msgEl.querySelector('.msg-ct');
-     const msgsWrap = document.querySelector('.msgs-wrap');
-     msgsWrap.appendChild(msgEl);
-     scrollToBottom();
+  var acts = document.createElement('div');
+  acts.className = 'msg-acts';
+  acts.style.cssText = 'display:flex;gap:6px;margin-top:10px';
 
-     let fullText = '';
-     let isImageStream = false;
+  msgInner.appendChild(label);
+  msgInner.appendChild(ct);
+  msgInner.appendChild(acts);
+  msg.appendChild(msgInner);
 
-     try {
-       const response = await fetch(`${API_BASE}/ask/universal`, {
-         method: 'POST',
-         headers: { 'Content-Type': 'application/json', ... },
-         body: JSON.stringify({ prompt, conversation_id: convId, stream: true, ... })
-       });
+  if (inner) {
+    inner.appendChild(msg);
+  }
 
-       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-       const reader = response.body.getReader();
-       const decoder = new TextDecoder();
-       let buffer = '';
-
-       while (true) {
-         const { done, value } = await reader.read();
-         if (done) break;
-
-         buffer += decoder.decode(value, { stream: true });
-         const lines = buffer.split('\n');
-         buffer = lines.pop() || ''; // keep incomplete line in buffer
-
-         for (const line of lines) {
-           if (!line.startsWith('data: ')) continue;
-           const raw = line.slice(6).trim();
-           if (raw === '[DONE]') continue;
-
-           let parsed;
-           try { parsed = JSON.parse(raw); } catch { continue; }
-
-           // ╔══════════════════════════════════════════╗
-           // ║  IMAGE STREAMING — delegate to handler   ║
-           // ╚══════════════════════════════════════════╝
-           if (ImageStreamHandler.handleEvent(parsed, msgCt, msgEl, convId, prompt)) {
-             isImageStream = true;
-             continue; // don't process as text
-           }
-
-           // ── Regular text content streaming ──
-           if (parsed.type === 'content' && parsed.text) {
-             fullText += parsed.text;
-             msgCt.innerHTML = renderMarkdown(fullText);
-             msgEl.classList.add('streaming-cursor');
-             scrollToBottom();
-           }
-
-           // ── Stream done signal ──
-           if (parsed.type === 'done') {
-             msgEl.classList.remove('streaming-cursor', 'msg-streaming');
-           }
-
-           // ── Error from backend ──
-           if (parsed.type === 'error') {
-             if (!isImageStream) {
-               msgCt.innerHTML = `<div style="color:var(--danger);padding:8px 0">${parsed.message || 'An error occurred'}</div>`;
-             }
-             msgEl.classList.remove('streaming-cursor', 'msg-streaming');
-           }
-         }
-       }
-
-       // ── Stream finished — cleanup image state ──
-       ImageStreamHandler.cleanup(convId);
-       msgEl.classList.remove('streaming-cursor', 'msg-streaming');
-
-       // ── Re-render final markdown (for KaTeX, highlight.js, etc.) ──
-       if (fullText) {
-         msgCt.innerHTML = renderMarkdown(fullText);
-         postRender(msgCt); // your existing KaTeX/highlight init
-       }
-
-       // ── If this was an image generation, build history HTML ──
-       if (isImageStream) {
-         const imgB64 = ImageStreamHandler.getBase64(convId);
-         if (imgB64) {
-           // Prepend a text summary if the AI also sent one
-           const imgHTML = ImageStreamHandler.buildHistoryHTML(imgB64, prompt);
-           fullText = imgHTML;
-           msgCt.innerHTML = imgHTML;
-         }
-       }
-
-       // ── Save to conversation history ──
-       await saveMessageToHistory(convId, 'user', prompt);
-       await saveMessageToHistory(convId, 'assistant', fullText);
-
-     } catch (err) {
-       ImageStreamHandler.cleanup(convId);
-       msgEl.classList.remove('streaming-cursor', 'msg-streaming');
-       if (!isImageStream) {
-         msgCt.innerHTML = `<div style="color:var(--danger);padding:8px 0"><i class="fa-solid fa-circle-exclamation"></i> ${err.message}</div>`;
-       }
-     }
-   }
-*/
-
-
-/* ═══════════════════════════════════════════════════════════════
-   HISTORY REPLAY: When loading old conversations that contain
-   generated images, the base64 is already inline in the saved
-   HTML. We just need to make those images interactive.
-   ═══════════════════════════════════════════════════════════════ */
-function initHistoricalImages(container) {
-  if (!container) return;
-  // Images inside .gen-img-card are already interactive via
-  // the onclick handlers baked into buildHistoryHTML().
-  // Just ensure they're visible (remove the opacity:0 if they
-  // were loaded from history, not from streaming):
-  container.querySelectorAll('.gen-img-card img').forEach(img => {
-    if (!img.classList.contains('loaded')) {
-      img.style.opacity = '1';
-      img.classList.add('loaded');
-    }
-  });
+  return { msgEl: msg, msgCt: ct, msgLabel: label, msgActs: acts };
 }
 
-// Call this after rendering any loaded conversation:
-// initHistoricalImages(document.querySelector('.msgs-inner'));
+
+/* ═══════════════════════════════════════════════════════════════════
+   FIX 4: The complete streaming function — drop-in replacement
+   for whatever sendMessage / handleStream you have now.
+   Every null path is guarded. Image events bypass DOMPurify entirely.
+   ═══════════════════════════════════════════════════════════════════ */
+async function streamChat(prompt, convId, opts) {
+  opts = opts || {};
+  var model = opts.model || 'helox';
+  var mode = opts.mode || 'general';
+  var remember = opts.remember !== false;
+  var API_BASE = opts.apiBase || (window.APP_CONFIG && window.APP_CONFIG.API_BASE) || '';
+
+  // ── 1. Create message elements BEFORE any network call ──
+  var ai = createAIMessageSafe();
+  var msgEl = ai.msgEl;
+  var msgCt = ai.msgCt;
+  var msgLabel = ai.msgLabel;
+
+  // Scroll to bottom
+  var wrap = document.querySelector('.msgs-wrap');
+  if (wrap) {
+    requestAnimationFrame(function() {
+      wrap.scrollTop = wrap.scrollHeight;
+    });
+  }
+
+  // ── 2. Track state ──
+  var fullText = '';
+  var isImageGen = false;
+  var streamAborted = false;
+
+  // Stop button
+  var stopBtn = document.createElement('button');
+  stopBtn.className = 'stop-stream-btn';
+  stopBtn.innerHTML = '<i class="fa-solid fa-stop"></i> Stop';
+  stopBtn.addEventListener('click', function() {
+    streamAborted = true;
+    stopBtn.disabled = true;
+    stopBtn.innerHTML = '<i class="fa-solid fa-check"></i> Stopped';
+    msgEl.classList.remove('streaming-cursor', 'msg-streaming');
+  });
+  if (ai.msgActs) ai.msgActs.appendChild(stopBtn);
+
+  // ── 3. Save user message to sidebar display ──
+  // (your existing addMessageToSidebar or equivalent)
+
+  try {
+    var resp = await fetch(API_BASE + '/ask/universal', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'text/event-stream'
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        prompt: prompt,
+        conversation_id: convId || null,
+        stream: true,
+        remember: remember,
+        model: model,
+        mode: mode
+      })
+    });
+
+    if (!resp.ok) {
+      var errText = '';
+      try { errText = await resp.text(); } catch(e) {}
+      throw new Error('HTTP ' + resp.status + (errText ? ': ' + errText.slice(0, 200) : ''));
+    }
+
+    var reader = resp.body.getReader();
+    var decoder = new TextDecoder();
+    var buffer = '';
+    var effectiveConvId = convId; // may be updated by backend
+
+    while (true) {
+      if (streamAborted) break;
+
+      var result = await reader.read();
+      if (result.done) break;
+
+      buffer += decoder.decode(result.value, { stream: true });
+      var lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (var i = 0; i < lines.length; i++) {
+        if (streamAborted) break;
+        var line = lines[i];
+        if (!line.startsWith('data: ')) continue;
+        var raw = line.slice(6).trim();
+        if (raw === '[DONE]') continue;
+
+        var parsed;
+        try { parsed = JSON.parse(raw); } catch(e) { continue; }
+
+        // ── Update conversation ID if backend sends one ──
+        if (parsed.conversation_id && !effectiveConvId) {
+          effectiveConvId = parsed.conversation_id;
+        }
+
+        // ╔═══════════════════════════════════════════════╗
+        // ║  IMAGE EVENTS — handled by ImageStreamHandler ║
+        // ║  These NEVER touch DOMPurify or marked         ║
+        // ╚═══════════════════════════════════════════════╝
+        if (ImageStreamHandler.handleEvent(
+          parsed, msgCt, msgEl, effectiveConvId || '__none__', prompt
+        )) {
+          isImageGen = true;
+          // Remove stop button once image starts generating
+          // (can't cancel an in-flight OpenAI image gen)
+          if (stopBtn.parentNode) stopBtn.remove();
+          continue;
+        }
+
+        // ── Text content delta ──
+        if (parsed.type === 'content' && typeof parsed.text === 'string') {
+          fullText += parsed.text;
+          // Render through markdown pipeline
+          try {
+            var rawHtml = typeof marked !== 'undefined'
+              ? marked.parse(fullText, { breaks: true, gfm: true })
+              : fullText.replace(/</g, '&lt;').replace(/\n/g, '<br>');
+
+            // Sanitize — but our hook preserves data:image URIs
+            var cleanHtml = typeof DOMPurify !== 'undefined'
+              ? DOMPurify.sanitize(rawHtml, {
+                  ALLOWED_TAGS: DOMPurify.getDefaultConfig().ALLOWED_TAGS,
+                  ALLOWED_ATTR: ['src', 'alt', 'id', 'class', 'style', 'href', 'target', 'rel',
+                    'data-preserve-src', 'onclick', 'loading'],
+                  ADD_TAGS: ['img', 'details', 'summary', 'input'],
+                  ADD_ATTR: ['type', 'checked', 'disabled', 'open']
+                })
+              : rawHtml;
+
+            msgCt.innerHTML = cleanHtml;
+          } catch(renderErr) {
+            // Fallback: plain text if markdown/sanitize fails
+            msgCt.textContent = fullText;
+          }
+
+          msgEl.classList.add('streaming-cursor');
+          if (msgLabel) {
+            var statusSpan = msgLabel.querySelector('.ai-status');
+            if (statusSpan) statusSpan.textContent = 'responding...';
+          }
+
+          // Auto-scroll
+          if (wrap) {
+            requestAnimationFrame(function() {
+              wrap.scrollTop = wrap.scrollHeight;
+            });
+          }
+          continue;
+        }
+
+        // ── Done signal ──
+        if (parsed.type === 'done') {
+          msgEl.classList.remove('streaming-cursor', 'msg-streaming');
+          if (msgLabel) {
+            var st = msgLabel.querySelector('.ai-status');
+            if (st) st.style.display = 'none';
+          }
+          continue;
+        }
+
+        // ── Non-image error (text errors only reach here) ──
+        if (parsed.type === 'error') {
+          msgEl.classList.remove('streaming-cursor', 'msg-streaming');
+          if (!isImageGen) {
+            msgCt.innerHTML = '<div style="color:var(--danger);padding:8px 0">' +
+              '<i class="fa-solid fa-circle-exclamation"></i> ' +
+              ((parsed.message || 'An error occurred') + '').replace(/[<>&"']/g, '') +
+              '</div>';
+          }
+          continue;
+        }
+      }
+    }
+
+    // ── Post-stream cleanup ──
+    ImageStreamHandler.cleanup(effectiveConvId || '__none__');
+    msgEl.classList.remove('streaming-cursor', 'msg-streaming');
+    if (stopBtn.parentNode) stopBtn.remove();
+
+    // Final render pass for KaTeX, highlight.js, etc.
+    if (fullText && !isImageGen) {
+      try {
+        // Re-render markdown one final time (clean)
+        var finalHtml = typeof marked !== 'undefined'
+          ? marked.parse(fullText, { breaks: true, gfm: true })
+          : fullText.replace(/</g, '&lt;').replace(/\n/g, '<br>');
+        finalHtml = typeof DOMPurify !== 'undefined'
+          ? DOMPurify.sanitize(finalHtml, {
+              ALLOWED_TAGS: DOMPurify.getDefaultConfig().ALLOWED_TAGS,
+              ALLOWED_ATTR: ['src','alt','id','class','style','href','target','rel','data-preserve-src','onclick','loading'],
+              ADD_TAGS: ['img','details','summary','input'],
+              ADD_ATTR: ['type','checked','disabled','open']
+            })
+          : finalHtml;
+        msgCt.innerHTML = finalHtml;
+      } catch(e) {}
+
+      // Run post-render hooks
+      if (typeof renderMathInElement === 'function') {
+        try { renderMathInElement(msgCt, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false}
+          ],
+          throwOnError: false
+        }); } catch(e) {}
+      }
+      msgCt.querySelectorAll('pre code').forEach(function(block) {
+        if (typeof hljs !== 'undefined') {
+          try { hljs.highlightElement(block); } catch(e) {}
+        }
+      });
+    }
+
+    // ── Build final content for history saving ──
+    var finalContent = fullText;
+    if (isImageGen) {
+      var imgB64 = ImageStreamHandler.getBase64(effectiveConvId || '__none__');
+      if (imgB64) {
+        finalContent = ImageStreamHandler.buildHistoryHTML(imgB64, prompt);
+        // Also put it in the DOM if not already there
+        if (!msgCt.querySelector('.gen-img-card')) {
+          msgCt.innerHTML = finalContent;
+        }
+      }
+    }
+
+    // ── Save messages to backend/history ──
+    if (effectiveConvId && finalContent) {
+      try {
+        await fetch(API_BASE + '/chat/' + effectiveConvId + '/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            role: 'assistant',
+            content: finalContent
+          })
+        });
+      } catch(e) {
+        console.warn('[streamChat] Failed to save message:', e);
+      }
+    }
+
+    // Update sidebar conversation list if needed
+    if (effectiveConvId && typeof updateSidebar === 'function') {
+      try { updateSidebar(); } catch(e) {}
+    }
+
+    return { conversation_id: effectiveConvId, content: finalContent };
+
+  } catch(err) {
+    // ── Fatal error (network, parse, etc.) ──
+    console.error('[streamChat] Fatal error:', err);
+    ImageStreamHandler.cleanup(convId || '__none__');
+    msgEl.classList.remove('streaming-cursor', 'msg-streaming');
+    if (stopBtn.parentNode) stopBtn.remove();
+
+    if (!isImageGen && !fullText) {
+      msgCt.innerHTML =
+        '<div style="color:var(--danger);padding:12px 0;display:flex;align-items:center;gap:10px">' +
+          '<i class="fa-solid fa-circle-exclamation" style="flex-shrink:0"></i>' +
+          '<div>' +
+            '<div style="font-weight:600;margin-bottom:4px">Connection Error</div>' +
+            '<div style="font-size:13px;color:var(--text-secondary)">' +
+              (err.message || 'Unknown error').replace(/[<>&"']/g, '') +
+            '</div>' +
+          '</div>' +
+        '</div>';
+    }
+
+    return { conversation_id: convId, content: fullText, error: err.message };
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FIX 5: When loading history, make saved images interactive
+   ═══════════════════════════════════════════════════════════════════ */
+function initHistoricalImages(container) {
+  if (!container) return;
+  var imgs = container.querySelectorAll('.gen-img-card img');
+  for (var i = 0; i < imgs.length; i++) {
+    if (!imgs[i].classList.contains('loaded')) {
+      imgs[i].style.opacity = '1';
+      imgs[i].classList.add('loaded');
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FIX 6: Complete the missing CSS that was cut off in your file
+   Append this to your <style> block (replaces everything from
+   .img-gen-loader-bg onward that was truncated)
+   ═══════════════════════════════════════════════════════════════════ */
 
 function sendToAI(text){
   if(!text)return;S.streaming=true;S.abort=new AbortController();addTyping();updateCB();var full='';
