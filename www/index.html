@@ -40,176 +40,329 @@ if(typeof DOMPurify!=='undefined'){
   });
 }
 
-/* ═══ Image Stream Handler ═══ */
-var ImageStreamHandler=(function(){
-  var S=new Map();
-  function ap(p,c){if(!p||!c)return false;try{p.appendChild(c);return true}catch(e){return false}}
-  function rp(o,n){if(!o||!o.parentNode||!n)return false;try{o.parentNode.replaceChild(n,o);return true}catch(e){try{o.parentNode.removeChild(o)}catch(e2){}return false}}
-  function mkLoader(){
-    var e=document.createElement('div');e.className='img-gen-loader';
-    e.innerHTML='<div class="img-gen-loader-bg"></div><div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:14px;pointer-events:none"><i class="fa-solid fa-wand-magic-sparkles" style="font-size:36px;color:var(--accent);opacity:.6;animation:spin 3s linear infinite"></i><span style="font-size:13px;color:var(--text-muted);font-weight:500">Generating image...</span><span style="font-size:11px;color:var(--text-muted);opacity:.5">This may take 10-30 seconds</span></div>';
-    return e;
+// ════════════════════════════════════════════════════════════
+// IMAGE STREAMING — PROGRESSIVE REVEAL (FIXED)
+// ════════════════════════════════════════════════════════════
+
+function _getStreamContentEl() {
+  return document.querySelector('.msg.ai-msg.msg-streaming .msg-ct') || null;
+}
+
+/** Show shimmer loader immediately when backend detects image intent */
+function handleImageGenerating() {
+  const ct = _getStreamContentEl();
+  if (!ct || ct.querySelector('.img-stream-container')) return;
+
+  const container = document.createElement('div');
+  container.className = 'img-stream-container';
+  container.id = 'imgStreamActive';
+  container.innerHTML = `
+    <div class="img-stream-viewport">
+      <div class="img-stream-shimmer" id="imgShimmer"></div>
+      <img class="img-stream-preview" id="imgStreamPreview" alt="" />
+      <div class="img-stream-progress-track">
+        <div class="img-stream-progress-fill" id="imgProgressFill"></div>
+      </div>
+      <div class="img-stream-label" id="imgStreamLabel">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <span>Generating image...</span>
+      </div>
+    </div>
+  `;
+  ct.appendChild(container);
+  _scrollChat();
+}
+
+/** Each progressive JPEG quality level from backend */
+function handleImageProgress(ev) {
+  const container = document.getElementById('imgStreamActive');
+  if (!container) return;
+
+  const progress = Math.min(100, Math.max(0, ev.progress || 0));
+  if (!ev.data) return;
+
+  const fill = document.getElementById('imgProgressFill');
+  if (fill) fill.style.width = progress + '%';
+
+  const preview = document.getElementById('imgStreamPreview');
+  if (!preview) return;
+
+  const shimmer = document.getElementById('imgShimmer');
+  if (shimmer && !shimmer.classList.contains('hidden')) shimmer.classList.add('hidden');
+
+  preview.src = 'data:image/jpeg;base64,' + ev.data;
+  if (!preview.classList.contains('visible')) preview.classList.add('visible');
+
+  // Blur curve: stays blurry 0-70%, snaps sharp 70-100%
+  const t = progress / 100;
+  let blur;
+  if (t < 0.7) {
+    blur = 30 - (t / 0.7) * 24;
+  } else {
+    const t2 = (t - 0.7) / 0.3;
+    blur = 6 * (1 - t2 * t2);
   }
-  function mkCard(b64,prompt){
-    if(!b64)return null;
-    var w=document.createElement('div');w.className='gen-img-card';
-    w.style.cssText='margin:16px 0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:var(--bg-secondary);position:relative';
-    var id='gi-'+Date.now()+'-'+Math.random().toString(36).slice(2,8);
-    var img=document.createElement('img');img.id=id;
-    img.alt=(prompt||'Generated image').replace(/[<>&"']/g,'').slice(0,200);
-    img.style.cssText='width:100%;display:block;border-radius:var(--radius);cursor:zoom-in;opacity:0;transition:opacity .5s ease,transform .4s cubic-bezier(.4,0,.2,1)';
-    img._ps='data:image/png;base64,'+b64;
-    img.addEventListener('click',function(){ImageStreamHandler.fullscreenById(id)});
-    var bd=document.createElement('div');
-    bd.style.cssText='position:absolute;bottom:10px;right:10px;display:flex;gap:6px;z-index:3';
-    bd.appendChild(mkBtn('fa-download','Download',function(e){e.stopPropagation();ImageStreamHandler.downloadById(id)}));
-    bd.appendChild(mkBtn('fa-expand','Fullscreen',function(e){e.stopPropagation();ImageStreamHandler.fullscreenById(id)}));
-    w.appendChild(img);w.appendChild(bd);
-    w._init=function(){
-      if(img._ps&&!img.src){img.src=img._ps;delete img._ps;}
-      requestAnimationFrame(function(){requestAnimationFrame(function(){img.style.opacity='1';img.classList.add('loaded')})});
-    };
-    return w;
-  }
-  function mkBtn(icon,title,fn){
-    var b=document.createElement('button');b.title=title;b.setAttribute('aria-label',title);
-    b.className='gen-img-btn';b.innerHTML='<i class="fa-solid '+icon+'"></i>';
-    b.addEventListener('click',fn);
-    return b;
-  }
-  function mkErr(msg){
-    var e=document.createElement('div');
-    e.style.cssText='margin:12px 0;padding:14px 18px;background:var(--adm-err-bg);border:1px solid var(--adm-err-border);border-radius:var(--radius-sm);color:var(--adm-err-text);font-size:13px;display:flex;align-items:center;gap:10px';
-    var i=document.createElement('i');i.className='fa-solid fa-circle-exclamation';i.style.flexShrink='0';
-    var s=document.createElement('span');s.textContent=(msg||'Image generation failed').replace(/[<>&"']/g,'');
-    e.appendChild(i);e.appendChild(s);return e;
-  }
-  function handle(p,ct,el,cid,prompt){
-    if(!p||typeof p!=='object'||!p.type)return false;
-    var t=p.type;
-    if(t!=='status'&&t!=='image'&&t!=='image_result'&&t!=='error')return false;
-    if(t==='status'){
-      var m=(p.message||'').toLowerCase();
-      if(!m.includes('image')&&!m.includes('generat')&&!m.includes('drawing'))return false;
-      if(!ct)return true;
-      if(el)el.classList.remove('streaming-cursor');
-      var ex=S.get(cid);if(ex&&ex.l)try{ex.l.parentNode.removeChild(ex.l)}catch(e){}
-      var l=mkLoader();ap(ct,l);S.set(cid,{l:l,p:prompt||'',b:null});return true;
+  blur = Math.max(0, blur);
+  const brightness = 1 + (blur / 80);
+  const scale = 1 + (blur / 600);
+
+  preview.style.filter = `blur(${blur.toFixed(1)}px) brightness(${brightness.toFixed(3)})`;
+  preview.style.transform = `scale(${scale.toFixed(4)})`;
+
+  const label = document.getElementById('imgStreamLabel');
+  if (label) {
+    const span = label.querySelector('span');
+    if (span) {
+      if (progress < 15) span.textContent = 'Generating image...';
+      else if (progress < 35) span.textContent = 'Outlining shapes...';
+      else if (progress < 55) span.textContent = 'Adding details...';
+      else if (progress < 75) span.textContent = 'Refining textures...';
+      else if (progress < 90) span.textContent = 'Enhancing quality...';
+      else span.textContent = 'Finalizing...';
     }
-    if(t==='image'||t==='image_result'){
-      var b=p.data||p.image||p.base64||null;
-      if(!b)return true;
-      if(!ct){S.set(cid,{l:null,p:prompt||'',b:b});return true;}
-      var c=mkCard(b,prompt||'');
-      if(!c)return true;
-      var st=S.get(cid);var ok=false;
-      if(st&&st.l)ok=rp(st.l,c);
-      if(!ok)ap(ct,c);
-      if(c._init)c._init();
-      S.set(cid,{l:null,p:prompt||'',b:b});
-      if(el){
-        el.classList.remove('streaming-cursor','msg-streaming');
-        var s=el.querySelector('.ai-status');
-        if(s)s.style.display='none';
-      }
-      return true;
-    }
-    if(t==='error'){
-      if(!ct)return true;
-      var es=S.get(cid);var eok=false;
-      if(es&&es.l)eok=rp(es.l,mkErr(p.message));
-      if(!eok)ap(ct,mkErr(p.message));
-      if(el)el.classList.remove('streaming-cursor','msg-streaming');
-      S.delete(cid);
-      return true;
-    }
-    return false;
+    if (progress >= 85) label.classList.add('fade-out');
+    else label.classList.remove('fade-out');
   }
-  function cleanup(cid){
-    var s=S.get(cid);
-    if(s&&s.l){
-      var c=mkCard(s.b,s.p);
-      if(c){rp(s.l,c);if(c._init)c._init();}
-      else try{s.l.parentNode.removeChild(s.l)}catch(e){}
-    }
-    S.delete(cid);
-  }
-  function getB64(cid){
-    var s=S.get(cid);return s?s.b:null;
-  }
-  function dl(id){
-    try{
-      var i=document.getElementById(id);
-      if(!i||!i.src||i.src===location.href)return;
-      var a=document.createElement('a');
-      a.href=i.src;
-      a.download='heloxai-'+Date.now()+'.png';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }catch(e){}
-  }
-  function fs(id){
-    try{
-      var i=document.getElementById(id);
-      if(!i||!i.src||i.src===location.href)return;
-      var m=document.getElementById('img-modal');
-      if(!m){
-        m=document.createElement('div');
-        m.id='img-modal';
-        m.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.88);backdrop-filter:blur(14px);display:none;align-items:center;justify-content:center;padding:24px;cursor:zoom-out;opacity:0;transition:opacity .25s ease';
-        m.addEventListener('click',function(e){
-          if(e.target===m)ImageStreamHandler.closeFullscreen();
-        });
-        document.body.appendChild(m);
-      }
-      m.innerHTML='';
-      var mi=document.createElement('img');
-      mi.src=i.src;
-      mi.alt='';
-      mi.style.cssText='max-width:95vw;max-height:92vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5);object-fit:contain';
-      m.appendChild(mi);
-      m.style.display='flex';
-      requestAnimationFrame(function(){m.style.opacity='1'});
-      var h=function(e){
-        if(e.key==='Escape'){
-          ImageStreamHandler.closeFullscreen();
-          document.removeEventListener('keydown',h);
-        }
-      };
-      document.addEventListener('keydown',h);
-    }catch(e){}
-  }
-  function cfs(){
-    var m=document.getElementById('img-modal');
-    if(m){
-      m.style.opacity='0';
-      setTimeout(function(){m.style.display='none'},250);
-    }
-  }
-  function histHTML(b64,prompt){
-    if(!b64)return '';
-    var id='hi-'+Date.now()+'-'+Math.random().toString(36).slice(2,8);
-    var a=(prompt||'Generated image').replace(/[<>&"']/g,'').slice(0,200);
-    return '<div class="gen-img-card" style="margin:16px 0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:var(--bg-secondary);position:relative">' +
-      '<img id="'+id+'" src="data:image/png;base64,'+b64+'" alt="'+a+'" style="width:100%;display:block;border-radius:var(--radius);cursor:zoom-in;opacity:1" onclick="ImageStreamHandler.fullscreenById(\''+id+'\')"/>' +
-      '<div style="position:absolute;bottom:10px;right:10px;display:flex;gap:6px;z-index:3">' +
-        '<button onclick="event.stopPropagation();ImageStreamHandler.downloadById(\''+id+'\')" class="gen-img-btn" title="Download"><i class="fa-solid fa-download"></i></button>' +
-        '<button onclick="event.stopPropagation();ImageStreamHandler.fullscreenById(\''+id+'\')" class="gen-img-btn" title="Fullscreen"><i class="fa-solid fa-expand"></i></button>' +
-      '</div></div>';
+  _scrollChat();
+}
+
+/** Final image — replaces loader with polished card + optional caption */
+function handleImageGenerated(ev) {
+  const container = document.getElementById('imgStreamActive');
+  if (!container) return;
+  const ct = container.parentElement;
+  if (!ct) return;
+
+  const imageData = ev.data;
+  const isPng = !imageData.startsWith('/9j/');
+  const mime = isPng ? 'data:image/png;base64,' : 'data:image/jpeg;base64,';
+
+  // Build caption HTML if provided
+  let captionHtml = '';
+  if (ev.caption) {
+    // Escape the caption for safe HTML insertion
+    const escaped = ev.caption
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+    // Parse italics *text* → <em>
+    const withEm = escaped.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    captionHtml = `<p style="margin:12px 16px 16px;font-size:13.5px;color:var(--text-secondary);line-height:1.6">${withEm}</p>`;
   }
 
-  return {
-    handleEvent: handle,
-    cleanup: cleanup,
-    getBase64: getB64,
-    downloadById: dl,
-    fullscreenById: fs,
-    closeFullscreen: cfs,
-    buildHistoryHTML: histHTML,
-    createLoader: mkLoader
-  };
-})();
+  const card = document.createElement('div');
+  card.className = 'gen-img-card';
+  card.innerHTML = `
+    <div class="gen-img-wrap" onclick="openImgModal(this.querySelector('img').src)">
+      <img src="${mime}${imageData}" alt="Generated image" class="gen-img-final" loading="eager" />
+      <div class="gen-img-hover-overlay">
+        <button class="gen-img-action" onclick="event.stopPropagation();downloadGenImage(this)" title="Download">
+          <i class="fa-solid fa-download"></i> Download
+        </button>
+        <button class="gen-img-action" onclick="event.stopPropagation();openImgModal(this.closest('.gen-img-card').querySelector('.gen-img-final').src)" title="Fullscreen">
+          <i class="fa-solid fa-expand"></i> Expand
+        </button>
+      </div>
+    </div>
+    ${captionHtml}
+  `;
+
+  container.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+  container.style.opacity = '0';
+  container.style.transform = 'scale(0.98)';
+
+  setTimeout(() => {
+    if (ct && container.parentNode === ct) ct.replaceChild(card, container);
+    const finalImg = card.querySelector('.gen-img-final');
+    if (finalImg) {
+      const reveal = () => finalImg.classList.add('loaded');
+      if (finalImg.complete && finalImg.naturalWidth > 0) reveal();
+      else { finalImg.onload = reveal; setTimeout(reveal, 800); }
+    }
+    _scrollChat();
+  }, 260);
+}
+
+/** Image error */
+function handleImageError(ev) {
+  const container = document.getElementById('imgStreamActive');
+  if (!container) return;
+  const ct = container.parentElement;
+  if (!ct) return;
+  const el = document.createElement('div');
+  el.className = 'img-stream-error';
+  el.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i><span>Image generation failed: ${ev.error || 'Unknown error'}</span>`;
+  container.style.transition = 'opacity 0.2s ease';
+  container.style.opacity = '0';
+  setTimeout(() => { if (ct && container.parentNode === ct) ct.replaceChild(el, container); }, 210);
+}
+
+// ════════════════════════════════════════════════════════════
+// IMAGE UTILITIES
+// ════════════════════════════════════════════════════════════
+
+function openImgModal(src) {
+  if (!src) return;
+  const modal = document.getElementById('img-modal');
+  const img = document.getElementById('modalImg');
+  img.src = src;
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeImgModal() {
+  const modal = document.getElementById('img-modal');
+  modal.classList.remove('open');
+  document.body.style.overflow = '';
+  setTimeout(() => { if (!modal.classList.contains('open')) document.getElementById('modalImg').src = ''; }, 300);
+}
+
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeImgModal(); });
+
+function downloadGenImage(btnEl) {
+  const card = btnEl.closest('.gen-img-card') || btnEl.closest('.gen-img-wrap').parentElement;
+  const img = card.querySelector('img');
+  if (!img || !img.src) return;
+
+  const src = img.src;
+  if (!src.startsWith('data:')) {
+    const a = document.createElement('a');
+    a.href = src; a.download = 'heloxai-image.png'; a.target = '_blank';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    return;
+  }
+
+  const parts = src.split(',');
+  const mimeMatch = parts[0].match(/data:(image\/\w+);/);
+  const mime = mimeMatch ? mimeMatch[1] : 'image/png';
+  const ext = mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpg';
+
+  try {
+    const byteChars = atob(parts[1]);
+    const byteArray = new Uint8Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
+    const blob = new Blob([byteArray], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `heloxai-${Date.now()}.${ext}`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  } catch (e) { console.error('Download failed:', e); }
+}
+
+function _scrollChat() {
+  const w = document.getElementById('msgsWrap');
+  if (w) requestAnimationFrame(() => { w.scrollTop = w.scrollHeight; });
+}
+
+// ════════════════════════════════════════════════════════════
+// CODE COPY BUTTONS
+// ════════════════════════════════════════════════════════════
+
+/**
+ * Wire up copy buttons on all <pre> blocks inside a container.
+ * Call this after every markdown render — both during streaming
+ * (on each update) and after stream completion.
+ *
+ * Uses event delegation on the container to avoid duplicate listeners.
+ */
+function initCodeCopyButtons(container) {
+  if (!container) return;
+
+  // Remove any stale delegation listener to avoid duplicates
+  if (container._codeCopyInit) return;
+  container._codeCopyInit = true;
+
+  container.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.code-copy-btn');
+    if (!btn) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const pre = btn.closest('pre');
+    if (!pre) return;
+
+    const code = pre.querySelector('code');
+    if (!code) return;
+
+    // Get clean text content (strip any trailing newline artifacts)
+    let text = code.textContent || code.innerText || '';
+
+    try {
+      await navigator.clipboard.writeText(text);
+
+      // Success state
+      btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+      btn.classList.add('copied');
+
+      setTimeout(() => {
+        btn.innerHTML = '<i class="fa-regular fa-clipboard"></i>';
+        btn.classList.remove('copied');
+      }, 2000);
+    } catch (err) {
+      // Fallback for older browsers / insecure contexts
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.innerHTML = '<i class="fa-regular fa-clipboard"></i>';
+          btn.classList.remove('copied');
+        }, 2000);
+      } catch (fallbackErr) {
+        btn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+        setTimeout(() => {
+          btn.innerHTML = '<i class="fa-regular fa-clipboard"></i>';
+        }, 2000);
+      }
+      document.body.removeChild(textarea);
+    }
+  });
+}
+
+/**
+ * Add copy buttons to all <pre> blocks that don't have one yet.
+ * Call this after inserting rendered markdown HTML into the DOM.
+ */
+function addCopyButtonsToPreBlocks(container) {
+  if (!container) return;
+
+  const pres = container.querySelectorAll('pre');
+  pres.forEach((pre) => {
+    if (pre.querySelector('.code-copy-btn')) return; // already has one
+
+    const btn = document.createElement('button');
+    btn.className = 'code-copy-btn';
+    btn.innerHTML = '<i class="fa-regular fa-clipboard"></i>';
+    btn.title = 'Copy code';
+    btn.setAttribute('aria-label', 'Copy code to clipboard');
+    pre.style.position = 'relative';
+    pre.appendChild(btn);
+  });
+
+  // Ensure delegation is wired up
+  initCodeCopyButtons(container);
+}
+
+/**
+ * Enhanced markdown renderer that integrates code copy buttons.
+ * Replace your existing renderMarkdown / updateMessageContent calls
+ * with this, or call addCopyButtonsToPreBlocks after your existing render.
+ *
+ * Usage:
+ *   const html = marked.parse(markdownText);
+ *   msgCt.innerHTML = html;
+ *   addCopyButtonsToPreBlocks(msgCt);
+ *   renderMathInElement(msgCt, {...}); // if using KaTeX
+ *   msgCt.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
+ */
 </script>
 
 <style>
@@ -1299,6 +1452,59 @@ pre:hover .code-copy-btn{opacity:1}
 .gen-img-card.landscape img{aspect-ratio:3/2}
 .gen-img-card.portrait img{aspect-ratio:2/3}
 .gen-img-card.square img{aspect-ratio:1/1}
+
+/* Code copy button — ensure this exists */
+.code-copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all .15s;
+  opacity: 0;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-body);
+  line-height: 1;
+}
+pre:hover .code-copy-btn { opacity: 1; }
+.code-copy-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-active);
+}
+.code-copy-btn.copied {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Ensure pre blocks are positioned for absolute button */
+.msg-ct pre {
+  position: relative;
+}
+
+/* Image error */
+.img-stream-error {
+  margin: 16px 0;
+  padding: 20px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(239,68,68,0.2);
+  background: rgba(239,68,68,0.06);
+  color: var(--danger);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  animation: slideUpFade 0.3s ease both;
+}
+.img-stream-error i { font-size: 18px; flex-shrink: 0; }
 
 /* Loader aspect ratio variants */
 .img-gen-loader.landscape{aspect-ratio:3/2}
@@ -3125,20 +3331,92 @@ async function sendMessage(prompt){
 
 // ── IMAGE GENERATION STREAMING HANDLERS ──
 
-case "image_generating":
-  // Show ChatGPT-style loader in the AI message
-  handleImageGenerating(event);
-  break;
+// Inside your fetch/SSE read loop, replace whatever switch/if
+// handles parsed event types with this:
 
-case "image_generated":
-  // Replace loader with the actual image, smooth reveal
-  handleImageGenerated(event);
-  break;
+let _imageWasGenerated = false;
 
-case "image_progress":
-  // Optional: update progress text
-  handleImageProgress(event);
-  break;
+for (const line of lines) {
+  if (!line.startsWith('data: ')) continue;
+  const payload = line.slice(6).trim();
+  if (payload === '[DONE]') continue;
+
+  let parsed;
+  try {
+    parsed = JSON.parse(payload);
+  } catch (e) {
+    // Not valid JSON — your existing raw text fallback if any
+    continue;
+  }
+
+  switch (parsed.type) {
+
+    // ── Image streaming (new progressive events) ──
+    case 'image_generating':
+      _imageWasGenerated = false;
+      handleImageGenerating();
+      break;
+
+    case 'image_progress':
+      handleImageProgress(parsed);
+      break;
+
+    case 'image_generated':
+      _imageWasGenerated = true;
+      handleImageGenerated(parsed);
+      break;
+
+    case 'image_error':
+      _imageWasGenerated = true;
+      handleImageError(parsed);
+      break;
+
+    // ── Web search results ──
+    case 'search_results':
+      if (parsed.html) {
+        streamBuffer += '\n' + parsed.html;
+        // YOUR EXISTING: re-render streamBuffer into msgCt.innerHTML
+        // e.g. msgCt.innerHTML = renderMarkdown(streamBuffer);
+        addCopyButtonsToPreBlocks(msgCt);
+      }
+      break;
+
+    // ── Text streaming ──
+    case 'text_delta':
+      // CRITICAL: skip any text_delta that leaks after image events
+      if (_imageWasGenerated) break;
+
+      if (parsed.content) {
+        streamBuffer += parsed.content;
+        // YOUR EXISTING: re-render streamBuffer into msgCt.innerHTML
+        // e.g. msgCt.innerHTML = renderMarkdown(streamBuffer);
+        addCopyButtonsToPreBlocks(msgCt);
+
+        // YOUR EXISTING: add streaming-cursor class
+        // e.g. msgEl.classList.add('streaming-cursor');
+      }
+      break;
+
+    // ── Stream done ──
+    case 'done':
+      _imageWasGenerated = false;
+      // YOUR EXISTING: remove streaming state
+      // e.g. msgEl.classList.remove('streaming-cursor', 'msg-streaming');
+      // YOUR EXISTING: update conversation ID, save, etc.
+      if (parsed.conversation_id) {
+        // YOUR EXISTING: currentConversationId = parsed.conversation_id;
+      }
+      // Final pass: ensure all code blocks have copy buttons
+      addCopyButtonsToPreBlocks(msgCt);
+      // YOUR EXISTING: hide stop button, re-enable input, etc.
+      break;
+
+    // ── Fallback: ignore unknown types ──
+    default:
+      // Don't break anything — just skip unrecognized events
+      break;
+  }
+}
 
         case 'status':status.textContent=ev.message||'';status.style.display='inline-flex';if(/generat.*image/i.test(ev.message||''))showImageSkeleton(aiEl);break;
         case 'token':raw+=(ev.text||'');status.textContent='responding...';scheduleRender(ct,raw,searchHtml);break;
