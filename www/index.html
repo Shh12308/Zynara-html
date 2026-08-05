@@ -3030,6 +3030,47 @@ svg .katex, svg .katex-html,
   .sidebar{width:100%;--sidebar-w:100%}.w-grid{grid-template-columns:1fr}.as-grid{grid-template-columns:1fr}.msgs-inner{padding:16px 16px 8px}.msg-acts{opacity:1}.gal-grid{grid-template-columns:repeat(2,1fr);gap:10px}.msg.ai-msg{padding-right:20px}.msg.user-msg{padding-left:20px}.msg.user-msg .msg-inner{max-width:94%}.model-sel{display:none}.cb-foot{display:none}.w-logo{font-size:40px}.w-sub{font-size:15px;margin-bottom:40px}.sidebar{border-right:none}.msg-img-item.single{max-width:220px}.msg-img-item.single img{max-width:220px;max-height:280px}.msg-img-item.multi{width:110px;height:110px}.msg-img-item.multi img{width:110px;height:110px}.em-modal{width:100%}.chat-hdr{padding:8px 12px}.cb-container{padding-left:12px;padding-right:12px}.toast-ct{right:12px;left:12px;top:12px}.toast{max-width:none;width:100%}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* =========================================
+   IMAGE STREAMING — PROGRESSIVE REVEAL
+   ========================================= */
+.img-stream-container{position:relative;margin:8px 0 16px;border-radius:var(--radius);overflow:hidden;background:var(--bg-secondary);border:1px solid var(--border)}
+.img-stream-viewport{position:relative;min-height:180px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--bg-tertiary)}
+.img-stream-shimmer{position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.04) 50%,transparent 70%);background-size:200% 100%;animation:shimmerSlide 1.8s ease-in-out infinite}
+.img-stream-shimmer.hidden{display:none}
+@keyframes shimmerSlide{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.img-stream-preview{max-width:100%;max-height:520px;object-fit:contain;opacity:0;transition:filter .35s ease,transform .35s ease,opacity .3s ease;display:block;border-radius:4px}
+.img-stream-preview.visible{opacity:1}
+.img-stream-progress-track{position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,.06)}
+.img-stream-progress-fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent),rgba(255,255,255,.7));border-radius:0 2px 2px 0;transition:width .25s ease}
+.img-stream-label{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:6px 14px;background:rgba(0,0,0,.65);backdrop-filter:blur(8px);border-radius:20px;font-size:12px;color:var(--text-secondary);white-space:nowrap;transition:opacity .3s ease}
+.img-stream-label.fade-out{opacity:0;pointer-events:none}
+.img-stream-label i{color:var(--accent);font-size:13px}
+
+/* --- Final generated image card --- */
+.gen-img-card{margin:10px 0 16px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:var(--bg-secondary);transition:border-color var(--speed)}
+.gen-img-card:hover{border-color:var(--border-active)}
+.gen-img-wrap{position:relative;cursor:pointer;overflow:hidden}
+.gen-img-final{width:100%;display:block;opacity:0;transition:opacity .5s ease}
+.gen-img-final.loaded{opacity:1}
+.gen-img-hover-overlay{position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.55) 0%,transparent 50%);display:flex;align-items:flex-end;justify-content:center;gap:10px;padding:16px;opacity:0;transition:opacity .25s ease}
+.gen-img-wrap:hover .gen-img-hover-overlay{opacity:1}
+.gen-img-action{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(255,255,255,.12);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.15);border-radius:10px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--font-body)}
+.gen-img-action:hover{background:rgba(255,255,255,.22);transform:translateY(-1px)}
+
+/* --- Image stream error --- */
+.img-stream-error{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--bg-secondary);border:1px solid rgba(239,68,68,.2);border-radius:var(--radius-sm);color:var(--danger);font-size:13px;margin:8px 0 16px}
+.img-stream-error i{font-size:16px;flex-shrink:0}
+
+/* =========================================
+   FULLSCREEN IMAGE MODAL
+   ========================================= */
+#img-modal{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.88);backdrop-filter:blur(16px);opacity:0;pointer-events:none;transition:opacity .3s ease;padding:24px}
+#img-modal.open{opacity:1;pointer-events:all}
+.img-modal-close{position:absolute;top:16px;right:16px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;z-index:2}
+.img-modal-close:hover{background:rgba(255,255,255,.2);transform:scale(1.05)}
+.img-modal-img{max-width:95vw;max-height:92vh;object-fit:contain;border-radius:var(--radius);box-shadow:0 8px 60px rgba(0,0,0,.6);transform:scale(.95);transition:transform .35s cubic-bezier(0,0,.2,1)}
+#img-modal.open .img-modal-img{transform:scale(1)}
 </style>
 </head>
 <body>
@@ -3349,73 +3390,55 @@ for (const line of lines) {
     continue;
   }
 
-  switch (parsed.type) {
+  // Inside your SSE parsing loop, where you do:
+//   const evt = JSON.parse(payload);
+//   switch (evt.type) { ... }
 
-    // ── Image streaming (new progressive events) ──
-    case 'image_generating':
-      _imageWasGenerated = false;
-      handleImageGenerating();
-      break;
+switch (evt.type) {
 
-    case 'image_progress':
-      handleImageProgress(parsed);
-      break;
+  /* ── IMAGE GENERATION EVENTS ── */
+  case 'image_generating':
+    handleImageGenerating();
+    break;
 
-    case 'image_generated':
-      _imageWasGenerated = true;
-      handleImageGenerated(parsed);
-      break;
+  case 'image_progress':
+    handleImageProgress(evt);
+    break;
 
-    case 'image_error':
-      _imageWasGenerated = true;
-      handleImageError(parsed);
-      break;
+  case 'image_generated':
+    handleImageGenerated(evt);
+    break;
 
-    // ── Web search results ──
-    case 'search_results':
-      if (parsed.html) {
-        streamBuffer += '\n' + parsed.html;
-        // YOUR EXISTING: re-render streamBuffer into msgCt.innerHTML
-        // e.g. msgCt.innerHTML = renderMarkdown(streamBuffer);
-        addCopyButtonsToPreBlocks(msgCt);
-      }
-      break;
+  case 'image_error':
+    handleImageError(evt);
+    break;
 
-    // ── Text streaming ──
-    case 'text_delta':
-      // CRITICAL: skip any text_delta that leaks after image events
-      if (_imageWasGenerated) break;
+  /* ── TEXT STREAMING ── */
+  case 'text_delta':
+    // Your existing text delta handling — append to currentMsgText,
+    // update the .msg-ct innerHTML, run marked.parse(), highlight, KaTeX, etc.
+    // Example:
+    currentMsgText += (evt.content || '');
+    msgCt.innerHTML = renderMarkdown(currentMsgText);
+    addCopyButtonsToPreBlocks(msgCt);
+    msgCt.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
+    try { renderMathInElement(msgCt, mathOpts); } catch(e) {}
+    _scrollChat();
+    break;
 
-      if (parsed.content) {
-        streamBuffer += parsed.content;
-        // YOUR EXISTING: re-render streamBuffer into msgCt.innerHTML
-        // e.g. msgCt.innerHTML = renderMarkdown(streamBuffer);
-        addCopyButtonsToPreBlocks(msgCt);
+  /* ── SEARCH RESULTS ── */
+  case 'search_results':
+    if (evt.html) {
+      const searchDiv = document.createElement('div');
+      searchDiv.innerHTML = evt.html;
+      msgCt.prepend(searchDiv);
+      _scrollChat();
+    }
+    break;
 
-        // YOUR EXISTING: add streaming-cursor class
-        // e.g. msgEl.classList.add('streaming-cursor');
-      }
-      break;
-
-    // ── Stream done ──
-    case 'done':
-      _imageWasGenerated = false;
-      // YOUR EXISTING: remove streaming state
-      // e.g. msgEl.classList.remove('streaming-cursor', 'msg-streaming');
-      // YOUR EXISTING: update conversation ID, save, etc.
-      if (parsed.conversation_id) {
-        // YOUR EXISTING: currentConversationId = parsed.conversation_id;
-      }
-      // Final pass: ensure all code blocks have copy buttons
-      addCopyButtonsToPreBlocks(msgCt);
-      // YOUR EXISTING: hide stop button, re-enable input, etc.
-      break;
-
-    // ── Fallback: ignore unknown types ──
-    default:
-      // Don't break anything — just skip unrecognized events
-      break;
-  }
+  /* ── FALLBACK ── */
+  default:
+    console.debug('Unknown SSE event:', evt.type, evt);
 }
 
         case 'status':status.textContent=ev.message||'';status.style.display='inline-flex';if(/generat.*image/i.test(ev.message||''))showImageSkeleton(aiEl);break;
@@ -5872,5 +5895,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
 })();
 </script>
+<!-- Fullscreen Image Modal -->
+<div id="img-modal" onclick="closeImgModal()">
+  <button class="img-modal-close" onclick="closeImgModal()" aria-label="Close image">
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+  <img id="modalImg" class="img-modal-img" alt="Full size image" onclick="event.stopPropagation()" />
+</div>
 </body>
 </html>
