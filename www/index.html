@@ -3274,11 +3274,46 @@ function toggleVD(open){
   $('voiceDd').classList.toggle('on',S.vdOpen);
 }
 
+function copyTextToClipboard(text, successCb, errorCb) {
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(function() {
+      if (successCb) successCb();
+    }).catch(function() {
+      fallbackCopyTextToClipboard(text, successCb, errorCb);
+    });
+  } else {
+    fallbackCopyTextToClipboard(text, successCb, errorCb);
+  }
+}
+
+function fallbackCopyTextToClipboard(text, successCb, errorCb) {
+  var textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.top = "0";
+  textarea.style.left = "0";
+  textarea.style.position = "fixed";
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  try {
+    var successful = document.execCommand('copy');
+    if (successful && successCb) successCb();
+    else if (!successful && errorCb) errorCb();
+  } catch (err) {
+    if (errorCb) errorCb(err);
+  }
+  document.body.removeChild(textarea);
+}
+
 function actCopy(idx){
   var m=S.msgs[idx];
   if(!m||!m.content) return;
   var txt=m.content.replace(/<[^>]*>/g,'');
-  navigator.clipboard.writeText(txt).then(function(){toast('Copied','ok');}).catch(function(){toast('Copy failed','err');});
+  copyTextToClipboard(txt, function() { 
+    toast('Copied','ok'); 
+  }, function() { 
+    toast('Copy failed','err'); 
+  });
 }
 function actLike(idx, type){
   var m=S.msgs[idx];
@@ -4249,18 +4284,21 @@ function initEvents(){
     }
     if(e.target.closest('#lbDl')){ e.preventDefault(); e.stopPropagation(); downloadResource(S.lbUrl); return; }
     
-    var cpBtn=e.target.closest('[data-action="copy-code"]');
+        var cpBtn=e.target.closest('[data-action="copy-code"]');
     if(cpBtn){
       e.stopPropagation();
       var blk=cpBtn.closest('.code-blk');
       var codeEl=blk?blk.querySelector('code'):null;
       if(codeEl){
-        navigator.clipboard.writeText(codeEl.textContent).then(function(){
+        var codeText = codeEl.textContent;
+        copyTextToClipboard(codeText, function() {
           var orig = cpBtn.innerHTML;
           cpBtn.innerHTML='<i class="fa-solid fa-check"></i> Copied';
           cpBtn.classList.add('copied');
           setTimeout(function(){cpBtn.innerHTML=orig;cpBtn.classList.remove('copied');},2000);
-        }).catch(function(){toast('Copy failed','err');});
+        }, function() {
+          toast('Copy failed','err');
+        });
       }
       return;
     }
