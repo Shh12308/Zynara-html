@@ -261,7 +261,7 @@ main{ flex:1; display:flex;flex-direction:column; width:100%; position:relative;
 .msg.user-msg .msg-bubble{background:var(--bg-user-bubble);border:1px solid var(--bg-user-bubble-border);padding:14px 18px;border-radius:var(--radius-lg) var(--radius-sm) var(--radius-lg) var(--radius-lg);word-break:break-word;width:100%; display:flex; flex-direction:column;}.msg.user-msg .msg-acts{justify-content:flex-end}
 .msg-text-wrapper { transition: max-height 0.4s var(--ease-out), opacity 0.2s var(--ease-out); overflow: hidden; width: 100%; transform: translateZ(0); }
 .msg-text-wrapper.collapsed { max-height: 180px; -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%); mask-image: linear-gradient(to bottom, black 50%, transparent 100%); }
-.msg-toggle-btn { background: none; border: none; color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; padding: 6px 0 2px 0; width: 100%; text-align: left; display: none; transition: opacity 0.2s var(--ease); opacity: 0.9; }
+.msg-toggle-btn { background: none; border: none; color: var(--accent); font-size: 13px; font-weight: 600; cursor:pointer; padding: 6px 0 2px 0; width: 100%; text-align: left; display: none; transition: opacity 0.2s var(--ease); opacity: 0.9; }
 .msg-toggle-btn:hover { opacity: 1; }
 
 .msg-ct {
@@ -2556,17 +2556,18 @@ function esc(s){
   d.textContent=String(s); 
   return d.innerHTML; 
 }
+
+// ROBUST UUID GENERATOR (FIXES BACKEND CRASHES)
 function uid() {
   try {
     if (crypto && crypto.randomUUID) return crypto.randomUUID();
   } catch(e) {}
-  
-  // Fallback UUID v4 generator
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
 }
+
 function now(){ return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
 function ago(ts){ 
   if(!ts) return ''; 
@@ -2904,6 +2905,8 @@ async function loadChatList(){
   S.chatListData = loadLocalChats(); 
   renderChatList();
 }
+
+// FIX: UPDATED startNewChat to properly use 'd.id' from backend response
 async function startNewChat(){
   if(S.streaming) stopGen();
   S.chatId = uid();
@@ -2924,10 +2927,11 @@ async function startNewChat(){
     var r=await fetch(url+'/newchat',{ method:'POST', headers:authH(), credentials:'include', body:JSON.stringify({model:S.model}) });
     if(r.ok){
         var d=await r.json();
-        if(d&&d.conversation_id){ 
-          if(d.conversation_id !== S.chatId) {
+        // THE FIX IS HERE: Use d.id instead of d.conversation_id
+        if(d&&d.id){ 
+          if(d.id !== S.chatId) {
              localStorage.removeItem('helox_history_' + S.chatId); 
-             S.chatId = d.conversation_id;
+             S.chatId = d.id;
              newMeta.id = S.chatId;
              saveActiveChat(S.chatId);
              saveLocalChats();
@@ -3274,6 +3278,7 @@ function toggleVD(open){
   $('voiceDd').classList.toggle('on',S.vdOpen);
 }
 
+// FIX: ROBUST CLIPBOARD COPY FUNCTIONALITY WITH FALLBACK
 function copyTextToClipboard(text, successCb, errorCb) {
   if (navigator.clipboard && window.isSecureContext) {
     navigator.clipboard.writeText(text).then(function() {
@@ -4284,7 +4289,8 @@ function initEvents(){
     }
     if(e.target.closest('#lbDl')){ e.preventDefault(); e.stopPropagation(); downloadResource(S.lbUrl); return; }
     
-        var cpBtn=e.target.closest('[data-action="copy-code"]');
+    // FIX: CODE BLOCK COPY BUTTON WITH FALLBACK
+    var cpBtn=e.target.closest('[data-action="copy-code"]');
     if(cpBtn){
       e.stopPropagation();
       var blk=cpBtn.closest('.code-blk');
