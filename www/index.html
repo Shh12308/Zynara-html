@@ -85,11 +85,43 @@ function _scrollChat() {
   const w = document.getElementById('msgsWrap');
   if (w) requestAnimationFrame(() => { w.scrollTop = w.scrollHeight; });
 }
+
+// FIX: UNIFIED ROBUST CLIPBOARD FUNCTION
+function copyTextToClipboard(text, successCb, errorCb) {
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(function() {
+      if (successCb) successCb();
+    }).catch(function() {
+      fallbackCopyTextToClipboard(text, successCb, errorCb);
+    });
+  } else {
+    fallbackCopyTextToClipboard(text, successCb, errorCb);
+  }
+}
+function fallbackCopyTextToClipboard(text, successCb, errorCb) {
+  var textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.top = "0";
+  textarea.style.left = "0";
+  textarea.style.position = "fixed";
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  try {
+    var successful = document.execCommand('copy');
+    if (successful && successCb) successCb();
+    else if (!successful && errorCb) errorCb();
+  } catch (err) {
+    if (errorCb) errorCb(err);
+  }
+  document.body.removeChild(textarea);
+}
+
 function initCodeCopyButtons(container) {
   if (!container) return;
   if (container._codeCopyInit) return;
   container._codeCopyInit = true;
-  container.addEventListener('click', async (e) => {
+  container.addEventListener('click', function(e) {
     const btn = e.target.closest('.code-copy-btn');
     if (!btn) return;
     e.preventDefault();
@@ -99,36 +131,16 @@ function initCodeCopyButtons(container) {
     const code = pre.querySelector('code');
     if (!code) return;
     let text = code.textContent || code.innerText || '';
-    try {
-      await navigator.clipboard.writeText(text);
+    copyTextToClipboard(text, function() {
       btn.innerHTML = '<i class="fa-solid fa-check"></i>';
       btn.classList.add('copied');
-      setTimeout(() => {
+      setTimeout(function() {
         btn.innerHTML = '<i class="fa-regular fa-clipboard"></i>';
         btn.classList.remove('copied');
       }, 2000);
-    } catch (err) {
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      textarea.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-      document.body.appendChild(textarea);
-      textarea.select();
-      try {
-        document.execCommand('copy');
-        btn.innerHTML = '<i class="fa-solid fa-check"></i>';
-        btn.classList.add('copied');
-        setTimeout(() => {
-          btn.innerHTML = '<i class="fa-regular fa-clipboard"></i>';
-          btn.classList.remove('copied');
-        }, 2000);
-      } catch (fallbackErr) {
-        btn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
-        setTimeout(() => {
-          btn.innerHTML = '<i class="fa-regular fa-clipboard"></i>';
-        }, 2000);
-      }
-      document.body.removeChild(textarea);
-    }
+    }, function() {
+      toast('Copy failed','err');
+    });
   });
 }
 function addCopyButtonsToPreBlocks(container) {
