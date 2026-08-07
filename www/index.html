@@ -2699,15 +2699,8 @@ function saveChatHistory(id, msgs) {
         var toSave = msgs.slice(-50).map(function(m) {
             var nm = { ...m };
             delete nm.dataUrl;
-            if (nm.images) {
-                nm.images = nm.images.map(function(img) {
-                    return {
-                        url: img.url.length > 2000 ? null : img.url,
-                        name: img.name,
-                        type: img.type
-                    };
-                }).filter(img => img.url !== null);
-            }
+            // FIX: Removed the filter that was deleting base64 images! 
+            // Images and videos will now stick in chats permanently.
             return nm;
         });
         var serialized = JSON.stringify(toSave);
