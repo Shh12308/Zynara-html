@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="system">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -635,6 +635,80 @@ pre:hover .code-copy-btn{opacity:1}
   margin-bottom: 4px;
   display: block;
 }
+
+/* Advanced Voice Player */
+.voice-player {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  margin: 10px 0;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 420px;
+}
+.vp-btn {
+  background: var(--accent-dim);
+  border: 1px solid var(--border-active);
+  color: var(--accent);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.vp-btn:hover { background: var(--accent); color: #fff; transform: scale(1.05); }
+.vp-btn.skip { background: transparent; border: none; color: var(--text-secondary); width: 28px; height: 28px; }
+.vp-btn.skip:hover { color: var(--accent); transform: scale(1.1); }
+.vp-slider {
+  flex: 1;
+  height: 5px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--border);
+  border-radius: 5px;
+  outline: none;
+  cursor: pointer;
+}
+.vp-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid var(--bg-primary);
+}
+.vp-time { font-size: 11px; color: var(--text-muted); font-family: var(--font-code); min-width: 35px; text-align: center; }
+
+/* Advanced Markdown Code Blocks (Collapsible) */
+.code-blk.collapsed pre { max-height: 200px; overflow: hidden; -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%); mask-image: linear-gradient(to bottom, black 60%, transparent 100%); position: relative; }
+.code-expand-btn {
+  display: block;
+  width: 100%;
+  padding: 8px;
+  background: var(--bg-tertiary);
+  border: none;
+  border-top: 1px solid var(--border);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.2s;
+}
+.code-expand-btn:hover { background: var(--bg-hover); }
+
+/* ChatGPT/Claude style typography tweaks */
+.msg-ct p { font-size: 15px; line-height: 1.75; }
+.msg-ct ul li::marker, .msg-ct ol li::marker { color: var(--accent); font-weight: bold; }
 .admonition p { margin: 4px 0; }
 .admonition p:last-child { margin-bottom: 0; }
 
@@ -3027,9 +3101,9 @@ function initMarked() {
   if (typeof mermaid !== 'undefined') mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
   try {
     const renderer = new marked.Renderer();
-    renderer.code = function(code, infostring) {
+    renderer.code = function(code, infoString) {
       var text = String(code || '').replace(/\r\n/g, '\n'); 
-      var langArr = (infostring || '').trim().split(/\s+/);
+      var langArr = (infoString || '').trim().split(/\s+/);
       var language = langArr[0] || '';
       var validLang = '';
       if (typeof hljs !== 'undefined' && typeof hljs.getLanguage === 'function') {
@@ -3054,6 +3128,7 @@ function initMarked() {
             validLang = 'text';
         }
       } catch (e) { highlighted = esc(text); }
+
       var btnsHtml = '';
       if (validLang) {
           if (validLang.toLowerCase() === 'html' || validLang.toLowerCase() === 'xml') {
@@ -3061,6 +3136,7 @@ function initMarked() {
           }
       }
       btnsHtml += '<button type="button" class="cp-btn" data-action="copy-code"><i class="fa-regular fa-copy"></i> Copy</button>';
+      
       var langIcon = 'fa-code';
       if(['js','javascript'].includes(validLang)) langIcon = 'fa-brands fa-js';
       else if(['ts','typescript'].includes(validLang)) langIcon = 'fa-brands fa-js';
@@ -3069,7 +3145,21 @@ function initMarked() {
       else if(['css'].includes(validLang)) langIcon = 'fa-brands fa-css3-alt';
       else if(['java'].includes(validLang)) langIcon = 'fa-brands fa-java';
       else if(['bash','shell','sh'].includes(validLang)) langIcon = 'fa-solid fa-terminal';
-      return '<div class="code-blk line-numbers"><div class="code-hd"><div class="code-lang-badge"><i class="'+langIcon+'"></i> ' + esc(validLang || 'text') + '</div>' + btnsHtml + '</div><pre><code class="hljs language-' + esc(validLang) + '">' + highlighted + '</code></pre></div>';
+      
+      // Check if code is long enough to be collapsible
+      var lineCount = text.split('\n').length;
+      var collapseClass = lineCount > 25 ? 'collapsible' : '';
+      
+      var html = '<div class="code-blk line-numbers ' + collapseClass + '">';
+      html += '<div class="code-hd"><div class="code-lang-badge"><i class="'+langIcon+'"></i> ' + esc(validLang || 'text') + '</div>' + btnsHtml + '</div>';
+      html += '<pre><code class="hljs language-' + esc(validLang) + '">' + highlighted + '</code></pre>';
+      
+      // Add expand button if collapsible
+      if (collapseClass) {
+        html += '<button type="button" class="code-expand-btn" data-action="expand-code">Show more (' + lineCount + ' lines)</button>';
+      }
+      html += '</div>';
+      return html;
     };
     renderer.image = function(href, title, text) {
       return '<div class="img-wrap"><img src="' + esc(href) + '" alt="' + esc(text || title || 'Image') + '" title="' + esc(title || text || 'Click to view') + '" loading="lazy" data-msg-img="' + esc(href) + '"></div>';
@@ -3334,11 +3424,107 @@ function actLike(idx, type){
   if(m.disliked) toast('Feedback received', 'ok');
 }
 
+function formatTime(sec) {
+  if (isNaN(sec) || sec === 0) return '0:00';
+  var m = Math.floor(sec / 60);
+  var s = Math.floor(sec % 60);
+  return m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+function setupAudioPlayer(idx, audioUrl) {
+  var msgEl = document.querySelector('.msg[data-i="' + idx + '"] .msg-inner');
+  if (!msgEl) return;
+  
+  // Remove existing player if any
+  var existing = msgEl.querySelector('.voice-player');
+  if (existing) existing.remove();
+
+  var playerHtml = 
+    '<div class="voice-player" id="vp-' + idx + '">' +
+      '<audio src="' + audioUrl + '"></audio>' +
+      '<button class="vp-btn skip vp-backward" title="Backward 10s"><i class="fa-solid fa-backward"></i></button>' +
+      '<button class="vp-btn vp-play" title="Play"><i class="fa-solid fa-play"></i></button>' +
+      '<button class="vp-btn skip vp-forward" title="Forward 10s"><i class="fa-solid fa-forward"></i></button>' +
+      '<span class="vp-time vp-current">0:00</span>' +
+      '<input type="range" class="vp-slider" value="0" min="0" max="100" step="0.1">' +
+      '<span class="vp-time vp-duration">0:00</span>' +
+    '</div>';
+    
+  var imgEl = $('mi-' + idx);
+  if (imgEl) imgEl.insertAdjacentHTML('beforebegin', playerHtml);
+  else msgEl.insertAdjacentHTML('beforeend', playerHtml);
+
+  var player = $('vp-' + idx);
+  var audio = player.querySelector('audio');
+  var playBtn = player.querySelector('.vp-play');
+  var slider = player.querySelector('.vp-slider');
+  var current = player.querySelector('.vp-current');
+  var duration = player.querySelector('.vp-duration');
+  var forwardBtn = player.querySelector('.vp-forward');
+  var backwardBtn = player.querySelector('.vp-backward');
+
+  // Stop other audios when starting a new one
+  audio.addEventListener('play', function() {
+    document.querySelectorAll('.voice-player audio').forEach(function(a) {
+      if (a !== audio && !a.paused) a.pause();
+    });
+    playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+  });
+
+  audio.addEventListener('pause', function() {
+    playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+  });
+
+  audio.addEventListener('loadedmetadata', function() {
+    duration.textContent = formatTime(audio.duration);
+    slider.max = audio.duration;
+  });
+
+  audio.addEventListener('timeupdate', function() {
+    current.textContent = formatTime(audio.currentTime);
+    slider.value = audio.currentTime;
+  });
+
+  audio.addEventListener('ended', function() {
+    playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+    slider.value = 0;
+    current.textContent = '0:00';
+  });
+
+  playBtn.addEventListener('click', function() {
+    if (audio.paused) audio.play(); else audio.pause();
+  });
+
+  slider.addEventListener('input', function() {
+    audio.currentTime = slider.value;
+  });
+
+  forwardBtn.addEventListener('click', function() {
+    audio.currentTime = Math.min(audio.duration, audio.currentTime + 10);
+  });
+
+  backwardBtn.addEventListener('click', function() {
+    audio.currentTime = Math.max(0, audio.currentTime - 10);
+  });
+  
+  audio.play();
+}
+
 async function actVoice(idx){
-  var m=S.msgs[idx];
-  if(!m||!m.content) return;  
+  var m = S.msgs[idx];
+  if (!m || !m.content) return;  
+  
+  // If player already exists, just toggle play/pause
+  var existingPlayer = $('vp-' + idx);
+  if (existingPlayer) {
+    var audio = existingPlayer.querySelector('audio');
+    if (audio) { if (audio.paused) audio.play(); else audio.pause(); }
+    return;
+  }
+
   toast('Generating audio...', 'inf');
   var textToRead = m.content.replace(/<[^>]*>/g,'').substring(0, 4000); 
+  
   if(isAuthed() && apiUrl()) {
       try {
         var r = await fetch(apiUrl()+'/tts', {
@@ -3349,21 +3535,27 @@ async function actVoice(idx){
         if(!r.ok) throw new Error('TTS failed');
         var blob = await r.blob();
         var audioUrl = URL.createObjectURL(blob);
-        var audio = new Audio(audioUrl);
-        S.currentAudio = audio;
-        audio.onended = function() { URL.revokeObjectURL(audioUrl); S.currentAudio = null; };
-        audio.play();
-        toast('Playing audio', 'ok');
+        setupAudioPlayer(idx, audioUrl);
         return;
-      } catch(e) { toast('Backend voice unavailable', 'wrn'); }
+      } catch(e) { 
+        toast('Backend voice unavailable, using local...', 'wrn'); 
+      }
   }
+  
+  // Fallback to browser TTS (No UI slider, but still works)
   if ('speechSynthesis' in window) {
       try {
           window.speechSynthesis.cancel(); 
           var utterance = new SpeechSynthesisUtterance(textToRead);
           utterance.rate = 1.0; utterance.pitch = 1.0;
           window.speechSynthesis.speak(utterance);
-          toast('Reading locally...', 'ok');
+          
+          // Basic UI feedback for local TTS
+          var msgEl = document.querySelector('.msg[data-i="' + idx + '"] .msg-acts .ma[data-act="voice"]');
+          if(msgEl) {
+            msgEl.innerHTML = '<i class="fa-solid fa-stop"></i>';
+            utterance.onend = function() { msgEl.innerHTML = '<i class="fa-solid fa-volume-high"></i>'; };
+          }
       } catch (e) { toast('Voice unavailable', 'err'); }
   } else { toast('Voice not supported', 'err'); }
 }
@@ -3491,9 +3683,9 @@ function buildMessageHtml(m, i) {
   var isAi = m.role === 'assistant';
   var roleClass = isAi ? 'ai-msg' : 'user-msg';
   var name = isAi ? 'AI' : 'You';
-  var html = '';
+  var html = '<div class="msg ' + roleClass + '" data-i="' + i + '">';
+  
   if (isAi) {
-      html += '<div class="msg ' + roleClass + '">';
       html += '  <div class="msg-inner">';
       html += '    <div class="msg-label"><span class="ai-dot"></span> AI <span id="ai-status-' + i + '" class="ai-status"></span></div>';
       html += '    <div id="mc-' + i + '" class="msg-ct"></div>';
@@ -3507,9 +3699,7 @@ function buildMessageHtml(m, i) {
       html += '    </div>';
       html += '    <div class="msg-time">' + m.time + '</div>';
       html += '  </div>';
-      html += '</div>';
   } else {
-      html += '<div class="msg ' + roleClass + '">';
       html += '  <div class="msg-inner">';
       html += '    <div class="msg-label">' + name + '</div>';
       html += '    <div class="msg-bubble">';
@@ -3523,8 +3713,8 @@ function buildMessageHtml(m, i) {
       html += '    </div>';
       html += '    <div class="msg-time">' + m.time + '</div>';
       html += '  </div>';
-      html += '</div>';
   }
+  html += '</div>';
   return html;
 }
 
@@ -3868,10 +4058,10 @@ function updateImageStreamProgress(ev) {
     var t = progress / 100;
     var blur;
     if (t < 0.7) {
-        blur = 30 - (t / 0.7) * 24;   // 30px → 6px
+        blur = 30 - (t / 0.7) * 24;   
     } else {
         var t2 = (t - 0.7) / 0.3;
-        blur = 6 * (1 - t2 * t2);      // 6px → 0px (quadratic ease)
+        blur = 6 * (1 - t2 * t2);      
     }
     blur = Math.max(0, blur);
     var brightness = 1 + (blur / 80);
@@ -4294,7 +4484,6 @@ function initEvents(){
     }
     if(e.target.closest('#lbDl')){ e.preventDefault(); e.stopPropagation(); downloadResource(S.lbUrl); return; }
     
-    // FIX: CODE BLOCK COPY BUTTON WITH FALLBACK
     var cpBtn=e.target.closest('[data-action="copy-code"]');
     if(cpBtn){
       e.stopPropagation();
@@ -4320,6 +4509,17 @@ function initEvents(){
       var blk = runBtn.closest('.code-blk');
       var codeEl = blk ? blk.querySelector('code') : null;
       if(codeEl){ openHtmlPreview(codeEl.textContent); }
+      return;
+    }
+
+    var expandBtn = e.target.closest('[data-action="expand-code"]');
+    if(expandBtn) {
+      e.stopPropagation();
+      var codeBlk = expandBtn.closest('.code-blk');
+      if(codeBlk) {
+        codeBlk.classList.toggle('collapsed');
+        expandBtn.innerHTML = codeBlk.classList.contains('collapsed') ? 'Show more' : 'Show less';
+      }
       return;
     }
     
@@ -4429,7 +4629,7 @@ function initEvents(){
     document.querySelectorAll('.modal-ov.on').forEach(function(m){m.classList.remove('on');});
   });
 
-  document.addEventListener('paste',function(e){
+    document.addEventListener('paste',function(e){
     if(S.streaming)return;
     var items=e.clipboardData&&e.clipboardData.items;if(!items)return;
     for(var i=0;i<items.length;i++){
