@@ -3101,20 +3101,26 @@ function initMarked() {
   if (typeof mermaid !== 'undefined') mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
   try {
     const renderer = new marked.Renderer();
-    renderer.code = function(code, infoString) {
-      var text = String(code || '').replace(/\r\n/g, '\n'); 
-      var langArr = (infoString || '').trim().split(/\s+/);
+    
+    // FIX: marked v12+ passes a single object parameter to these functions
+    renderer.code = function({ text, lang, escaped }) {
+      var textStr = String(text || '').replace(/\r\n/g, '\n'); 
+      var infoString = lang || '';
+      var langArr = infoString.trim().split(/\s+/);
       var language = langArr[0] || '';
       var validLang = '';
+      
       if (typeof hljs !== 'undefined' && typeof hljs.getLanguage === 'function') {
         if (language && hljs.getLanguage(language)) validLang = language;
       }
+      
       var highlighted = '';
       try {
         if (typeof hljs !== 'undefined') {
-          if (text.length > 100000) text = text.slice(0, 100000);
-          if (validLang) highlighted = hljs.highlight(text, { language: validLang, ignoreIllegals: true }).value;
-          else highlighted = hljs.highlightAuto(text).value;
+          if (textStr.length > 100000) textStr = textStr.slice(0, 100000);
+          if (validLang) highlighted = hljs.highlight(textStr, { language: validLang, ignoreIllegals: true }).value;
+          else highlighted = hljs.highlightAuto(textStr).value;
+          
           if (highlighted && typeof highlighted === 'string') {
              var lines = highlighted.split('\n');
              var lineNumsHtml = '<div class="line-numbers-rows">';
@@ -3124,10 +3130,10 @@ function initMarked() {
              validLang = validLang || 'plaintext';
           }
         } else { 
-            highlighted = esc(text); 
+            highlighted = esc(textStr); 
             validLang = 'text';
         }
-      } catch (e) { highlighted = esc(text); }
+      } catch (e) { highlighted = esc(textStr); }
 
       var btnsHtml = '';
       if (validLang) {
@@ -3146,31 +3152,35 @@ function initMarked() {
       else if(['java'].includes(validLang)) langIcon = 'fa-brands fa-java';
       else if(['bash','shell','sh'].includes(validLang)) langIcon = 'fa-solid fa-terminal';
       
-      // Check if code is long enough to be collapsible
-      var lineCount = text.split('\n').length;
+      var lineCount = textStr.split('\n').length;
       var collapseClass = lineCount > 25 ? 'collapsible' : '';
       
       var html = '<div class="code-blk line-numbers ' + collapseClass + '">';
       html += '<div class="code-hd"><div class="code-lang-badge"><i class="'+langIcon+'"></i> ' + esc(validLang || 'text') + '</div>' + btnsHtml + '</div>';
       html += '<pre><code class="hljs language-' + esc(validLang) + '">' + highlighted + '</code></pre>';
       
-      // Add expand button if collapsible
       if (collapseClass) {
         html += '<button type="button" class="code-expand-btn" data-action="expand-code">Show more (' + lineCount + ' lines)</button>';
       }
       html += '</div>';
       return html;
     };
-    renderer.image = function(href, title, text) {
+    
+    renderer.image = function({ href, title, text }) {
       return '<div class="img-wrap"><img src="' + esc(href) + '" alt="' + esc(text || title || 'Image') + '" title="' + esc(title || text || 'Click to view') + '" loading="lazy" data-msg-img="' + esc(href) + '"></div>';
     };
-    renderer.link = function(href, title, text) {
+    
+    renderer.link = function({ href, title, text }) {
       var titleAttr = title ? ' title="' + esc(title) + '"' : '';
       return '<a href="' + esc(href) + '" target="_blank" rel="noopener noreferrer"' + titleAttr + '>' + text + '</a>';
     };
+    
     marked.use({ breaks: true, gfm: true, renderer: renderer });
     S._mdOk = true;
-  } catch (e) { S._mdOk = false; }
+  } catch (e) { 
+    S._mdOk = false; 
+    console.error("Marked.js initialization failed:", e);
+  }
 }
 
 function processAdmonitions(html) {
