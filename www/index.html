@@ -27,139 +27,7 @@
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
-<script>
-if(typeof DOMPurify!=='undefined'){
-  DOMPurify.addHook('uponSanitizeAttribute',function(n,d){
-    if(d.attrName==='src'&&d.attrValue&&d.attrValue.startsWith('data:image/'))
-      n.setAttribute('data-keep-src',d.attrValue);
-  });
-  DOMPurify.addHook('afterSanitizeAttributes',function(n){
-    var k=n.getAttribute('data-keep-src');
-    if(k){n.setAttribute('src',k);n.removeAttribute('data-keep-src');}
-  });
-}
-function openImgModal(src) {
-  if (!src) return;
-  const modal = document.getElementById('img-modal');
-  const img = document.getElementById('modalImg');
-  if (!modal || !img) return;
-  img.src = src;
-  modal.classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-function closeImgModal() {
-  const modal = document.getElementById('img-modal');
-  if (!modal) return;
-  modal.classList.remove('open');
-  document.body.style.overflow = '';
-  setTimeout(() => { if (!modal.classList.contains('open')) document.getElementById('modalImg').src = ''; }, 300);
-}
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeImgModal(); });
-function downloadGenImage(btnEl) {
-  const card = btnEl.closest('.gen-img-card') || btnEl.closest('.gen-img-wrap').parentElement;
-  const img = card.querySelector('img');
-  if (!img || !img.src) return;
-  const src = img.src;
-  if (!src.startsWith('data:')) {
-    const a = document.createElement('a');
-    a.href = src; a.download = 'heloxai-image.png'; a.target = '_blank';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    return;
-  }
-  const parts = src.split(',');
-  const mimeMatch = parts[0].match(/data:(image\/\w+);/);
-  const mime = mimeMatch ? mimeMatch[1] : 'image/png';
-  const ext = mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpg';
-  try {
-    const byteChars = atob(parts[1]);
-    const byteArray = new Uint8Array(byteChars.length);
-    for (let i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
-    const blob = new Blob([byteArray], { type: mime });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `heloxai-${Date.now()}.${ext}`;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
-  } catch (e) { console.error('Download failed:', e); }
-}
-function _scrollChat() {
-  const w = document.getElementById('msgsWrap');
-  if (w) requestAnimationFrame(() => { w.scrollTop = w.scrollHeight; });
-}
 
-// FIX: UNIFIED ROBUST CLIPBOARD FUNCTION
-function copyTextToClipboard(text, successCb, errorCb) {
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(text).then(function() {
-      if (successCb) successCb();
-    }).catch(function() {
-      fallbackCopyTextToClipboard(text, successCb, errorCb);
-    });
-  } else {
-    fallbackCopyTextToClipboard(text, successCb, errorCb);
-  }
-}
-function fallbackCopyTextToClipboard(text, successCb, errorCb) {
-  var textarea = document.createElement('textarea');
-  textarea.value = text;
-  textarea.style.top = "0";
-  textarea.style.left = "0";
-  textarea.style.position = "fixed";
-  document.body.appendChild(textarea);
-  textarea.focus();
-  textarea.select();
-  try {
-    var successful = document.execCommand('copy');
-    if (successful && successCb) successCb();
-    else if (!successful && errorCb) errorCb();
-  } catch (err) {
-    if (errorCb) errorCb(err);
-  }
-  document.body.removeChild(textarea);
-}
-
-function initCodeCopyButtons(container) {
-  if (!container) return;
-  if (container._codeCopyInit) return;
-  container._codeCopyInit = true;
-  container.addEventListener('click', function(e) {
-    const btn = e.target.closest('.code-copy-btn');
-    if (!btn) return;
-    e.preventDefault();
-    e.stopPropagation();
-    const pre = btn.closest('pre');
-    if (!pre) return;
-    const code = pre.querySelector('code');
-    if (!code) return;
-    let text = code.textContent || code.innerText || '';
-    copyTextToClipboard(text, function() {
-      btn.innerHTML = '<i class="fa-solid fa-check"></i>';
-      btn.classList.add('copied');
-      setTimeout(function() {
-        btn.innerHTML = '<i class="fa-regular fa-clipboard"></i>';
-        btn.classList.remove('copied');
-      }, 2000);
-    }, function() {
-      toast('Copy failed','err');
-    });
-  });
-}
-function addCopyButtonsToPreBlocks(container) {
-  if (!container) return;
-  const pres = container.querySelectorAll('pre');
-  pres.forEach((pre) => {
-    if (pre.querySelector('.code-copy-btn')) return;
-    const btn = document.createElement('button');
-    btn.className = 'code-copy-btn';
-    btn.innerHTML = '<i class="fa-regular fa-clipboard"></i>';
-    btn.title = 'Copy code';
-    btn.setAttribute('aria-label', 'Copy code to clipboard');
-    pre.style.position = 'relative';
-    pre.appendChild(btn);
-  });
-  initCodeCopyButtons(container);
-}
-</script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;outline:none;}
 :root{
@@ -1589,6 +1457,14 @@ pre:hover .code-copy-btn { opacity: 1; }
 .code-hd{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg-tertiary);border-bottom:1px solid var(--border);font-size:11px;color:var(--text-muted);font-weight:500;user-select:none;position:relative;z-index:2}
 .code-lang-badge{display:flex;align-items:center;gap:6px;text-transform:uppercase;font-size:10px;font-weight:700;letter-spacing:0.5px}
 .code-lang-badge i{color:var(--accent)}
+.code-hd-actions { display:flex; gap:4px; align-items:center; }
+.code-blk .cp-btn { opacity:1; } /* always visible, not hover-only */
+.code-blk .cp-label { font-size:10px; }
+.code-blk.collapsible.collapsed pre { max-height:240px; overflow:hidden; -webkit-mask-image:linear-gradient(to bottom, black 60%, transparent 100%); mask-image:linear-gradient(to bottom, black 60%, transparent 100%); }
+.code-blk .code-expand-btn i { transition:transform .2s; }
+.code-blk:not(.collapsed) .code-expand-btn i { transform:rotate(180deg); }
+@media (hover:none) { .code-blk .cp-btn { opacity:1 !important; } }
+
 .cp-btn{background:none;border:none;color:var(--text-muted);font-size:10px;cursor:pointer;padding:4px 8px;border-radius:4px;display:flex;align-items:center;gap:6px;font-family:var(--font-body);transition:all var(--speed);font-weight:500;touch-action:manipulation;z-index:3;position:relative}.cp-btn:hover{color:var(--text-primary);background:var(--bg-hover)}.cp-btn.copied{color:var(--success)}.cp-btn.copied i{animation:checkPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)}
 @keyframes checkPop{0%{transform:scale(0.5)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
 .code-blk pre{margin:0;padding:16px;overflow-x:auto;background:var(--bg-code)!important;position:relative;-webkit-overflow-scrolling:touch}
@@ -1858,537 +1734,6 @@ pre:hover .code-copy-btn { opacity: 1; }
   50% { transform: translateY(0); }
 }
 
-.live-clock-widget {
-  margin: 18px 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  background: var(--bg-secondary);
-  position: relative;
-  transition: border-color .3s var(--ease), box-shadow .3s var(--ease);
-  max-width: 400px;
-}
-.live-clock-widget:hover {
-  border-color: var(--border-active);
-  box-shadow: var(--glow);
-}
-.lcw-ambient {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  transition: background .8s var(--ease);
-  opacity: 0.5;
-}
-.lcw-ambient.is-day {
-  background: linear-gradient(160deg, rgba(251, 191, 36, 0.06) 0%, transparent 60%);
-}
-.lcw-ambient.is-night {
-  background: linear-gradient(160deg, rgba(99, 102, 241, 0.08) 0%, transparent 60%);
-}
-.lcw-ambient.is-dawn {
-  background: linear-gradient(160deg, rgba(244, 114, 82, 0.08) 0%, rgba(251, 191, 36, 0.04) 50%, transparent 80%);
-}
-.lcw-ambient.is-dusk {
-  background: linear-gradient(160deg, rgba(168, 85, 247, 0.06) 0%, rgba(244, 114, 82, 0.04) 50%, transparent 80%);
-}
-.lcw-inner { position: relative; z-index: 1; padding: 20px; }
-.lcw-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
-.lcw-city-group { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
-.lcw-flag { font-size: 22px; line-height: 1; flex-shrink: 0; }
-.lcw-city {
-  font-family: var(--font-display);
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.lcw-country {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-top: 1px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.lcw-live {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 9px;
-  border-radius: 6px;
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  font-size: 9px;
-  font-weight: 800;
-  color: #ef4444;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  flex-shrink: 0;
-}
-.lcw-live-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #ef4444;
-  animation: livePulse 1.5s ease-in-out infinite;
-}
-.lcw-tz-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 9px;
-  border-radius: 6px;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  flex-shrink: 0;
-  font-family: var(--font-code);
-  letter-spacing: 0.3px;
-}
-.lcw-body { display: flex; align-items: center; gap: 20px; }
-.lcw-daynight {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background .8s var(--ease), box-shadow .8s var(--ease);
-  overflow: hidden;
-}
-.lcw-daynight.is-day {
-  background: linear-gradient(135deg, #fbbf24, #f59e0b);
-  box-shadow: 0 0 20px rgba(251, 191, 36, 0.25), inset 0 -4px 8px rgba(0,0,0,0.1);
-}
-.lcw-daynight.is-night {
-  background: linear-gradient(135deg, #312e81, #1e1b4b);
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.2), inset 0 -4px 8px rgba(0,0,0,0.2);
-}
-.lcw-daynight.is-dawn {
-  background: linear-gradient(135deg, #f97316, #fbbf24);
-  box-shadow: 0 0 20px rgba(249, 115, 22, 0.2), inset 0 -4px 8px rgba(0,0,0,0.1);
-}
-.lcw-daynight.is-dusk {
-  background: linear-gradient(135deg, #7c3aed, #f97316);
-  box-shadow: 0 0 20px rgba(124, 58, 237, 0.2), inset 0 -4px 8px rgba(0,0,0,0.15);
-}
-.lcw-daynight-icon {
-  font-size: 22px;
-  position: relative;
-  z-index: 1;
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
-}
-.lcw-daynight.is-night .lcw-daynight-icon::after {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: 4px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: inherit;
-  z-index: 2;
-}
-.lcw-digital { flex: 1; min-width: 0; }
-.lcw-time {
-  display: flex;
-  align-items: baseline;
-  gap: 0;
-  font-family: var(--font-code);
-  font-weight: 500;
-  line-height: 1;
-  color: var(--text-primary);
-}
-.lcw-time-hm { font-size: 38px; letter-spacing: -1px; }
-.lcw-time-colon {
-  font-size: 34px;
-  color: var(--accent);
-  animation: colonBlink 1s step-end infinite;
-  margin: 0 2px;
-  position: relative;
-  top: -2px;
-}
-.lcw-time-sec {
-  font-size: 20px;
-  color: var(--text-muted);
-  margin-left: 4px;
-  font-weight: 400;
-  min-width: 28px;
-}
-.lcw-time-ampm {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-secondary);
-  margin-left: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-.lcw-time-24h .lcw-time-ampm { display: none; }
-.lcw-date {
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin-top: 6px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.lcw-date-dot {
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: var(--text-muted);
-  flex-shrink: 0;
-}
-.lcw-footer {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
-  flex-wrap: wrap;
-}
-.lcw-utc {
-  font-size: 11px;
-  color: var(--text-muted);
-  font-family: var(--font-code);
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.lcw-utc i { font-size: 10px; }
-.lcw-relative {
-  font-size: 11px;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.lcw-relative .rel-ahead { color: var(--success); font-weight: 600; }
-.lcw-relative .rel-behind { color: var(--danger); font-weight: 600; }
-.lcw-relative .rel-same { color: var(--text-muted); font-weight: 600; }
-.lcw-dow {
-  font-size: 11px;
-  color: var(--text-muted);
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 5px;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
-}
-.live-clocks-group {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 12px;
-  margin: 18px 0;
-  max-width: 100%;
-}
-.live-clocks-group .live-clock-widget { margin: 0; max-width: none; }
-.live-clocks-group.lcg-2 { grid-template-columns: repeat(2, 1fr); }
-.live-clocks-group.lcg-many { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
-.lcg-header {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-secondary);
-  padding-bottom: 4px;
-}
-.lcg-header i { color: var(--accent); font-size: 14px; }
-.lcg-header .lcg-count {
-  font-size: 11px;
-  color: var(--text-muted);
-  font-weight: 500;
-  padding: 2px 8px;
-  background: var(--bg-tertiary);
-  border-radius: 5px;
-  border: 1px solid var(--border);
-}
-.live-clock-compare {
-  margin: 18px 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  background: var(--bg-secondary);
-  display: flex;
-  flex-direction: column;
-}
-.lcc-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 16px;
-  background: var(--bg-tertiary);
-  border-bottom: 1px solid var(--border);
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-}
-.lcc-header i { color: var(--accent); font-size: 13px; }
-.lcc-body { display: flex; align-items: stretch; }
-.lcc-side {
-  flex: 1;
-  padding: 18px 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  min-width: 0;
-}
-.lcc-side:first-child { border-right: 1px solid var(--border); }
-.lcc-city {
-  font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 2px;
-}
-.lcc-flag { font-size: 20px; margin-bottom: 6px; }
-.lcc-time {
-  font-family: var(--font-code);
-  font-size: 32px;
-  font-weight: 500;
-  color: var(--text-primary);
-  letter-spacing: -0.5px;
-  display: flex;
-  align-items: baseline;
-}
-.lcc-time .lcw-time-colon { font-size: 28px; margin: 0 1px; }
-.lcc-time .lcw-time-sec { font-size: 16px; margin-left: 4px; }
-.lcc-date { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
-.lcc-daynight {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.lcc-daynight .lcw-daynight-icon { font-size: 16px; }
-.lcc-diff {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 0 6px;
-  flex-shrink: 0;
-}
-.lcc-diff-arrow {
-  font-size: 16px;
-  color: var(--accent);
-  animation: livePulse 2s ease-in-out infinite;
-}
-.lcc-diff-label {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--accent);
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  letter-spacing: 0.5px;
-  margin-top: 8px;
-  white-space: nowrap;
-}
-.lcc-footer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  padding: 10px 16px;
-  border-top: 1px solid var(--border);
-  font-size: 11px;
-  color: var(--text-muted);
-  background: var(--bg-tertiary);
-}
-.lcc-footer-diff {
-  font-weight: 700;
-  color: var(--accent);
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.inline-time {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 2px 10px 2px 6px;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-family: var(--font-code);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-primary);
-  vertical-align: middle;
-  transition: border-color .2s;
-  white-space: nowrap;
-}
-.inline-time:hover { border-color: var(--border-active); }
-.inline-time .it-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--accent);
-  animation: livePulse 1.5s ease-in-out infinite;
-  flex-shrink: 0;
-}
-.inline-time .it-sec { color: var(--text-muted); font-size: 11px; }
-.world-clock-strip {
-  display: flex;
-  gap: 10px;
-  margin: 18px 0;
-  overflow-x: auto;
-  padding-bottom: 8px;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-.world-clock-strip::-webkit-scrollbar { display: none; }
-.wcs-card {
-  flex-shrink: 0;
-  width: 180px;
-  scroll-snap-align: start;
-  padding: 14px 16px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  text-align: center;
-  transition: border-color .2s, transform .2s;
-  cursor: default;
-}
-.wcs-card:hover { border-color: var(--border-active); transform: translateY(-2px); }
-.wcs-flag { font-size: 24px; margin-bottom: 6px; }
-.wcs-city {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 1px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.wcs-time {
-  font-family: var(--font-code);
-  font-size: 22px;
-  font-weight: 500;
-  color: var(--text-primary);
-  margin: 8px 0 2px;
-  letter-spacing: -0.5px;
-}
-.wcs-time .lcw-time-colon { font-size: 20px; margin: 0 1px; }
-.wcs-time .lcw-time-sec { font-size: 13px; color: var(--text-muted); margin-left: 2px; }
-.wcs-date { font-size: 11px; color: var(--text-muted); }
-.wcs-dow {
-  display: inline-block;
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--text-secondary);
-  padding: 2px 7px;
-  background: var(--bg-tertiary);
-  border-radius: 4px;
-  margin-top: 6px;
-}
-.wcs-daynight {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin: 6px auto 0;
-}
-.wcs-daynight.is-day { background: #fbbf24; box-shadow: 0 0 8px rgba(251,191,36,0.3); }
-.wcs-daynight.is-night { background: #6366f1; box-shadow: 0 0 8px rgba(99,102,241,0.3); }
-.wcs-daynight.is-dawn { background: #f97316; box-shadow: 0 0 8px rgba(249,115,22,0.3); }
-.wcs-daynight.is-dusk { background: #a855f7; box-shadow: 0 0 8px rgba(168,85,247,0.3); }
-.lcw-analog {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  border: 2px solid var(--border);
-  position: relative;
-  flex-shrink: 0;
-  background: var(--bg-tertiary);
-}
-.lcw-analog-tick {
-  position: absolute;
-  width: 1px;
-  height: 6px;
-  background: var(--text-muted);
-  top: 3px;
-  left: 50%;
-  transform-origin: 50% 25px;
-  opacity: 0.5;
-}
-.lcw-analog-tick.major {
-  height: 8px;
-  width: 2px;
-  background: var(--text-secondary);
-  opacity: 0.8;
-  transform-origin: 50% 24px;
-}
-.lcw-analog-hand {
-  position: absolute;
-  bottom: 50%;
-  left: 50%;
-  transform-origin: 50% 100%;
-  border-radius: 2px;
-}
-.lcw-analog-hour { width: 3px; height: 16px; background: var(--text-primary); margin-left: -1.5px; }
-.lcw-analog-minute { width: 2px; height: 22px; background: var(--text-secondary); margin-left: -1px; }
-.lcw-analog-second { width: 1px; height: 24px; background: var(--accent); margin-left: -0.5px; }
-.lcw-analog-center {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--accent);
-  transform: translate(-50%, -50%);
-  z-index: 2;
-}
-@media (max-width: 640px) {
-  .live-clocks-group { grid-template-columns: 1fr !important; }
-  .live-clock-compare .lcc-body { flex-direction: column; }
-  .lcc-side:first-child { border-right: none; border-bottom: 1px solid var(--border); }
-  .lcc-diff { flex-direction: row; padding: 8px 0; }
-  .lcc-diff-label { writing-mode: horizontal-tb; margin-top: 0; margin-left: 8px; }
-  .lcc-diff-arrow { transform: rotate(90deg); }
-  .lcw-time-hm { font-size: 30px; }
-  .lcw-time-sec { font-size: 16px; }
-  .lcw-time-colon { font-size: 26px; }
-  .lcw-daynight { width: 42px; height: 42px; }
-  .lcw-daynight-icon { font-size: 18px; }
-  .wcs-card { width: 160px; padding: 12px; }
-  .wcs-time { font-size: 18px; }
-}
-
-code .katex, code .katex-html,
-pre .katex, pre .katex-html,
-.code-blk .katex, .code-blk .katex-html,
-.hljs .katex, .hljs .katex-html,
-.mermaid .katex, .mermaid .katex-html,
-svg .katex, svg .katex-html,
-.code-hd .katex, .code-hd .katex-html {
-  display: none !important;
-  font-size: 0 !important;
-  height: 0 !important;
-  width: 0 !important;
-  overflow: hidden !important;
-  padding: 0 !important;
-  margin: 0 !important;
-}
-
 .em-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;opacity:0;pointer-events:none;transition:opacity .3s var(--ease);backdrop-filter:blur(4px)}.em-overlay.on{opacity:1;pointer-events:all}
 .em-modal{position:fixed;top:0;right:0;bottom:0;width:480px;background:var(--bg-secondary);border-left:1px solid var(--border);box-shadow:var(--shadow);z-index:201;transform:translateX(100%);transition:transform .3s cubic-bezier(.16,1,.3,1);display:flex;flex-direction:column; max-width: 90vw;}
 .em-modal.on{transform:translateX(0)}.em-head{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--border);background:var(--bg-primary);flex-shrink:0; padding-top: max(18px, env(safe-area-inset-top));}
@@ -2610,7 +1955,6 @@ svg .katex, svg .katex-html,
 <div class="toast-ct" id="toastCt"></div>
 
 <script src="./env.js"></script>
-<script src="./clock.js"></script>
 <script>
 (function () {
     if (!window.__ENV__) {
@@ -2644,7 +1988,6 @@ function esc(s){
   return d.innerHTML; 
 }
 
-// ROBUST UUID GENERATOR (FIXES BACKEND CRASHES)
 function uid() {
   try {
     if (crypto && crypto.randomUUID) return crypto.randomUUID();
@@ -2689,6 +2032,37 @@ function toast(msg,type){
   var ct = $('toastCt');
   if(ct) ct.appendChild(el);
   setTimeout(function(){if(el.parentNode)el.remove()},3200);
+}
+
+// Unified clipboard utility (replaces duplicates)
+function copyText(text, okCb, errCb) {
+  if (navigator.clipboard && window.isSecureContext && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(okCb || function(){}, function(){
+      _copyFallback(text, okCb, errCb);
+    });
+    return;
+  }
+  _copyFallback(text, okCb, errCb);
+}
+function _copyFallback(text, okCb, errCb) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;padding:0;border:0;opacity:0;';
+  ta.contentEditable = true;
+  document.body.appendChild(ta);
+  var sel = window.getSelection();
+  var range = document.createRange();
+  range.selectNodeContents(ta);
+  sel.removeAllRanges();
+  sel.addRange(range);
+  ta.setSelectionRange(0, text.length);
+  var ok = false;
+  try { ok = document.execCommand('copy'); } catch (e) {}
+  document.body.removeChild(ta);
+  sel.removeAllRanges();
+  if (ok && okCb) okCb();
+  else if (!ok && errCb) errCb(new Error('copy failed'));
 }
 
 function handleError(err, context = 'Operation', showToast = true) {
@@ -2769,7 +2143,7 @@ function getActiveChat() { try { return localStorage.getItem('helox_active_chat'
 function saveLocalChats() {
     try {
         S.chatListData.sort(function(a,b){ return new Date(b.updated_at) - new Date(a.updated_at); });
-        var meta = S.chatListData.map(function(c){ return { id: c.id, title: c.title, updated_at: c.updated_at }; });
+        var meta = S.chatListData.map(function(c){ return { id: c.id, title: c.title, updated_at: c.updated_at, pinned: c.pinned || false }; });
         safeSetItem('helox_chats', JSON.stringify(meta));
     } catch(e) {}
 }
@@ -2786,8 +2160,6 @@ function saveChatHistory(id, msgs) {
         var toSave = msgs.slice(-50).map(function(m) {
             var nm = { ...m };
             delete nm.dataUrl;
-            // FIX: Removed the filter that was deleting base64 images! 
-            // Images and videos will now stick in chats permanently.
             return nm;
         });
         var serialized = JSON.stringify(toSave);
@@ -2986,14 +2358,13 @@ async function loadChatList(){
   renderChatList();
 }
 
-// FIX: UPDATED startNewChat to properly use 'd.id' from backend response
 async function startNewChat(){
   if(S.streaming) stopGen();
   S.chatId = uid();
   S.msgs = [];
   S.gallery = []; 
   var newTitle = 'New Chat ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-  var newMeta = { id: S.chatId, title: newTitle, updated_at: new Date().toISOString() };
+  var newMeta = { id: S.chatId, title: newTitle, updated_at: new Date().toISOString(), pinned: false };
   S.chatListData.unshift(newMeta);
   saveLocalChats();
   saveActiveChat(S.chatId);
@@ -3007,7 +2378,6 @@ async function startNewChat(){
     var r=await fetch(url+'/newchat',{ method:'POST', headers:authH(), credentials:'include', body:JSON.stringify({model:S.model}) });
     if(r.ok){
         var d=await r.json();
-        // THE FIX IS HERE: Use d.id instead of d.conversation_id
         if(d&&d.id){ 
           if(d.id !== S.chatId) {
              localStorage.removeItem('helox_history_' + S.chatId); 
@@ -3095,93 +2465,131 @@ async function delConv(cid){
 function setTheme(t){try{if(t==='system')document.documentElement.setAttribute('data-theme',window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');else document.documentElement.setAttribute('data-theme',t)}catch(e){}S.theme=t;try{localStorage.setItem('helox-theme',t)}catch(e){}document.querySelectorAll('.t-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-t')===t)})}
 function initTheme(){var s='dark';try{s=localStorage.getItem('helox-theme')||'dark'}catch(e){}setTheme(s);try{window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(S.theme==='system')setTheme('system')})}catch(e){}}
 
-let mdCache = new Map();
+// Markdown Pipeline
+const _mdCache = new Map();
+let _mdOk = false;
 
 function initMarked() {
-  if (typeof marked === 'undefined') { S._mdOk = false; return; }
-  if (typeof mermaid !== 'undefined') mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
-  try {
-    const renderer = new marked.Renderer();
-    
-    // FIX: marked v12+ passes a single object parameter to these functions
-    renderer.code = function({ text, lang, escaped }) {
-      var textStr = String(text || '').replace(/\r\n/g, '\n'); 
-      var infoString = lang || '';
-      var langArr = infoString.trim().split(/\s+/);
-      var language = langArr[0] || '';
-      var validLang = '';
-      
-      if (typeof hljs !== 'undefined' && typeof hljs.getLanguage === 'function') {
-        if (language && hljs.getLanguage(language)) validLang = language;
-      }
-      
-      var highlighted = '';
-      try {
-        if (typeof hljs !== 'undefined') {
-          if (textStr.length > 100000) textStr = textStr.slice(0, 100000);
-          if (validLang) highlighted = hljs.highlight(textStr, { language: validLang, ignoreIllegals: true }).value;
-          else highlighted = hljs.highlightAuto(textStr).value;
-          
-          if (highlighted && typeof highlighted === 'string') {
-             var lines = highlighted.split('\n');
-             var lineNumsHtml = '<div class="line-numbers-rows">';
-             lines.forEach(function() { lineNumsHtml += '<span></span>'; });
-             lineNumsHtml += '</div>';
-             highlighted = lineNumsHtml + highlighted;
-             validLang = validLang || 'plaintext';
-          }
-        } else { 
-            highlighted = esc(textStr); 
-            validLang = 'text';
-        }
-      } catch (e) { highlighted = esc(textStr); }
-
-      var btnsHtml = '';
-      if (validLang) {
-          if (validLang.toLowerCase() === 'html' || validLang.toLowerCase() === 'xml') {
-            btnsHtml += '<button type="button" class="cp-btn" data-action="run-html" style="margin-right:5px;"><i class="fa-solid fa-play"></i> Run</button>';
-          }
-      }
-      btnsHtml += '<button type="button" class="cp-btn" data-action="copy-code"><i class="fa-regular fa-copy"></i> Copy</button>';
-      
-      var langIcon = 'fa-code';
-      if(['js','javascript'].includes(validLang)) langIcon = 'fa-brands fa-js';
-      else if(['ts','typescript'].includes(validLang)) langIcon = 'fa-brands fa-js';
-      else if(['python','py'].includes(validLang)) langIcon = 'fa-brands fa-python';
-      else if(['html','xml'].includes(validLang)) langIcon = 'fa-brands fa-html5';
-      else if(['css'].includes(validLang)) langIcon = 'fa-brands fa-css3-alt';
-      else if(['java'].includes(validLang)) langIcon = 'fa-brands fa-java';
-      else if(['bash','shell','sh'].includes(validLang)) langIcon = 'fa-solid fa-terminal';
-      
-      var lineCount = textStr.split('\n').length;
-      var collapseClass = lineCount > 25 ? 'collapsible' : '';
-      
-      var html = '<div class="code-blk line-numbers ' + collapseClass + '">';
-      html += '<div class="code-hd"><div class="code-lang-badge"><i class="'+langIcon+'"></i> ' + esc(validLang || 'text') + '</div>' + btnsHtml + '</div>';
-      html += '<pre><code class="hljs language-' + esc(validLang) + '">' + highlighted + '</code></pre>';
-      
-      if (collapseClass) {
-        html += '<button type="button" class="code-expand-btn" data-action="expand-code">Show more (' + lineCount + ' lines)</button>';
-      }
-      html += '</div>';
-      return html;
-    };
-    
-    renderer.image = function({ href, title, text }) {
-      return '<div class="img-wrap"><img src="' + esc(href) + '" alt="' + esc(text || title || 'Image') + '" title="' + esc(title || text || 'Click to view') + '" loading="lazy" data-msg-img="' + esc(href) + '"></div>';
-    };
-    
-    renderer.link = function({ href, title, text }) {
-      var titleAttr = title ? ' title="' + esc(title) + '"' : '';
-      return '<a href="' + esc(href) + '" target="_blank" rel="noopener noreferrer"' + titleAttr + '>' + text + '</a>';
-    };
-    
-    marked.use({ breaks: true, gfm: true, renderer: renderer });
-    S._mdOk = true;
-  } catch (e) { 
-    S._mdOk = false; 
-    console.error("Marked.js initialization failed:", e);
+  if (typeof marked === 'undefined') { _mdOk = false; return; }
+  if (typeof mermaid !== 'undefined') {
+    mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose', fontFamily: 'var(--font-code)' });
   }
+  try {
+    const R = new marked.Renderer();
+
+    R.code = function ({ text, lang, escaped }) {
+      return renderCodeBlock(text || '', lang || '', escaped);
+    };
+
+    R.codespan = function ({ text }) {
+      return '<code>' + esc(String(text || '')) + '</code>';
+    };
+
+    R.image = function ({ href, title, text }) {
+      var alt = esc(text || title || 'Image');
+      var src = esc(href || '');
+      return '<div class="img-wrap"><img src="' + src + '" alt="' + alt + '" loading="lazy" data-msg-img="' + src + '" title="' + esc(title || '') + '"></div>';
+    };
+
+    R.link = function ({ href, title, text }) {
+      var url = String(href || '');
+      if (/^(javascript|vbscript|file):/i.test(url)) return text || '';
+      var t = title ? ' title="' + esc(title) + '"' : '';
+      var ext = /^https?:\/\//i.test(url) ? ' target="_blank" rel="noopener noreferrer"' : '';
+      return '<a href="' + esc(url) + '"' + ext + t + '>' + (text || '') + '</a>';
+    };
+
+    marked.use({ breaks: true, gfm: true, renderer: R });
+    _mdOk = true;
+  } catch (e) {
+    _mdOk = false;
+    console.error('[HeloXAi] marked init failed:', e);
+  }
+}
+
+function renderCodeBlock(rawText, infoString, escaped) {
+  var text = String(rawText || '').replace(/\r\n/g, '\n').replace(/\t/g, '  ');
+  if (text.length > 200000) text = text.slice(0, 200000) + '\n/* truncated */';
+
+  var parts = (infoString || '').trim().split(/\s+/);
+  var lang = (parts[0] || '').toLowerCase();
+  var filename = '';
+  for (var i = 1; i < parts.length; i++) {
+    var m = parts[i].match(/^title=(?:"([^"]+)"|'([^']+)'|(.+))$/);
+    if (m) filename = m[1] || m[2] || m[3];
+  }
+
+  var validLang = lang;
+  if (typeof hljs !== 'undefined' && hljs.getLanguage) {
+    if (!lang || !hljs.getLanguage(lang)) {
+      var aliases = { py:'python', js:'javascript', ts:'typescript', sh:'bash', yml:'yaml', cs:'csharp', 'c++':'cpp' };
+      if (aliases[lang]) lang = aliases[lang];
+      if (!hljs.getLanguage(lang)) validLang = '';
+    }
+  }
+
+  var highlighted = '';
+  try {
+    if (typeof hljs !== 'undefined') {
+      if (validLang) {
+        highlighted = hljs.highlight(text, { language: validLang, ignoreIllegals: true }).value;
+      } else {
+        var auto = hljs.highlightAuto(text);
+        highlighted = auto.value;
+        validLang = auto.language || 'plaintext';
+      }
+    } else {
+      highlighted = esc(text);
+      validLang = validLang || 'text';
+    }
+  } catch (e) {
+    highlighted = esc(text);
+    validLang = 'text';
+  }
+
+  var lines = highlighted.split('\n');
+  var showLineNumbers = lines.length > 3;
+  if (showLineNumbers) {
+    var nums = '<div class="line-numbers-rows" aria-hidden="true">';
+    for (var j = 0; j < lines.length; j++) nums += '<span></span>';
+    nums += '</div>';
+    highlighted = nums + highlighted;
+  }
+
+  var icon = 'fa-code', label = validLang || 'text';
+  var L = (validLang || '').toLowerCase();
+  if (['js','javascript'].includes(L))      { icon = 'fa-brands fa-js';       label = 'JavaScript'; }
+  else if (['ts','typescript'].includes(L))  { icon = 'fa-brands fa-js';       label = 'TypeScript'; }
+  else if (['py','python'].includes(L))      { icon = 'fa-brands fa-python';   label = 'Python'; }
+  else if (['html','xml','svg'].includes(L)) { icon = 'fa-brands fa-html5';    label = 'HTML'; }
+  else if (L === 'css')                       { icon = 'fa-brands fa-css3-alt'; label = 'CSS'; }
+  else if (L === 'java')                      { icon = 'fa-brands fa-java';     label = 'Java'; }
+  else if (['bash','sh','shell','zsh'].includes(L)) { icon = 'fa-solid fa-terminal'; label = 'Shell'; }
+  else if (['json','jsonc'].includes(L))      { icon = 'fa-solid fa-code';      label = 'JSON'; }
+  else if (['sql'].includes(L))               { icon = 'fa-solid fa-database';  label = 'SQL'; }
+  else if (['md','markdown'].includes(L))     { icon = 'fa-brands fa-markdown'; label = 'Markdown'; }
+  else if (L === 'mermaid')                   { icon = 'fa-solid fa-diagram-project'; label = 'Mermaid'; }
+
+  var lineCount = text.split('\n').length;
+  var collapsible = lineCount > 25;
+
+  var rawEncoded = encodeURIComponent(text);
+
+  var html = '<div class="code-blk' + (showLineNumbers ? ' line-numbers' : '') + (collapsible ? ' collapsible collapsed' : '') + '" data-lang="' + esc(validLang || 'text') + '">';
+  html += '<div class="code-hd">';
+  html += '<div class="code-lang-badge"><i class="fa-solid ' + icon + '"></i> ' + esc(label) + (filename ? ' <span class="code-filename"><i class="fa-regular fa-file"></i> ' + esc(filename) + '</span>' : '') + '</div>';
+  html += '<div class="code-hd-actions">';
+  if (L === 'html' || L === 'xml') {
+    html += '<button type="button" class="cp-btn" data-action="run-html" data-tip="Run HTML"><i class="fa-solid fa-play"></i><span class="cp-label">Run</span></button>';
+  }
+  html += '<button type="button" class="cp-btn" data-action="copy-code" data-raw="' + rawEncoded + '" data-tip="Copy code" aria-label="Copy code"><i class="fa-regular fa-copy"></i><span class="cp-label">Copy</span></button>';
+  html += '</div></div>';
+  html += '<pre><code class="hljs language-' + esc(validLang || 'text') + '">' + highlighted + '</code></pre>';
+  if (collapsible) {
+    html += '<button type="button" class="code-expand-btn" data-action="expand-code"><i class="fa-solid fa-chevron-down"></i> Show more (' + lineCount + ' lines)</button>';
+  }
+  html += '</div>';
+  return html;
 }
 
 function processAdmonitions(html) {
@@ -3231,24 +2639,29 @@ function processMermaid(element) {
 }
 
 function md(text) {
-  if (text == null) return '';
+  if (text == null || text === '') return '';
+  var key = String(text);
+  if (_mdCache.has(key)) return _mdCache.get(key);
+  var html;
   try {
-    if (mdCache.has(text)) return mdCache.get(text);
-    var html = '';
-    if (S._mdOk && typeof marked !== 'undefined') { 
-        html = marked.parse(String(text)); 
-        html = processAdmonitions(html);
-        html = processEmbeds(html);
-    } else { html = esc(String(text)).replace(/\n/g, '<br>'); }
+    if (_mdOk && typeof marked !== 'undefined') {
+      html = marked.parse(key);
+      html = processAdmonitions(html);
+      html = processEmbeds(html);
+    } else {
+      html = esc(key).replace(/\n/g, '<br>');
+    }
     if (typeof DOMPurify !== 'undefined') {
       html = DOMPurify.sanitize(html, {
-        ALLOWED_TAGS: ['p','br','b','i','strong','em','a','code','pre','span','div','ul','ol','li','sup','sub','del','s','h1','h2','h3','h4','h5','h6','hr','table','thead','tbody','tr','td','th','blockquote','img','details','summary','input','iframe','svg','path','dl','dt','dd','kbd','mark','figure','figcaption','math','semantics','annotation','msup','msub','mfrac','msqrt','mrow','mi','mo','mn','mtext','mover','munder','munderover','mtable','mtr','mtd','mspace','mpadded'],
-        ALLOWED_ATTR: ['href','target','rel','class','id','title','alt','data-action','src','loading','width','height','type','checked','frameborder','allowfullscreen','viewBox','d','fill','xmlns','data-msg-img','data-rm-idx','data-gid','data-i','data-act','data-tip','data-model','data-t','data-mode','data-cid','data-del-cid','open','style','role','aria-label','tabindex','disabled','for','name','value','placeholder','rows','cols','autocapitalize','autocomplete','spellcheck']
+        ADD_ATTR: ['data-action','data-msg-img','data-i','data-act','data-cid','data-del-cid','data-gid','data-tip','data-filename','data-lang','data-raw','target','rel'],
+        ADD_TAGS: ['details','summary','figure','figcaption','mark','kbd']
       });
     }
-    mdCache.set(text, html);
-    return html;
-  } catch (e) { return esc(String(text)).replace(/\n/g, '<br>'); }
+  } catch (e) {
+    html = esc(key).replace(/\n/g, '<br>');
+  }
+  _mdCache.set(key, html);
+  return html;
 }
 
 (function() {
@@ -3296,6 +2709,26 @@ function applyMath(el) {
       });
     } catch (e) {}
   }
+}
+
+let _streamMathRAF = 0;
+function renderStreamingMarkdown(idx, text) {
+  var el = $('mc-' + idx);
+  if (!el) return;
+  _mdCache.delete(text);
+  el.innerHTML = md(text);
+  cancelAnimationFrame(_streamMathRAF);
+  _streamMathRAF = requestAnimationFrame(function () { applyMath(el); });
+}
+
+function finalizeMessageMarkdown(idx) {
+  var el = $('mc-' + idx);
+  if (!el) return;
+  var m = S.msgs[idx];
+  if (m) _mdCache.delete(m.content);
+  el.innerHTML = md(m ? m.content : '');
+  applyMath(el);
+  processMermaid(el);
 }
 
 function toggleSB(open){S.sbOpen=typeof open==='boolean'?open:!S.sbOpen;$('sidebar').classList.toggle('open',S.sbOpen);$('sbOv').classList.toggle('on',S.sbOpen);}
@@ -3384,55 +2817,77 @@ function toggleVD(open){
   $('voiceDd').classList.toggle('on',S.vdOpen);
 }
 
-// FIX: ROBUST CLIPBOARD COPY FUNCTIONALITY WITH FALLBACK
-function copyTextToClipboard(text, successCb, errorCb) {
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(text).then(function() {
-      if (successCb) successCb();
-    }).catch(function() {
-      fallbackCopyTextToClipboard(text, successCb, errorCb);
-    });
-  } else {
-    fallbackCopyTextToClipboard(text, successCb, errorCb);
-  }
-}
-
-function fallbackCopyTextToClipboard(text, successCb, errorCb) {
-  var textarea = document.createElement('textarea');
-  textarea.value = text;
-  textarea.style.top = "0";
-  textarea.style.left = "0";
-  textarea.style.position = "fixed";
-  document.body.appendChild(textarea);
-  textarea.focus();
-  textarea.select();
-  try {
-    var successful = document.execCommand('copy');
-    if (successful && successCb) successCb();
-    else if (!successful && errorCb) errorCb();
-  } catch (err) {
-    if (errorCb) errorCb(err);
-  }
-  document.body.removeChild(textarea);
-}
-
 function actCopy(idx){
-  var m=S.msgs[idx];
-  if(!m||!m.content) return;
-  var txt=m.content.replace(/<[^>]*>/g,'');
-  copyTextToClipboard(txt, function() { 
-    toast('Copied','ok'); 
-  }, function() { 
-    toast('Copy failed','err'); 
-  });
+  var m = S.msgs[idx];
+  if (!m || !m.content) { toast('Nothing to copy', 'wrn'); return; }
+  copyText(m.content, function () { toast('Response copied', 'ok'); }, function () { toast('Copy failed', 'err'); });
 }
+
+function actCopyCode(idx){
+  var m = S.msgs[idx];
+  if (!m) return;
+  var blocks = [];
+  var re = /```([^\n]*)\n([\s\S]*?)```/g;
+  var mm;
+  while ((mm = re.exec(m.content)) !== null) blocks.push(mm[2]);
+  if (!blocks.length) { toast('No code in this response', 'wrn'); return; }
+  copyText(blocks.join('\n\n'), function () { toast(blocks.length + ' block(s) copied', 'ok'); });
+}
+
 function actLike(idx, type){
-  var m=S.msgs[idx];
-  if(!m) return;
-  if(type==='like'){m.liked=!m.liked;m.disliked=false;} else {m.disliked=!m.disliked;m.liked=false;}
+  var m = S.msgs[idx];
+  if (!m) return;
+  if (type === 'like') { m.liked = !m.liked; m.disliked = false; }
+  else { m.disliked = !m.disliked; m.liked = false; }
   renderAll();
-  if(m.liked) toast('Liked', 'ok');
-  if(m.disliked) toast('Feedback received', 'ok');
+  if (m.liked) toast('Thanks for the feedback', 'ok');
+  if (m.disliked) toast('Feedback received', 'ok');
+}
+
+function actRetry(idx){
+  var userText = '';
+  for (var i = idx - 1; i >= 0; i--) {
+    if (S.msgs[i].role === 'user') { userText = S.msgs[i].content; break; }
+  }
+  if (!userText) { toast('No user message to retry', 'wrn'); return; }
+  S.msgs = S.msgs.slice(0, idx);
+  renderAll();
+  sendToAI(userText);
+}
+
+function actExportMD(idx) {
+  var m = S.msgs[idx];
+  if (!m) return;
+  var blob = new Blob([m.content], { type: 'text/markdown' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'heloxai-response-' + (idx + 1) + '.md';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  toast('Exported as Markdown', 'ok');
+}
+
+function togglePinChat(cid) {
+  var c = S.chatListData.find(function (x) { return x.id === cid; });
+  if (!c) return;
+  c.pinned = !c.pinned;
+  saveLocalChats();
+  renderChatList();
+  toast(c.pinned ? 'Pinned' : 'Unpinned', 'ok');
+}
+
+function renameChat(cid) {
+  var c = S.chatListData.find(function (x) { return x.id === cid; });
+  if (!c) return;
+  var name = prompt('Rename chat:', c.title);
+  if (name && name.trim()) {
+    c.title = name.trim().slice(0, 80);
+    saveLocalChats();
+    renderChatList();
+    if (cid === S.chatId) $('hdrTitle').textContent = c.title;
+    toast('Renamed', 'ok');
+  }
 }
 
 function formatTime(sec) {
@@ -3446,7 +2901,6 @@ function setupAudioPlayer(idx, audioUrl) {
   var msgEl = document.querySelector('.msg[data-i="' + idx + '"] .msg-inner');
   if (!msgEl) return;
   
-  // Remove existing player if any
   var existing = msgEl.querySelector('.voice-player');
   if (existing) existing.remove();
 
@@ -3474,7 +2928,6 @@ function setupAudioPlayer(idx, audioUrl) {
   var forwardBtn = player.querySelector('.vp-forward');
   var backwardBtn = player.querySelector('.vp-backward');
 
-  // Stop other audios when starting a new one
   audio.addEventListener('play', function() {
     document.querySelectorAll('.voice-player audio').forEach(function(a) {
       if (a !== audio && !a.paused) a.pause();
@@ -3525,7 +2978,6 @@ async function actVoice(idx){
   var m = S.msgs[idx];
   if (!m || !m.content) return;  
   
-  // If player already exists, just toggle play/pause
   var existingPlayer = $('vp-' + idx);
   if (existingPlayer) {
     var audio = existingPlayer.querySelector('audio');
@@ -3553,7 +3005,6 @@ async function actVoice(idx){
       }
   }
   
-  // Fallback to browser TTS (No UI slider, but still works)
   if ('speechSynthesis' in window) {
       try {
           window.speechSynthesis.cancel(); 
@@ -3561,7 +3012,6 @@ async function actVoice(idx){
           utterance.rate = 1.0; utterance.pitch = 1.0;
           window.speechSynthesis.speak(utterance);
           
-          // Basic UI feedback for local TTS
           var msgEl = document.querySelector('.msg[data-i="' + idx + '"] .msg-acts .ma[data-act="voice"]');
           if(msgEl) {
             msgEl.innerHTML = '<i class="fa-solid fa-stop"></i>';
@@ -3569,15 +3019,6 @@ async function actVoice(idx){
           }
       } catch (e) { toast('Voice unavailable', 'err'); }
   } else { toast('Voice not supported', 'err'); }
-}
-function actRegen(idx){
-  var lastIdx = S.msgs.length-1;
-  if(lastIdx>=0 && S.msgs[lastIdx].role === 'assistant'){ S.msgs.pop(); renderAll(); }
-  var lastUser = '';
-  for(var i=S.msgs.length-1;i>=0;i--){
-      if(S.msgs[i].role==='user'){ lastUser=S.msgs[i].content; break; }
-  }
-  if(lastUser) sendToAI(lastUser);
 }
 
 function refreshUI(){
@@ -3673,8 +3114,22 @@ function showMsgs(){$('welcomeEl').style.display='none';$('msgsEl').style.displa
 function renderChatList(){
   var el=$('chatListItems');if(!el)return;
   if(!S.chatListData.length){el.innerHTML='<span style="color:var(--text-muted);font-size:12px;padding:6px 12px;display:block">No conversations yet</span>';return;}
+  var sorted = S.chatListData.slice().sort(function(a, b) {
+    if (!!b.pinned !== !!a.pinned) return !!b.pinned - !!a.pinned;
+    return new Date(b.updated_at) - new Date(a.updated_at);
+  });
   var html='';
-  S.chatListData.forEach(function(c){html+='<button class="cl-item'+(c.id===S.chatId?' active':'')+'" data-cid="'+c.id+'"><i class="fa-regular fa-message"></i><span class="cl-title">'+esc(c.title)+'</span><span class="cl-time">'+ago(c.updated_at)+'</span><button type="button" class="cl-del" data-del-cid="'+c.id+'" aria-label="Delete"><i class="fa-solid fa-trash"></i></button></button>';});
+  sorted.forEach(function(c){
+    html+='<button class="cl-item'+(c.id===S.chatId?' active':'')+(c.pinned?' pinned':'')+'" data-cid="'+c.id+'">';
+    html+='<i class="fa-regular fa-message"></i>';
+    if(c.pinned) html+='<i class="fa-solid fa-thumbtack" style="color:var(--accent);font-size:10px;margin-right:-4px"></i>';
+    html+='<span class="cl-title">'+esc(c.title)+'</span>';
+    html+='<span class="cl-time">'+ago(c.updated_at)+'</span>';
+    html+='<button type="button" class="cl-del" data-act="pin" data-cid="'+c.id+'" aria-label="Pin"><i class="fa-solid fa-thumbtack"></i></button>';
+    html+='<button type="button" class="cl-del" data-act="rename" data-cid="'+c.id+'" aria-label="Rename"><i class="fa-solid fa-pen"></i></button>';
+    html+='<button type="button" class="cl-del" data-del-cid="'+c.id+'" aria-label="Delete"><i class="fa-solid fa-trash"></i></button>';
+    html+='</button>';
+  });
   el.innerHTML=html;
 }
 function buildImgHtml(imgs){
@@ -3692,38 +3147,38 @@ function buildImgHtml(imgs){
 
 function buildMessageHtml(m, i) {
   var isAi = m.role === 'assistant';
-  var roleClass = isAi ? 'ai-msg' : 'user-msg';
-  var name = isAi ? 'AI' : 'You';
-  var html = '<div class="msg ' + roleClass + '" data-i="' + i + '">';
-  
+  var html = '<div class="msg ' + (isAi ? 'ai-msg' : 'user-msg') + '" data-i="' + i + '">';
+
   if (isAi) {
-      html += '  <div class="msg-inner">';
-      html += '    <div class="msg-label"><span class="ai-dot"></span> AI <span id="ai-status-' + i + '" class="ai-status"></span></div>';
-      html += '    <div id="mc-' + i + '" class="msg-ct"></div>';
-      html += '    <div id="mi-' + i + '" class="msg-imgs"></div>';
-      html += '    <div class="msg-acts">';
-      html += '      <button class="ma" data-act="copy" data-i="' + i + '"><i class="fa-regular fa-copy"></i></button>';
-      html += '      <button class="ma' + (m.liked?' liked':'') + '" data-act="like" data-i="' + i + '"><i class="fa-regular fa-thumbs-up"></i></button>';
-      html += '      <button class="ma' + (m.disliked?' disliked':'') + '" data-act="dislike" data-i="' + i + '"><i class="fa-regular fa-thumbs-down"></i></button>';
-      html += '      <button class="ma' + (isAuthed()?'':' locked') + '" data-act="voice" data-i="' + i + '" data-tip="Read Aloud"><i class="fa-solid fa-volume-high"></i></button>';
-      html += '      <button class="ma" data-act="regen" data-i="' + i + '"><i class="fa-solid fa-rotate-right"></i></button>';
-      html += '    </div>';
-      html += '    <div class="msg-time">' + m.time + '</div>';
-      html += '  </div>';
+    html += '<div class="msg-inner">';
+    html += '  <div class="msg-label"><span class="ai-dot"></span> HeloXAi <span id="ai-status-' + i + '" class="ai-status"></span></div>';
+    html += '  <div id="mc-' + i + '" class="msg-ct"></div>';
+    html += '  <div id="mi-' + i + '" class="msg-imgs"></div>';
+    html += '  <div class="msg-acts">';
+    html += '    <button class="ma" data-act="copy" data-i="' + i + '" data-tip="Copy" aria-label="Copy response"><i class="fa-regular fa-copy"></i></button>';
+    html += '    <button class="ma" data-act="copy-code" data-i="' + i + '" data-tip="Copy code" aria-label="Copy code blocks"><i class="fa-solid fa-code"></i></button>';
+    html += '    <button class="ma" data-act="export-md" data-i="' + i + '" data-tip="Export Markdown" aria-label="Export as Markdown"><i class="fa-solid fa-file-arrow-down"></i></button>';
+    html += '    <button class="ma' + (m.liked ? ' liked' : '') + '" data-act="like" data-i="' + i + '" data-tip="Good response" aria-label="Like"><i class="fa-regular fa-thumbs-up"></i></button>';
+    html += '    <button class="ma' + (m.disliked ? ' disliked' : '') + '" data-act="dislike" data-i="' + i + '" data-tip="Bad response" aria-label="Dislike"><i class="fa-regular fa-thumbs-down"></i></button>';
+    html += '    <button class="ma' + (isAuthed() ? '' : ' locked') + '" data-act="voice" data-i="' + i + '" data-tip="Read aloud" aria-label="Read aloud"><i class="fa-solid fa-volume-high"></i></button>';
+    html += '    <button class="ma" data-act="retry" data-i="' + i + '" data-tip="Retry" aria-label="Retry"><i class="fa-solid fa-rotate-right"></i></button>';
+    html += '  </div>';
+    html += '  <div class="msg-time">' + esc(m.time || '') + '</div>';
+    html += '</div>';
   } else {
-      html += '  <div class="msg-inner">';
-      html += '    <div class="msg-label">' + name + '</div>';
-      html += '    <div class="msg-bubble">';
-      html += '      <div class="msg-text-wrapper" id="mtw-' + m.id + '">' + esc(m.content) + '</div>';
-      html += '      <button class="msg-toggle-btn" id="mtb-' + m.id + '">Show more</button>';
-      if (m.images && m.images.length) html += buildImgHtml(m.images);
-      html += '    </div>';
-      html += '    <div class="msg-acts">';
-      html += '      <button class="ma" data-act="copy" data-i="' + i + '"><i class="fa-regular fa-copy"></i></button>';
-      html += '      <button class="ma" data-act="edit" data-i="' + i + '"><i class="fa-solid fa-pen"></i></button>';
-      html += '    </div>';
-      html += '    <div class="msg-time">' + m.time + '</div>';
-      html += '  </div>';
+    html += '<div class="msg-inner">';
+    html += '  <div class="msg-label">You</div>';
+    html += '  <div class="msg-bubble">';
+    html += '    <div class="msg-text-wrapper" id="mtw-' + m.id + '">' + esc(m.content) + '</div>';
+    html += '    <button class="msg-toggle-btn" id="mtb-' + m.id + '">Show more</button>';
+    if (m.images && m.images.length) html += buildImgHtml(m.images);
+    html += '  </div>';
+    html += '  <div class="msg-acts">';
+    html += '    <button class="ma" data-act="copy" data-i="' + i + '" data-tip="Copy" aria-label="Copy"><i class="fa-regular fa-copy"></i></button>';
+    html += '    <button class="ma" data-act="edit" data-i="' + i + '" data-tip="Edit" aria-label="Edit and resend"><i class="fa-solid fa-pen"></i></button>';
+    html += '  </div>';
+    html += '  <div class="msg-time">' + esc(m.time || '') + '</div>';
+    html += '</div>';
   }
   html += '</div>';
   return html;
@@ -3783,18 +3238,10 @@ function renderAll(){
     if (S.isAutoScrolling) scrollBot(true);
 }
 
-var _lastMathTime = 0;
 function updateLastAI(content){
   var i=S.msgs.length-1;if(i<0||S.msgs[i].role!=='assistant')return;
-  S.msgs[i].content=content;var el=$('mc-'+i);
-  if(el){
-      el.innerHTML = md(content); 
-      var now = Date.now();
-      if (now - _lastMathTime > 300) {
-          _lastMathTime = now;
-          applyMath(el);
-      }
-  }
+  S.msgs[i].content=content;
+  renderStreamingMarkdown(i, content);
   var w=$('msgsWrap');
   if(w){
     var dist = w.scrollHeight - w.scrollTop - w.clientHeight;
@@ -3996,7 +3443,7 @@ function sendWithFiles(text,imgs,files){
       return res.json().then(function(d){var c=d.response||d.reply ||d.content||d.result||d.message||JSON.stringify(d);var ai={id:uid(),role:'assistant',content:c,liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();addGal(c);saveChatHistory(S.chatId, S.msgs);if(S.chatId)updateTs(S.chatId);});
     }
     var ai={id:uid(),role:'assistant',content:'',liked:false,disliked:false,time:now()};S.msgs.push(ai);renderAll();
-    return streamRes(res,function(chunk){full+=chunk;requestAnimationFrame(function(){updateLastAI(full);});},function(){S.msgs[S.msgs.length-1].content=full;addGal(full);saveChatHistory(S.chatId, S.msgs);if(S.chatId)updateTs(S.chatId);}, onMedia);
+    return streamRes(res,function(chunk){full+=chunk;requestAnimationFrame(function(){updateLastAI(full);});},function(){S.msgs[S.msgs.length-1].content=full;addGal(full);saveChatHistory(S.chatId, S.msgs);if(S.chatId)updateTs(S.chatId);finalizeMessageMarkdown(S.msgs.length - 1);}, onMedia);
   }).catch(function(e){
     rmTyping();
     if(e.name==='AbortError'){
@@ -4303,9 +3750,7 @@ function sendToAI(text){
           S.msgs[S.msgs.length-1].content = full;
           saveChatHistory(S.chatId, S.msgs);
           if(S.chatId) updateTs(S.chatId);
-          var i = S.msgs.length-1;
-          var el = $('mc-'+i);
-          if(el) processMermaid(el);
+          finalizeMessageMarkdown(S.msgs.length - 1);
       },
       onMedia,
       onStatus,
@@ -4368,16 +3813,6 @@ function updateCB(){
     if(!S.recording){ mic.classList.remove('hide'); voice.classList.remove('hide'); }
     ss.classList.add('hide'); ss.classList.remove('send','stop');
   }
-}
-
-function finalizeLastMessage() {
-    var i = S.msgs.length - 1;
-    if (i < 0 || S.msgs[i].role !== 'assistant') return;
-    var el = $('mc-' + i);
-    if (!el || !el.isConnected) return;
-    applyMath(el);
-    processMermaid(el);
-    mdCache.delete(S.msgs[i].content);
 }
 
 async function loadVoices() {
@@ -4495,43 +3930,46 @@ function initEvents(){
     }
     if(e.target.closest('#lbDl')){ e.preventDefault(); e.stopPropagation(); downloadResource(S.lbUrl); return; }
     
-    var cpBtn=e.target.closest('[data-action="copy-code"]');
-    if(cpBtn){
+    // --- Code block actions ---
+    var codeBtn = e.target.closest('.code-blk [data-action]');
+    if (codeBtn) {
       e.stopPropagation();
-      var blk=cpBtn.closest('.code-blk');
-      var codeEl=blk?blk.querySelector('code'):null;
-      if(codeEl){
-        var codeText = codeEl.textContent;
-        copyTextToClipboard(codeText, function() {
-          var orig = cpBtn.innerHTML;
-          cpBtn.innerHTML='<i class="fa-solid fa-check"></i> Copied';
-          cpBtn.classList.add('copied');
-          setTimeout(function(){cpBtn.innerHTML=orig;cpBtn.classList.remove('copied');},2000);
-        }, function() {
-          toast('Copy failed','err');
-        });
-      }
-      return;
-    }
-    
-    var runBtn = e.target.closest('[data-action="run-html"]');
-    if(runBtn){
-      e.stopPropagation();
-      var blk = runBtn.closest('.code-blk');
-      var codeEl = blk ? blk.querySelector('code') : null;
-      if(codeEl){ openHtmlPreview(codeEl.textContent); }
-      return;
-    }
+      var action = codeBtn.getAttribute('data-action');
+      var blk = codeBtn.closest('.code-blk');
 
-    var expandBtn = e.target.closest('[data-action="expand-code"]');
-    if(expandBtn) {
-      e.stopPropagation();
-      var codeBlk = expandBtn.closest('.code-blk');
-      if(codeBlk) {
-        codeBlk.classList.toggle('collapsed');
-        expandBtn.innerHTML = codeBlk.classList.contains('collapsed') ? 'Show more' : 'Show less';
+      if (action === 'copy-code') {
+        var raw = codeBtn.getAttribute('data-raw');
+        var codeText = raw ? decodeURIComponent(raw) : (blk.querySelector('code') ? blk.querySelector('code').textContent : '');
+        copyText(codeText, function () {
+          var lbl = codeBtn.querySelector('.cp-label');
+          var icn = codeBtn.querySelector('i');
+          var origLabel = lbl ? lbl.textContent : '';
+          var origIcon = icn ? icn.className : '';
+          if (lbl) lbl.textContent = 'Copied';
+          if (icn) icn.className = 'fa-solid fa-check';
+          codeBtn.classList.add('copied');
+          setTimeout(function () {
+            if (lbl) lbl.textContent = origLabel || 'Copy';
+            if (icn) icn.className = origIcon || 'fa-regular fa-copy';
+            codeBtn.classList.remove('copied');
+          }, 1800);
+        }, function () { toast('Copy failed', 'err'); });
+        return;
       }
-      return;
+
+      if (action === 'run-html') {
+        var rawAttr = blk.querySelector('[data-action="copy-code"]') ? blk.querySelector('[data-action="copy-code"]').getAttribute('data-raw') : null;
+        var html = rawAttr ? decodeURIComponent(rawAttr) : (blk.querySelector('code') ? blk.querySelector('code').textContent : '');
+        openHtmlPreview(html);
+        return;
+      }
+
+      if (action === 'expand-code') {
+        blk.classList.toggle('collapsed');
+        var isCollapsed = blk.classList.contains('collapsed');
+        codeBtn.innerHTML = '<i class="fa-solid fa-chevron-down"></i> ' + (isCollapsed ? 'Show more' : 'Show less');
+        return;
+      }
     }
     
     var rmBtn=e.target.closest('[data-rm-idx]');
@@ -4547,10 +3985,12 @@ function initEvents(){
       var idx=parseInt(ab.getAttribute('data-i'),10);
       if(isNaN(idx)||idx<0||idx>=S.msgs.length)return;
       if(act==='copy') actCopy(idx);
+      else if(act==='copy-code') actCopyCode(idx);
+      else if(act==='export-md') actExportMD(idx);
       else if(act==='like') actLike(idx,'like');
       else if(act==='dislike') actLike(idx,'dislike');
       else if(act==='edit') openEdit(idx); 
-      else if(act==='regen') actRegen(idx);
+      else if(act==='regen' || act==='retry') actRetry(idx);
       else if(act==='voice') actVoice(idx);
       return;
     }
@@ -4603,6 +4043,11 @@ function initEvents(){
   $('htmlPreviewModal').addEventListener('click',function(e){if(e.target===$('htmlPreviewModal')){$('htmlPreviewModal').classList.remove('on');}});
 
   $('chatList').addEventListener('click',function(e){
+    var pinBtn = e.target.closest('[data-act="pin"]');
+    if (pinBtn) { e.stopPropagation(); togglePinChat(pinBtn.getAttribute('data-cid')); return; }
+    var rnBtn = e.target.closest('[data-act="rename"]');
+    if (rnBtn) { e.stopPropagation(); renameChat(rnBtn.getAttribute('data-cid')); return; }
+    
     var delBtn=e.target.closest('[data-del-cid]');
     if(delBtn){
       e.stopPropagation();
@@ -4629,18 +4074,41 @@ function initEvents(){
   });
 
   document.addEventListener('keydown',function(e){
-    if(e.key!=='Escape')return;
-    if($('lightbox').classList.contains('on')){closeLB();return;}
-    if($('htmlPreviewModal').classList.contains('on')){$('htmlPreviewModal').classList.remove('on');return;}
-    if(S.asOpen){toggleAS(false);return;}
-    if(S.vdOpen){toggleVD(false);return;}
-    if(S.sbOpen){toggleSB(false);return;}
-    if(S.mdOpen){toggleMD(false);return;}
-    if($('emModal').classList.contains('on')){closeEdit();return;}
-    document.querySelectorAll('.modal-ov.on').forEach(function(m){m.classList.remove('on');});
+    var inField = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName) || document.activeElement.isContentEditable;
+    
+    if (e.key === 'Escape') {
+      if($('lightbox').classList.contains('on')){closeLB();return;}
+      if($('htmlPreviewModal').classList.contains('on')){$('htmlPreviewModal').classList.remove('on');return;}
+      if(S.asOpen){toggleAS(false);return;}
+      if(S.vdOpen){toggleVD(false);return;}
+      if(S.sbOpen){toggleSB(false);return;}
+      if(S.mdOpen){toggleMD(false);return;}
+      if($('emModal').classList.contains('on')){closeEdit();return;}
+      document.querySelectorAll('.modal-ov.on').forEach(function(m){m.classList.remove('on');});
+      return;
+    }
+
+    if (inField) return;
+
+    if (e.metaKey || e.ctrlKey) {
+      if (e.key === 'k') { e.preventDefault(); $('sbSearch').focus(); return; }
+      if (e.key === '/') { e.preventDefault(); $('cbInput').focus(); return; }
+      if (e.shiftKey && (e.key === 'O' || e.key === 'o')) { e.preventDefault(); startNewChat(); return; }
+      if (e.shiftKey && (e.key === 'R' || e.key === 'r')) {
+        e.preventDefault();
+        var li = S.msgs.length - 1;
+        if (li >= 0 && S.msgs[li].role === 'assistant') actRetry(li);
+        return;
+      }
+    }
+
+    if (e.key === 'r' && !S.streaming) {
+      var li2 = S.msgs.length - 1;
+      if (li2 >= 0 && S.msgs[li2].role === 'assistant') actRetry(li2);
+    }
   });
 
-    document.addEventListener('paste',function(e){
+  document.addEventListener('paste',function(e){
     if(S.streaming)return;
     var items=e.clipboardData&&e.clipboardData.items;if(!items)return;
     for(var i=0;i<items.length;i++){
@@ -4681,6 +4149,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
 })();
 </script>
+
 <!-- Fullscreen Image Modal -->
 <div id="img-modal" onclick="closeImgModal()">
   <button class="img-modal-close" onclick="closeImgModal()" aria-label="Close image">
@@ -4688,5 +4157,56 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   </button>
   <img id="modalImg" class="img-modal-img" alt="Full size image" onclick="event.stopPropagation()" />
 </div>
+
+<script>
+// Standalone helper scripts for fullscreen modal (from original)
+function openImgModal(src) {
+  if (!src) return;
+  const modal = document.getElementById('img-modal');
+  const img = document.getElementById('modalImg');
+  if (!modal || !img) return;
+  img.src = src;
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeImgModal() {
+  const modal = document.getElementById('img-modal');
+  if (!modal) return;
+  modal.classList.remove('open');
+  document.body.style.overflow = '';
+  setTimeout(() => { if (!modal.classList.contains('open')) document.getElementById('modalImg').src = ''; }, 300);
+}
+function downloadGenImage(btnEl) {
+  const card = btnEl.closest('.gen-img-card') || btnEl.closest('.gen-img-wrap').parentElement;
+  const img = card.querySelector('img');
+  if (!img || !img.src) return;
+  const src = img.src;
+  if (!src.startsWith('data:')) {
+    const a = document.createElement('a');
+    a.href = src; a.download = 'heloxai-image.png'; a.target = '_blank';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    return;
+  }
+  const parts = src.split(',');
+  const mimeMatch = parts[0].match(/data:(image\/\w+);/);
+  const mime = mimeMatch ? mimeMatch[1] : 'image/png';
+  const ext = mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpg';
+  try {
+    const byteChars = atob(parts[1]);
+    const byteArray = new Uint8Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
+    const blob = new Blob([byteArray], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `heloxai-${Date.now()}.${ext}`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  } catch (e) { console.error('Download failed:', e); }
+}
+function _scrollChat() {
+  const w = document.getElementById('msgsWrap');
+  if (w) requestAnimationFrame(() => { w.scrollTop = w.scrollHeight; });
+}
+</script>
 </body>
 </html>
