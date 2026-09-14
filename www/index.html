@@ -3386,12 +3386,17 @@ function streamRes(res, onChunk, onDone, onMedia, onStatus, onImageEvent) {
             parts.forEach(processChunk);
             return pump();
         }).catch(function (err) {
+            // If the user stopped the generation, let the AbortError pass to sendToAI's catch block
+            if (err && err.name === 'AbortError') {
+                throw err;
+            }
+            // Otherwise, log the network/parse error and finish gracefully
             console.error('Stream read error:', err);
             if (!finished) onDone();
         });
     }
     return pump();
-} 
+}  
 
 async function sendMsg(text){
   var t=text||$('cbInput').value.trim();
