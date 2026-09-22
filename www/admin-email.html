@@ -108,7 +108,7 @@ const status = document.getElementById("status");
 
 /* 🔐 ADMIN AUTH */
 const { data:{ user } } = await supabase.auth.getUser();
-if(!user) location.href="admin-login.html";
+if(!user) location.href="admin-email.html";
 
 const { data:me } = await supabase.from("users").select("role").eq("id",user.id).single();
 if(me?.role!=="admin"){ await supabase.auth.signOut(); location.href="admin-login.html"; }
