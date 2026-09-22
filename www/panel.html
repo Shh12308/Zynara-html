@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>HeloXAi // SOC</title>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Existing environment -->
+  <script src="./env.js"></script>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #020403;
+      --panel: #050806;
+      --panel2: #080d09;
+      --border: #183a20;
+      --green: #43ff78;
+      --green2: #8cffaa;
+      --muted: #55725c;
+      --text: #ccebd2;
+      --yellow: #ffd447;
+      --red: #ff5555;
+      --blue: #74caff;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Courier New", monospace;
+    }
+
+    body {
+      overflow: hidden;
+    }
+
+    button {
+      font-family: inherit;
+    }
+
+    /* =========================
+       APP
+    ========================= */
+
+    .app {
+      width: 100%;
+      height: 100vh;
+
+      display: flex;
+      flex-direction: column;
+
+      background:
+        radial-gradient(
+          circle at 50% 0%,
+          rgba(35, 110, 50, .12),
+          transparent 45%
+        ),
+        #020403;
+    }
+
+    /* =========================
+       TOP BAR
+    ========================= */
+
+    .topbar {
+      height: 62px;
+      flex-shrink: 0;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding: 0 22px;
+
+      border-bottom: 1px solid var(--border);
+
+      background: rgba(3, 7, 4, .97);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-dot {
+      width: 10px;
+      height: 10px;
+
+      border-radius: 50%;
+
+      background: var(--green);
+
+      box-shadow:
+        0 0 8px var(--green),
+        0 0 22px rgba(67, 255, 120, .35);
+
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: .45;
+      }
+
+    }
+
+    .brand-title {
+      font-size: 17px;
+      font-weight: bold;
+      letter-spacing: 4px;
+    }
+
+    .top-right {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .connection {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .connection-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--yellow);
+    }
+
+    .connection-dot.online {
+      background: var(--green);
+      box-shadow: 0 0 9px var(--green);
+    }
+
+    /* =========================
+       MAIN
+    ========================= */
+
+    .main {
+      flex: 1;
+      min-height: 0;
+
+      display: grid;
+
+      grid-template-columns: 230px 1fr 310px;
+    }
+
+    /* =========================
+       LEFT SIDEBAR
+    ========================= */
+
+    .sidebar {
+      min-width: 0;
+      overflow-y: auto;
+
+      padding: 17px;
+
+      border-right: 1px solid var(--border);
+
+      background: rgba(4, 8, 5, .9);
+    }
+
+    .section-label {
+      margin: 2px 0 11px;
+
+      color: var(--green);
+
+      font-size: 9px;
+      letter-spacing: 2px;
+    }
+
+    .metric {
+      padding: 12px;
+      margin-bottom: 9px;
+
+      background: var(--panel2);
+
+      border: 1px solid var(--border);
+    }
+
+    .metric-label {
+      color: var(--muted);
+
+      font-size: 8px;
+      letter-spacing: 1px;
+
+      margin-bottom: 6px;
+    }
+
+    .metric-value {
+      color: var(--green2);
+
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .metric-value.red {
+      color: var(--red);
+    }
+
+    .metric-value.yellow {
+      color: var(--yellow);
+    }
+
+    .metric-value.blue {
+      color: var(--blue);
+    }
+
+    /* =========================
+       CENTER
+    ========================= */
+
+    .center {
+      min-width: 0;
+
+      display: flex;
+      flex-direction: column;
+    }
+
+    .center-header {
+      height: 42px;
+      flex-shrink: 0;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding: 0 15px;
+
+      border-bottom: 1px solid var(--border);
+
+      color: var(--muted);
+
+      font-size: 9px;
+      letter-spacing: 1.5px;
+    }
+
+    .live {
+      color: var(--green);
+    }
+
+    #logs {
+      flex: 1;
+      min-height: 0;
+
+      overflow-y: auto;
+
+      padding: 13px 16px;
+
+      font-size: 12px;
+      line-height: 1.8;
+    }
+
+    #logs::-webkit-scrollbar,
+    .sidebar::-webkit-scrollbar,
+    .right::-webkit-scrollbar {
+      width: 7px;
+    }
+
+    #logs::-webkit-scrollbar-thumb,
+    .sidebar::-webkit-scrollbar-thumb,
+    .right::-webkit-scrollbar-thumb {
+      background: #17351e;
+    }
+
+    .boot {
+      color: var(--green);
+      margin-bottom: 3px;
+    }
+
+    .log {
+      padding: 3px 0;
+
+      border-bottom: 1px solid rgba(50, 120, 60, .09);
+
+      animation: appear .16s ease;
+    }
+
+    @keyframes appear {
+
+      from {
+        opacity: 0;
+        transform: translateX(-5px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+    }
+
+    .time {
+      color: #3f6147;
+    }
+
+    .type {
+      display: inline-block;
+
+      width: 115px;
+
+      margin-left: 7px;
+
+      font-weight: bold;
+    }
+
+    .message {
+      color: var(--text);
+    }
+
+    .source {
+      color: #45624b;
+      margin-left: 8px;
+    }
+
+    .sev-info {
+      color: var(--blue);
+    }
+
+    .sev-warning {
+      color: var(--yellow);
+    }
+
+    .sev-critical {
+      color: var(--red);
+
+      text-shadow:
+        0 0 5px rgba(255, 50, 50, .35);
+    }
+
+    /* =========================
+       RIGHT PANEL
+    ========================= */
+
+    .right {
+      min-width: 0;
+      overflow-y: auto;
+
+      padding: 14px;
+
+      border-left: 1px solid var(--border);
+
+      background: rgba(4, 8, 5, .9);
+    }
+
+    .panel {
+      margin-bottom: 12px;
+
+      padding: 12px;
+
+      background: var(--panel2);
+
+      border: 1px solid var(--border);
+    }
+
+    .panel-title {
+      margin-bottom: 10px;
+
+      color: var(--green);
+
+      font-size: 9px;
+      letter-spacing: 2px;
+    }
+
+    /* =========================
+       HEALTH
+    ========================= */
+
+    .health-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding: 6px 0;
+
+      border-bottom: 1px solid rgba(50, 120, 60, .08);
+
+      font-size: 10px;
+    }
+
+    .health-name {
+      color: #709278;
+    }
+
+    .health-status {
+      color: var(--green);
+    }
+
+    .health-status.bad {
+      color: var(--red);
+    }
+
+    .health-status.warn {
+      color: var(--yellow);
+    }
+
+    /* =========================
+       CHARTS
+    ========================= */
+
+    .chart {
+      width: 100%;
+      height: 100px;
+
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+
+      padding-top: 10px;
+    }
+
+    .bar {
+      flex: 1;
+      min-width: 3px;
+
+      height: 4px;
+
+      background: var(--green);
+
+      opacity: .65;
+
+      transition:
+        height .25s ease,
+        opacity .2s ease;
+    }
+
+    .bar:hover {
+      opacity: 1;
+    }
+
+    /* =========================
+       ADMIN
+    ========================= */
+
+    .admin-button {
+      width: 100%;
+
+      padding: 9px;
+
+      margin-top: 7px;
+
+      border: 1px solid var(--border);
+
+      background: #071008;
+
+      color: var(--green);
+
+      cursor: pointer;
+
+      font-size: 9px;
+
+      letter-spacing: 1px;
+    }
+
+    .admin-button:hover {
+      background: #0b180d;
+      border-color: var(--green);
+    }
+
+    .admin-button.danger {
+      color: var(--red);
+    }
+
+    .admin-button:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+    }
+
+    .admin-status {
+      color: var(--muted);
+      font-size: 9px;
+      line-height: 1.6;
+    }
+
+    /* =========================
+       FOOTER
+    ========================= */
+
+    .footer {
+      height: 27px;
+      flex-shrink: 0;
+
+      display: flex;
+      align-items: center;
+
+      padding: 0 15px;
+
+      border-top: 1px solid var(--border);
+
+      color: #35523c;
+
+      font-size: 8px;
+      letter-spacing: 1px;
+    }
+
+    /* =========================
+       MOBILE
+    ========================= */
+
+    @media (max-width: 1050px) {
+
+      .main {
+        grid-template-columns: 210px 1fr;
+      }
+
+      .right {
+        display: none;
+      }
+
+    }
+
+    @media (max-width: 650px) {
+
+      .main {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .top-right {
+        gap: 5px;
+      }
+
+      .brand-title {
+        font-size: 12px;
+      }
+
+      .type {
+        width: auto;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+<div class="app">
+
+  <!-- =========================
+       TOP BAR
+  ========================== -->
+
+  <header class="topbar">
+
+    <div class="brand">
+
+      <div class="brand-dot"></div>
+
+      <div class="brand-title">
+        HELOXAI // SOC
+      </div>
+
+    </div>
+
+
+    <div class="top-right">
+
+      <div class="connection">
+
+        <span
+          id="connectionDot"
+          class="connection-dot"
+        ></span>
+
+        <span id="connectionText">
+          CONNECTING
+        </span>
+
+      </div>
+
+      <span id="clock">
+        --:--:--
+      </span>
+
+    </div>
+
+  </header>
+
+
+  <!-- =========================
+       MAIN
+  ========================== -->
+
+  <main class="main">
+
+
+    <!-- =======================
+         LEFT
+    ======================== -->
+
+    <aside class="sidebar">
+
+      <div class="section-label">
+        SECURITY METRICS
+      </div>
+
+
+      <div class="metric">
+
+        <div class="metric-label">
+          EVENTS
+        </div>
+
+        <div
+          id="eventCount"
+          class="metric-value"
+        >
+          0
+        </div>
+
+      </div>
+
+
+      <div class="metric">
+
+        <div class="metric-label">
+          ALERTS
+        </div>
+
+        <div
+          id="alertCount"
+          class="metric-value red"
+        >
+          0
+        </div>
+
+      </div>
+
+
+      <div class="metric">
+
+        <div class="metric-label">
+          LOGIN SUCCESS
+        </div>
+
+        <div
+          id="loginSuccess"
+          class="metric-value"
+        >
+          0
+        </div>
+
+      </div>
+
+
+      <div class="metric">
+
+        <div class="metric-label">
+          LOGIN FAILURES
+        </div>
+
+        <div
+          id="loginFailures"
+          class="metric-value yellow"
+        >
+          0
+        </div>
+
+      </div>
+
+
+      <div class="metric">
+
+        <div class="metric-label">
+          CRITICAL EVENTS
+        </div>
+
+        <div
+          id="criticalCount"
+          class="metric-value red"
+        >
+          0
+        </div>
+
+      </div>
+
+
+      <div class="metric">
+
+        <div class="metric-label">
+          ADMIN
+        </div>
+
+        <div
+          id="adminStatus"
+          class="metric-value blue"
+          style="font-size:13px"
+        >
+          CHECKING
+        </div>
+
+      </div>
+
+    </aside>
+
+
+    <!-- =======================
+         CENTER
+    ======================== -->
+
+    <section class="center">
+
+      <div class="center-header">
+
+        <span>
+          SECURITY EVENT STREAM
+        </span>
+
+        <span class="live">
+          ● LIVE
+        </span>
+
+      </div>
+
+
+      <div id="logs">
+
+        <div class="boot">
+          &gt; HELOXAI SOC INITIALIZING...
+        </div>
+
+        <div class="boot">
+          &gt; LOADING SECURITY TELEMETRY...
+        </div>
+
+        <div class="boot">
+          &gt; CONNECTING TO SUPABASE...
+        </div>
+
+      </div>
+
+
+      <footer class="footer">
+        HELOXAI SECURITY OPERATIONS CENTER
+        &nbsp;//&nbsp;
+        REALTIME MONITOR
+      </footer>
+
+    </section>
+
+
+    <!-- =======================
+         RIGHT
+    ======================== -->
+
+    <aside class="right">
+
+
+      <!-- HEALTH -->
+
+      <div class="panel">
+
+        <div class="panel-title">
+          SYSTEM HEALTH
+        </div>
+
+
+        <div class="health-row">
+
+          <span class="health-name">
+            SUPABASE
+          </span>
+
+          <span
+            id="dbHealth"
+            class="health-status"
+          >
+            CHECKING
+          </span>
+
+        </div>
+
+
+        <div class="health-row">
+
+          <span class="health-name">
+            REALTIME
+          </span>
+
+          <span
+            id="realtimeHealth"
+            class="health-status"
+          >
+            CHECKING
+          </span>
+
+        </div>
+
+
+        <div class="health-row">
+
+          <span class="health-name">
+            BACKEND
+          </span>
+
+          <span
+            id="backendHealth"
+            class="health-status"
+          >
+            CHECKING
+          </span>
+
+        </div>
+
+
+        <div class="health-row">
+
+          <span class="health-name">
+            FREE AI
+          </span>
+
+          <span
+            id="freeAIHealth"
+            class="health-status"
+          >
+            CHECKING
+          </span>
+
+        </div>
+
+
+        <div class="health-row">
+
+          <span class="health-name">
+            PREMIUM AI
+          </span>
+
+          <span
+            id="premiumAIHealth"
+            class="health-status"
+          >
+            CHECKING
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <!-- EVENTS CHART -->
+
+      <div class="panel">
+
+        <div class="panel-title">
+          EVENT ACTIVITY
+        </div>
+
+        <div
+          id="eventChart"
+          class="chart"
+        ></div>
+
+      </div>
+
+
+      <!-- ALERT CHART -->
+
+      <div class="panel">
+
+        <div class="panel-title">
+          ALERT ACTIVITY
+        </div>
+
+        <div
+          id="alertChart"
+          class="chart"
+        ></div>
+
+      </div>
+
+
+      <!-- ADMIN -->
+
+      <div class="panel">
+
+        <div class="panel-title">
+          ADMIN CONTROLS
+        </div>
+
+
+        <div
+          id="adminMessage"
+          class="admin-status"
+        >
+          Checking administrator permissions...
+        </div>
+
+
+        <button
+          id="refreshButton"
+          class="admin-button"
+        >
+          REFRESH TELEMETRY
+        </button>
+
+
+        <button
+          id="testAlertButton"
+          class="admin-button"
+          disabled
+        >
+          CREATE TEST ALERT
+        </button>
+
+
+        <button
+          id="clearButton"
+          class="admin-button danger"
+        >
+          CLEAR TERMINAL
+        </button>
+
+      </div>
+
+
+    </aside>
+
+  </main>
+
+</div>
+
+
+<script src="./security.js"></script>
+
+</body>
+
+</html>
