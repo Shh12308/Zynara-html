@@ -1,19 +1,18 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark light">
   <title>HeloxAi Settings</title>
-  
-  <!-- Dependencies -->
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-  
+
   <style>
-    /* --- CSS VARIABLES & THEME --- */
     :root {
-      /* Light Theme */
       --bg-body: #ffffff;
       --bg-sidebar: #f9f9f9;
       --bg-card: #ffffff;
@@ -21,941 +20,1634 @@
       --text-main: #0d0d0d;
       --text-muted: #6e6e80;
       --border: #e5e5e5;
-      --border-hover: #d1d1d1;
+      --border-hover: #c9c9d1;
       --primary: #10a37f;
       --primary-hover: #0d8a6a;
       --danger: #ef4444;
       --danger-bg: #fef2f2;
       --danger-border: #fee2e2;
-      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-      --radius: 8px;
-      --font-family: 'Söhne', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', Roboto, Ubuntu, Cantarell, 'Noto Sans', sans-serif, 'Helvetica Neue', Arial;
+      --shadow: 0 2px 8px rgba(0,0,0,.05);
+      --radius: 12px;
+      --font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
     [data-theme="dark"] {
-      /* Dark Theme */
       --bg-body: #212121;
-      --bg-sidebar: #202123;
-      --bg-card: #2d2d30;
-      --bg-input: #40414f;
-      --text-main: #ececf1;
-      --text-muted: #c5c5d2;
-      --border: #4d4d4f;
-      --border-hover: #565869;
+      --bg-sidebar: #171717;
+      --bg-card: #2a2a2a;
+      --bg-input: #303030;
+      --text-main: #ececec;
+      --text-muted: #a1a1aa;
+      --border: #3f3f3f;
+      --border-hover: #555555;
       --primary: #19c37d;
-      --primary-hover: #1a7f5a;
+      --primary-hover: #16a66a;
       --danger: #ff6b6b;
       --danger-bg: #3a1d1d;
-      --danger-border: #4a2626;
-      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+      --danger-border: #613030;
+      --shadow: 0 2px 8px rgba(0,0,0,.12);
     }
 
-    * { box-sizing: border-box; outline: none; }
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background: var(--bg-body);
+      scroll-behavior: smooth;
+    }
 
     body {
       margin: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
       font-family: var(--font-family);
-      background-color: var(--bg-body);
+      background: var(--bg-body);
       color: var(--text-main);
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-      transition: background-color 0.3s, color 0.3s;
+      transition: background-color .2s, color .2s;
     }
 
-    /* --- LAYOUT --- */
-    .app-container { display: flex; width: 100%; height: 100%; }
-    
+    button, input, select {
+      font: inherit;
+    }
+
+    button, a, input, select {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:focus-visible, a:focus-visible,
+    input:focus-visible, select:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 3px;
+    }
+
+    .app-container {
+      display: flex;
+      min-height: 100vh;
+      min-height: 100dvh;
+      width: 100%;
+    }
+
     .sidebar {
-      width: 260px;
-      background-color: var(--bg-sidebar);
-      border-right: 1px solid var(--border);
+      width: 250px;
+      flex: 0 0 250px;
       display: flex;
       flex-direction: column;
-      padding: 16px;
-      flex-shrink: 0;
-      transition: transform 0.3s ease;
-      z-index: 10;
+      padding: 20px 14px;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
     }
 
     .sidebar-header {
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 0 0 20px 0;
+      padding: 4px 10px 24px;
+      font-size: 1.08rem;
       font-weight: 700;
-      font-size: 1.1rem;
-      color: var(--text-main);
-      white-space: nowrap;
+      letter-spacing: -.3px;
     }
 
-    .nav-list { list-style: none; padding: 0; margin: 0; flex: 1; display: flex; flex-direction: column; }
-    .nav-item { margin-bottom: 4px; }
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .nav-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
 
     .nav-btn {
       width: 100%;
-      text-align: left;
-      padding: 10px 12px;
-      border-radius: var(--radius);
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
-      font-size: 0.95rem;
-      font-weight: 500;
       display: flex;
       align-items: center;
       gap: 12px;
-      transition: all 0.2s;
-      white-space: nowrap;
+      padding: 11px 12px;
+      border: 1px solid transparent;
+      border-radius: 9px;
+      background: transparent;
+      color: var(--text-muted);
+      text-align: left;
+      font-size: .94rem;
+      cursor: pointer;
+      transition: background .15s, color .15s;
     }
 
-    .nav-btn:hover { background-color: rgba(0,0,0,0.05); color: var(--text-main); }
-    .nav-btn.active {
-      background-color: rgba(16, 163, 127, 0.1); 
+    .nav-btn:hover {
+      background: rgba(127,127,127,.10);
       color: var(--text-main);
-      font-weight: 600;
     }
-    [data-theme="dark"] .nav-btn:hover { background-color: rgba(255,255,255,0.05); }
-    .nav-icon { width: 18px; height: 18px; opacity: 0.8; flex-shrink: 0; }
+
+    .nav-btn.active {
+      background: rgba(16,163,127,.13);
+      color: var(--text-main);
+      border-color: rgba(16,163,127,.15);
+    }
+
+    .nav-icon {
+      width: 19px;
+      height: 19px;
+      flex-shrink: 0;
+    }
 
     .logout-wrapper {
-      margin-top: auto; 
-      padding-top: 10px; 
+      margin-top: auto;
+      padding-top: 16px;
       border-top: 1px solid var(--border);
     }
 
     .main-content {
       flex: 1;
-      padding: 40px;
-      overflow-y: auto;
-      max-width: 900px;
+      min-width: 0;
+      width: 100%;
+      max-width: 1100px;
       margin: 0 auto;
-      width: 100%;
+      padding: 30px clamp(18px, 4vw, 56px) 60px;
     }
 
-    .section-header { margin-bottom: 30px; }
-    .section-title { font-size: 1.5rem; font-weight: 600; margin: 0 0 8px 0; }
-    .section-desc { color: var(--text-muted); font-size: 0.95rem; margin: 0; }
-
-    .settings-card {
-      background-color: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
-      margin-bottom: 24px;
-      box-shadow: var(--shadow);
-      transition: box-shadow 0.2s;
-    }
-    .settings-card:hover { box-shadow: 0 6px 10px -1px rgba(0, 0, 0, 0.12); }
-
-    .form-group { margin-bottom: 20px; }
-    .form-group:last-child { margin-bottom: 0; }
-
-    .form-label {
-      display: block;
-      font-size: 0.9rem;
-      font-weight: 500;
-      margin-bottom: 8px;
-      color: var(--text-main);
+    .page-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 36px;
     }
 
-    .form-input {
-      width: 100%;
-      padding: 10px 12px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background-color: var(--bg-input);
-      color: var(--text-main);
-      font-family: inherit;
-      font-size: 0.95rem;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-
-    .form-input:focus {
-      border-color: var(--border-hover);
-      box-shadow: 0 0 0 2px rgba(16, 163, 127, 0.1);
-    }
-
-    /* --- BUTTON SYSTEM --- */
-    .btn-group { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-    .btn-group.right { justify-content: flex-end; margin-top: 10px; }
-    .btn-group.center { justify-content: center; }
-    .btn-group.stretch > .btn { flex: 1; }
-
-    .btn {
+    .back-button {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      padding: 10px 16px;
-      border-radius: var(--radius);
+      min-height: 40px;
+      padding: 9px 14px;
       border: 1px solid var(--border);
-      background: var(--bg-body);
+      border-radius: 9px;
+      background: var(--bg-card);
       color: var(--text-main);
+      font-size: .9rem;
       font-weight: 500;
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      line-height: 1.2;
       text-decoration: none;
+      transition: background .15s, border-color .15s;
+    }
+
+    .back-button:hover {
+      background: var(--bg-sidebar);
+      border-color: var(--border-hover);
+    }
+
+    .page-label {
+      color: var(--text-muted);
+      font-size: .9rem;
+    }
+
+    .section-header {
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      margin: 0 0 8px;
+      font-size: clamp(1.35rem, 3vw, 1.65rem);
+      font-weight: 650;
+      letter-spacing: -.5px;
+    }
+
+    .section-desc {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: .94rem;
+      line-height: 1.6;
+    }
+
+    .settings-card {
+      margin-bottom: 20px;
+      padding: clamp(18px, 3vw, 26px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-card);
+      box-shadow: var(--shadow);
+    }
+
+    .card-title {
+      margin: 0 0 14px;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .card-description {
+      margin: 0 0 16px;
+      color: var(--text-muted);
+      font-size: .9rem;
+      line-height: 1.65;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: .9rem;
+      font-weight: 550;
+    }
+
+    .form-input {
+      width: 100%;
+      min-height: 43px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: var(--bg-input);
+      color: var(--text-main);
+      font-size: .94rem;
+      transition: border-color .15s, box-shadow .15s;
+    }
+
+    .form-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(16,163,127,.12);
+      outline: none;
+    }
+
+    .form-help {
+      margin: 0 0 9px;
+      color: var(--text-muted);
+      font-size: .82rem;
+      line-height: 1.5;
+    }
+
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn-group.right {
+      justify-content: flex-end;
+    }
+
+    .btn-group.stretch > .btn {
+      flex: 1;
+    }
+
+    .btn {
+      min-height: 41px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: 10px 15px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: var(--bg-card);
+      color: var(--text-main);
+      font-size: .9rem;
+      font-weight: 550;
+      line-height: 1.25;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background .15s, border-color .15s, transform .15s;
     }
 
     .btn:hover:not(:disabled) {
-      background-color: var(--bg-sidebar);
+      background: var(--bg-sidebar);
       border-color: var(--border-hover);
-      transform: translateY(-1px);
     }
 
-    .btn:active:not(:disabled) { transform: translateY(0); }
-    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
+    .btn:active:not(:disabled) {
+      transform: scale(.99);
+    }
+
+    .btn:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
 
     .btn-primary {
-      background-color: var(--primary);
-      color: #fff;
       border-color: transparent;
+      background: var(--primary);
+      color: #fff;
     }
 
     .btn-primary:hover:not(:disabled) {
-      background-color: var(--primary-hover);
-      box-shadow: 0 4px 12px rgba(16, 163, 127, 0.25);
+      background: var(--primary-hover);
       border-color: transparent;
     }
 
     .btn-danger {
-      background-color: transparent;
+      background: transparent;
       color: var(--danger);
-      border-color: transparent;
-    }
-
-    .btn-danger:hover:not(:disabled) {
-      background-color: var(--danger-bg);
       border-color: var(--danger-border);
     }
 
-    .btn .spinner {
-      width: 14px; height: 14px;
+    .btn-danger:hover:not(:disabled) {
+      background: var(--danger-bg);
+      border-color: var(--danger);
+    }
+
+    .spinner {
+      width: 14px;
+      height: 14px;
       border: 2px solid currentColor;
       border-right-color: transparent;
       border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+      animation: spin .8s linear infinite;
+      display: none;
+      flex-shrink: 0;
+    }
+
+    .btn.loading .spinner {
+      display: block;
+    }
+
+    .btn.loading .btn-icon,
+    .btn.loading .btn-label {
       display: none;
     }
-    .btn.loading .spinner { display: block; }
-    .btn.loading span { display: none; }
-    .btn.loading svg { display: none; }
 
-    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
 
-    /* AVATAR */
-    .avatar-container { display: flex; align-items: center; gap: 20px; margin-bottom: 24px; }
+    .avatar-container {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+
     .avatar-wrapper {
-      position: relative; width: 80px; height: 80px; cursor: pointer;
-      border-radius: 50%; overflow: hidden; box-shadow: var(--shadow); flex-shrink: 0;
+      position: relative;
+      width: 78px;
+      height: 78px;
+      flex-shrink: 0;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      background: var(--bg-sidebar);
+      cursor: pointer;
     }
-    .avatar-img { width: 100%; height: 100%; object-fit: cover; }
-    .avatar-overlay {
-      position: absolute; inset: 0; background: rgba(0,0,0,0.6);
-      display: flex; align-items: center; justify-content: center;
-      opacity: 0; transition: opacity 0.2s; color: white;
-    }
-    .avatar-wrapper:hover .avatar-overlay { opacity: 1; }
 
-    /* TOGGLE */
-    .toggle-wrapper { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
-    .toggle-wrapper:last-child { border-bottom: none; }
-    .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
-    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .avatar-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .avatar-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,.58);
+      color: #fff;
+      opacity: 0;
+      transition: opacity .15s;
+    }
+
+    .avatar-wrapper:hover .avatar-overlay,
+    .avatar-wrapper:focus-within .avatar-overlay {
+      opacity: 1;
+    }
+
+    .toggle-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 15px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .toggle-wrapper:last-child {
+      border-bottom: none;
+    }
+
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+    }
+
     .slider {
-      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-      background-color: #ccc; transition: .4s; border-radius: 24px;
+      position: absolute;
+      inset: 0;
+      border-radius: 24px;
+      background: #777;
+      cursor: pointer;
+      transition: background .2s;
     }
-    .slider:before {
-      position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
-      background-color: white; transition: .4s; border-radius: 50%;
+
+    .slider::before {
+      position: absolute;
+      content: "";
+      width: 18px;
+      height: 18px;
+      left: 3px;
+      top: 3px;
+      border-radius: 50%;
+      background: #fff;
+      transition: transform .2s;
     }
-    input:checked + .slider { background-color: var(--primary); }
-    input:checked + .slider:before { transform: translateX(20px); }
+
+    .toggle-switch input:checked + .slider {
+      background: var(--primary);
+    }
+
+    .toggle-switch input:checked + .slider::before {
+      transform: translateX(20px);
+    }
+
+    .toggle-switch input:focus-visible + .slider {
+      outline: 2px solid var(--primary);
+      outline-offset: 3px;
+    }
 
     .provider-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 4px 8px; background: rgba(16, 163, 127, 0.1);
-      color: var(--primary); border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-top: 4px; flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: rgba(16,163,127,.12);
+      color: var(--primary);
+      font-size: .76rem;
+      font-weight: 600;
     }
 
-    .tab-content { display: none; animation: fadeIn 0.3s ease; }
-    .tab-content.active { display: block; }
+    .tab-content {
+      display: none;
+      animation: fadeIn .18s ease;
+    }
 
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    .tab-content.active {
+      display: block;
+    }
 
-    /* TOAST */
-    #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(3px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .account-email-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    #user-email {
+      font-weight: 550;
+      font-size: 1rem;
+      overflow-wrap: anywhere;
+    }
+
+    .plan-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .plan-badge {
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: var(--primary);
+      color: #fff;
+      font-size: .8rem;
+      font-weight: 650;
+      letter-spacing: .4px;
+    }
+
+    .muted {
+      color: var(--text-muted);
+    }
+
+    #toast-container {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      pointer-events: none;
+    }
+
     .toast {
-      background: var(--bg-card); color: var(--text-main); padding: 12px 20px;
-      border-radius: var(--radius); box-shadow: var(--shadow); border-left: 4px solid var(--primary);
-      display: flex; align-items: center; gap: 10px; font-size: 0.9rem;
-      animation: slideIn 0.3s ease; max-width: 300px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      max-width: min(360px, calc(100vw - 36px));
+      padding: 13px 16px;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--primary);
+      border-radius: 10px;
+      background: var(--bg-card);
+      color: var(--text-main);
+      box-shadow: var(--shadow);
+      font-size: .9rem;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+      animation: slideIn .2s ease;
+      transition: opacity .2s;
+      pointer-events: auto;
     }
-    .toast.error { border-left-color: var(--danger); }
-    .toast.warning { border-left-color: #f59e0b; }
-    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-    /* MOBILE RESPONSIVENESS FIXES */
-    @media (max-width: 768px) {
-      .app-container { flex-direction: column; }
-      .sidebar { 
-        width: 100%; height: auto; flex-direction: row; overflow-x: auto; padding: 10px; 
-        border-right: none; border-bottom: 1px solid var(--border); 
-        align-items: center;
+    .toast.error {
+      border-left-color: var(--danger);
+    }
+
+    .toast.warning {
+      border-left-color: #f59e0b;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(8px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @media (max-width: 760px) {
+      .app-container {
+        flex-direction: column;
       }
-      .sidebar-header { display: none; }
-      .nav-list { display: flex; flex-direction: row; gap: 10px; width: auto; overflow-x: auto; padding-bottom: 2px; }
-      .nav-item { margin: 0; flex-shrink: 0; }
-      .nav-btn { width: auto; white-space: nowrap; padding: 8px 16px; border: 1px solid var(--border); }
-      .nav-btn.active { border-color: var(--primary); background: var(--primary); color: #fff; }
-      .logout-wrapper { 
-        margin-top: 0; padding-top: 0; border-top: none; 
-        margin-left: 10px; padding-left: 10px; border-left: 1px solid var(--border);
+
+      .sidebar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        width: 100%;
+        flex: 0 0 auto;
+        padding: 9px 10px;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
       }
-      #logout-btn { width: auto; padding: 8px 12px; justify-content: center; border: 1px solid var(--border); color: var(--danger); }
-      .main-content { padding: 20px; max-width: 100%; }
-      .avatar-container { flex-direction: column; text-align: center; gap: 12px; }
-      .avatar-wrapper { margin: 0 auto; }
-      .btn-group { width: 100%; flex-direction: column; }
-      .btn-group.right { justify-content: stretch; align-items: stretch; }
-      .btn { width: 100%; }
+
+      .sidebar-header {
+        display: none;
+      }
+
+      .nav-list {
+        flex-direction: row;
+        gap: 7px;
+        overflow-x: auto;
+        scrollbar-width: thin;
+      }
+
+      .nav-item {
+        flex: 0 0 auto;
+      }
+
+      .nav-btn {
+        width: auto;
+        padding: 9px 12px;
+        white-space: nowrap;
+        border-color: var(--border);
+        font-size: .85rem;
+      }
+
+      .nav-btn.active {
+        background: rgba(16,163,127,.15);
+        color: var(--text-main);
+        border-color: var(--primary);
+      }
+
+      .nav-icon {
+        width: 17px;
+        height: 17px;
+      }
+
+      .logout-wrapper {
+        flex: 0 0 auto;
+        margin: 0 0 0 8px;
+        padding: 0 0 0 8px;
+        border-top: none;
+        border-left: 1px solid var(--border);
+      }
+
+      #logout-btn {
+        width: auto;
+        padding: 9px 10px;
+      }
+
+      #logout-btn .nav-icon {
+        display: none;
+      }
+
+      .main-content {
+        padding: 22px 16px 45px;
+      }
+
+      .page-topbar {
+        margin-bottom: 28px;
+      }
+
+      .avatar-container {
+        align-items: flex-start;
+      }
+
+      .btn-group {
+        width: 100%;
+      }
+
+      .btn-group .btn,
+      .btn-group.stretch > .btn {
+        flex: 1 1 100%;
+        width: 100%;
+      }
+
+      .btn-group.right {
+        justify-content: stretch;
+      }
+    }
+
+    @media (max-width: 390px) {
+      .nav-btn {
+        padding: 8px 10px;
+        gap: 7px;
+      }
+
+      .nav-btn .nav-icon {
+        display: none;
+      }
+
+      .page-label {
+        font-size: .82rem;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+      }
     }
   </style>
 </head>
-<body>
 
+<body>
 <div class="app-container">
-  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-header">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+      <span class="brand-mark" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2 2 7l10 5 10-5-10-5Z"></path>
+          <path d="m2 17 10 5 10-5"></path>
+          <path d="m2 12 10 5 10-5"></path>
+        </svg>
+      </span>
       HeloxAi
     </div>
-    <ul class="nav-list">
-      <li class="nav-item">
-        <button class="nav-btn active" onclick="switchTab('general')">
-          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-          General
-        </button>
-      </li>
-      <li class="nav-item">
-        <button class="nav-btn" onclick="switchTab('account')">
-          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0110 0v4"></path></svg>
-          Account
-        </button>
-      </li>
-      <li class="nav-item">
-        <button class="nav-btn" onclick="switchTab('billing')">
-          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
-          Billing
-        </button>
-      </li>
-      <li class="nav-item">
-        <button class="nav-btn" onclick="switchTab('data')">
-          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          Data
-        </button>
-      </li>
-    </ul>
+
+    <nav aria-label="Settings navigation">
+      <ul class="nav-list">
+        <li class="nav-item">
+          <button type="button" class="nav-btn active" data-tab="general" aria-current="page">
+            <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="8" r="4"></circle>
+              <path d="M5 21v-2a7 7 0 0 1 14 0v2"></path>
+            </svg>
+            General
+          </button>
+        </li>
+        <li class="nav-item">
+          <button type="button" class="nav-btn" data-tab="account">
+            <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            Account
+          </button>
+        </li>
+        <li class="nav-item">
+          <button type="button" class="nav-btn" data-tab="billing">
+            <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+              <path d="M2 10h20"></path>
+            </svg>
+            Billing
+          </button>
+        </li>
+        <li class="nav-item">
+          <button type="button" class="nav-btn" data-tab="data">
+            <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <path d="m7 10 5 5 5-5"></path>
+              <path d="M12 15V3"></path>
+            </svg>
+            Data
+          </button>
+        </li>
+      </ul>
+    </nav>
+
     <div class="logout-wrapper">
-      <button id="logout-btn" class="nav-btn">
-        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+      <button id="logout-btn" type="button" class="nav-btn">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <path d="m16 17 5-5-5-5"></path>
+          <path d="M21 12H9"></path>
+        </svg>
         <span>Log out</span>
       </button>
     </div>
   </aside>
 
-  <!-- MAIN CONTENT -->
   <main class="main-content">
-    <!-- GENERAL TAB -->
-    <div id="tab-general" class="tab-content active">
-      <div class="section-header">
-        <h2 class="section-title">General Settings</h2>
+    <div class="page-topbar">
+      <a href="index.html" class="back-button" aria-label="Go back to HeloxAi home">
+        <svg width="18" height="18" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 12H5"></path>
+          <path d="m12 19-7-7 7-7"></path>
+        </svg>
+        Go Back
+      </a>
+      <span class="page-label">HeloxAi Settings</span>
+    </div>
+
+    <!-- GENERAL -->
+    <section id="tab-general" class="tab-content active">
+      <header class="section-header">
+        <h1 class="section-title">General Settings</h1>
         <p class="section-desc">Manage your profile, personality, and appearance.</p>
-      </div>
+      </header>
 
       <div class="settings-card">
         <div class="avatar-container">
-          <div class="avatar-wrapper" onclick="document.getElementById('avatar-input').click()">
-            <img id="avatar-preview" src="https://picsum.photos/seed/helox/200/200" alt="Profile" class="avatar-img">
-            <div class="avatar-overlay">
-              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+          <div class="avatar-wrapper" role="button" tabindex="0"
+            aria-label="Upload profile picture"
+            onclick="document.getElementById('avatar-input').click()"
+            onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
+            <img id="avatar-preview" src="https://picsum.photos/seed/helox/200/200"
+              alt="Profile picture" class="avatar-img">
+            <div class="avatar-overlay" aria-hidden="true">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+              </svg>
             </div>
-            <input type="file" id="avatar-input" accept="image/*" style="display:none">
           </div>
-          <div style="flex: 1;">
-            <h3 style="margin:0; font-size:1rem;">Profile Picture</h3>
-            <p style="margin:5px 0 0; font-size:0.85rem; color:var(--text-muted);">Click the avatar to upload a new image.</p>
+          <input type="file" id="avatar-input" accept="image/*" hidden>
+          <div>
+            <h2 class="card-title" style="margin-bottom:6px">Profile Picture</h2>
+            <p class="card-description" style="margin:0">Select your avatar to upload a new image. Save your changes to apply it.</p>
           </div>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Nickname</label>
-          <input type="text" id="nickname" class="form-input" placeholder="e.g. Alex">
+          <label class="form-label" for="nickname">Nickname</label>
+          <input type="text" id="nickname" class="form-input" maxlength="80" placeholder="e.g. Alex" autocomplete="nickname">
         </div>
 
         <div class="form-group">
-          <label class="form-label">AI Personality</label>
-          <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">Determines how the AI responds to you.</p>
+          <label class="form-label" for="personality">AI Personality</label>
+          <p class="form-help">Choose how the AI responds to you.</p>
           <select id="personality" class="form-input">
-            <option value="friendly">Friendly & Casual</option>
-            <option value="professional">Professional & Direct</option>
-            <option value="playful">Creative & Playful</option>
+            <option value="friendly">Friendly &amp; Casual</option>
+            <option value="professional">Professional &amp; Direct</option>
+            <option value="playful">Creative &amp; Playful</option>
             <option value="socratic">Socratic (Inquisitive)</option>
           </select>
         </div>
 
-        <div class="btn-group right stretch">
-            <button id="save-profile" class="btn btn-primary">
-                <div class="spinner"></div>
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                <span>Save Changes</span>
-            </button>
+        <div class="btn-group right">
+          <button id="save-profile" type="button" class="btn btn-primary">
+            <span class="spinner"></span>
+            <svg class="btn-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11Z"></path>
+              <path d="M17 21v-8H7v8"></path>
+              <path d="M7 3v5h8"></path>
+            </svg>
+            <span class="btn-label">Save Changes</span>
+          </button>
         </div>
       </div>
 
       <div class="settings-card">
-        <h3 style="margin-top:0; margin-bottom:15px; font-size:1rem;">Appearance</h3>
+        <h2 class="card-title">Appearance</h2>
         <div class="toggle-wrapper">
-          <span>Dark Mode</span>
+          <div>
+            <div style="font-weight:550">Dark Mode</div>
+            <div class="form-help" style="margin:5px 0 0">Use the dark HeloxAi theme.</div>
+          </div>
           <label class="toggle-switch">
-            <input type="checkbox" id="theme-toggle">
+            <input type="checkbox" id="theme-toggle" aria-label="Enable dark mode">
             <span class="slider"></span>
           </label>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- ACCOUNT TAB -->
-    <div id="tab-account" class="tab-content">
-      <div class="section-header">
-        <h2 class="section-title">Account Security</h2>
-        <p class="section-desc">Update your email and password.</p>
-      </div>
+    <!-- ACCOUNT -->
+    <section id="tab-account" class="tab-content">
+      <header class="section-header">
+        <h1 class="section-title">Account Security</h1>
+        <p class="section-desc">Update your email address and password.</p>
+      </header>
 
       <div class="settings-card">
+        <h2 class="card-title">Email Address</h2>
         <div class="form-group">
-          <label class="form-label">Email Address</label>
-          <div style="display:flex; gap:10px; margin-bottom:10px; align-items:center; flex-wrap: wrap;">
-            <span id="user-email" style="font-weight:500; font-size: 1.1rem; word-break: break-all;">Loading...</span>
-            <div id="provider-badge"></div>
+          <div class="account-email-row">
+            <span id="user-email">Loading...</span>
+            <span id="provider-badge"></span>
           </div>
-          <input type="email" id="new-email" class="form-input" placeholder="Enter new email address">
+          <label class="form-label" for="new-email">New Email Address</label>
+          <input type="email" id="new-email" class="form-input" placeholder="Enter new email address" autocomplete="email">
         </div>
         <div class="btn-group stretch">
-            <button id="update-email-btn" class="btn">
-                <div class="spinner"></div>
-                <span>Update Email</span>
-            </button>
+          <button id="update-email-btn" type="button" class="btn">
+            <span class="spinner"></span><span class="btn-label">Update Email</span>
+          </button>
         </div>
       </div>
 
       <div class="settings-card" id="password-card">
-        <h3 style="margin-top:0; margin-bottom:15px; font-size:1rem;">Change Password</h3>
+        <h2 class="card-title">Change Password</h2>
         <div class="form-group">
-          <label class="form-label">New Password</label>
-          <input type="password" id="new-password" class="form-input" placeholder="Min. 6 characters">
+          <label class="form-label" for="new-password">New Password</label>
+          <input type="password" id="new-password" class="form-input" minlength="6" autocomplete="new-password" placeholder="Minimum 6 characters">
         </div>
         <div class="btn-group stretch">
-            <button id="update-password-btn" class="btn">
-                <div class="spinner"></div>
-                <span>Update Password</span>
-            </button>
+          <button id="update-password-btn" type="button" class="btn">
+            <span class="spinner"></span><span class="btn-label">Update Password</span>
+          </button>
         </div>
       </div>
 
-      <div class="settings-card" style="border-color: var(--danger-border);">
-        <h3 style="margin-top:0; color: var(--danger); margin-bottom:10px; font-size:1rem;">Delete Account</h3>
-        <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:15px;">Permanently delete your account and all associated data. This action cannot be undone.</p>
+      <div class="settings-card" style="border-color:var(--danger-border)">
+        <h2 class="card-title" style="color:var(--danger)">Delete Account</h2>
+        <p class="card-description">Permanently delete your account and associated data. This action cannot be undone.</p>
         <div class="btn-group stretch">
-            <button id="delete-account-btn" class="btn btn-danger">
-                <div class="spinner"></div>
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path></svg>
-                <span>Delete Account</span>
-            </button>
+          <button id="delete-account-btn" type="button" class="btn btn-danger">
+            <span class="spinner"></span>
+            <svg class="btn-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 6h18"></path>
+              <path d="M8 6V4h8v2"></path>
+              <path d="m19 6-1 14H6L5 6"></path>
+            </svg>
+            <span class="btn-label">Delete Account</span>
+          </button>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- BILLING TAB -->
-    <div id="tab-billing" class="tab-content">
-      <div class="section-header">
-        <h2 class="section-title">Billing & Plans</h2>
-        <p class="section-desc">Manage your subscription and payment methods.</p>
-      </div>
+    <!-- BILLING -->
+    <section id="tab-billing" class="tab-content">
+      <header class="section-header">
+        <h1 class="section-title">Billing &amp; Plans</h1>
+        <p class="section-desc">Manage your subscription and payment requests.</p>
+      </header>
 
       <div class="settings-card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap: wrap; gap: 10px;">
+        <div class="plan-row">
           <div>
-            <h3 style="margin:0; font-size:1.1rem;">Current Plan</h3>
-            <p id="plan-status" style="margin:5px 0 0; color:var(--text-muted); font-size:0.9rem;">Checking status...</p>
+            <h2 class="card-title" style="margin-bottom:5px">Current Plan</h2>
+            <p id="plan-status" class="card-description" style="margin:0">Checking status...</p>
           </div>
-          <div id="plan-badge" style="background:var(--primary); color:white; padding:6px 16px; border-radius:99px; font-size:0.85rem; font-weight:600; letter-spacing: 0.5px;">
-            FREE
-          </div>
+          <span id="plan-badge" class="plan-badge">FREE</span>
         </div>
-        
         <div class="btn-group stretch">
-            <button id="manage-subscription" class="btn btn-primary">
-                <div class="spinner"></div>
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"></path></svg>
-                <span>Manage Subscription</span>
-            </button>
+          <button id="manage-subscription" type="button" class="btn btn-primary">
+            <span class="spinner"></span>
+            <svg class="btn-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33h-.08a1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-3.9.6"></path>
+            </svg>
+            <span class="btn-label">Manage Subscription</span>
+          </button>
         </div>
       </div>
 
       <div class="settings-card">
-        <h3 style="margin-top:0; margin-bottom:15px; font-size:1rem;">Refunds</h3>
-        <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:15px;">If you are unsatisfied with your purchase, you may request a refund within 7 days of transaction.</p>
+        <h2 class="card-title">Refunds</h2>
+        <p class="card-description">If you are unsatisfied with your purchase, you may request a refund within 7 days of the transaction, subject to your payment provider's policy.</p>
         <div class="btn-group stretch">
-            <button id="request-refund" class="btn btn-danger">
-                <div class="spinner"></div>
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                <span>Request Refund</span>
-            </button>
+          <button id="request-refund" type="button" class="btn btn-danger">
+            <span class="spinner"></span>
+            <svg class="btn-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path>
+            </svg>
+            <span class="btn-label">Request Refund</span>
+          </button>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- DATA CONTROLS TAB -->
-    <div id="tab-data" class="tab-content">
-      <div class="section-header">
-        <h2 class="section-title">Data Controls</h2>
-        <p class="section-desc">Download your data and manage privacy.</p>
+    <!-- DATA -->
+    <section id="tab-data" class="tab-content">
+      <header class="section-header">
+        <h1 class="section-title">Data Controls</h1>
+        <p class="section-desc">Export your conversations and manage privacy preferences.</p>
+      </header>
+
+      <div class="settings-card">
+        <h2 class="card-title">Export Data</h2>
+        <p class="card-description">Download your conversation history as a ZIP file containing JSON conversation files and a manifest.</p>
+        <div class="btn-group stretch">
+          <button id="export-data-btn" type="button" class="btn">
+            <span class="spinner"></span>
+            <svg class="btn-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <path d="m7 10 5 5 5-5"></path>
+              <path d="M12 15V3"></path>
+            </svg>
+            <span class="btn-label">Export Conversations</span>
+          </button>
+        </div>
       </div>
 
       <div class="settings-card">
-        <h3 style="margin-top:0; margin-bottom:15px; font-size:1rem;">Export Data</h3>
-        <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:15px;">Download a copy of your chat history and profile data as a ZIP file, formatted like standard AI exports (ChatGPT/Anthropic style).</p>
-        <div class="btn-group stretch">
-            <button id="export-data-btn" class="btn">
-                <div class="spinner"></div>
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                <span>Export Conversations</span>
-            </button>
-        </div>
-      </div>
-
-      <div class="settings-card">
-        <h3 style="margin-top:0; margin-bottom:15px; font-size:1rem;">Training Data</h3>
+        <h2 class="card-title">Training Data</h2>
         <div class="toggle-wrapper">
           <div>
-            <div style="font-weight:500;">Model Improvement</div>
-            <div style="font-size:0.85rem; color:var(--text-muted);">Allow your chats to be used to improve HeloxAi models.</div>
+            <div style="font-weight:550">Model Improvement</div>
+            <p class="form-help" style="margin:5px 0 0">Allow your chats to be used to improve HeloxAi models.</p>
           </div>
           <label class="toggle-switch">
-            <input type="checkbox" checked>
+            <input type="checkbox" id="training-toggle" checked aria-label="Allow model improvement">
             <span class="slider"></span>
           </label>
         </div>
+        <p class="form-help" id="training-help" style="margin-top:10px">This preference is stored in this browser. Connect it to your backend to sync it across devices.</p>
       </div>
-    </div>
+    </section>
   </main>
 </div>
 
-<!-- TOAST CONTAINER -->
-<div id="toast-container"></div>
+<div id="toast-container" role="status" aria-live="polite"></div>
 
-<script src="env.js" onerror="console.warn('env.js not found, using defaults if set or page will be read-only')"></script>
-
+<script src="env.js"></script>
 <script type="module">
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-  // --- CONFIGURATION ---
   const SUPABASE_URL = window.__ENV__?.SUPABASE_URL;
   const SUPABASE_ANON_KEY = window.__ENV__?.SUPABASE_ANON_KEY;
-  const BACKEND_URL = window.__ENV__?.BACKEND_URL;
+  const BACKEND_URL = window.__ENV__?.BACKEND_URL?.replace(/\/+$/, '');
 
-  let supabase;
-  
-  if (SUPABASE_URL && SUPABASE_ANON_KEY) {
-    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  } else {
-    console.error("Supabase credentials missing.");
+  let supabase = null;
+  let currentUser = null;
+  let currentSession = null;
+  let isProfileInitialized = false;
+
+  const $ = id => document.getElementById(id);
+  const userEmailSpan = $('user-email');
+  const providerBadge = $('provider-badge');
+  const avatarPreview = $('avatar-preview');
+  const nicknameInput = $('nickname');
+  const personalitySelect = $('personality');
+  const themeToggle = $('theme-toggle');
+
+  // Theme
+  function setTheme(theme) {
+    const normalized = theme === 'light' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', normalized);
+    themeToggle.checked = normalized === 'dark';
+
+    try {
+      localStorage.setItem('helox-theme', normalized);
+    } catch (error) {
+      console.warn('Theme preference could not be stored.', error);
+    }
   }
 
-  let currentUser = null;
-  let isProfileInitialized = false; 
+  try {
+    setTheme(localStorage.getItem('helox-theme') || 'dark');
+  } catch {
+    setTheme('dark');
+  }
 
-  // --- DOM ELEMENTS ---
-  const userEmailSpan = document.getElementById("user-email");
-  const providerBadge = document.getElementById("provider-badge");
-  const avatarPreview = document.getElementById("avatar-preview");
-  const nicknameInput = document.getElementById("nickname");
-  const personalitySelect = document.getElementById("personality");
-  const themeToggle = document.getElementById("theme-toggle");
+  themeToggle.addEventListener('change', () => {
+    setTheme(themeToggle.checked ? 'dark' : 'light');
+  });
 
-  // --- INITIALIZATION ---
+  // Toasts
+  function showToast(message, type = 'success') {
+    const container = $('toast-container');
+    const toast = document.createElement('div');
+    toast.className = 'toast' +
+      (type === 'error' ? ' error' : type === 'warning' ? ' warning' : '');
+
+    const icon = document.createElement('span');
+    icon.textContent = type === 'error' ? '✕' : type === 'warning' ? '⚠' : '✓';
+
+    const text = document.createElement('span');
+    text.textContent = String(message);
+
+    toast.append(icon, text);
+    container.appendChild(toast);
+
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 250);
+    }, 3500);
+  }
+
+  window.showToast = showToast;
+
+  function setButtonLoading(btnId, loading) {
+    const button = $(btnId);
+    if (!button) return;
+    button.classList.toggle('loading', loading);
+    button.disabled = loading;
+    button.setAttribute('aria-busy', String(loading));
+  }
+
+  function requireUser() {
+    if (!supabase || !currentUser) {
+      showToast('Please sign in before using this feature.', 'error');
+      return false;
+    }
+    return true;
+  }
+
+  async function getAccessToken() {
+    if (!supabase) throw new Error('Supabase is not configured.');
+
+    const { data, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    if (!data.session?.access_token) {
+      throw new Error('Your session has expired. Please sign in again.');
+    }
+
+    currentSession = data.session;
+    currentUser = data.session.user;
+    return data.session.access_token;
+  }
+
+  async function backendRequest(path, options = {}) {
+    if (!BACKEND_URL) {
+      throw new Error('Backend URL is not configured in env.js.');
+    }
+
+    const token = await getAccessToken();
+    const response = await fetch(`${BACKEND_URL}${path}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        ...(options.headers || {})
+      }
+    });
+
+    let data = {};
+    try {
+      data = await response.json();
+    } catch {
+      // Some backend errors may not return JSON.
+    }
+
+    if (!response.ok) {
+      throw new Error(data.error || data.message || `Request failed (${response.status}).`);
+    }
+
+    return data;
+  }
+
+  // Tabs
+  function switchTab(tabName) {
+    const allowed = ['general', 'account', 'billing', 'data'];
+    if (!allowed.includes(tabName)) return;
+
+    document.querySelectorAll('.nav-btn[data-tab]').forEach(button => {
+      const active = button.dataset.tab === tabName;
+      button.classList.toggle('active', active);
+      if (active) button.setAttribute('aria-current', 'page');
+      else button.removeAttribute('aria-current');
+    });
+
+    document.querySelectorAll('.tab-content').forEach(tab => {
+      tab.classList.toggle('active', tab.id === `tab-${tabName}`);
+    });
+
+    if (window.matchMedia('(max-width: 760px)').matches) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  document.querySelectorAll('.nav-btn[data-tab]').forEach(button => {
+    button.addEventListener('click', () => switchTab(button.dataset.tab));
+  });
+
+  function updatePlanBadge(profile = {}) {
+    const badge = $('plan-badge');
+    const status = $('plan-status');
+    const plan = String(profile.plan || '').toLowerCase();
+    const lifetime = profile.is_lifetime === true || plan === 'lifetime';
+    const premium = profile.is_premium === true ||
+      ['premium', 'ultimate_monthly', 'ultimate_yearly', 'monthly', 'yearly'].includes(plan);
+
+    if (lifetime) {
+      badge.textContent = 'LIFETIME';
+      badge.style.background = '#b7791f';
+      status.textContent = 'Lifetime access active';
+    } else if (premium) {
+      badge.textContent = 'PREMIUM';
+      badge.style.background = 'var(--primary)';
+      status.textContent = 'Premium subscription active';
+    } else {
+      badge.textContent = 'FREE';
+      badge.style.background = '#71717a';
+      status.textContent = 'Free plan';
+    }
+  }
+
   async function init() {
-    const savedTheme = localStorage.getItem('helox-theme') || 'dark';
-    setTheme(savedTheme);
-    themeToggle.checked = savedTheme === 'dark';
-
-    if (!supabase) {
-      showToast("Configuration Error: Missing API Keys", "error");
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      showToast('Supabase configuration is missing. Check env.js.', 'error');
+      userEmailSpan.textContent = 'Not connected';
+      updatePlanBadge({ plan: 'free' });
       return;
     }
 
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error || !user) { 
-      if(window.location.protocol !== 'file:') {
-         window.location.href = "auth.html"; 
-      } else {
-         showToast("Not Authenticated (Demo Mode)", "error");
-      }
-      return; 
-    }
-    
-    currentUser = user;
+    try {
+      supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // 1. Set Account Info
-    userEmailSpan.textContent = user.email;
-    const provider = user.app_metadata?.provider || "email";
-    const icons = { google: "G", github: "GH", email: "E" };
-    providerBadge.innerHTML = `<span class="provider-badge">${icons[provider] || 'E'} ${provider}</span>`;
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
 
-    if (provider !== "email") document.getElementById("password-card").style.display = "none";
+      currentSession = sessionData.session;
+      currentUser = currentSession?.user || null;
 
-    // 2. Fetch Data from SEPARATE tables
-    
-    // A. Fetch Plan/Profile data from 'users' table
-    let { data: dbUser, error: userError } = await supabase
-      .from('users')
-      .select('id, nickname, personality, plan, is_premium, is_lifetime')
-      .eq('id', user.id)
-      .maybeSingle(); 
+      if (!currentUser) {
+        userEmailSpan.textContent = 'Not signed in';
+        updatePlanBadge({ plan: 'free' });
 
-    console.log("User Data Fetch:", dbUser, userError);
-
-    // B. Fetch Avatar data from 'profiles' table
-    let { data: dbProfile, error: profileError } = await supabase
-      .from('profiles')
-      .select('avatar_url')
-      .eq('id', user.id)
-      .maybeSingle();
-
-    console.log("Profile Data Fetch:", dbProfile, profileError);
-
-    // 3. Handle Missing Data (Recursion/RLS Fallback)
-    if (!dbUser) {
-        console.warn("User row missing in 'users' table. Trying Backend Fallback for Plan...");
-        
-        // Try to fetch plan from Backend (Bypasses RLS)
-        let planStatus = 'free';
-        if (BACKEND_URL) {
-            try {
-                const { data: { session } } = await supabase.auth.getSession();
-                if (session) {
-                    const res = await fetch(`${BACKEND_URL}/user/plan`, {
-                        method: "GET",
-                        headers: { "Authorization": `Bearer ${session.access_token}` }
-                    });
-                    if (res.ok) {
-                        const data = await res.json();
-                        const p = (data.plan || '').toLowerCase();
-                        // Map backend 'monthly'/'yearly' to DB strings
-                        if (p === 'monthly') planStatus = 'ultimate_monthly';
-                        else if (p === 'yearly') planStatus = 'ultimate_yearly';
-                        else if (p === 'lifetime') planStatus = 'lifetime';
-                    }
-                }
-            } catch (e) {
-                console.warn("Backend fallback failed, defaulting to free");
-            }
+        if (location.protocol !== 'file:') {
+          location.href = 'auth.html';
+        } else {
+          showToast('Demo mode: sign in to use account features.', 'warning');
         }
+        return;
+      }
 
-        updatePlanBadge({
-            plan: planStatus,
-            is_premium: planStatus !== 'free',
-            is_lifetime: planStatus === 'lifetime'
-        });
+      userEmailSpan.textContent = currentUser.email || 'Email unavailable';
 
-        nicknameInput.value = user.email?.split('@')[0] || ''; 
-        personalitySelect.value = 'friendly';
-        isProfileInitialized = false; 
-    } else {
+      const provider = currentUser.app_metadata?.provider || 'email';
+      const providerLabel = document.createElement('span');
+      providerLabel.className = 'provider-badge';
+      providerLabel.textContent = provider;
+      providerBadge.replaceChildren(providerLabel);
+
+      if (provider !== 'email') {
+        $('password-card').style.display = 'none';
+      }
+
+      const [userResult, profileResult] = await Promise.all([
+        supabase.from('users')
+          .select('id, nickname, personality, plan, is_premium, is_lifetime')
+          .eq('id', currentUser.id)
+          .maybeSingle(),
+        supabase.from('profiles')
+          .select('avatar_url')
+          .eq('id', currentUser.id)
+          .maybeSingle()
+      ]);
+
+      if (userResult.error) console.warn('Could not load user settings:', userResult.error);
+      if (profileResult.error) console.warn('Could not load profile:', profileResult.error);
+
+      const dbUser = userResult.data;
+      const dbProfile = profileResult.data;
+
+      if (dbUser) {
         nicknameInput.value = dbUser.nickname || '';
         personalitySelect.value = dbUser.personality || 'friendly';
         updatePlanBadge(dbUser);
         isProfileInitialized = true;
-    }
+      } else {
+        nicknameInput.value = currentUser.email?.split('@')[0] || '';
+        personalitySelect.value = 'friendly';
+        isProfileInitialized = false;
 
-    // 4. Handle Avatar
-    if (dbProfile?.avatar_url) {
+        let fallbackPlan = { plan: 'free', is_premium: false, is_lifetime: false };
+
+        if (BACKEND_URL) {
+          try {
+            const data = await backendRequest('/user/plan', { method: 'GET' });
+            const plan = String(data.plan || 'free').toLowerCase();
+            fallbackPlan = {
+              plan: plan === 'monthly' ? 'ultimate_monthly' :
+                    plan === 'yearly' ? 'ultimate_yearly' : plan,
+              is_premium: !['free', ''].includes(plan),
+              is_lifetime: plan === 'lifetime'
+            };
+          } catch (error) {
+            console.warn('Could not load plan from backend:', error);
+          }
+        }
+
+        updatePlanBadge(fallbackPlan);
+      }
+
+      if (dbProfile?.avatar_url) {
         avatarPreview.src = dbProfile.avatar_url;
-    } else {
-        avatarPreview.src = `https://picsum.photos/seed/${user.id}/200/200`;
+      } else {
+        avatarPreview.src = `https://picsum.photos/seed/${encodeURIComponent(currentUser.id)}/200/200`;
+      }
+
+    } catch (error) {
+      console.error('Settings initialization failed:', error);
+      showToast(`Could not load settings: ${error.message}`, 'error');
     }
   }
 
-  function setTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('helox-theme', theme);
-  }
+  // Upload avatar preview
+  $('avatar-input').addEventListener('change', event => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-  themeToggle.addEventListener('change', (e) => setTheme(e.target.checked ? 'dark' : 'light'));
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select an image file.', 'error');
+      event.target.value = '';
+      return;
+    }
 
-  window.switchTab = function(tabName) {
-    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-    const activeBtn = document.querySelector(`.nav-btn[onclick="switchTab('${tabName}')"]`);
-    if (activeBtn) activeBtn.classList.add('active');
-    const activeTab = document.getElementById(`tab-${tabName}`);
-    if (activeTab) activeTab.classList.add('active');
-  };
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('Please choose an image smaller than 5 MB.', 'error');
+      event.target.value = '';
+      return;
+    }
 
-  window.showToast = function(message, type = 'success') {
-    const container = document.getElementById('toast-container');
-    const toast = document.createElement('div');
-    toast.className = `toast ${type === 'error' ? 'error' : type === 'warning' ? 'warning' : ''}`;
-    let icon = type === 'error' ? '❌' : type === 'warning' ? '⚠️' : '✅';
-    toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
-    container.appendChild(toast);
-    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
-  };
+    const previewUrl = URL.createObjectURL(file);
+    avatarPreview.src = previewUrl;
+    avatarPreview.onload = () => URL.revokeObjectURL(previewUrl);
+  });
 
-  function setButtonLoading(btnId, isLoading) {
-      const btn = document.getElementById(btnId);
-      if (!btn) return;
-      if (isLoading) { btn.classList.add('loading'); btn.disabled = true; } 
-      else { btn.classList.remove('loading'); btn.disabled = false; }
-  }
+  // Save profile and avatar
+  $('save-profile').addEventListener('click', async () => {
+    if (!requireUser()) return;
 
-  // --- EXPORT DATA ---
-  document.getElementById("export-data-btn").addEventListener("click", async () => {
-      const btnId = "export-data-btn";
-      setButtonLoading(btnId, true);
+    const btnId = 'save-profile';
+    setButtonLoading(btnId, true);
 
-      try {
-          const zip = new JSZip();
-          const dateStr = new Date().toISOString().slice(0, 10);
-          const folderName = `HeloxAi_Export_${dateStr}`;
-          const conversationsFolder = zip.folder(`${folderName}/conversations`);
+    try {
+      const nickname = nicknameInput.value.trim();
+      const personality = personalitySelect.value;
+      const avatarFile = $('avatar-input').files?.[0];
 
-          const { data: conversations, error: convError } = await supabase
-            .from('conversations')
-            .select('id, title, created_at, updated_at')
-            .eq('user_id', currentUser.id)
-            .order('created_at', { ascending: true });
+      let avatarUrl = avatarPreview.src;
 
-          if (convError) throw convError;
-          if (!conversations || conversations.length === 0) {
-              showToast("No conversations found to export.", "error");
-              setButtonLoading(btnId, false);
-              return;
-          }
+      if (avatarFile) {
+        const extension = (avatarFile.name.split('.').pop() || 'png')
+          .toLowerCase().replace(/[^a-z0-9]/g, '') || 'png';
+        const fileName = `${currentUser.id}/${crypto.randomUUID()}.${extension}`;
 
-          const convoIds = conversations.map(c => c.id);
-          let messages = [];
-          if (convoIds.length > 0) {
-              const { data: msgsData, error: msgError } = await supabase
-                .from('messages')
-                .select('*')
-                .in('conversation_id', convoIds)
-                .order('created_at', { ascending: true });
-              if (msgError) throw msgError;
-              messages = msgsData || [];
-          }
-
-          const manifest = {
-              version: "1.0",
-              exported_at: new Date().toISOString(),
-              user_id: currentUser.id,
-              total_conversations: conversations.length,
-              total_messages: messages.length
-          };
-
-          conversations.forEach(conv => {
-              const convMessages = messages.filter(m => m.conversation_id === conv.id);
-              const chatData = {
-                  id: conv.id,
-                  title: conv.title,
-                  created_at: conv.created_at,
-                  updated_at: conv.updated_at,
-                  messages: convMessages.map(m => ({ role: m.role, content: m.content, created_at: m.created_at }))
-              };
-              const safeTitle = (conv.title || "Untitled").replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_').toLowerCase();
-              const fileName = `${safeTitle}.json`;
-              conversationsFolder.file(fileName, JSON.stringify(chatData, null, 2));
+        const { data: uploadData, error: uploadError } = await supabase
+          .storage.from('avatars')
+          .upload(fileName, avatarFile, {
+            upsert: true,
+            contentType: avatarFile.type
           });
 
-          zip.file(`${folderName}/manifest.json`, JSON.stringify(manifest, null, 2));
-          zip.file(`${folderName}/README.txt`, `HeloxAi Data Export\n--------------------\nExport Date: ${manifest.exported_at}\nTotal Conversations: ${manifest.total_conversations}`);
-          const content = await zip.generateAsync({ type: "blob" });
-          saveAs(content, `${folderName}.zip`);
-          showToast(`Exported ${conversations.length} conversations successfully!`);
-
-      } catch (err) {
-          console.error(err);
-          showToast("Export failed: " + err.message, "error");
-      } finally {
-          setButtonLoading(btnId, false);
-      }
-  });
-
-  // --- PROFILE UPDATE ---
-  document.getElementById("save-profile").addEventListener("click", async () => {
-    const btnId = "save-profile";
-    setButtonLoading(btnId, true);
-
-    const nickname = nicknameInput.value;
-    const personality = personalitySelect.value;
-    const avatarFile = document.getElementById('avatar-input').files[0];
-    let avatarUrl = null;
-
-    try {
-      // 1. Handle Avatar Upload
-      if (avatarFile) {
-        const fileExt = avatarFile.name.split('.').pop();
-        const fileName = `${currentUser.id}/${Math.random().toString(36).substring(7)}.${fileExt}`;
-        const { data: uploadData, error: uploadError } = await supabase.storage.from('avatars').upload(fileName, avatarFile, { upsert: true });
         if (uploadError) throw uploadError;
-        const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
-        avatarUrl = publicUrlData.publicUrl;
-        avatarPreview.src = avatarUrl;
-        await supabase.from('profiles').upsert({ id: currentUser.id, avatar_url: avatarUrl });
+
+        const { data: publicData } = supabase.storage
+          .from('avatars').getPublicUrl(uploadData.path || fileName);
+
+        avatarUrl = publicData.publicUrl;
+
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({ id: currentUser.id, avatar_url: avatarUrl });
+
+        if (profileError) throw profileError;
       }
 
-      // 2. Handle User Data (Nickname, Personality)
-      const updates = { id: currentUser.id, nickname, personality, updated_at: new Date() };
-      
-      const { error } = await supabase.from('users').upsert(updates);
-      
-      if (error) {
-        if (error.code === '42P17') {
-            throw new Error("Database Policy Error: Check RLS policies.");
-        }
-        throw error;
-      }
+      const { error: userError } = await supabase.from('users').upsert({
+        id: currentUser.id,
+        nickname,
+        personality,
+        updated_at: new Date().toISOString()
+      });
 
-      showToast("Profile & Personality saved successfully");
+      if (userError) throw userError;
+
       isProfileInitialized = true;
-
-    } catch (err) {
-      console.error(err);
-      showToast("Error: " + err.message, "error");
-    } finally { setButtonLoading(btnId, false); }
-  });
-
-  // --- EMAIL UPDATE ---
-  document.getElementById("update-email-btn").addEventListener("click", async () => {
-    const btnId = "update-email-btn";
-    const newEmail = document.getElementById("new-email").value;
-    if (!newEmail) return showToast("Please enter an email", "error");
-    setButtonLoading(btnId, true);
-    const { error } = await supabase.auth.updateUser({ email: newEmail });
-    if (error) { showToast(error.message, "error"); } else { 
-        showToast("Confirmation email sent to " + newEmail); 
-        document.getElementById("new-email").value = "";
-    }
-    setButtonLoading(btnId, false);
-  });
-
-  // --- PASSWORD UPDATE ---
-  document.getElementById("update-password-btn").addEventListener("click", async () => {
-    const btnId = "update-password-btn";
-    const newPass = document.getElementById("new-password").value;
-    if (!newPass || newPass.length < 6) return showToast("Password must be 6+ chars", "error");
-    setButtonLoading(btnId, true);
-    const { error } = await supabase.auth.updateUser({ password: newPass });
-    if (error) { showToast(error.message, "error"); } else { 
-        showToast("Password updated"); 
-        document.getElementById("new-password").value = ""; 
-    }
-    setButtonLoading(btnId, false);
-  });
-
-  // --- BILLING UI UPDATES ---
-  function updatePlanBadge(profile) {
-    const badge = document.getElementById('plan-badge');
-    const status = document.getElementById('plan-status');
-    const planStr = (profile.plan || '').toLowerCase();
-    const isLifetime = profile.is_lifetime || planStr === 'lifetime';
-    const isPremium = profile.is_premium || 
-                      planStr === 'premium' || 
-                      planStr === 'ultimate_monthly' || 
-                      planStr === 'ultimate_yearly';
-
-    if (isLifetime) {
-      badge.textContent = 'LIFETIME'; badge.style.background = '#f59e0b'; status.textContent = "Lifetime Access Active";
-    } else if (isPremium) {
-      badge.textContent = 'PREMIUM'; badge.style.background = '#10a37f'; status.textContent = "Premium Active";
-    } else {
-      badge.textContent = 'FREE'; badge.style.background = '#6e6e80'; status.textContent = "Free Plan";
-    }
-  }
-
-  // --- MANAGE SUBSCRIPTION ---
-  document.getElementById("manage-subscription").addEventListener("click", async () => {
-    const btnId = "manage-subscription"; 
-    setButtonLoading(btnId, true);
-    if (!BACKEND_URL) { showToast("Backend URL not configured", "error"); setButtonLoading(btnId, false); return; }
-    try {
-      const res = await fetch(`${BACKEND_URL}/create-portal-session`, { 
-          method: "POST", 
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${currentUser.access_token}` },
-          body: JSON.stringify({ user_id: currentUser.id }) 
-      });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url; else throw new Error(data.error || "No URL returned");
-    } catch (err) { showToast("Error: " + err.message, "error"); } finally { setButtonLoading(btnId, false); }
-  });
-
-  // --- REQUEST REFUND ---
-  document.getElementById("request-refund").addEventListener("click", async () => {
-    const btnId = "request-refund";
-    if (!confirm("Are you sure you want to request a refund?")) return;
-    setButtonLoading(btnId, true);
-    if (!BACKEND_URL) { showToast("Backend URL not configured", "error"); setButtonLoading(btnId, false); return; }
-    try {
-      const res = await fetch(`${BACKEND_URL}/refund`, { 
-          method: "POST", 
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${currentUser.access_token}` },
-          body: JSON.stringify({ user_id: currentUser.id, reason: "requested_by_customer" }) 
-      });
-      const data = await res.json();
-      if (data.success) showToast("Refund request submitted"); else throw new Error(data.error);
-    } catch (err) { showToast("Refund failed: " + err.message, "error"); } finally { setButtonLoading(btnId, false); }
-  });
-
-  // --- DELETE ACCOUNT ---
-  document.getElementById("delete-account-btn").addEventListener("click", async () => {
-    const btnId = "delete-account-btn";
-    if (!confirm("Are you sure? This cannot be undone.")) return;
-    if (!confirm("This will delete all your chats, media, and profile data. Continue?")) return;
-    setButtonLoading(btnId, true);
-    try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !session) throw new Error("User not authenticated");
-      const res = await fetch(`${BACKEND_URL}/delete-account`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}` }
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to delete account");
-      showToast("Account deleted successfully", "success");
-      await supabase.auth.signOut();
-      window.location.href = "auth.html";
-    } catch (err) {
-      console.error(err);
-      showToast("Error: " + err.message, "error");
+      $('avatar-input').value = '';
+      showToast('Profile and personality saved successfully.');
+    } catch (error) {
+      console.error('Profile save failed:', error);
+      showToast(`Could not save profile: ${error.message}`, 'error');
+    } finally {
       setButtonLoading(btnId, false);
     }
   });
 
-  // --- LOGOUT ---
-  document.getElementById("logout-btn").addEventListener("click", async () => {
-    await supabase.auth.signOut();
-    window.location.href = "auth.html";
+  // Update email
+  $('update-email-btn').addEventListener('click', async () => {
+    if (!requireUser()) return;
+
+    const input = $('new-email');
+    const email = input.value.trim();
+
+    if (!email || !input.checkValidity()) {
+      showToast('Please enter a valid email address.', 'error');
+      input.focus();
+      return;
+    }
+
+    const btnId = 'update-email-btn';
+    setButtonLoading(btnId, true);
+
+    try {
+      const { error } = await supabase.auth.updateUser({ email });
+      if (error) throw error;
+
+      showToast('Check your email for the confirmation link.');
+      input.value = '';
+    } catch (error) {
+      showToast(`Could not update email: ${error.message}`, 'error');
+    } finally {
+      setButtonLoading(btnId, false);
+    }
   });
 
-  // Run Init
-  document.addEventListener('DOMContentLoaded', init);
+  // Update password
+  $('update-password-btn').addEventListener('click', async () => {
+    if (!requireUser()) return;
+
+    const input = $('new-password');
+    const password = input.value;
+
+    if (password.length < 6) {
+      showToast('Password must be at least 6 characters.', 'error');
+      input.focus();
+      return;
+    }
+
+    const btnId = 'update-password-btn';
+    setButtonLoading(btnId, true);
+
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) throw error;
+
+      showToast('Password updated successfully.');
+      input.value = '';
+    } catch (error) {
+      showToast(`Could not update password: ${error.message}`, 'error');
+    } finally {
+      setButtonLoading(btnId, false);
+    }
+  });
+
+  // Export conversations
+  $('export-data-btn').addEventListener('click', async () => {
+    if (!requireUser()) return;
+
+    const btnId = 'export-data-btn';
+    setButtonLoading(btnId, true);
+
+    try {
+      if (typeof JSZip === 'undefined' || typeof saveAs !== 'function') {
+        throw new Error('The ZIP export libraries did not load. Refresh the page and try again.');
+      }
+
+      const { data: conversations, error: convError } = await supabase
+        .from('conversations')
+        .select('id, title, created_at, updated_at')
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: true });
+
+      if (convError) throw convError;
+
+      if (!conversations?.length) {
+        showToast('No conversations found to export.', 'warning');
+        return;
+      }
+
+      const ids = conversations.map(conversation => conversation.id);
+      const { data: messageData, error: messageError } = await supabase
+        .from('messages')
+        .select('*')
+        .in('conversation_id', ids)
+        .order('created_at', { ascending: true });
+
+      if (messageError) throw messageError;
+
+      const messages = messageData || [];
+      const exportDate = new Date().toISOString();
+      const datePart = exportDate.slice(0, 10);
+      const folder = `HeloxAi_Export_${datePart}`;
+      const zip = new JSZip();
+      const conversationFolder = zip.folder(`${folder}/conversations`);
+
+      conversations.forEach(conversation => {
+        const conversationMessages = messages
+          .filter(message => message.conversation_id === conversation.id)
+          .map(message => ({
+            role: message.role,
+            content: message.content,
+            created_at: message.created_at
+          }));
+
+        const safeTitle = (conversation.title || 'Untitled')
+          .replace(/[^a-z0-9_-]/gi, '_')
+          .replace(/_+/g, '_')
+          .slice(0, 100) || 'untitled';
+
+        conversationFolder.file(`${safeTitle}_${String(conversation.id).slice(0, 8)}.json`,
+          JSON.stringify({
+            id: conversation.id,
+            title: conversation.title,
+            created_at: conversation.created_at,
+            updated_at: conversation.updated_at,
+            messages: conversationMessages
+          }, null, 2));
+      });
+
+      zip.file(`${folder}/manifest.json`, JSON.stringify({
+        version: '1.0',
+        exported_at: exportDate,
+        user_id: currentUser.id,
+        total_conversations: conversations.length,
+        total_messages: messages.length
+      }, null, 2));
+
+      zip.file(`${folder}/README.txt`,
+        `HeloxAi Data Export\n-------------------\nExported: ${exportDate}\nConversations: ${conversations.length}\nMessages: ${messages.length}\n`);
+
+      const blob = await zip.generateAsync({ type: 'blob' });
+      saveAs(blob, `${folder}.zip`);
+      showToast(`Exported ${conversations.length} conversations successfully.`);
+    } catch (error) {
+      console.error('Export failed:', error);
+      showToast(`Export failed: ${error.message}`, 'error');
+    } finally {
+      setButtonLoading('export-data-btn', false);
+    }
+  });
+
+  // Manage subscription
+  $('manage-subscription').addEventListener('click', async () => {
+    if (!requireUser()) return;
+
+    const btnId = 'manage-subscription';
+    setButtonLoading(btnId, true);
+
+    try {
+      const data = await backendRequest('/create-portal-session', {
+        method: 'POST',
+        body: JSON.stringify({ user_id: currentUser.id })
+      });
+
+      if (!data.url) throw new Error(data.error || 'No subscription portal URL was returned.');
+
+      const url = new URL(data.url);
+      if (!['https:', 'http:'].includes(url.protocol)) {
+        throw new Error('The subscription portal returned an invalid URL.');
+      }
+
+      location.href = url.href;
+    } catch (error) {
+      showToast(`Could not open subscription portal: ${error.message}`, 'error');
+      setButtonLoading(btnId, false);
+    }
+  });
+
+  // Refund request
+  $('request-refund').addEventListener('click', async () => {
+    if (!requireUser()) return;
+    if (!confirm('Are you sure you want to request a refund?')) return;
+
+    const btnId = 'request-refund';
+    setButtonLoading(btnId, true);
+
+    try {
+      const data = await backendRequest('/refund', {
+        method: 'POST',
+        body: JSON.stringify({
+          user_id: currentUser.id,
+          reason: 'requested_by_customer'
+        })
+      });
+
+      if (data.success) showToast('Refund request submitted.');
+      else throw new Error(data.error || 'The refund request was not accepted.');
+    } catch (error) {
+      showToast(`Refund request failed: ${error.message}`, 'error');
+    } finally {
+      setButtonLoading(btnId, false);
+    }
+  });
+
+  // Delete account
+  $('delete-account-btn').addEventListener('click', async () => {
+    if (!requireUser()) return;
+    if (!confirm('Are you sure you want to delete your account? This cannot be undone.')) return;
+    if (!confirm('This may permanently remove your chats, profile, and related data. Continue?')) return;
+
+    const btnId = 'delete-account-btn';
+    setButtonLoading(btnId, true);
+
+    try {
+      await backendRequest('/delete-account', {
+        method: 'POST',
+        body: JSON.stringify({ user_id: currentUser.id })
+      });
+
+      showToast('Account deleted successfully.');
+
+      const { error: signOutError } = await supabase.auth.signOut();
+      if (signOutError) console.warn('Sign out after deletion failed:', signOutError);
+
+      location.href = 'auth.html';
+    } catch (error) {
+      console.error('Account deletion failed:', error);
+      showToast(`Could not delete account: ${error.message}`, 'error');
+      setButtonLoading(btnId, false);
+    }
+  });
+
+  // Log out
+  $('logout-btn').addEventListener('click', async () => {
+    if (!supabase) {
+      location.href = 'auth.html';
+      return;
+    }
+
+    $('logout-btn').disabled = true;
+
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      location.href = 'auth.html';
+    } catch (error) {
+      showToast(`Could not log out: ${error.message}`, 'error');
+      $('logout-btn').disabled = false;
+    }
+  });
+
+  // Keep local training preference separate from backend claims.
+  const trainingToggle = $('training-toggle');
+  try {
+    const storedTraining = localStorage.getItem('helox-training-enabled');
+    if (storedTraining !== null) trainingToggle.checked = storedTraining === 'true';
+  } catch {}
+
+  trainingToggle.addEventListener('change', () => {
+    try {
+      localStorage.setItem('helox-training-enabled', String(trainingToggle.checked));
+      showToast('Training preference saved in this browser.');
+    } catch {
+      showToast('Could not save the preference in this browser.', 'error');
+    }
+  });
+
+  // Track auth changes
+  async function start() {
+    await init();
+
+    if (supabase) {
+      supabase.auth.onAuthStateChange((_event, session) => {
+        currentSession = session;
+        currentUser = session?.user || null;
+
+        if (!currentUser && location.protocol !== 'file:') {
+          location.href = 'auth.html';
+        }
+      });
+    }
+  }
+
+  start();
 </script>
 </body>
 </html>
