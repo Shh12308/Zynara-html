@@ -2519,13 +2519,14 @@ function renderCodeBlock(rawText, infoString, escaped) {
     if (m) filename = m[1] || m[2] || m[3];
   }
 
+  // Normalize common language aliases BEFORE highlighting. Previously `py`/`js`
+  // changed `lang` but left `validLang` unchanged, causing highlight.js to reject
+  // the alias and fall back to plain text.
+  var aliases = { py:'python', js:'javascript', ts:'typescript', sh:'bash', shell:'bash', yml:'yaml', cs:'csharp', 'c++':'cpp', htm:'xml' };
+  lang = aliases[lang] || lang;
   var validLang = lang;
   if (typeof hljs !== 'undefined' && hljs.getLanguage) {
-    if (!lang || !hljs.getLanguage(lang)) {
-      var aliases = { py:'python', js:'javascript', ts:'typescript', sh:'bash', yml:'yaml', cs:'csharp', 'c++':'cpp' };
-      if (aliases[lang]) lang = aliases[lang];
-      if (!hljs.getLanguage(lang)) validLang = '';
-    }
+    if (!lang || !hljs.getLanguage(lang)) validLang = '';
   }
 
   var highlighted = '';
@@ -3376,23 +3377,26 @@ function streamRes(res, onChunk, onDone, onMedia, onStatus, onImageEvent) {
     function pump() {
         return reader.read().then(function (result) {
             if (result.done) {
+                // Flush any bytes still held by TextDecoder and normalize SSE line endings.
+                buffer += decoder.decode();
+                buffer = buffer.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
                 if (buffer.trim() && !finished) { processChunk(buffer); }
                 if (!finished) onDone();
                 return;
             }
             buffer += decoder.decode(result.value, { stream: true });
+            // FastAPI emits SSE events separated by a blank line. Normalize CRLF as
+            // some browsers/proxies can expose Windows-style line endings.
+            buffer = buffer.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
             var parts = buffer.split('\n\n');
             buffer = parts.pop();
             parts.forEach(processChunk);
             return pump();
         }).catch(function (err) {
-            // If the user stopped the generation, let the AbortError pass to sendToAI's catch block
-            if (err && err.name === 'AbortError') {
-                throw err;
-            }
-            // Otherwise, log the network/parse error and finish gracefully
+            // Do not silently turn a broken network stream into a successful response.
+            // The caller's catch handler can now show the error and preserve diagnostics.
             console.error('Stream read error:', err);
-            if (!finished) onDone();
+            throw err;
         });
     }
     return pump();
