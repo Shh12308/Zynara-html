@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>HeloXAi - Advanced AI Companion</title>
-<meta name="description" content="Stop switching between ChatGPT, Google, and Midjourney. Use one AI instead.">
+<title>HeloxAI — Your AI workspace</title>
+<meta name="description" content="HeloxAI is your AI workspace for writing, coding, research and creative work.">
 
   <link rel="manifest" href="/manifest.json">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%2310b981'/%3E%3Cstop offset='100%25' style='stop-color:%23059669'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23g)'/%3E%3Ctext x='50' y='68' font-family='Arial, sans-serif' font-size='60' font-weight='bold' fill='white' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E" />
@@ -1790,6 +1790,91 @@ pre:hover .code-copy-btn { opacity: 1; }
   .sidebar{width:100%;--sidebar-w:100%}.w-grid{grid-template-columns:1fr}.as-grid{grid-template-columns:1fr}.msgs-inner{padding:16px 16px 8px}.msg-acts{opacity:1}.gal-grid{grid-template-columns:repeat(2,1fr);gap:10px}.msg.ai-msg{padding-right:20px}.msg.user-msg{padding-left:20px}.msg.user-msg .msg-inner{max-width:94%}.model-sel{display:none}.cb-foot{display:none}.w-logo{font-size:40px}.w-sub{font-size:15px;margin-bottom:40px}.sidebar{border-right:none}.msg-img-item.single{max-width:220px}.msg-img-item.single img{max-width:220px;max-height:280px}.msg-img-item.multi{width:110px;height:110px}.msg-img-item.multi img{width:110px;height:110px}.em-modal{width:100%}.chat-hdr{padding:8px 12px}.cb-container{padding-left:12px;padding-right:12px}.toast-ct{right:12px;left:12px;top:12px}.toast{max-width:none;width:100%}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+
+/* ============================================================
+   HELOXAI 2.0 — ChatGPT-inspired workspace refresh
+   Keeps existing IDs, event handlers, model routing and API logic.
+   ============================================================ */
+:root{--sidebar-w:276px;--msg-max:790px;--radius-xl:22px}
+[data-theme="dark"]{--bg-primary:#212121;--bg-secondary:#171717;--bg-tertiary:#2b2b2b;--bg-quaternary:#343434;--bg-sidebar:#171717;--bg-input:#303030;--bg-hover:#292929;--text-primary:#ececec;--text-secondary:#b4b4b4;--text-muted:#858585;--accent:#19c37d;--accent-hover:#12a66a;--border:rgba(255,255,255,.09);--border-active:rgba(25,195,125,.45);--bg-user-bubble:#303030;--bg-user-bubble-border:transparent;--glow:none}
+html,body{background:var(--bg-primary)}
+body::before{display:none}
+.sidebar{background:var(--bg-sidebar);border-right:1px solid var(--border);padding:10px 9px max(10px,env(safe-area-inset-bottom))}
+.sb-head{border:0;padding:10px 10px 18px}
+.sb-logo{font-size:20px;letter-spacing:-.8px;background:none;-webkit-text-fill-color:initial;color:var(--text-primary)}
+.sb-logo span,.w-logo span{color:var(--accent);-webkit-text-fill-color:var(--accent)}
+.ib{color:var(--text-secondary);border-radius:10px}
+.sb-search{padding:0 7px 12px}
+.sb-search input{height:38px;background:#222;border:1px solid transparent;border-radius:10px;padding-left:34px}
+.sb-search input:focus{border-color:var(--border-active);background:#252525}
+.nc-btn{margin:0 7px 13px;border:1px solid var(--border);border-radius:10px;background:transparent;color:var(--text-primary);font-weight:600;min-height:42px;transition:background .18s,border-color .18s}
+.nc-btn:hover{background:var(--bg-hover);border-color:var(--border-active)}
+.cl{padding:2px 5px}
+.cl-label,.theme-lbl{padding:10px 10px 7px;color:var(--text-muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.cl-item{border-radius:9px;margin:2px 0;padding:10px 11px;color:var(--text-secondary)}
+.cl-item:hover,.cl-item.active{background:#292929;color:var(--text-primary)}
+.s-nav{padding:12px 5px 8px;border-top:1px solid var(--border);gap:3px}
+.s-nav a,.s-nav button{border-radius:9px;padding:10px 11px;color:var(--text-secondary);font-size:13px}
+.s-nav a:hover,.s-nav button:hover{background:var(--bg-hover);color:var(--text-primary)}
+.theme-sec{padding:6px 5px 12px}
+.theme-grid{gap:5px}
+.t-btn{border-radius:8px}
+.s-user{margin:4px 3px 0;padding:10px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.025)}
+main{background:var(--bg-primary)}
+.chat-hdr{min-height:58px;padding:8px 22px;background:rgba(33,33,33,.94);border-bottom:1px solid var(--border);backdrop-filter:blur(14px);gap:12px}
+.hdr-title{font-weight:650;letter-spacing:-.25px}
+.modes-container{gap:3px}
+.mode-btn{border-radius:9px;padding:8px 10px;color:var(--text-secondary)}
+.mode-btn.active{background:#303030;color:var(--text-primary)}
+.model-sel{border:1px solid var(--border);border-radius:10px;padding:7px 10px;background:#292929}
+.htab{border-radius:9px}
+.msgs-wrap{scrollbar-gutter:stable}
+.welcome{max-width:900px;margin:0 auto;padding:48px 24px 35px;justify-content:center}
+.welcome::before{display:none}
+.w-logo{font-family:var(--font-display);font-size:clamp(30px,4vw,40px);font-weight:650;letter-spacing:-1.6px;color:var(--text-primary);margin-bottom:10px}
+.w-sub{font-size:clamp(15px,2vw,18px);line-height:1.55;color:var(--text-secondary);max-width:580px;margin:0 auto 32px}
+.w-grid{max-width:680px;gap:10px}
+.w-card{min-height:88px;text-align:left;display:flex;align-items:center;gap:13px;padding:15px 16px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.025);transition:background .18s,border-color .18s,transform .18s}
+.w-card:hover{background:var(--bg-hover);border-color:rgba(255,255,255,.17);transform:translateY(-1px)}
+.w-icon{width:34px;height:34px;flex:0 0 34px;border-radius:10px;background:rgba(25,195,125,.11);color:var(--accent);display:grid;place-items:center}
+.w-text{font-size:13px;line-height:1.45;color:var(--text-secondary)}
+.w-lock{margin-left:auto;white-space:nowrap}
+.msgs-inner{padding:30px 26px 18px}
+.msg{margin-bottom:26px}
+.msg.ai-msg .msg-label{font-size:13px;color:var(--text-secondary);font-weight:600;margin-bottom:10px}
+.msg.ai-msg .msg-label .ai-dot{width:9px;height:9px;box-shadow:0 0 0 4px rgba(25,195,125,.12)}
+.msg.ai-msg .msg-ct{font-size:15.5px;line-height:1.78}
+.msg.user-msg .msg-inner{max-width:min(88%,680px)}
+.msg.user-msg .msg-bubble{border:0;border-radius:20px;padding:12px 17px;background:#303030}
+.msg.user-msg .msg-label{font-size:12px;color:var(--text-muted);margin-bottom:6px}
+.msg-acts{opacity:.45;transition:opacity .18s}
+.msg:hover .msg-acts,.msg-acts:focus-within{opacity:1}
+.cb-container{padding:10px 22px max(18px,env(safe-area-inset-bottom));background:linear-gradient(180deg,transparent 0%,var(--bg-primary) 20%);}
+.cb-wrap{max-width:850px;width:100%;margin:0 auto}
+.chatbar{background:#303030;border:1px solid rgba(255,255,255,.13);border-radius:25px;padding:11px 12px;gap:8px;box-shadow:0 8px 30px rgba(0,0,0,.12)}
+.chatbar:focus-within{background:#303030;border-color:rgba(255,255,255,.24);box-shadow:0 8px 30px rgba(0,0,0,.15)}
+.cb-input{font-size:15px;line-height:1.55;min-height:27px;max-height:200px;color:var(--text-primary)}
+.cb-input::placeholder{color:#929292}
+.cb-btn{width:36px;height:36px;border-radius:50%;color:var(--text-secondary)}
+.cb-btn:hover{background:#414141;color:var(--text-primary)}
+#sendStopBtn{background:var(--text-primary);color:#171717;width:34px;height:34px}
+#sendStopBtn:hover{background:#fff;color:#111}
+.cb-foot{max-width:850px;margin:8px auto 0;color:var(--text-muted);font-size:11px}
+.cb-foot kbd{background:transparent;border:0;color:var(--text-secondary);font:inherit}
+.scroll-bot{background:#303030;border:1px solid var(--border);box-shadow:0 3px 12px rgba(0,0,0,.18)}
+.model-dd{border:1px solid var(--border);border-radius:13px;box-shadow:0 14px 40px rgba(0,0,0,.35)}
+.toast{border:1px solid var(--border);border-radius:12px}
+button,a,input,textarea{transition-duration:.16s}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent)!important;outline-offset:2px}
+@media(min-width:1025px){.sidebar{width:var(--sidebar-w)}}
+@media(max-width:1024px){.sidebar{width:285px;padding-top:max(10px,env(safe-area-inset-top))}.chat-hdr{padding-left:14px;padding-right:14px}}
+@media(max-width:640px){
+ .chat-hdr{min-height:54px;padding:6px 10px;gap:7px}.hdr-title{font-size:14px}.modes-container{display:none}.htab{font-size:11px;padding:6px 8px}.hdr-plan{display:none}
+ .welcome{padding:35px 18px 22px;justify-content:center}.w-logo{font-size:34px}.w-sub{font-size:14px;margin-bottom:24px}.w-grid{grid-template-columns:1fr;gap:8px}.w-card{min-height:65px;padding:12px}.msgs-inner{padding:20px 14px 10px}.msg.ai-msg{padding-right:4px}.msg.user-msg{padding-left:4px}.msg.user-msg .msg-inner{max-width:94%}.msg.user-msg .msg-bubble{padding:11px 14px}.cb-container{padding:8px 10px max(12px,env(safe-area-inset-bottom))}.chatbar{padding:8px;border-radius:22px}.cb-btn{width:33px;height:33px}.cb-input{font-size:16px}.cb-foot{display:none}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
 </style>
 </head>
 <body>
@@ -1843,7 +1928,7 @@ pre:hover .code-copy-btn { opacity: 1; }
     <div id="chatView">
       <div class="welcome" id="welcomeEl">
         <div class="w-logo">HeloX<span>Ai</span></div>
-        <p class="w-sub">Your advanced AI companion — think, create, code, and explore with intelligence.Best alternative for ChatGPT/Claude and is soon to be the greatest of all Ai models globally.</p>
+        <p class="w-sub">What can I help you with today? Think, write, code, research and create — all in one place.</p>
         <div class="w-grid">
           <div class="w-card locked" id="wcImgGen" data-prompt="Generate a stunning image of a cyberpunk city at sunset with neon reflections" data-media="image"><span class="w-icon"><i class="fa-solid fa-image"></i></span><div class="w-text">Generate a stunning cyberpunk city at sunset</div><span class="w-lock"><i class="fa-solid fa-lock"></i> Sign in</span></div>
           <div class="w-card" data-prompt="Explain quantum computing in simple terms with real-world analogies"><span class="w-icon"><i class="fa-solid fa-atom"></i></span><div class="w-text">Explain quantum computing with simple analogies</div></div>
@@ -1868,7 +1953,7 @@ pre:hover .code-copy-btn { opacity: 1; }
       <div class="chatbar" id="chatbar">
         <button type="button" class="cb-btn" id="fileBtn" aria-label="Upload file"><i class="fa-solid fa-paperclip"></i></button>
         <button type="button" class="cb-btn" id="asBtn" aria-label="Quick actions"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
-        <textarea class="cb-input" id="cbInput" placeholder="Message HeloXAi..." rows="1" aria-label="Chat input"></textarea>
+        <textarea class="cb-input" id="cbInput" placeholder="Message HeloxAI..." rows="1" aria-label="Chat input"></textarea>
         <div class="cb-r">
           <button type="button" class="cb-btn" id="micBtn" aria-label="Voice input"><i class="fa-solid fa-microphone"></i></button>
           <div style="position:relative">
@@ -2218,11 +2303,13 @@ function checkLimits(text) {
 
 function apiUrl(){
   try {
-    var base = getEnvVar('FREE_AI_URL');
+    // Railway backend URL is the default API origin; plan-specific URLs may override it.
+    var base = getEnvVar('FREE_AI_URL') || getEnvVar('BACKEND_URL');
     if(S.user && (S.user.is_lifetime || S.user.is_premium)){
       var p = getEnvVar('PREMIUM_AI_URL');
       if(p && p.indexOf('http')===0) base = p;
     }
+    if(base) base = base.replace(/\/+$/, '');
     if(!base) {
         console.error('[HeloXAi] API URL is not configured in env.js');
         return null; 
@@ -2354,93 +2441,110 @@ async function signOut(){
 }
 
 async function loadChatList(){
-  S.chatListData = loadLocalChats(); 
+  // Local cache is shown immediately; the authenticated backend is the source of truth.
+  S.chatListData = loadLocalChats();
   renderChatList();
+  var url = apiUrl();
+  if (!url) return;
+  try {
+    var res = await fetch(url + '/chats', { method:'GET', headers:authH(), credentials:'include' });
+    if (!res.ok) throw new Error('Chat list request failed (' + res.status + ')');
+    var data = await res.json();
+    if (Array.isArray(data.chats)) {
+      var cached = {};
+      S.chatListData.forEach(function(c){ cached[c.id] = c; });
+      S.chatListData = data.chats.map(function(c){
+        return { id:c.id, title:c.title || 'New Chat', updated_at:c.updated_at || c.created_at || new Date().toISOString(), pinned:!!(cached[c.id] && cached[c.id].pinned) };
+      });
+      saveLocalChats();
+      renderChatList();
+    }
+  } catch(e) { console.warn('[HeloxAI] Using cached chat list:', e.message); }
 }
 
 async function startNewChat(){
   if(S.streaming) stopGen();
-  S.chatId = uid();
-  S.msgs = [];
-  S.gallery = []; 
   var newTitle = 'New Chat ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-  var newMeta = { id: S.chatId, title: newTitle, updated_at: new Date().toISOString(), pinned: false };
-  S.chatListData.unshift(newMeta);
-  saveLocalChats();
-  saveActiveChat(S.chatId);
-  saveChatHistory(S.chatId, S.msgs);
-  $('hdrTitle').textContent = newTitle;
-  renderAll();
-  if(S.sbOpen) toggleSB(false);
+  var localId = uid();
+  var url = apiUrl();
+  if (!url) { toast('API is not configured','err'); return; }
   try {
-    var url = apiUrl();
-    if(!url) throw new Error("API not configured");
-    var r=await fetch(url+'/newchat',{ method:'POST', headers:authH(), credentials:'include', body:JSON.stringify({model:S.model}) });
-    if(r.ok){
-        var d=await r.json();
-        if(d&&d.id){ 
-          if(d.id !== S.chatId) {
-             localStorage.removeItem('helox_history_' + S.chatId); 
-             S.chatId = d.id;
-             newMeta.id = S.chatId;
-             saveActiveChat(S.chatId);
-             saveLocalChats();
-          }
-        }
-    }
-  }catch(e){}
+    var r = await fetch(url + '/newchat', {
+      method:'POST', headers:authH(), credentials:'include',
+      body:JSON.stringify({ title:newTitle, model:S.model })
+    });
+    if (!r.ok) throw new Error('Could not create chat (' + r.status + ')');
+    var d = await r.json();
+    if (!d || !d.id) throw new Error('Backend did not return a chat ID');
+    S.chatId = d.id;
+    S.msgs = [];
+    S.gallery = [];
+    S.chatListData = S.chatListData.filter(function(c){ return c.id !== localId; });
+    S.chatListData.unshift({ id:d.id, title:d.title || newTitle, updated_at:new Date().toISOString(), pinned:false });
+    saveLocalChats();
+    saveActiveChat(S.chatId);
+    saveChatHistory(S.chatId, S.msgs);
+    $('hdrTitle').textContent = d.title || newTitle;
+    renderAll();
+    if(S.sbOpen) toggleSB(false);
+  } catch(e) {
+    toast(e.message || 'Could not create chat','err');
+  }
 }
-
 async function loadConv(cid){
   S.msgs=[]; showWelcome();
   $('hdrTitle').textContent = 'Loading...';
-  var msgs = loadChatHistory(cid);
-  if(msgs.length > 0) {
-      S.msgs = msgs;
-      var chat = S.chatListData.find(c=>c.id===cid);
-      if(chat) $('hdrTitle').textContent = chat.title;
-  } else {
-      if (sb && cid) {
-          try {
-              var res=await sb.from('messages').select('*').eq('conversation_id',cid).order('created_at',{ascending:true});
-              if(!res.error && res.data) {
-                 S.msgs=res.data.map(function(m){
-                     var imgs = m.media_url ? [{url:m.media_url, name:'Generated'}] : [];
-                     return { id:m.id, role:m.role, content:m.content, content_type:m.content_type||'text', media_url:m.media_url||null, images: imgs, time:new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}), liked:false, disliked:false };
-                 });
-                 saveChatHistory(cid, S.msgs);
-              }
-          } catch(e) {}
+  var chat = S.chatListData.find(function(c){ return c.id===cid; });
+  var loadedFromApi = false;
+  var url = apiUrl();
+  if (url && cid) {
+    try {
+      var res = await fetch(url + '/chat/' + encodeURIComponent(cid) + '/messages', { method:'GET', headers:authH(), credentials:'include' });
+      if (res.ok) {
+        var data = await res.json();
+        if (Array.isArray(data.messages)) {
+          S.msgs = data.messages.map(function(m){
+            var media = m.media_url ? [{url:m.media_url, name:'Generated'}] : [];
+            return { id:m.id || uid(), role:m.role, content:m.content || '', content_type:m.content_type || 'text', media_url:m.media_url || null, images:media, time:m.created_at ? new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : now(), liked:false, disliked:false };
+          });
+          loadedFromApi = true;
+          saveChatHistory(cid, S.msgs);
+        }
+      } else if (res.status !== 404) {
+        console.warn('[HeloxAI] Message history request failed:', res.status);
       }
+    } catch(e) { console.warn('[HeloxAI] Could not load server history:', e.message); }
   }
+  if (!loadedFromApi) S.msgs = loadChatHistory(cid);
+  if (chat) $('hdrTitle').textContent = chat.title;
   S.gallery=[];
-  S.msgs.forEach(function(m){ 
-      if(m.role==='assistant') {
-          if(m.images && m.images.length) {
-              m.images.forEach(function(i){
-                  var type = (i.url && (i.url.includes('.mp4') || i.url.includes('.webm'))) ? 'video' : 'image';
-                  if(!S.gallery.some(function(g){return g.url===i.url})) S.gallery.unshift({type:type,url:i.url,prompt:'Generated',id:uid()});
-              });
-          } else { addGal(m.content); }
-      }
+  S.msgs.forEach(function(m){
+    if(m.role==='assistant') {
+      if(m.images && m.images.length) {
+        m.images.forEach(function(i){
+          if(!i.url) return;
+          var type = (i.url.includes('.mp4') || i.url.includes('.webm')) ? 'video' : 'image';
+          if(!S.gallery.some(function(g){return g.url===i.url})) S.gallery.unshift({type:type,url:i.url,prompt:'Generated',id:uid()});
+        });
+      } else { addGal(m.content); }
+    }
   });
   S.chatId=cid;
-  saveActiveChat(cid); 
+  saveActiveChat(cid);
   renderChatList();
   renderAll();
   switchView('chat');
 }
-
 async function saveMsg(m){
+  // The /ask/universal endpoint persists user and assistant messages server-side.
+  // Keep a local cache for instant rendering and offline recovery only.
   saveChatHistory(S.chatId, S.msgs);
-  if(!sb||!S.user||!S.chatId)return;
-  try{ await sb.from('messages').insert({ conversation_id:S.chatId, role:m.role, content:m.content, content_type:m.content_type||'text', media_url:m.media_url||null, metadata:m.metadata||{} }); }catch(e){}
 }
 async function updateTs(cid){
+  // Backend updates conversation timestamps when it persists a chat turn.
   saveChatHistory(cid, S.msgs);
-  if(!sb||!cid)return;
-  try{ await sb.from('conversations').update({updated_at:new Date().toISOString()}).eq('id',cid); }catch(e){}
 }
+
 async function delConv(cid){
   if(!confirm('Delete this chat?')) return;
   try {
@@ -2449,12 +2553,13 @@ async function delConv(cid){
       saveLocalChats();
   } catch(e) {}
   if(S.chatId === cid) saveActiveChat(null);
-  try{ 
+  try{
       var url = apiUrl();
-      if(url) await fetch(url+'/chats/'+cid,{method:'DELETE',headers:authH(),credentials:'include'}); 
-  }catch(e){}
-  if(!sb||!cid)return;
-  try{ await sb.from('messages').delete().eq('conversation_id',cid); await sb.from('conversations').delete().eq('id',cid); }catch(e){}
+      if(url) {
+        var response = await fetch(url + '/chats/' + encodeURIComponent(cid), {method:'DELETE', headers:authH(), credentials:'include'});
+        if(!response.ok && response.status !== 404) throw new Error('Delete failed (' + response.status + ')');
+      }
+  } catch(e) { toast(e.message || 'Could not delete chat','err'); return; }
   if(S.chatId===cid){
       S.msgs=[]; S.chatId=null; $('hdrTitle').textContent='HeloXAi'; renderAll();
   }
