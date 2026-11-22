@@ -2573,8 +2573,14 @@ function initMarked() {
   try {
     const R = new marked.Renderer();
 
-    R.code = function ({ text, lang, escaped }) {
-      return renderCodeBlock(text || '', lang || '', escaped);
+    R.code = function (token, legacyLang, legacyEscaped) {
+      // Marked v12 passes a token object; older integrations may pass strings.
+      var codeText = (token && typeof token === 'object')
+        ? (token.text != null ? token.text : (token.raw || ''))
+        : (token == null ? '' : String(token));
+      var codeLang = (token && typeof token === 'object') ? (token.lang || '') : (legacyLang || '');
+      var wasEscaped = (token && typeof token === 'object') ? !!token.escaped : !!legacyEscaped;
+      return renderCodeBlock(codeText, codeLang, wasEscaped);
     };
 
     R.codespan = function ({ text }) {
@@ -2604,10 +2610,10 @@ function initMarked() {
 }
 
 function renderCodeBlock(rawText, infoString, escaped) {
-  var text = String(rawText || '').replace(/\r\n/g, '\n').replace(/\t/g, '  ');
+  var text = String(rawText == null ? '' : rawText).replace(/\r\n?/g, '\n').replace(/\t/g, '  ');
   if (text.length > 200000) text = text.slice(0, 200000) + '\n/* truncated */';
 
-  var parts = (infoString || '').trim().split(/\s+/);
+  var parts = String(infoString || '').trim().split(/\s+/);
   var lang = (parts[0] || '').toLowerCase();
   var filename = '';
   for (var i = 1; i < parts.length; i++) {
@@ -2615,80 +2621,49 @@ function renderCodeBlock(rawText, infoString, escaped) {
     if (m) filename = m[1] || m[2] || m[3];
   }
 
-  // Normalize common language aliases BEFORE highlighting. Previously `py`/`js`
-  // changed `lang` but left `validLang` unchanged, causing highlight.js to reject
-  // the alias and fall back to plain text.
   var aliases = { py:'python', js:'javascript', ts:'typescript', sh:'bash', shell:'bash', yml:'yaml', cs:'csharp', 'c++':'cpp', htm:'xml' };
   lang = aliases[lang] || lang;
   var validLang = lang;
-  if (typeof hljs !== 'undefined' && hljs.getLanguage) {
-    if (!lang || !hljs.getLanguage(lang)) validLang = '';
+  if (typeof hljs !== 'undefined' && hljs.getLanguage && (!lang || !hljs.getLanguage(lang))) validLang = '';
+
+  // Escaped original source is the fallback; highlighting must never hide code.
+  var highlighted = esc(text);
+  if (text && validLang && typeof hljs !== 'undefined') {
+    try { highlighted = hljs.highlight(text, { language: validLang, ignoreIllegals: true }).value; }
+    catch (e) { highlighted = esc(text); }
   }
 
-  var highlighted = '';
-  try {
-    if (typeof hljs !== 'undefined') {
-      if (validLang) {
-        highlighted = hljs.highlight(text, { language: validLang, ignoreIllegals: true }).value;
-      } else {
-        var auto = hljs.highlightAuto(text);
-        highlighted = auto.value;
-        validLang = auto.language || 'plaintext';
-      }
-    } else {
-      highlighted = esc(text);
-      validLang = validLang || 'text';
-    }
-  } catch (e) {
-    highlighted = esc(text);
-    validLang = 'text';
-  }
-
-  var lines = highlighted.split('\n');
-  var showLineNumbers = lines.length > 3;
-  if (showLineNumbers) {
-    var nums = '<div class="line-numbers-rows" aria-hidden="true">';
-    for (var j = 0; j < lines.length; j++) nums += '<span></span>';
-    nums += '</div>';
-    highlighted = nums + highlighted;
-  }
-
-  var icon = 'fa-code', label = validLang || 'text';
-  var L = (validLang || '').toLowerCase();
-  if (['js','javascript'].includes(L))      { icon = 'fa-brands fa-js';       label = 'JavaScript'; }
-  else if (['ts','typescript'].includes(L))  { icon = 'fa-brands fa-js';       label = 'TypeScript'; }
-  else if (['py','python'].includes(L))      { icon = 'fa-brands fa-python';   label = 'Python'; }
-  else if (['html','xml','svg'].includes(L)) { icon = 'fa-brands fa-html5';    label = 'HTML'; }
-  else if (L === 'css')                       { icon = 'fa-brands fa-css3-alt'; label = 'CSS'; }
-  else if (L === 'java')                      { icon = 'fa-brands fa-java';     label = 'Java'; }
+  var L = (validLang || lang || '').toLowerCase();
+  var icon = 'fa-code', label = validLang || lang || 'text';
+  if (['js','javascript'].includes(L)) { icon = 'fa-brands fa-js'; label = 'JavaScript'; }
+  else if (['ts','typescript'].includes(L)) { icon = 'fa-brands fa-js'; label = 'TypeScript'; }
+  else if (['py','python'].includes(L)) { icon = 'fa-brands fa-python'; label = 'Python'; }
+  else if (['html','xml','svg'].includes(L)) { icon = 'fa-brands fa-html5'; label = 'HTML'; }
+  else if (L === 'css') { icon = 'fa-brands fa-css3-alt'; label = 'CSS'; }
+  else if (L === 'java') { icon = 'fa-brands fa-java'; label = 'Java'; }
   else if (['bash','sh','shell','zsh'].includes(L)) { icon = 'fa-solid fa-terminal'; label = 'Shell'; }
-  else if (['json','jsonc'].includes(L))      { icon = 'fa-solid fa-code';      label = 'JSON'; }
-  else if (['sql'].includes(L))               { icon = 'fa-solid fa-database';  label = 'SQL'; }
-  else if (['md','markdown'].includes(L))     { icon = 'fa-brands fa-markdown'; label = 'Markdown'; }
-  else if (L === 'mermaid')                   { icon = 'fa-solid fa-diagram-project'; label = 'Mermaid'; }
+  else if (['json','jsonc'].includes(L)) { icon = 'fa-solid fa-code'; label = 'JSON'; }
+  else if (L === 'sql') { icon = 'fa-solid fa-database'; label = 'SQL'; }
+  else if (['md','markdown'].includes(L)) { icon = 'fa-brands fa-markdown'; label = 'Markdown'; }
+  else if (L === 'mermaid') { icon = 'fa-solid fa-diagram-project'; label = 'Mermaid'; }
 
   var lineCount = text.split('\n').length;
   var collapsible = lineCount > 25;
-
   var rawEncoded = encodeURIComponent(text);
+  var safeLang = esc(validLang || lang || 'text');
 
-  var html = '<div class="code-blk' + (showLineNumbers ? ' line-numbers' : '') + (collapsible ? ' collapsible collapsed' : '') + '" data-lang="' + esc(validLang || 'text') + '">';
-  html += '<div class="code-hd">';
-  html += '<div class="code-lang-badge"><i class="fa-solid ' + icon + '"></i> ' + esc(label) + (filename ? ' <span class="code-filename"><i class="fa-regular fa-file"></i> ' + esc(filename) + '</span>' : '') + '</div>';
-  html += '<div class="code-hd-actions">';
-  if (L === 'html' || L === 'xml') {
-    html += '<button type="button" class="cp-btn" data-action="run-html" data-tip="Run HTML"><i class="fa-solid fa-play"></i><span class="cp-label">Run</span></button>';
-  }
+  var html = '<div class="code-blk' + (collapsible ? ' collapsible collapsed' : '') + '" data-lang="' + safeLang + '">';
+  html += '<div class="code-hd"><div class="code-lang-badge"><i class="' + icon + '"></i> ' + esc(label);
+  if (filename) html += ' <span class="code-filename"><i class="fa-regular fa-file"></i> ' + esc(filename) + '</span>';
+  html += '</div><div class="code-hd-actions">';
+  if (L === 'html' || L === 'xml') html += '<button type="button" class="cp-btn" data-action="run-html" data-tip="Run HTML"><i class="fa-solid fa-play"></i><span class="cp-label">Run</span></button>';
   html += '<button type="button" class="cp-btn" data-action="copy-code" data-raw="' + rawEncoded + '" data-tip="Copy code" aria-label="Copy code"><i class="fa-regular fa-copy"></i><span class="cp-label">Copy</span></button>';
   html += '</div></div>';
-  html += '<pre><code class="hljs language-' + esc(validLang || 'text') + '">' + highlighted + '</code></pre>';
-  if (collapsible) {
-    html += '<button type="button" class="code-expand-btn" data-action="expand-code"><i class="fa-solid fa-chevron-down"></i> Show more (' + lineCount + ' lines)</button>';
-  }
+  html += '<pre><code class="hljs language-' + safeLang + '">' + highlighted + '</code></pre>';
+  if (collapsible) html += '<button type="button" class="code-expand-btn" data-action="expand-code"><i class="fa-solid fa-chevron-down"></i> Show more (' + lineCount + ' lines)</button>';
   html += '</div>';
   return html;
 }
-
 function processAdmonitions(html) {
     return html.replace(/<blockquote>\s*\[\!([A-Z]+)\]\s*([^\n]*)\n([\s\S]*?)<\/blockquote>/g, function(match, type, title, content) {
         var cls = 'adm-note', icon = 'fa-info-circle', t = type.toLowerCase();
@@ -2814,11 +2789,11 @@ let _streamMathRAF = 0;
 // but not emitted its closing fence yet. Close it temporarily for this render
 // only, so the partial code is displayed as a code block immediately.
 function prepareStreamingMarkdown(source) {
-  var lines = String(source || '').split('\\n');
+  var lines = String(source || '').split('\n');
   var openFence = null;
 
   for (var i = 0; i < lines.length; i++) {
-    var match = lines[i].match(/^\\s*(`{3,}|~{3,})/);
+    var match = lines[i].match(/^\s*(`{3,}|~{3,})/);
     if (!match) continue;
 
     var fence = match[1];
@@ -2829,7 +2804,7 @@ function prepareStreamingMarkdown(source) {
     }
   }
 
-  return openFence ? String(source || '') + '\\n' + openFence : String(source || '');
+  return openFence ? String(source || '') + '\n' + openFence : String(source || '');
 }
 
 function renderStreamingMarkdown(idx, text) {
