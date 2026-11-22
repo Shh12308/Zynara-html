@@ -2620,14 +2620,20 @@ function renderCodeBlock(rawText, infoString, escaped) {
   // the alias and fall back to plain text.
   var aliases = { py:'python', js:'javascript', ts:'typescript', sh:'bash', shell:'bash', yml:'yaml', cs:'csharp', 'c++':'cpp', htm:'xml' };
   lang = aliases[lang] || lang;
+  // Mermaid is rendered by Mermaid.js after Markdown parsing, not by
+  // highlight.js. Preserve its language class so processMermaid() can find it.
+  var isMermaid = lang === 'mermaid';
   var validLang = lang;
-  if (typeof hljs !== 'undefined' && hljs.getLanguage) {
+  if (!isMermaid && typeof hljs !== 'undefined' && hljs.getLanguage) {
     if (!lang || !hljs.getLanguage(lang)) validLang = '';
   }
 
   var highlighted = '';
   try {
-    if (typeof hljs !== 'undefined') {
+    if (isMermaid) {
+      highlighted = esc(text);
+      validLang = 'mermaid';
+    } else if (typeof hljs !== 'undefined') {
       if (validLang) {
         highlighted = hljs.highlight(text, { language: validLang, ignoreIllegals: true }).value;
       } else {
@@ -2641,11 +2647,11 @@ function renderCodeBlock(rawText, infoString, escaped) {
     }
   } catch (e) {
     highlighted = esc(text);
-    validLang = 'text';
+    validLang = isMermaid ? 'mermaid' : 'text';
   }
 
   var lines = highlighted.split('\n');
-  var showLineNumbers = lines.length > 3;
+  var showLineNumbers = !isMermaid && lines.length > 3;
   if (showLineNumbers) {
     var nums = '<div class="line-numbers-rows" aria-hidden="true">';
     for (var j = 0; j < lines.length; j++) nums += '<span></span>';
