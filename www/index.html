@@ -22,7 +22,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/atom-one-dark.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/common.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
@@ -2620,20 +2620,14 @@ function renderCodeBlock(rawText, infoString, escaped) {
   // the alias and fall back to plain text.
   var aliases = { py:'python', js:'javascript', ts:'typescript', sh:'bash', shell:'bash', yml:'yaml', cs:'csharp', 'c++':'cpp', htm:'xml' };
   lang = aliases[lang] || lang;
-  // Mermaid is rendered by Mermaid.js after Markdown parsing, not by
-  // highlight.js. Preserve its language class so processMermaid() can find it.
-  var isMermaid = lang === 'mermaid';
   var validLang = lang;
-  if (!isMermaid && typeof hljs !== 'undefined' && hljs.getLanguage) {
+  if (typeof hljs !== 'undefined' && hljs.getLanguage) {
     if (!lang || !hljs.getLanguage(lang)) validLang = '';
   }
 
   var highlighted = '';
   try {
-    if (isMermaid) {
-      highlighted = esc(text);
-      validLang = 'mermaid';
-    } else if (typeof hljs !== 'undefined') {
+    if (typeof hljs !== 'undefined') {
       if (validLang) {
         highlighted = hljs.highlight(text, { language: validLang, ignoreIllegals: true }).value;
       } else {
@@ -2647,11 +2641,11 @@ function renderCodeBlock(rawText, infoString, escaped) {
     }
   } catch (e) {
     highlighted = esc(text);
-    validLang = isMermaid ? 'mermaid' : 'text';
+    validLang = 'text';
   }
 
   var lines = highlighted.split('\n');
-  var showLineNumbers = !isMermaid && lines.length > 3;
+  var showLineNumbers = lines.length > 3;
   if (showLineNumbers) {
     var nums = '<div class="line-numbers-rows" aria-hidden="true">';
     for (var j = 0; j < lines.length; j++) nums += '<span></span>';
@@ -2815,11 +2809,35 @@ function applyMath(el) {
 }
 
 let _streamMathRAF = 0;
+
+// While a response is streaming, the model may have opened a fenced code block
+// but not emitted its closing fence yet. Close it temporarily for this render
+// only, so the partial code is displayed as a code block immediately.
+function prepareStreamingMarkdown(source) {
+  var lines = String(source || '').split('\\n');
+  var openFence = null;
+
+  for (var i = 0; i < lines.length; i++) {
+    var match = lines[i].match(/^\\s*(`{3,}|~{3,})/);
+    if (!match) continue;
+
+    var fence = match[1];
+    if (!openFence) {
+      openFence = fence;
+    } else if (fence.charAt(0) === openFence.charAt(0) && fence.length >= openFence.length) {
+      openFence = null;
+    }
+  }
+
+  return openFence ? String(source || '') + '\\n' + openFence : String(source || '');
+}
+
 function renderStreamingMarkdown(idx, text) {
   var el = $('mc-' + idx);
   if (!el) return;
-  _mdCache.delete(text);
-  el.innerHTML = md(text);
+  var renderSource = prepareStreamingMarkdown(text);
+  _mdCache.delete(renderSource);
+  el.innerHTML = md(renderSource);
   cancelAnimationFrame(_streamMathRAF);
   _streamMathRAF = requestAnimationFrame(function () { applyMath(el); });
 }
